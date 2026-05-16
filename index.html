@@ -6,7 +6,7 @@
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
 </head>
 <body>
 
@@ -26,18 +26,17 @@
         </div>
       </div>
       <div class="header-badges">
-        <span class="badge">宏旺 201</span>
-        <span class="badge badge-accent">v2.0</span>
+        <span class="badge">201 系列</span>
+        <span class="badge badge-accent">v2.1</span>
       </div>
     </div>
   </div>
 
-  <!-- Toast -->
   <div class="toast-container" id="toastContainer"></div>
 
   <div class="container">
 
-    <!-- 基价设置 -->
+    <!-- ===== 价格参数 ===== -->
     <div class="card">
       <div class="card-header">
         <div class="card-header-left">
@@ -46,43 +45,28 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="price-config">
-          <div class="price-input-group price-primary">
-            <label>J2 基价</label>
-            <input type="number" id="j2BasePrice" value="7800" step="10">
-            <span class="unit">元/吨</span>
+        <div class="origin-grid">
+          <div class="origin-grid-header">
+            <span>🏢 产地基价</span>
+            <span class="og-hint">填写各产地 J2 基价，J1/J3/J4 自动推导</span>
           </div>
-          <div class="price-derive">
-            <span class="price-derive-label">不含税</span>
-            <span class="price-derive-value" id="j2NoTax">7,176</span>
-          </div>
-        </div>
-        <div class="price-derivatives">
-          <div class="price-chip">
-            <span class="chip-label">J1</span>
-            <span class="chip-price" id="j1Price">8,700</span>
-            <span class="chip-offset">+900</span>
-          </div>
-          <div class="price-chip">
-            <span class="chip-label">J3</span>
-            <span class="chip-price" id="j3Price">8,200</span>
-            <span class="chip-offset">+400</span>
-          </div>
-          <div class="price-chip">
-            <span class="chip-label">J4</span>
-            <span class="chip-price" id="j4Price">9,400</span>
-            <span class="chip-offset">+1,600</span>
-          </div>
-          <div class="price-input-group price-j5">
-            <label>J5</label>
-            <input type="number" id="j5BasePrice" value="" placeholder="手动" step="10">
-            <span class="unit">元/吨</span>
+          <div class="origin-rows" id="originRows"></div>
+          <div class="origin-footer">
+            <div class="add-origin" style="display:flex;gap:6px;align-items:center;">
+              <input id="newOriginInput" placeholder="输入新产地" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:120px;">
+              <button class="btn btn-sm btn-outline" id="addOriginBtn">+ 添加</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">J5 统一基价</label>
+              <input type="number" id="j5BasePrice" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;" placeholder="手动">
+              <span style="font-size:11px;color:var(--text-muted);">→ <b id="j5PriceShow" style="color:var(--accent);">未设置</b> 元/吨</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 数据录入 -->
+    <!-- ===== 数据录入 ===== -->
     <div class="card">
       <div class="card-header">
         <div class="card-header-left">
@@ -105,23 +89,25 @@
           <button class="tab-btn" data-tab="manual"><span>✏️</span> 手动添加</button>
         </div>
 
-        <!-- Tab: 粘贴文本 -->
         <div class="tab-panel active" id="tab-text">
           <textarea id="freeText" class="free-text-area" placeholder="每行一条，格式示例：
 宏旺201J2 NO.4 5C-FILM 0.50*1240*C
-宏旺201J1压延 8K黄钛金 7C-FILM 0.50*1219*2500
-宏旺201J4 2B 0.80*1500*C"></textarea>
+青山201J1压延 8K黄钛金 7C-FILM 0.50*1219*2500
+联众201J4 2B 0.80*1500*C"></textarea>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
             <div class="text-hint">
-              支持 J1-J4/J5 + 压延料，如 <code>201J1压延</code>，长度用 <code>C</code> 表示卷板
+              支持 <b>产地+材质+表面+保护膜+规格</b>，用 <code>压延</code> 标记压延料，<code>C</code> 表示卷板
             </div>
             <button class="btn btn-primary" id="parseTextBtn">解析并添加</button>
           </div>
         </div>
 
-        <!-- Tab: 手动添加 -->
         <div class="tab-panel" id="tab-manual">
           <div class="manual-row">
+            <div class="input-group">
+              <label>产地</label>
+              <select id="manualOrigin"></select>
+            </div>
             <div class="input-group">
               <label>材质</label>
               <select id="manualMaterial">
@@ -180,11 +166,12 @@
               <button class="btn btn-primary" id="addManualBtn" style="width:100%;">➕ 添加</button>
             </div>
           </div>
+          <div id="manualPriceDisplay" style="margin-top:8px;font-size:12px;"></div>
         </div>
       </div>
     </div>
 
-    <!-- 结果 -->
+    <!-- ===== 报价结果 ===== -->
     <div class="card" id="resultCard" style="display:none;">
       <div class="card-header">
         <div class="card-header-left">
@@ -207,7 +194,7 @@
         <table>
           <thead>
             <tr>
-              <th style="width:36px;"></th><th style="width:32px;">#</th><th>产地</th><th>材质</th><th>表面</th><th>厚度</th><th>宽度</th><th>长度</th><th>保护膜1</th><th>保护膜2</th><th>含税成本</th><th>不含税成本</th><th>边/板</th><th>含税售价</th><th>不含税售价</th><th style="width:36px;"></th>
+              <th style="width:36px;"></th><th style="width:32px;">#</th><th>产地</th><th>材质</th><th>表面</th><th>厚度</th><th>宽度</th><th>长度</th><th>膜1</th><th>膜2</th><th>含税成本</th><th>不含税成本</th><th>边/板</th><th>含税售价</th><th>不含税售价</th><th style="width:36px;"></th>
             </tr>
           </thead>
           <tbody id="resultBody"></tbody>
@@ -218,12 +205,10 @@
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">🔩</div>
       <h3>KK不锈钢报价系统</h3>
-      <p>上传 Excel 或手动添加数据开始报价</p>
+      <p>上传 Excel、粘贴文本或手动添加数据开始报价</p>
     </div>
 
-    <div class="footer">
-      KK不锈钢报价系统 · 宏旺 201 (J1/J2/J3/J4/J5) · 含压延料
-    </div>
+    <div class="footer">KK不锈钢报价系统 · 201系列 · 含压延料 · 多产地</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
