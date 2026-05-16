@@ -18,8 +18,10 @@ const PricingEngine = (() => {
 
   function getEdgeType(width) {
     const w = parseFloat(width);
+    // 精确匹配齐边
     if (EDGE_TYPE.trim.includes(w)) return 'trim';
-    if (EDGE_TYPE.rough.includes(w)) return 'rough';
+    // 1240-1280 都是毛边 (粗磨)，以及 1530
+    if ((w >= 1240 && w <= 1280) || w === 1530 || EDGE_TYPE.rough.includes(w)) return 'rough';
     return null;
   }
 
