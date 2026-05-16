@@ -1,76 +1,69 @@
 /**
- * Excel 解析器
- * 依赖: SheetJS (xlsx) CDN
+ * KK不锈钢报价系统 - Excel 解析与导出
  */
 const ExcelParser = (() => {
 
-  /**
-   * 读取上传的 Excel 文件，返回解析后的数据行数组
-   * 支持：
-   * 1. 标准列格式（有表头）
-   * 2. 自由文本格式（每行一条描述）
-   */
   function parseExcel(file, basePrice) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = function(e) {
         try {
           const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+          const wb = XLSX.read(data, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }).filter(r => r.some(c => c !== ''));
 
-          if (jsonData.length === 0) {
-            resolve([]);
-            return;
+          const items = [];
+          let headers = null;
+          let headerRowIdx = -1;
+
+          // 检测表头行
+          for (let i = 0; i < Math.min(3, rows.length); i++) {
+            const rowText = rows[i].join(' ').toLowerCase();
+            if (rowText.includes('材质') || rowText.includes('表面') || rowText.includes('厚度')) {
+              headers = rows[i];
+              headerRowIdx = i;
+              break;
+            }
           }
 
-          // 检测是否有表头
-          const firstRow = jsonData[0].map(c => String(c).trim().toLowerCase());
-          const hasHeader = detectHeader(firstRow);
-
-          let rows;
-          if (hasHeader) {
-            rows = jsonData.slice(1); // 跳过表头
+          if (headers) {
+            // 有表头：从表头下一行开始解析
+            for (let i = headerRowIdx + 1; i < rows.length; i++) {
+              const item = parseRow(rows[i], headers, basePrice);
+              if (item) {
+                // 如果 row 里没有规格, 看是否有 厚度/宽度/长度 列
+                if (!item.thickness) {
+                  const thicknessIdx = headers.findIndex(h => h.includes('厚度'));
+                  const widthIdx = headers.findIndex(h => h.includes('宽度'));
+                  const lengthIdx = headers.findIndex(h => h.includes('长度'));
+                  if (thicknessIdx >= 0 && rows[i][thicknessIdx]) item.thickness = String(rows[i][thicknessIdx]).trim();
+                  if (widthIdx >= 0 && rows[i][widthIdx]) item.width = String(rows[i][widthIdx]).trim();
+                  if (lengthIdx >= 0 && rows[i][lengthIdx]) item.length = String(rows[i][lengthIdx]).trim();
+                }
+                items.push(item);
+              }
+            }
           } else {
-            rows = jsonData;
+            // 无表头：每行作为自由文本解析
+            for (const row of rows) {
+              const text = row.join(' ').trim();
+              if (!text) continue;
+              const parsed = PricingEngine.parseFreeText(text, basePrice);
+              if (typeof parsed === 'object') items.push(parsed);
+            }
           }
 
-          const results = [];
-          for (const row of rows) {
-            if (!row || row.every(c => String(c).trim() === '')) continue;
-
-            const parsed = parseRow(row, hasHeader ? firstRow : null, basePrice);
-            if (parsed) results.push(parsed);
-          }
-
-          resolve(results);
+          resolve(items);
         } catch (err) {
-          reject(err);
+          console.error('Excel parse error:', err);
+          resolve([]);
         }
       };
-      reader.onerror = reject;
       reader.readAsArrayBuffer(file);
     });
   }
 
-  /**
-   * 检测第一行是否为表头
-   */
-  function detectHeader(firstRow) {
-    const headerKeywords = ['产地', '材质', '表面', '厚度', '宽度', '长度', '保护膜', '规格', '膜', 'film', 'thickness', 'surface'];
-    let matchCount = 0;
-    for (const cell of firstRow) {
-      for (const kw of headerKeywords) {
-        if (cell.includes(kw)) { matchCount++; break; }
-      }
-    }
-    return matchCount >= 2;
-  }
-
-  /**
-   * 解析单行数据
-   */
   function parseRow(row, headers, basePrice) {
     if (headers) {
       const item = { basePrice };
@@ -108,22 +101,73 @@ const ExcelParser = (() => {
     return null;
   }
 
-  /**
-   * 导出计算结果为 Excel 文件
-   */
   function exportToExcel(results, filename) {
     const rows = [];
+    // 给客户看的简洁表头
+    rows.push(['产地', '材质', '规格', '膜', '价格']);
 
-    // 表头
+    for (const r of results) {
+      if (!r.success) {
+        rows.push([r.index, '', '', '', `错误: ${r.errors.join('; ')}`]);
+        continue;
+      }
+      const d = r.detail;
+      // 规格: 厚度*宽度*长度
+      const spec = `${d.thickness}*${d.width}*${d.length}`;
+      // 膜: 合并膜1+膜2
+      const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
+      // 价格 = 不含税售价（对外就叫"价格"）
+      rows.push([
+        d.origin || '',
+        d.material || '',
+        spec,
+        film,
+        d.saleNoTax
+      ]);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 10 }, // 产地
+      { wch: 10 }, // 材质
+      { wch: 22 }, // 规格
+      { wch: 24 }, // 膜
+      { wch: 14 }  // 价格
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '报价单');
+
+    // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
+    const detailRows = _buildDetailRows(results);
+    if (detailRows.length > 0) {
+      const ds = XLSX.utils.aoa_to_sheet(detailRows);
+      XLSX.utils.book_append_sheet(wb, ds, '内部明细');
+      wb.Sheets['内部明细'].hidden = true; // Excel 隐藏工作表
+      // 列宽
+      ds['!cols'] = [
+        { wch: 5 },  { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 10 },
+        { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 12 },
+        { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 },
+        { wch: 16 }, { wch: 16 },
+        { wch: 10 }, { wch: 10 }, { wch: 12 },
+        { wch: 16 }, { wch: 16 }
+      ];
+    }
+
+    XLSX.writeFile(wb, filename || 'KK报价.xlsx');
+  }
+
+  function _buildDetailRows(results) {
+    const rows = [];
     rows.push([
-      '序号', '产地', '材质', '表面', '厚度(mm)', '宽度(mm)', '长度', 
+      '序号', '产地', '材质', '表面', '厚度(mm)', '宽度(mm)', '长度',
       '保护膜1', '保护膜2', '基价(元/吨)',
       '厚度加价(元/吨)', '表面加工费(元/吨)', '膜1费用(元/吨)', '膜2费用(元/吨)',
       '含税成本(元/吨)', '不含税成本(元/吨)',
       '毛边/齐边', '卷板/平板', '销售加价(元/吨)',
       '含税售价(元/吨)', '不含税售价(元/吨)'
     ]);
-
     for (const r of results) {
       if (!r.success) {
         rows.push([r.index, '', '', '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`]);
@@ -131,47 +175,18 @@ const ExcelParser = (() => {
       }
       const d = r.detail;
       rows.push([
-        r.index, r.detail.origin || '', r.detail.material || '', r.detail.surface || '', r.detail.thickness, r.detail.width, r.detail.length,
-        r.detail.film1 || '', r.detail.film2 || '', r.detail.basePrice,
-        r.detail.thickSurcharge, r.detail.surfaceFeePerTon, r.detail.film1PerTon, r.detail.film2PerTon,
-        r.detail.costTax, r.detail.costNoTax,
-        r.detail.edgeType === 'rough' ? '毛边' : '齐边',
-        r.detail.boardType === 'coil' ? '卷板' : '平板',
-        r.detail.markup,
-        r.detail.saleTax, r.detail.saleNoTax
+        r.index, d.origin || '', d.material || '', d.surface || '',
+        d.thickness, d.width, d.length,
+        d.film1 || '', d.film2 || '', d.basePrice,
+        d.thickSurcharge, d.surfaceFeePerTon, d.film1PerTon, d.film2PerTon,
+        d.costTax, d.costNoTax,
+        d.edgeType === 'rough' ? '毛边' : '齐边',
+        d.boardType === 'coil' ? '卷板' : '平板',
+        d.markup,
+        d.saleTax, d.saleNoTax
       ]);
     }
-
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-
-    // 设置列宽
-    ws['!cols'] = [
-      { wch: 5 },  // 序号
-      { wch: 10 }, // 产地
-      { wch: 10 }, // 材质
-      { wch: 20 }, // 表面
-      { wch: 10 }, // 厚度
-      { wch: 10 }, // 宽度
-      { wch: 10 }, // 长度
-      { wch: 16 }, // 膜1
-      { wch: 16 }, // 膜2
-      { wch: 12 }, // 基价
-      { wch: 14 }, // 厚度加价
-      { wch: 14 }, // 表面加工费
-      { wch: 12 }, // 膜1费用
-      { wch: 12 }, // 膜2费用
-      { wch: 16 }, // 含税成本
-      { wch: 16 }, // 不含税成本
-      { wch: 10 }, // 边类型
-      { wch: 10 }, // 板类型
-      { wch: 12 }, // 销售加价
-      { wch: 16 }, // 含税售价
-      { wch: 16 }, // 不含税售价
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '报价结果');
-    XLSX.writeFile(wb, filename || '报价结果.xlsx');
+    return rows;
   }
 
   return { parseExcel, exportToExcel };
