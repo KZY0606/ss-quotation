@@ -156,6 +156,7 @@ const PricingEngine = (() => {
     return {
       success: true,
       detail: {
+        origin: item.origin || '',
         material, surface, thickness, width, length, film1, film2, basePrice,
         isYanYan,
         density, sqmPerTon: round2(sqmPerTon),
@@ -219,8 +220,8 @@ const PricingEngine = (() => {
       }
     }
 
-    // 提取产地
-    const originPatterns = ['宏旺', '联众', '甬金', '青山', '德龙', '北海诚德', '张浦'];
+    // 提取产地 (使用 ORIGIN_KEYWORDS)
+    const originPatterns = ORIGIN_KEYWORDS;
     let origin = '';
     for (const op of originPatterns) {
       if (remaining.includes(op)) {
