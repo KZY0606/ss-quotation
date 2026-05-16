@@ -60,10 +60,27 @@ const App = (() => {
     els.addOriginBtn.addEventListener('click', addOrigin);
     els.expandAllBtn.addEventListener('click', toggleAllExpand);
 
-    dom('manualOrigin')?.addEventListener('change', syncManualPrices);
+    dom('manualOrigin')?.addEventListener('change', () => {
+      syncManualPrices();
+      dom('manualMaterial')?.focus();
+    });
 
-    document.querySelectorAll('#tab-manual input[type="text"]').forEach(inp => {
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') addManual(); });
+    // 手动添加表单：Enter 跳转下一个字段，最后一个字段 Enter 直接添加
+    const manualFields = ['manualOrigin', 'manualMaterial', 'manualSurface', 'manualThickness', 'manualWidth', 'manualLength', 'manualFilm1', 'manualFilm2'];
+    manualFields.forEach((id, i) => {
+      const el = dom(id);
+      if (!el) return;
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (i < manualFields.length - 1) {
+            const next = dom(manualFields[i + 1]);
+            if (next) { next.focus(); if (typeof next.select === 'function') next.select(); }
+          } else {
+            addManual();
+          }
+        }
+      });
     });
   }
 
@@ -90,13 +107,55 @@ const App = (() => {
       `;
       els.originRows.appendChild(div);
     });
-    // Bind origin J2 inputs
-    document.querySelectorAll('.origin-j2-input').forEach(inp => {
+    // Bind origin J2 inputs - keyboard nav + paste support
+    const originInputs = document.querySelectorAll('.origin-j2-input');
+    originInputs.forEach((inp, i) => {
       inp.addEventListener('input', () => {
         const o = inp.dataset.origin;
         originPrices[o] = parseFloat(inp.value) || 0;
         renderOriginGrid();
         updateAllDerived();
+      });
+      // Enter → 下一个产地
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (e.shiftKey && i > 0) originInputs[i - 1].focus();
+          else if (!e.shiftKey && i < originInputs.length - 1) originInputs[i + 1].focus();
+        }
+      });
+      // 批量粘贴：支持 "7800, 7900, 7700" 分布到多个产地
+      inp.addEventListener('paste', (e) => {
+        setTimeout(() => {
+          const val = inp.value;
+          const nums = val.split(/[,，\s]+/).filter(x => x && !isNaN(parseFloat(x))).map(x => parseFloat(x.trim()));
+          if (nums.length > 1) {
+            e.preventDefault();
+            // 从当前产地开始，依次填入
+            for (let j = 0; j < nums.length && i + j < originInputs.length; j++) {
+              const target = originInputs[i + j];
+              const o2 = target.dataset.origin;
+              originPrices[o2] = nums[j];
+              target.value = nums[j];
+            }
+            // 如果还有剩余产地，焦点移到下一个未填的
+            renderOriginGrid();
+            updateAllDerived();
+            const newInputs = document.querySelectorAll('.origin-j2-input');
+            if (i + nums.length < newInputs.length) newInputs[i + nums.length].focus();
+            showToast(`已填入 ${Math.min(nums.length, originInputs.length - i)} 个产地`, 'success');
+            return;
+          }
+          // 单个数字粘贴：直接填入当前
+          if (nums.length === 1) {
+            originPrices[inp.dataset.origin] = nums[0];
+            renderOriginGrid();
+            updateAllDerived();
+            // 焦点移到下一个
+            const newInputs = document.querySelectorAll('.origin-j2-input');
+            if (i < newInputs.length - 1) newInputs[i + 1].focus();
+          }
+        }, 10);
       });
     });
     document.querySelectorAll('.o-remove').forEach(btn => {
