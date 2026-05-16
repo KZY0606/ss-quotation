@@ -3,30 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>不锈钢批量报价系统</title>
+  <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
 </head>
 <body>
 
   <!-- Header -->
   <div class="header">
+    <div class="header-bg"></div>
     <div class="header-inner">
       <div class="header-left">
-        <div class="header-logo">🔩</div>
+        <div class="header-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
         <div>
-          <h1>不锈钢批量报价系统</h1>
-          <div class="header-subtitle">Stainless Steel Batch Quotation System</div>
+          <h1>KK不锈钢报价系统</h1>
+          <div class="header-subtitle">Stainless Steel Batch Quotation</div>
         </div>
       </div>
       <div class="header-badges">
-        <span class="badge">宏旺 201J2</span>
-        <span class="badge badge-accent">v1.0</span>
+        <span class="badge">宏旺 201</span>
+        <span class="badge badge-accent">v2.0</span>
       </div>
     </div>
   </div>
 
-  <!-- Toast Container -->
+  <!-- Toast -->
   <div class="toast-container" id="toastContainer"></div>
 
   <div class="container">
@@ -35,27 +41,48 @@
     <div class="card">
       <div class="card-header">
         <div class="card-header-left">
-          <div class="card-icon card-icon-blue">💰</div>
+          <div class="card-icon card-icon-steel">💰</div>
           <h2>价格参数</h2>
         </div>
       </div>
       <div class="card-body">
         <div class="price-config">
-          <div class="price-input-group">
-            <label>含税基价</label>
-            <input type="number" id="basePrice" value="7800" step="10">
+          <div class="price-input-group price-primary">
+            <label>J2 基价</label>
+            <input type="number" id="j2BasePrice" value="7800" step="10">
             <span class="unit">元/吨</span>
           </div>
           <div class="price-derive">
             <span class="price-derive-label">不含税</span>
-            <span class="price-derive-value" id="noTaxBase">7,176</span>
-            <span class="price-derive-hint">元/吨</span>
+            <span class="price-derive-value" id="j2NoTax">7,176</span>
+          </div>
+        </div>
+        <div class="price-derivatives">
+          <div class="price-chip">
+            <span class="chip-label">J1</span>
+            <span class="chip-price" id="j1Price">8,700</span>
+            <span class="chip-offset">+900</span>
+          </div>
+          <div class="price-chip">
+            <span class="chip-label">J3</span>
+            <span class="chip-price" id="j3Price">8,200</span>
+            <span class="chip-offset">+400</span>
+          </div>
+          <div class="price-chip">
+            <span class="chip-label">J4</span>
+            <span class="chip-price" id="j4Price">9,400</span>
+            <span class="chip-offset">+1,600</span>
+          </div>
+          <div class="price-input-group price-j5">
+            <label>J5</label>
+            <input type="number" id="j5BasePrice" value="" placeholder="手动" step="10">
+            <span class="unit">元/吨</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 数据输入 -->
+    <!-- 数据录入 -->
     <div class="card">
       <div class="card-header">
         <div class="card-header-left">
@@ -73,26 +100,20 @@
         </div>
       </div>
       <div class="card-body">
-
-        <!-- Tab Bar -->
         <div class="tab-bar">
-          <button class="tab-btn active" data-tab="text">
-            <span>📝</span> 粘贴文本
-          </button>
-          <button class="tab-btn" data-tab="manual">
-            <span>✏️</span> 手动添加
-          </button>
+          <button class="tab-btn active" data-tab="text"><span>📝</span> 粘贴文本</button>
+          <button class="tab-btn" data-tab="manual"><span>✏️</span> 手动添加</button>
         </div>
 
         <!-- Tab: 粘贴文本 -->
         <div class="tab-panel active" id="tab-text">
-          <textarea id="freeText" class="free-text-area" placeholder="每行一条数据，格式示例：
+          <textarea id="freeText" class="free-text-area" placeholder="每行一条，格式示例：
 宏旺201J2 NO.4 5C-FILM 0.50*1240*C
-宏旺201J2 8K黄钛金 7C-FILM 0.50*1219*2500
-宏旺201J2 2B 0.80*1500*C"></textarea>
+宏旺201J1压延 8K黄钛金 7C-FILM 0.50*1219*2500
+宏旺201J4 2B 0.80*1500*C"></textarea>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
             <div class="text-hint">
-              支持：产地 + 材质 + 表面 + 保护膜 + 规格（<code>厚度×宽度×长度</code>），长度用 <code>C</code> 表示卷板
+              支持 J1-J4/J5 + 压延料，如 <code>201J1压延</code>，长度用 <code>C</code> 表示卷板
             </div>
             <button class="btn btn-primary" id="parseTextBtn">解析并添加</button>
           </div>
@@ -103,7 +124,17 @@
           <div class="manual-row">
             <div class="input-group">
               <label>材质</label>
-              <input type="text" id="manualMaterial" value="201" placeholder="201">
+              <select id="manualMaterial">
+                <option value="201J2">201J2</option>
+                <option value="201J1">201J1</option>
+                <option value="201J3">201J3</option>
+                <option value="201J4">201J4</option>
+                <option value="201J5">201J5 (自定义)</option>
+              </select>
+            </div>
+            <div class="input-group" style="flex-direction:row;align-items:center;gap:6px;padding-top:22px;">
+              <input type="checkbox" id="manualYanYan" style="width:16px;height:16px;accent-color:var(--primary);">
+              <label for="manualYanYan" style="font-size:12px;font-weight:600;color:var(--warning);cursor:pointer;text-transform:uppercase;letter-spacing:0.3px;">压延料</label>
             </div>
             <div class="input-group">
               <label>表面</label>
@@ -150,11 +181,10 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
 
-    <!-- 结果表格 -->
+    <!-- 结果 -->
     <div class="card" id="resultCard" style="display:none;">
       <div class="card-header">
         <div class="card-header-left">
@@ -162,98 +192,46 @@
           <h2>报价结果</h2>
         </div>
         <div class="toolbar">
-          <button class="btn btn-ghost" id="expandAllBtn" title="展开/收起全部明细">📋 全部明细</button>
+          <button class="btn btn-ghost" id="expandAllBtn">📋 全部明细</button>
           <button class="btn btn-outline" id="exportBtn2">📥 导出 Excel</button>
         </div>
       </div>
-
-      <!-- Stats -->
       <div class="stats-bar" id="statsBar">
-        <div class="stat-item">
-          <span class="stat-dot stat-dot-total"></span>
-          <span class="stat-label">总条数</span>
-          <span class="stat-value" id="totalCount">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-dot stat-dot-success"></span>
-          <span class="stat-label">计算成功</span>
-          <span class="stat-value" style="color:var(--success)" id="successCount">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-dot stat-dot-error"></span>
-          <span class="stat-label">错误</span>
-          <span class="stat-value" style="color:var(--danger)" id="errorCount">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-dot stat-dot-price"></span>
-          <span class="stat-label">最低含税售价</span>
-          <span class="stat-value" style="color:#7c3aed" id="minSaleTax">-</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-dot stat-dot-price"></span>
-          <span class="stat-label">最高含税售价</span>
-          <span class="stat-value" style="color:#7c3aed" id="maxSaleTax">-</span>
-        </div>
+        <div class="stat-item"><span class="stat-dot stat-dot-total"></span><span class="stat-label">总条数</span><span class="stat-value" id="totalCount">0</span></div>
+        <div class="stat-item"><span class="stat-dot stat-dot-success"></span><span class="stat-label">成功</span><span class="stat-value" style="color:var(--success)" id="successCount">0</span></div>
+        <div class="stat-item"><span class="stat-dot stat-dot-error"></span><span class="stat-label">错误</span><span class="stat-value" style="color:var(--danger)" id="errorCount">0</span></div>
+        <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最低含税售价</span><span class="stat-value" style="color:var(--accent)" id="minSaleTax">-</span></div>
+        <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最高含税售价</span><span class="stat-value" style="color:var(--accent)" id="maxSaleTax">-</span></div>
       </div>
-
-      <!-- Table -->
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th style="width:40px;"></th>
-              <th style="width:36px;">#</th>
-              <th>产地</th>
-              <th>材质</th>
-              <th>表面</th>
-              <th>厚度</th>
-              <th>宽度</th>
-              <th>长度</th>
-              <th>保护膜1</th>
-              <th>保护膜2</th>
-              <th>含税成本</th>
-              <th>不含税成本</th>
-              <th>边/板</th>
-              <th>含税售价</th>
-              <th>不含税售价</th>
-              <th style="width:40px;"></th>
+              <th style="width:36px;"></th><th style="width:32px;">#</th><th>产地</th><th>材质</th><th>表面</th><th>厚度</th><th>宽度</th><th>长度</th><th>保护膜1</th><th>保护膜2</th><th>含税成本</th><th>不含税成本</th><th>边/板</th><th>含税售价</th><th>不含税售价</th><th style="width:36px;"></th>
             </tr>
           </thead>
-          <tbody id="resultBody">
-          </tbody>
+          <tbody id="resultBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Empty State -->
     <div class="empty-state" id="emptyState">
-      <div class="empty-icon">📋</div>
-      <h3>暂无数据</h3>
-      <p>上传 Excel 文件或手动添加数据开始报价</p>
+      <div class="empty-icon">🔩</div>
+      <h3>KK不锈钢报价系统</h3>
+      <p>上传 Excel 或手动添加数据开始报价</p>
     </div>
 
     <div class="footer">
-      不锈钢批量报价系统 · 宏旺 201J2 · 数据仅供参考
+      KK不锈钢报价系统 · 宏旺 201 (J1/J2/J3/J4/J5) · 含压延料
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/parser.js"></script>
   <script src="js/app.js"></script>
-
   <script>
-    // 实时更新不含税基价
-    const bpInput = document.getElementById('basePrice');
-    const noTaxSpan = document.getElementById('noTaxBase');
-    bpInput.addEventListener('input', () => {
-      const v = parseFloat(bpInput.value) || 0;
-      noTaxSpan.textContent = Math.round(v * 0.92).toLocaleString();
-    });
-
-    // Tab 切换
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -263,6 +241,5 @@
       });
     });
   </script>
-
 </body>
 </html>
