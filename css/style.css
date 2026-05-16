@@ -538,6 +538,22 @@ tr.main-row:hover .delete-btn { opacity:1; }
 }
 .o-remove:hover { background:var(--danger-bg); color:var(--danger); }
 
+/* Lock button */
+.o-lock {
+  background:none; border:none; cursor:pointer;
+  padding:2px 4px; border-radius:4px;
+  font-size:15px; line-height:1;
+  opacity:0.4; transition:all 0.15s;
+}
+.o-lock:hover { opacity:1; background:var(--border-light); }
+.o-lock.locked { opacity:1; }
+.o-lock.locked + .oj2 input {
+  background:var(--success-bg);
+  border-color:var(--success);
+  color:var(--success);
+  font-weight:700;
+}
+
 .origin-footer {
   display:flex; align-items:center;
   justify-content:space-between;
