@@ -72,52 +72,39 @@ const ExcelParser = (() => {
    * 解析单行数据
    */
   function parseRow(row, headers, basePrice) {
-    // 如果有表头，按列名提取
     if (headers) {
       const item = { basePrice };
       for (let i = 0; i < headers.length; i++) {
         const val = String(row[i] || '').trim();
         const h = headers[i];
 
-        if (h.includes('产地')) item.origin = val;
+        if (h.includes('产地') || h.includes('origin')) item.origin = val;
         else if (h.includes('材质')) item.material = val;
         else if (h.includes('表面')) item.surface = val;
         else if (h.includes('厚度') || h.includes('thickness')) item.thickness = val;
         else if (h.includes('宽度') || h.includes('width')) item.width = val;
         else if (h.includes('长度') || h.includes('length')) item.length = val;
         else if (h.includes('规格') || h.includes('spec')) {
-          // 规格列可能包含 "0.50*1240*C"
           const spec = PricingEngine.parseSpec(val);
-          if (spec) {
-            item.thickness = spec.thickness;
-            item.width = spec.width;
-            item.length = spec.length;
-          }
+          if (spec) { item.thickness = spec.thickness; item.width = spec.width; item.length = spec.length; }
         }
         else if (h.includes('膜1') || h === '保护膜' || h.includes('film1') || h.includes('膜一')) item.film1 = val;
         else if (h.includes('膜2') || h.includes('film2') || h.includes('膜二')) item.film2 = val;
+        else if (h.includes('压延') || h.includes('yan') || h.includes('yanyan')) item.isYanYan = val === '是' || val === 'Y' || val === 'yes';
       }
       return item;
     }
 
-    // 无表头：尝试自由文本解析
-    // 将整行合并为一个字符串
+    // 无表头：自由文本
     const text = row.join(' ').trim();
     if (!text) return null;
-
-    // 尝试从文本中提取规格
     const specRegex = /(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)\s*[*×xX]\s*(\S+)/;
     if (specRegex.test(text)) {
       const parsed = PricingEngine.parseFreeText(text, basePrice);
-      return parsed;
+      if (typeof parsed === 'object') return parsed;
     }
-
-    // 如果只有规格格式，没有其他信息
     const spec = PricingEngine.parseSpec(text);
-    if (spec) {
-      return { ...spec, basePrice };
-    }
-
+    if (spec) return { ...spec, basePrice };
     return null;
   }
 
@@ -144,14 +131,14 @@ const ExcelParser = (() => {
       }
       const d = r.detail;
       rows.push([
-        r.index, d.material || '', d.surface || '', d.thickness, d.width, d.length,
-        d.film1 || '', d.film2 || '', d.basePrice,
-        d.thickSurcharge, d.surfaceFeePerTon, d.film1PerTon, d.film2PerTon,
-        d.costTax, d.costNoTax,
-        d.edgeType === 'rough' ? '毛边' : '齐边',
-        d.boardType === 'coil' ? '卷板' : '平板',
-        d.markup,
-        d.saleTax, d.saleNoTax
+        r.index, r.detail.origin || '', r.detail.material || '', r.detail.surface || '', r.detail.thickness, r.detail.width, r.detail.length,
+        r.detail.film1 || '', r.detail.film2 || '', r.detail.basePrice,
+        r.detail.thickSurcharge, r.detail.surfaceFeePerTon, r.detail.film1PerTon, r.detail.film2PerTon,
+        r.detail.costTax, r.detail.costNoTax,
+        r.detail.edgeType === 'rough' ? '毛边' : '齐边',
+        r.detail.boardType === 'coil' ? '卷板' : '平板',
+        r.detail.markup,
+        r.detail.saleTax, r.detail.saleNoTax
       ]);
     }
 
