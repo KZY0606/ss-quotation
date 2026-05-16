@@ -65,6 +65,16 @@ const App = (() => {
       dom('manualMaterial')?.focus();
     });
 
+    // J5 基价输入
+    const j5Inp = dom('j5BasePrice');
+    if (j5Inp) {
+      j5Inp.addEventListener('input', () => {
+        j5Price = parseFloat(j5Inp.value) || 0;
+        const j5Show = dom('j5PriceShow');
+        if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
+      });
+    }
+
     // 手动添加表单：Enter 跳转下一个字段，最后一个字段 Enter 直接添加
     const manualFields = ['manualOrigin', 'manualMaterial', 'manualSurface', 'manualThickness', 'manualWidth', 'manualLength', 'manualFilm1', 'manualFilm2'];
     manualFields.forEach((id, i) => {
@@ -113,7 +123,7 @@ const App = (() => {
       inp.addEventListener('input', () => {
         const o = inp.dataset.origin;
         originPrices[o] = parseFloat(inp.value) || 0;
-        renderOriginGrid();
+        updateDerivedDisplay(o);  // 只更新文本，不重建DOM
         updateAllDerived();
       });
       // Enter → 下一个产地
@@ -137,10 +147,10 @@ const App = (() => {
               const o2 = target.dataset.origin;
               originPrices[o2] = nums[j];
               target.value = nums[j];
+              updateDerivedDisplay(o2);  // 只更新文本
             }
-            // 如果还有剩余产地，焦点移到下一个未填的
-            renderOriginGrid();
             updateAllDerived();
+            // 焦点移到下一个未填的
             const newInputs = document.querySelectorAll('.origin-j2-input');
             if (i + nums.length < newInputs.length) newInputs[i + nums.length].focus();
             showToast(`已填入 ${Math.min(nums.length, originInputs.length - i)} 个产地`, 'success');
@@ -148,8 +158,9 @@ const App = (() => {
           }
           // 单个数字粘贴：直接填入当前
           if (nums.length === 1) {
-            originPrices[inp.dataset.origin] = nums[0];
-            renderOriginGrid();
+            const o = inp.dataset.origin;
+            originPrices[o] = nums[0];
+            updateDerivedDisplay(o);  // 只更新文本
             updateAllDerived();
             // 焦点移到下一个
             const newInputs = document.querySelectorAll('.origin-j2-input');
@@ -171,6 +182,20 @@ const App = (() => {
     if (sel) {
       sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
       syncManualPrices();
+    }
+  }
+
+  function updateDerivedDisplay(origin) {
+    const rows = document.querySelectorAll('.origin-row');
+    for (const row of rows) {
+      if (row.querySelector('.oname')?.textContent === origin) {
+        const derived = row.querySelector('.oderived');
+        const p = originPrices[origin] || 0;
+        derived.innerHTML = p > 0
+          ? `J1: <b>${(p+900).toLocaleString()}</b>  J3: <b>${(p+400).toLocaleString()}</b>  J4: <b>${(p+1600).toLocaleString()}</b>`
+          : '<span class="oderived-hint">请填写 J2 基价</span>';
+        break;
+      }
     }
   }
 
@@ -202,17 +227,8 @@ const App = (() => {
   }
 
   function updateAllDerived() {
-    // Update J5 display
     const j5Show = dom('j5PriceShow');
     if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
-    // J5 input sync
-    const j5Inp = dom('j5BasePrice');
-    if (j5Inp) {
-      j5Inp.addEventListener('input', () => {
-        j5Price = parseFloat(j5Inp.value) || 0;
-        if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
-      });
-    }
   }
 
   // ========== 数据操作 ==========
