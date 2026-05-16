@@ -9,6 +9,7 @@ const App = (() => {
   // 各产地 J2 基价
   let originPrices = {};
   let originOrder = [...ORIGIN_PRESETS];
+  let lockedOrigins = {}; // { "宏旺": true, "青山": ... } 锁定状态
   let j5Price = 0;
 
   // ========== 基价计算 ==========
@@ -29,6 +30,7 @@ const App = (() => {
     // Initialize origin prices
     originOrder.forEach(o => { originPrices[o] = 0; });
     originPrices['宏旺'] = 7800; // default
+    loadLockedPrices(); // 恢复已锁定的价格
 
     cacheDom();
     bindEvents();
@@ -101,12 +103,16 @@ const App = (() => {
       const div = document.createElement('div');
       div.className = 'origin-row';
       const price = originPrices[origin] || 0;
+      const locked = !!lockedOrigins[origin];
       const j1 = price ? price + 900 : 0;
       const j3 = price ? price + 400 : 0;
       const j4 = price ? price + 1600 : 0;
       div.innerHTML = `
         <span class="oname">${origin}</span>
-        <div class="oj2"><label>J2</label><input type="number" class="origin-j2-input" data-origin="${origin}" value="${price || ''}" step="10" placeholder="0"></div>
+        <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" title="${locked ? '点击解锁' : '点击锁定'}">
+          ${locked ? '🔒' : '🔓'}
+        </button>
+        <div class="oj2"><label>J2</label><input type="number" class="origin-j2-input" data-origin="${origin}" value="${price || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
         <span class="oarrow">→</span>
         <span class="oderived">
           ${price > 0 
@@ -177,6 +183,12 @@ const App = (() => {
         renderOriginGrid();
       });
     });
+    // Lock toggle
+    document.querySelectorAll('.o-lock').forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleLock(btn.dataset.origin);
+      });
+    });
     // Manual add dropdown
     const sel = dom('manualOrigin');
     if (sel) {
@@ -229,6 +241,41 @@ const App = (() => {
   function updateAllDerived() {
     const j5Show = dom('j5PriceShow');
     if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
+  }
+
+  // ========== 锁定价格持久化 ==========
+  function saveLockedPrices() {
+    try {
+      const data = {};
+      for (const [o, p] of Object.entries(originPrices)) {
+        if (lockedOrigins[o]) data[o] = p;
+      }
+      localStorage.setItem('kk_locked_prices', JSON.stringify(data));
+    } catch (e) { /* ignore */ }
+  }
+
+  function loadLockedPrices() {
+    try {
+      const raw = localStorage.getItem('kk_locked_prices');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      for (const [o, p] of Object.entries(data)) {
+        if (originPrices.hasOwnProperty(o) || originOrder.includes(o)) {
+          originPrices[o] = p;
+          lockedOrigins[o] = true;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function toggleLock(origin) {
+    lockedOrigins[origin] = !lockedOrigins[origin];
+    if (!lockedOrigins[origin] && originPrices[origin] === 0) {
+      // 解锁且价格为 0 → 恢复默认提示
+    }
+    saveLockedPrices();
+    renderOriginGrid();
+    updateAllDerived();
   }
 
   // ========== 数据操作 ==========
