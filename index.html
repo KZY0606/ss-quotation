@@ -45,23 +45,40 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="origin-grid">
-          <div class="origin-grid-header">
-            <span>🏢 产地基价</span>
-            <span class="og-hint">填写各产地 J2 基价，<b>Enter 跳转下一个</b>，<b>批量粘贴</b>如 <code>7800, 7900, 7700</code> 自动分布</span>
-          </div>
-          <div class="origin-rows" id="originRows"></div>
-          <div class="origin-footer">
-            <div class="add-origin" style="display:flex;gap:6px;align-items:center;">
-              <input id="newOriginInput" placeholder="输入新产地" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:120px;">
-              <button class="btn btn-sm btn-outline" id="addOriginBtn">+ 添加</button>
+        <div class="config-tabs">
+          <button class="config-tab active" data-config="origins">🏢 基价</button>
+          <button class="config-tab" data-config="films">🔖 保护膜</button>
+          <button class="config-tab" data-config="surfaces">✨ 表面加工</button>
+        </div>
+
+        <!-- 基价 -->
+        <div class="config-panel active" data-config="origins">
+          <div class="origin-grid">
+            <div class="origin-rows" id="originRows"></div>
+            <div class="origin-footer">
+              <div class="add-origin" style="display:flex;gap:6px;align-items:center;">
+                <input id="newOriginInput" placeholder="输入新产地" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:120px;">
+                <button class="btn btn-sm btn-outline" id="addOriginBtn">+ 添加</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">J5 统一基价</label>
+                <input type="number" id="j5BasePrice" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;" placeholder="手动">
+                <span style="font-size:11px;color:var(--text-muted);">→ <b id="j5PriceShow" style="color:var(--accent);">未设置</b> 元/吨</span>
+              </div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">J5 统一基价</label>
-              <input type="number" id="j5BasePrice" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;" placeholder="手动">
-              <span style="font-size:11px;color:var(--text-muted);">→ <b id="j5PriceShow" style="color:var(--accent);">未设置</b> 元/吨</span>
-            </div>
           </div>
+        </div>
+
+        <!-- 保护膜配置 -->
+        <div class="config-panel" data-config="films">
+          <div class="config-hint">修改单价后点击 🔒 锁定，刷新不会丢失</div>
+          <div id="filmConfigTable" class="config-table-wrap"></div>
+        </div>
+
+        <!-- 表面加工费配置 -->
+        <div class="config-panel" data-config="surfaces">
+          <div class="config-hint">修改单价后点击 🔒 锁定，刷新不会丢失</div>
+          <div id="surfaceConfigTable" class="config-table-wrap"></div>
         </div>
       </div>
     </div>
