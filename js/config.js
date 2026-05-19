@@ -159,6 +159,9 @@ const SURFACE_FEES = {
   ]
 };
 
+// 小珠光压花附加费 (元/吨)
+const LINEN_FEE = 300;
+
 // 保护膜 (元/平米)
 const FILM_FEES = {
   '垫纸':           0.3,
@@ -216,6 +219,13 @@ const SURFACE_ALIASES = {
   '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
   '拉丝香槟金': '拉丝香槟金',
+  // 小珠光 (linen) 复合表面
+  '小珠光': 'LINEN', 'linen': 'LINEN',
+  'ba linen': 'BA-LINEN', 'ba-linen': 'BA-LINEN', 'ba小珠光': 'BA-LINEN', 'ba': '单面抛光',
+  '8k linen': '8K-LINEN', '8k-linen': '8K-LINEN', '镜面8k小珠光': '8K-LINEN', '镜面8K小珠光': '8K-LINEN',
+  '8k黄钛金小珠光': '8K黄钛金-LINEN', '镜面8k黄钛金小珠光': '8K黄钛金-LINEN',
+  '8k玫瑰金小珠光': '8K玫瑰金-LINEN', '8k黑钛金小珠光': '8K黑钛金-LINEN',
+  '拉丝黄钛金小珠光': '拉丝黄钛金-LINEN', '拉丝玫瑰金小珠光': '拉丝玫瑰金-LINEN',
   '单面抛光': '单面抛光', '双面抛光': '双面抛光',
 };
 
