@@ -152,11 +152,11 @@ const ExcelParser = (() => {
   function exportToExcel(results, filename) {
     const rows = [];
     // 给客户看的简洁表头
-    rows.push(['产地', '材质', '规格', '膜', '价格']);
+    rows.push(['产地', '材质', '表面', '规格', '膜', '价格']);
 
     for (const r of results) {
       if (!r.success) {
-        rows.push([r.index, '', '', '', `错误: ${r.errors.join('; ')}`]);
+        rows.push([r.index, '', '', '', '', `错误: ${r.errors.join('; ')}`]);
         continue;
       }
       const d = r.detail;
@@ -168,6 +168,7 @@ const ExcelParser = (() => {
       rows.push([
         d.origin || '',
         d.material || '',
+        d.surface || '',
         spec,
         film,
         d.saleNoTax
@@ -178,6 +179,7 @@ const ExcelParser = (() => {
     ws['!cols'] = [
       { wch: 10 }, // 产地
       { wch: 10 }, // 材质
+      { wch: 16 }, // 表面
       { wch: 22 }, // 规格
       { wch: 24 }, // 膜
       { wch: 14 }  // 价格
