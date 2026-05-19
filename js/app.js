@@ -598,10 +598,11 @@ const App = (() => {
     if (d.surfaceFeeSqm > 0) html += step(`③ 表面加工费 (${d.surface}, ${fmt(d.surfaceFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.surfaceFeePerTon, '元/吨', true);
     else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.surface})`, d.surfaceFeePerTon, '元/吨', true);
     else html += step(`③ 表面加工费 (${d.surface})`, 0, '', false);
-    if (d.film1PerTon > 0) html += step(`④ 保护膜1 (${d.film1}, ${d.film1FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film1PerTon, '元/吨', true);
-    else html += step('④ 保护膜1', 0, '', false);
-    if (d.film2PerTon > 0) html += step(`⑤ 保护膜2 (${d.film2}, ${d.film2FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film2PerTon, '元/吨', true);
-    else if (d.film2?.trim()) html += step('⑤ 保护膜2', 0, '', false);
+    if (d.linenFeePerTon) html += step(`④ 小珠光压花`, d.linenFeePerTon, '元/吨', true);
+    if (d.film1PerTon > 0) html += step(`${d.linenFeePerTon ? '⑤' : '④'} 保护膜1 (${d.film1}, ${d.film1FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film1PerTon, '元/吨', true);
+    else html += step(`${d.linenFeePerTon ? '⑤' : '④'} 保护膜1`, 0, '', false);
+    if (d.film2PerTon > 0) html += step(`${d.linenFeePerTon ? '⑥' : d.film1PerTon ? '⑤' : '④'} 保护膜2 (${d.film2}, ${d.film2FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film2PerTon, '元/吨', true);
+    else if (d.film2?.trim()) html += step(`${d.linenFeePerTon ? '⑥' : d.film1PerTon ? '⑤' : '④'} 保护膜2`, 0, '', false);
     html += total('含税成本小计', d.costRaw, 'tax');
     html += total('四舍五入 (十位)', d.costTax, 'tax');
     html += '</div><div class="calc-section"><div class="calc-section-title">不含税成本 & 销售价</div>';
