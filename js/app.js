@@ -12,6 +12,9 @@ const App = (() => {
   let lockedOrigins = {}; // { "宏旺": true, "青山": ... } 锁定状态
   let j5Price = 0;
 
+  // 用户自定义价格覆盖（保护膜、表面加工费等）
+  let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
+
   // ========== 基价计算 ==========
   function getMaterialPrice(origin, material) {
     const j2 = originPrices[origin];
@@ -31,10 +34,14 @@ const App = (() => {
     originOrder.forEach(o => { originPrices[o] = 0; });
     originPrices['宏旺'] = 7800; // default
     loadLockedPrices(); // 恢复已锁定的价格
+    loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
+    PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
 
     cacheDom();
     bindEvents();
     renderOriginGrid();
+    renderFilmConfig();
+    renderSurfaceConfig();
     updateAllDerived();
     render();
   }
@@ -61,6 +68,20 @@ const App = (() => {
     els.parseTextBtn.addEventListener('click', parseText);
     els.addOriginBtn.addEventListener('click', addOrigin);
     els.expandAllBtn.addEventListener('click', toggleAllExpand);
+
+    // 价格参数配置选项卡切换
+    document.querySelectorAll('.config-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.config-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = document.querySelector(`.config-panel[data-config="${btn.dataset.config}"]`);
+        if (panel) panel.classList.add('active');
+        // 渲染对应面板
+        if (btn.dataset.config === 'films') renderFilmConfig();
+        if (btn.dataset.config === 'surfaces') renderSurfaceConfig();
+      });
+    });
 
     dom('manualOrigin')?.addEventListener('change', () => {
       syncManualPrices();
@@ -278,6 +299,99 @@ const App = (() => {
     updateAllDerived();
   }
 
+  // ========== 价格覆盖管理 ==========
+  function savePriceOverrides() {
+    try { localStorage.setItem('kk_price_overrides', JSON.stringify(priceOverrides)); }
+    catch (e) { /* ignore */ }
+  }
+
+  function loadPriceOverrides() {
+    try {
+      const raw = localStorage.getItem('kk_price_overrides');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      priceOverrides.filmFees = data.filmFees || {};
+      priceOverrides.surfaceFees = data.surfaceFees || {};
+      priceOverrides.filmLocked = data.filmLocked || {};
+      priceOverrides.surfaceLocked = data.surfaceLocked || {};
+    } catch (e) { /* ignore */ }
+  }
+
+  function renderFilmConfig() {
+    const wrap = dom('filmConfigTable');
+    if (!wrap) return;
+    let html = '<table><thead><tr><th>保护膜名称</th><th>单价(元/平米)</th><th>默认</th><th></th></tr></thead><tbody>';
+    for (const [name, defaultPrice] of Object.entries(FILM_FEES)) {
+      const val = priceOverrides.filmFees[name] ?? defaultPrice;
+      const locked = !!priceOverrides.filmLocked[name];
+      html += `<tr>
+        <td><span class="cfg-name">${name}</span></td>
+        <td><input type="number" class="cfg-price-input film-price-inp" data-name="${name}" value="${val}" step="0.1" ${locked ? 'readonly' : ''}></td>
+        <td><span class="cfg-default">${defaultPrice}</span></td>
+        <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="film">${locked ? '🔒' : '🔓'}</button></td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+
+    // 绑定输入事件
+    wrap.querySelectorAll('.film-price-inp').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const name = inp.dataset.name;
+        priceOverrides.filmFees[name] = parseFloat(inp.value) || 0;
+        savePriceOverrides();
+      });
+    });
+    // 绑定锁定事件
+    wrap.querySelectorAll('.cfg-lock-btn[data-type="film"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        priceOverrides.filmLocked[name] = !priceOverrides.filmLocked[name];
+        savePriceOverrides();
+        renderFilmConfig(); // 刷新显示
+      });
+    });
+  }
+
+  function renderSurfaceConfig() {
+    const wrap = dom('surfaceConfigTable');
+    if (!wrap) return;
+    let html = '<table><thead><tr><th>表面名称</th><th>单价(元/平米)</th><th>默认(元/平米)</th><th></th></tr></thead><tbody>';
+    for (const [name, cfg] of Object.entries(SURFACE_FEES)) {
+      if (typeof cfg === 'object' && cfg.type === 'sqm') {
+        const defaultPrice = cfg.price;
+        const val = priceOverrides.surfaceFees[name] ?? defaultPrice;
+        const locked = !!priceOverrides.surfaceLocked[name];
+        html += `<tr>
+          <td><span class="cfg-name">${name}</span></td>
+          <td><input type="number" class="cfg-price-input surf-price-inp" data-name="${name}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
+          <td><span class="cfg-default">${defaultPrice}</span></td>
+          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
+        </tr>`;
+      }
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+
+    // 绑定输入事件
+    wrap.querySelectorAll('.surf-price-inp').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const name = inp.dataset.name;
+        priceOverrides.surfaceFees[name] = parseFloat(inp.value) || 0;
+        savePriceOverrides();
+      });
+    });
+    // 绑定锁定事件
+    wrap.querySelectorAll('.cfg-lock-btn[data-type="surf"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        priceOverrides.surfaceLocked[name] = !priceOverrides.surfaceLocked[name];
+        savePriceOverrides();
+        renderSurfaceConfig();
+      });
+    });
+  }
+
   // ========== 数据操作 ==========
   function handleFile(e) {
     const f = e.target.files[0];
@@ -350,6 +464,8 @@ const App = (() => {
     // Sync J5
     const j5Inp = dom('j5BasePrice');
     if (j5Inp) j5Price = parseFloat(j5Inp.value) || 0;
+    // Inject user price overrides
+    PricingEngine.setUserOverrides(priceOverrides);
     // Update base prices
     let missing = [];
     dataItems.forEach(item => {
