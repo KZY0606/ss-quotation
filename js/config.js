@@ -82,21 +82,72 @@ const SURFACE_FEES = {
     { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 18.0, unit: 'sqm' }
   ],
 
-  '8K黄钛金':   { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6.5  },
-  '8K玫瑰金':   { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7.5  },
-  '8K黑钛金':   { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5.0  },
-  '8K宝石蓝':   { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 12.0 },
-  '8K紫罗兰':   { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 16.0 },
-  '8K翡翠绿':   { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 27.0 },
-  '8K紫红':     { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 19.0 },
-  '8K中国红':   { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 22.0 },
-  '8K古铜':     { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 13.0 },
+  '8K黄钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11,  unit: 'sqm' }
+  ],
+  '8K玫瑰金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' }
+  ],
+  '8K黑钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
+  '8K宝石蓝': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 16.5, unit: 'sqm' }
+  ],
+  '8K紫罗兰': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 14.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 20.5, unit: 'sqm' }
+  ],
+  '8K翡翠绿': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 25.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 31.5, unit: 'sqm' }
+  ],
+  '8K紫红': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 17.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 23.5, unit: 'sqm' }
+  ],
+  '8K中国红': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 20.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 26.5, unit: 'sqm' }
+  ],
+  '8K古铜': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 11.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 17.5, unit: 'sqm' }
+  ],
 
-  '拉丝黄钛金':       { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5.5  },
-  '拉丝玫瑰金':       { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6.5  },
-  '拉丝黑钛金':       { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4.0  },
-  '拉丝古铜哑光抗指纹': { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 15.5 },
-  '拉丝古铜亮光抗指纹': { type: 'sqm', tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 13.0 },
+  '拉丝黄钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9,   unit: 'sqm' }
+  ],
+  '拉丝玫瑰金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
+  '拉丝黑钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
+  ],
+  '拉丝古铜哑光抗指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 14.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 18.5, unit: 'sqm' }
+  ],
+  '拉丝古铜亮光抗指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 11.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 15.5, unit: 'sqm' }
+  ],
+
+  '8K香槟金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' }
+  ],
+  '拉丝香槟金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
 
   '单面抛光': [
     { tMin: 0.20, tMax: 0.29, price: 200 },
@@ -143,7 +194,8 @@ const ORIGIN_KEYWORDS = ['宏旺', '青山', '联众', '甬金', '太钢', '德�
 const SURFACE_ALIASES = {
   'no.4': 'NO.4', 'no4': 'NO.4', 'no 4': 'NO.4', 'hl': 'HL',
   '2b': '2B', '8k': '8K',
-  '磨砂': 'NO.4', '雪花砂': 'NO.4',
+  '磨砂': 'NO.4', '雪花砂': 'NO.4', '砂面': 'NO.4',
+  '拉丝': 'HL',
   '镜面8k': '8K', '镜面8K': '8K',
   '黄钛金': '8K黄钛金', '8k黄钛金': '8K黄钛金', '镜面黄钛金': '8K黄钛金', '镜面8k黄钛金': '8K黄钛金',
   'gold mirror 8k': '8K黄钛金', 'gold mirror': '8K黄钛金',
@@ -162,6 +214,8 @@ const SURFACE_ALIASES = {
   'gold no4': '拉丝黄钛金',
   '拉丝古铜哑光抗指纹': '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹': '拉丝古铜亮光抗指纹',
   '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜',
+  '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
+  '拉丝香槟金': '拉丝香槟金',
   '单面抛光': '单面抛光', '双面抛光': '双面抛光',
 };
 
