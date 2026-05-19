@@ -18,9 +18,15 @@ const ExcelParser = (() => {
           let headerRowIdx = -1;
 
           // 检测表头行
-          for (let i = 0; i < Math.min(3, rows.length); i++) {
+          for (let i = 0; i < Math.min(5, rows.length); i++) {
             const rowText = rows[i].join(' ').toLowerCase();
             if (rowText.includes('材质') || rowText.includes('表面') || rowText.includes('厚度')) {
+              headers = rows[i];
+              headerRowIdx = i;
+              break;
+            }
+            // 检测英文表头: THICKNESS / MATERIAL / PVC
+            if (rowText.includes('thickness') && rowText.includes('material')) {
               headers = rows[i];
               headerRowIdx = i;
               break;
@@ -28,20 +34,62 @@ const ExcelParser = (() => {
           }
 
           if (headers) {
-            // 有表头：从表头下一行开始解析
-            for (let i = headerRowIdx + 1; i < rows.length; i++) {
-              const item = parseRow(rows[i], headers, basePrice);
-              if (item) {
-                // 如果 row 里没有规格, 看是否有 厚度/宽度/长度 列
-                if (!item.thickness) {
-                  const thicknessIdx = headers.findIndex(h => h.includes('厚度'));
-                  const widthIdx = headers.findIndex(h => h.includes('宽度'));
-                  const lengthIdx = headers.findIndex(h => h.includes('长度'));
-                  if (thicknessIdx >= 0 && rows[i][thicknessIdx]) item.thickness = String(rows[i][thicknessIdx]).trim();
-                  if (widthIdx >= 0 && rows[i][widthIdx]) item.width = String(rows[i][widthIdx]).trim();
-                  if (lengthIdx >= 0 && rows[i][lengthIdx]) item.length = String(rows[i][lengthIdx]).trim();
+            // 判断是否英文表头格式
+            const hText = headers.join(' ').toLowerCase();
+            const isEnglish = hText.includes('thickness');
+
+            if (isEnglish) {
+              // 英文表头格式：THICKNESS | MATERIAL J2 1240 x 2500 | WEIGHT | QTY | PVC
+              // 从 MATERIAL 表头单元格提取材质和规格
+              const matHeader = String(headers[1] || '').trim(); // B1
+              const materialMatch = matHeader.match(/(J\d+)\s+(\d+)\s*x\s*(\d+)/i);
+              const defaultMaterial = materialMatch ? '201' + materialMatch[1].toUpperCase() : '201J2';
+              const defaultWidth = materialMatch ? materialMatch[2] : '1240';
+              const defaultLength = materialMatch ? materialMatch[3] : '2500';
+
+              for (let i = headerRowIdx + 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row[0] && !row[1]) continue; // 跳过空行
+                const thkRaw = String(row[0] || '').trim().replace(/\s*mm\s*/i, '');
+                const surfRaw = String(row[1] || '').trim();
+                const filmRaw = String(row[4] || '').trim();
+                if (!thkRaw || !surfRaw) continue;
+                // 跳过分类标题行（没有厚度数字的纯文本行）
+                if (isNaN(parseFloat(thkRaw))) continue;
+
+                // 标准化表面和膜名（通过 engine 的别名系统）
+                const surface = PricingEngine.normalizeSurface(surfRaw);
+                const film = PricingEngine.normalizeFilm(filmRaw);
+
+                items.push({
+                  origin: '宏旺',
+                  material: defaultMaterial,
+                  surface: surface || surfRaw,
+                  thickness: thkRaw,
+                  width: defaultWidth,
+                  length: defaultLength,
+                  film1: film || '',
+                  film2: '',
+                  isYanYan: false,
+                  basePrice: 0
+                });
+              }
+            } else {
+              // 有表头：从表头下一行开始解析
+              for (let i = headerRowIdx + 1; i < rows.length; i++) {
+                const item = parseRow(rows[i], headers, basePrice);
+                if (item) {
+                  // 如果 row 里没有规格, 看是否有 厚度/宽度/长度 列
+                  if (!item.thickness) {
+                    const thicknessIdx = headers.findIndex(h => h.includes('厚度'));
+                    const widthIdx = headers.findIndex(h => h.includes('宽度'));
+                    const lengthIdx = headers.findIndex(h => h.includes('长度'));
+                    if (thicknessIdx >= 0 && rows[i][thicknessIdx]) item.thickness = String(rows[i][thicknessIdx]).trim();
+                    if (widthIdx >= 0 && rows[i][widthIdx]) item.width = String(rows[i][widthIdx]).trim();
+                    if (lengthIdx >= 0 && rows[i][lengthIdx]) item.length = String(rows[i][lengthIdx]).trim();
+                  }
+                  items.push(item);
                 }
-                items.push(item);
               }
             }
           } else {
