@@ -15,6 +15,10 @@ const App = (() => {
   // 用户自定义价格覆盖（保护膜、表面加工费等）
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
 
+  // 共享配置
+  const SHARED_CONFIG_URL = 'https://raw.githubusercontent.com/KZY0606/ss-quotation/main/data/shared-prices.json';
+  const SHARED_CONFIG_API = 'https://api.github.com/repos/KZY0606/ss-quotation/contents/data/shared-prices.json';
+
   // ========== 基价计算 ==========
   function getMaterialPrice(origin, material) {
     const j2 = originPrices[origin];
@@ -44,6 +48,16 @@ const App = (() => {
     renderSurfaceConfig();
     updateAllDerived();
     render();
+
+    // 异步加载共享配置
+    setTimeout(() => {
+      applySharedPrices().then(() => {
+        renderOriginGrid();
+        renderFilmConfig();
+        renderSurfaceConfig();
+      });
+    }, 100);
+  }
   }
 
   function cacheDom() {
@@ -68,6 +82,7 @@ const App = (() => {
     els.parseTextBtn.addEventListener('click', parseText);
     els.addOriginBtn.addEventListener('click', addOrigin);
     els.expandAllBtn.addEventListener('click', toggleAllExpand);
+    dom('publishSharedBtn')?.addEventListener('click', publishSharedPrices);
 
     // 价格参数配置选项卡切换
     document.querySelectorAll('.config-tab').forEach(btn => {
@@ -390,6 +405,125 @@ const App = (() => {
         renderSurfaceConfig();
       });
     });
+  }
+
+  // ========== 共享配置 ==========
+  async function fetchSharedPrices() {
+    try {
+      const res = await fetch(SHARED_CONFIG_URL + '?t=' + Date.now());
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { return null; }
+  }
+
+  async function applySharedPrices() {
+    const shared = await fetchSharedPrices();
+    const status = dom('sharedStatus');
+    if (!shared) {
+      if (status) status.textContent = '⚠️ 未读取到共享配置';
+      return;
+    }
+    // 应用共享的基价
+    if (shared.originPrices) {
+      for (const [o, p] of Object.entries(shared.originPrices)) {
+        if (originPrices.hasOwnProperty(o) && !lockedOrigins[o]) {
+          originPrices[o] = p;
+        }
+      }
+    }
+    // 应用共享的膜价
+    if (shared.filmFees) {
+      for (const [name, p] of Object.entries(shared.filmFees)) {
+        if (!priceOverrides.filmLocked[name]) {
+          priceOverrides.filmFees[name] = p;
+        }
+      }
+    }
+    // 应用共享的表面加工费
+    if (shared.surfaceFees) {
+      for (const [name, p] of Object.entries(shared.surfaceFees)) {
+        if (!priceOverrides.surfaceLocked[name]) {
+          priceOverrides.surfaceFees[name] = p;
+        }
+      }
+    }
+    savePriceOverrides();
+    if (status) status.textContent = `✅ 已读取共享配置 ${shared.updatedAt || ''}`;
+  }
+
+  async function publishSharedPrices() {
+    const status = dom('sharedStatus');
+    if (status) status.textContent = '⏳ 发布中...';
+    
+    const data = {
+      originPrices: {},
+      filmFees: {},
+      surfaceFees: {},
+      updatedAt: new Date().toLocaleString('zh-CN', { hour12: false })
+    };
+    // 只发布已锁定或被覆盖的数据
+    for (const [o, p] of Object.entries(originPrices)) {
+      if (p > 0) data.originPrices[o] = p;
+    }
+    for (const [name, p] of Object.entries(priceOverrides.filmFees)) {
+      data.filmFees[name] = p;
+    }
+    for (const [name, p] of Object.entries(priceOverrides.surfaceFees)) {
+      data.surfaceFees[name] = p;
+    }
+
+    // 获取 GitHub Token
+    let token = localStorage.getItem('kk_github_token');
+    if (!token) {
+      token = prompt('请输入 GitHub Token（首次使用需要）');
+      if (!token) { if (status) status.textContent = '❌ 已取消'; return; }
+      localStorage.setItem('kk_github_token', token);
+    }
+
+    try {
+      // 获取文件的 SHA（如果已存在）
+      let sha = null;
+      const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
+      try {
+        const existing = await fetch(SHARED_CONFIG_API, { headers });
+        if (existing.ok) {
+          const info = await existing.json();
+          sha = info.sha;
+        }
+      } catch (e) { /* 文件可能不存在 */ }
+
+      // 推送
+      const jsonStr = JSON.stringify(data, null, 2);
+      const body = {
+        message: `更新共享配置 ${new Date().toLocaleString('zh-CN', { hour12: false })}`,
+        content: btoa(unescape(encodeURIComponent(jsonStr))),
+        branch: 'main'
+      };
+      if (sha) body.sha = sha;
+
+      const res = await fetch(SHARED_CONFIG_API, {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        if (status) status.textContent = `✅ 已发布 ${new Date().toLocaleString('zh-CN', { hour12: false })}`;
+        showToast('共享配置已发布！', 'success');
+      } else {
+        const errText = await res.text();
+        if (res.status === 401) {
+          localStorage.removeItem('kk_github_token');
+          if (status) status.textContent = '❌ Token 无效，已清除请重试';
+        } else {
+          if (status) status.textContent = `❌ 发布失败 (${res.status})`;
+        }
+        showToast(`发布失败: ${res.status}`, 'error');
+      }
+    } catch (e) {
+      if (status) status.textContent = '❌ 网络错误';
+      showToast('网络错误', 'error');
+    }
   }
 
   // ========== 数据操作 ==========
