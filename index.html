@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -42,10 +42,6 @@
         <div class="card-header-left">
           <div class="card-icon card-icon-steel">💰</div>
           <h2>价格参数</h2>
-        </div>
-        <div class="toolbar" style="gap:6px;">
-          <span id="sharedStatus" style="font-size:11px;color:var(--text-muted);"></span>
-          <button class="btn btn-sm btn-primary" id="publishSharedBtn" title="发布当前配置到共享">🌐 发布共享</button>
         </div>
       </div>
       <div class="card-body">
@@ -145,37 +141,16 @@
             </div>
             <div class="input-group">
               <label>表面</label>
-              <select id="manualSurface">
-                <option value="">选择表面...</option>
-                <optgroup label="普通表面">
-                  <option value="2B">2B</option>
-                  <option value="NO.4">NO.4</option>
-                  <option value="HL">HL</option>
-                  <option value="8K">8K</option>
-                </optgroup>
-                <optgroup label="8K 彩色">
-                  <option value="8K黄钛金">8K黄钛金</option>
-                  <option value="8K玫瑰金">8K玫瑰金</option>
-                  <option value="8K黑钛金">8K黑钛金</option>
-                  <option value="8K宝石蓝">8K宝石蓝</option>
-                  <option value="8K紫罗兰">8K紫罗兰</option>
-                  <option value="8K翡翠绿">8K翡翠绿</option>
-                  <option value="8K紫红">8K紫红</option>
-                  <option value="8K中国红">8K中国红</option>
-                  <option value="8K古铜">8K古铜</option>
-                </optgroup>
-                <optgroup label="拉丝彩色">
-                  <option value="拉丝黄钛金">拉丝黄钛金</option>
-                  <option value="拉丝玫瑰金">拉丝玫瑰金</option>
-                  <option value="拉丝黑钛金">拉丝黑钛金</option>
-                  <option value="拉丝古铜哑光抗指纹">拉丝古铜哑光抗指纹</option>
-                  <option value="拉丝古铜亮光抗指纹">拉丝古铜亮光抗指纹</option>
-                </optgroup>
-                <optgroup label="抛光">
-                  <option value="单面抛光">单面抛光</option>
-                  <option value="双面抛光">双面抛光</option>
-                </optgroup>
-              </select>
+              <input type="text" id="manualSurface" placeholder="NO.4 / 8K..." list="surfaceList">
+              <datalist id="surfaceList">
+                <option value="2B"><option value="NO.4"><option value="HL"><option value="8K">
+                <option value="8K黄钛金"><option value="8K玫瑰金"><option value="8K黑钛金">
+                <option value="8K宝石蓝"><option value="8K紫罗兰"><option value="8K翡翠绿">
+                <option value="8K紫红"><option value="8K中国红"><option value="8K古铜">
+                <option value="拉丝黄钛金"><option value="拉丝玫瑰金"><option value="拉丝黑钛金">
+                <option value="拉丝古铜哑光抗指纹"><option value="拉丝古铜亮光抗指纹">
+                <option value="单面抛光"><option value="双面抛光">
+              </datalist>
             </div>
             <div class="input-group">
               <label>厚度 (mm)</label>
@@ -191,51 +166,18 @@
             </div>
             <div class="input-group">
               <label>保护膜 1</label>
-              <select id="manualFilm1">
-                <option value="">无</option>
-                <optgroup label="普通膜">
-                  <option value="垫纸">垫纸</option>
-                  <option value="5C-FILM">5C-FILM</option>
-                  <option value="HW 5C-FILM">HW 5C-FILM</option>
-                  <option value="7C-FILM">7C-FILM</option>
-                  <option value="HW 7C-FILM">HW 7C-FILM</option>
-                  <option value="10C-FILM">10C-FILM</option>
-                </optgroup>
-                <optgroup label="特殊膜">
-                  <option value="7C-LASER-FILM">7C-LASER-FILM</option>
-                  <option value="7C-ACHEM-FILM">7C-ACHEM-FILM</option>
-                  <option value="7C-POLI-FILM">7C-POLI-FILM</option>
-                </optgroup>
-                <optgroup label="Novacel">
-                  <option value="7C-NOVACEL-FILM">7C-NOVACEL-FILM</option>
-                  <option value="8C-NOVACEL-FILM">8C-NOVACEL-FILM</option>
-                  <option value="10C-NOVACEL-FILM">10C-NOVACEL-FILM</option>
-                </optgroup>
-              </select>
+              <input type="text" id="manualFilm1" placeholder="5C-FILM" list="filmList">
+              <datalist id="filmList">
+                <option value="垫纸"><option value="5C-FILM"><option value="HW 5C-FILM">
+                <option value="7C-FILM"><option value="HW 7C-FILM"><option value="10C-FILM">
+                <option value="7C-LASER-FILM"><option value="7C-ACHEM-FILM">
+                <option value="7C-POLI-FILM"><option value="7C-NOVACEL-FILM">
+                <option value="8C-NOVACEL-FILM"><option value="10C-NOVACEL-FILM">
+              </datalist>
             </div>
             <div class="input-group">
               <label>保护膜 2</label>
-              <select id="manualFilm2">
-                <option value="">无</option>
-                <optgroup label="普通膜">
-                  <option value="垫纸">垫纸</option>
-                  <option value="5C-FILM">5C-FILM</option>
-                  <option value="HW 5C-FILM">HW 5C-FILM</option>
-                  <option value="7C-FILM">7C-FILM</option>
-                  <option value="HW 7C-FILM">HW 7C-FILM</option>
-                  <option value="10C-FILM">10C-FILM</option>
-                </optgroup>
-                <optgroup label="特殊膜">
-                  <option value="7C-LASER-FILM">7C-LASER-FILM</option>
-                  <option value="7C-ACHEM-FILM">7C-ACHEM-FILM</option>
-                  <option value="7C-POLI-FILM">7C-POLI-FILM</option>
-                </optgroup>
-                <optgroup label="Novacel">
-                  <option value="7C-NOVACEL-FILM">7C-NOVACEL-FILM</option>
-                  <option value="8C-NOVACEL-FILM">8C-NOVACEL-FILM</option>
-                  <option value="10C-NOVACEL-FILM">10C-NOVACEL-FILM</option>
-                </optgroup>
-              </select>
+              <input type="text" id="manualFilm2" placeholder="选填">
             </div>
             <div class="input-group" style="justify-content:end;">
               <button class="btn btn-primary" id="addManualBtn" style="width:100%;">➕ 添加</button>
@@ -303,3 +245,4 @@
   </script>
 </body>
 </html>
+
