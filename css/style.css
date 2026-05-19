@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --primary: #475569;
   --primary-light: #64748b;
   --primary-dark: #334155;
@@ -618,9 +618,6 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .cfg-lock-btn:hover { opacity:1; background:var(--border-light); }
 .cfg-lock-btn.locked { opacity:1; }
 
-/* Select dropdown styling */
-select { font-family:var(--font); font-size:13px; }
-
 /* ===== Responsive ===== */
 @media (max-width:1024px) { .calc-breakdown { grid-template-columns:1fr; } }
 @media (max-width:768px) {
@@ -634,3 +631,4 @@ select { font-family:var(--font); font-size:13px; }
   .manual-row { grid-template-columns:1fr 1fr; }
   .calc-breakdown { grid-template-columns:1fr; }
 }
+
