@@ -356,7 +356,7 @@ const App = (() => {
   function renderSurfaceConfig() {
     const wrap = dom('surfaceConfigTable');
     if (!wrap) return;
-    let html = '<table><thead><tr><th>表面名称</th><th>单价(元/平米)</th><th>默认(元/平米)</th><th></th></tr></thead><tbody>';
+    let html = '<table><thead><tr><th>表面名称</th><th>覆盖价(元/平米)</th><th>阶梯默认价</th><th></th></tr></thead><tbody>';
     for (const [name, cfg] of Object.entries(SURFACE_FEES)) {
       if (typeof cfg === 'object' && cfg.type === 'sqm') {
         const defaultPrice = cfg.price;
@@ -366,6 +366,20 @@ const App = (() => {
           <td><span class="cfg-name">${name}</span></td>
           <td><input type="number" class="cfg-price-input surf-price-inp" data-name="${name}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
           <td><span class="cfg-default">${defaultPrice}</span></td>
+          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
+        </tr>`;
+      } else if (Array.isArray(cfg)) {
+        // 跳过 单面抛光/双面抛光（元/吨），只显示元/平米的有色表面
+        if (name === '单面抛光' || name === '双面抛光') continue;
+        const tiers = cfg.filter(t => t.unit === 'sqm' || !t.unit);
+        if (tiers.length === 0) continue;
+        const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
+        const val = priceOverrides.surfaceFees[name] ?? tiers[0].price;
+        const locked = !!priceOverrides.surfaceLocked[name];
+        html += `<tr>
+          <td><span class="cfg-name">${name}</span></td>
+          <td><input type="number" class="cfg-price-input surf-price-inp" data-name="${name}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
+          <td><span class="cfg-default">${tierDesc}</span></td>
           <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
         </tr>`;
       }
