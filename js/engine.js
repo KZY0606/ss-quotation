@@ -39,9 +39,21 @@ const PricingEngine = (() => {
     return null;
   }
 
+  // 用户价格覆盖（由 App 注入，存于 localStorage）
+  let userOverrides = null;
+  function setUserOverrides(overrides) { userOverrides = overrides; }
+
   function getSurfaceFee(surface, thickness, width) {
     const t = parseFloat(thickness);
     const w = parseFloat(width);
+    // 用户覆盖：简单单价（元/平米）模式
+    if (userOverrides && userOverrides.surfaceFees && userOverrides.surfaceFees[surface] !== undefined) {
+      const val = userOverrides.surfaceFees[surface];
+      if (typeof val === 'number') {
+        return { sqmPrice: val, needConvert: true };
+      }
+      return val;
+    }
     const fee = SURFACE_FEES[surface];
     if (!fee) return null;
     if (fee.type === 'none') return 0;
@@ -68,6 +80,10 @@ const PricingEngine = (() => {
 
   function getFilmFee(filmName) {
     if (!filmName || filmName.trim() === '' || filmName.trim() === '无' || filmName.trim() === '/') return 0;
+    // 优先使用用户覆盖
+    if (userOverrides && userOverrides.filmFees && userOverrides.filmFees[filmName] !== undefined) {
+      return userOverrides.filmFees[filmName];
+    }
     return FILM_FEES[filmName] || null;
   }
 
@@ -295,6 +311,7 @@ const PricingEngine = (() => {
     calculate, calculateBatch, parseSpec, parseFreeText,
     normalizeSurface, normalizeFilm, getDensity, getEdgeType,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
+    setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, YANYAN_THICKNESS_SURCHARGE,
     SURFACE_FEES, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS
   };
