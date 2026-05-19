@@ -137,8 +137,15 @@ const PricingEngine = (() => {
     const boardType = getBoardType(length);
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
 
+    // 检测小珠光(LINEN)附加工艺
+    const linenMatch = surface.match(/^(.+)-LINEN$/i);
+    const hasLinen = linenMatch || /^LINEN$/.test(surface);
+    const baseName = hasLinen && linenMatch ? linenMatch[1] : surface;
+    const baseSurface = normalizeSurface(baseName);
+
     let surfaceFeePerTon = 0;
-    const surfaceRaw = getSurfaceFee(surface, thickness, width);
+    let linenFeePerTon = hasLinen ? LINEN_FEE : 0;
+    const surfaceRaw = getSurfaceFee(baseSurface, thickness, width);
     if (surfaceRaw === null) {
       errors.push(`表面 "${surface}" 在 厚度${thickness}mm × 宽度${width}mm 下无匹配加工费`);
     } else if (typeof surfaceRaw === 'number') {
@@ -162,7 +169,7 @@ const PricingEngine = (() => {
       return { success: false, errors };
     }
 
-    const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + film1PerTon + film2PerTon);
+    const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + linenFeePerTon + film1PerTon + film2PerTon);
     const taxExcluded = round2(subtotal * 0.92);
     const costTax = round10(subtotal);
     const costNoTax = round10(taxExcluded);
@@ -176,11 +183,12 @@ const PricingEngine = (() => {
       detail: {
         origin: item.origin || '',
         material, surface, thickness, width, length, film1, film2, basePrice,
-        isYanYan,
+        isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),
         thickSurcharge, thickTable: isYanYan ? '压延料' : '常规',
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
         surfaceFeePerTon: round2(surfaceFeePerTon),
+        linenFeePerTon,
         film1FeeSqm: film1Fee || 0, film1PerTon,
         film2FeeSqm: film2Fee || 0, film2PerTon,
         costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded),
