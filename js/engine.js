@@ -338,16 +338,47 @@ const PricingEngine = (() => {
 
   function parseFreeText(text, basePriceMap) {
     if (!text) return null;
+    let remaining = text.trim();
+    // 处理中文逗号和全角符号
+    remaining = remaining.replace(/[，,、；;：:]/g, ' ').trim();
+
     const specRegex = /(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)\s*[*×xX]\s*(\S+)/;
-    const specMatch = text.match(specRegex);
-    if (!specMatch) return null;
+    const specMatch = remaining.match(specRegex);
 
-    const thickness = parseFloat(specMatch[1]);
-    const width = parseFloat(specMatch[2]);
-    const lengthStr = specMatch[3].toUpperCase();
-    const length = (lengthStr === 'C' || lengthStr === 'COIL') ? 'C' : specMatch[3];
+    let thickness = null, width = null, length = null;
+    if (specMatch) {
+      thickness = parseFloat(specMatch[1]);
+      width = parseFloat(specMatch[2]);
+      const lenStr = specMatch[3].toUpperCase();
+      length = (lenStr === 'C' || lenStr === 'COIL') ? 'C' : specMatch[3];
+      remaining = remaining.replace(specRegex, ' ').trim();
+    } else {
+      // 无完整规格，尝试单独提取厚度如 "0.3MM"
+      const thkMatch = remaining.match(/(\d+\.?\d+)\s*MM/i);
+      if (thkMatch) {
+        thickness = parseFloat(thkMatch[0]);
+        width = 1240;
+        length = 'C';
+        remaining = remaining.replace(thkMatch[0], ' ').trim();
+      } else {
+        return null;
+      }
+    }
 
-    let remaining = text.replace(specRegex, ' ').trim();
+    // 提取括号里的膜信息: "GOLD MIRROR(7C-FILM+5C-FILM)"
+    let film1 = '', film2 = '';
+    const parenFilm = remaining.match(/\(([^)]+)\)/);
+    if (parenFilm) {
+      const parts = parenFilm[1].split('+').map(s => s.trim());
+      for (const p of parts) {
+        const norm = normalizeFilm(p);
+        if (norm) {
+          if (!film1) film1 = norm;
+          else if (!film2 && norm !== film1) film2 = norm;
+        }
+      }
+      remaining = remaining.replace(parenFilm[0], ' ').trim();
+    }
 
     // 检测压延
     let isYanYan = false;
@@ -378,48 +409,47 @@ const PricingEngine = (() => {
       }
     }
 
-    // 提取保护膜
-    let film1 = '', film2 = '';
-    for (const [alias, standard] of Object.entries(FILM_ALIASES)) {
-      const regex = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      if (regex.test(remaining)) {
-        if (!film1) film1 = standard;
-        else if (!film2) film2 = standard;
-        remaining = remaining.replace(regex, ' ').trim();
+    // 提取保护膜（如果括号里没找到）
+    if (!film1) {
+      for (const [alias, standard] of Object.entries(FILM_ALIASES)) {
+        const regex = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        if (regex.test(remaining)) {
+          if (!film1) film1 = standard;
+          else if (!film2 && standard !== film1) film2 = standard;
+          remaining = remaining.replace(regex, ' ').trim();
+        }
       }
-    }
-    for (const fname of Object.keys(FILM_FEES)) {
-      if (remaining.includes(fname) && fname !== film1 && fname !== film2) {
-        if (!film1) film1 = fname;
-        else if (!film2) film2 = fname;
-        remaining = remaining.replace(fname, ' ').trim();
+      for (const fname of Object.keys(FILM_FEES)) {
+        if (remaining.includes(fname) && fname !== film1 && fname !== film2) {
+          if (!film1) film1 = fname;
+          else if (!film2) film2 = fname;
+          remaining = remaining.replace(fname, ' ').trim();
+        }
       }
-    }
-    if (remaining.includes('垫纸')) {
-      if (!film1) film1 = '垫纸';
-      else if (!film2) film2 = '垫纸';
-      remaining = remaining.replace('垫纸', ' ').trim();
+      if (remaining.includes('垫纸')) {
+        if (!film1) film1 = '垫纸';
+        else if (!film2) film2 = '垫纸';
+        remaining = remaining.replace('垫纸', ' ').trim();
+      }
     }
 
-    // 提取表面
+    // 提取表面 — 用 SURFACE_ALIASES 按长度排序优先匹配
     let surface = '';
-    const surfaceNames = [
-      '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹',
-      '镜面8K紫罗兰', '镜面8K翡翠绿', '镜面8K中国红', '镜面8K紫红', '镜面8K宝石蓝', '镜面8K古铜',
-      '镜面8K黄钛金', '镜面8K玫瑰金', '镜面8K黑钛金',
-      '镜面紫罗兰', '镜面翡翠绿', '镜面中国红', '镜面紫红', '镜面宝石蓝', '镜面古铜',
-      '镜面黄钛金', '镜面玫瑰金', '镜面黑钛金',
-      '8K紫罗兰', '8K翡翠绿', '8K中国红', '8K紫红', '8K宝石蓝', '8K古铜',
-      '8K黄钛金', '8K玫瑰金', '8K黑钛金',
-      '拉丝黄钛金', '拉丝玫瑰金', '拉丝黑钛金',
-      '单面抛光', '双面抛光',
-      'NO.4', 'HL', '8K', '2B'
-    ];
-    for (const sn of surfaceNames) {
-      if (remaining.toUpperCase().includes(sn.toUpperCase())) {
-        surface = sn;
-        remaining = remaining.replace(new RegExp(sn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ').trim();
+    const sortedAliases = Object.entries(SURFACE_ALIASES).sort((a,b) => b[0].length - a[0].length);
+    for (const [alias, norm] of sortedAliases) {
+      const re = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      if (re.test(remaining)) {
+        surface = norm;
+        remaining = remaining.replace(re, ' ').trim();
         break;
+      }
+    }
+    if (!surface) {
+      // 全文尝试 normalizeSurface
+      const normed = normalizeSurface(remaining.trim());
+      if (normed && normed !== remaining.trim()) {
+        surface = normed;
+        remaining = '';
       }
     }
 
