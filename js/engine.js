@@ -174,8 +174,14 @@ const PricingEngine = (() => {
     if (!surface) return null;
     const s = surface.trim();
 
+    // 格式1b: "表面 + BRIGHT AFP" / "表面 + MATTE AFP"（集装箱表格格式）
+    let m = s.match(/^(.+?)\s*[+]\s*(BRIGHT|MATTE)\s+AFP\s*$/i);
+    if (m) {
+      return { baseName: m[1].trim(), isMatte: m[2].toLowerCase() === 'matte' };
+    }
+
     // 格式1: "表面 + AFP" / "表面+AFP(B)" / "表面+AFP(M)"
-    let m = s.match(/^(.+?)\s*[+]\s*AFP\s*(?:\(([^)]*)\))?\s*$/i);
+    m = s.match(/^(.+?)\s*[+]\s*AFP\s*(?:\(([^)]*)\))?\s*$/i);
     if (m) {
       const spec = (m[2] || '').toLowerCase();
       return { baseName: m[1].trim(), isMatte: spec === 'm' || spec === 'matte' };
