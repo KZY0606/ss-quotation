@@ -173,6 +173,22 @@ const SURFACE_FEES = {
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14,  unit: 'sqm' }
   ],
 
+  '双面8K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1250, price: 9,   unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1250, price: 16,  unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1000, wMax: 1250, price: 24,  unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1250, price: 30,  unit: 'sqm' }
+  ],
+  '6K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 1.6, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1250, price: 3.6, unit: 'sqm' }
+  ],
+  '双面6K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 3.2, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1250, price: 7.2, unit: 'sqm' }
+  ],
+
   '单面抛光': [
     { tMin: 0.20, tMax: 0.29, price: 200 },
     { tMin: 0.30, tMax: 1.20, price: 150 }
@@ -269,6 +285,10 @@ const SURFACE_ALIASES = {
   '8k玫瑰金小珠光': '8K玫瑰金-LINEN', '8k黑钛金小珠光': '8K黑钛金-LINEN',
   '拉丝黄钛金小珠光': '拉丝黄钛金-LINEN', '拉丝玫瑰金小珠光': '拉丝玫瑰金-LINEN',
   '单面抛光': '单面抛光', '双面抛光': '双面抛光',
+  // 双面8K / 6K / 双面6K
+  '双面8k': '双面8K', '双面8K': '双面8K', '双面镜面8K': '双面8K', '双面镜面8k': '双面8K',
+  '6k': '6K', '6K': '6K', '镜面6K': '6K', '镜面6k': '6K',
+  '双面6k': '双面6K', '双面6K': '双面6K', '双面镜面6K': '双面6K', '双面镜面6k': '双面6K',
 };
 
 // 保护膜名称标准化映射
