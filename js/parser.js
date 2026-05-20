@@ -59,6 +59,7 @@ const ExcelParser = (() => {
 
                 // 标准化表面名（仅用于计算，原文保留）
                 const normSurface = PricingEngine.normalizeSurface(surfRaw);
+                const film = PricingEngine.normalizeFilm(filmRaw);
 
                 items.push({
                   origin: '宏旺',
