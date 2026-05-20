@@ -253,6 +253,8 @@ const SURFACE_ALIASES = {
   'champagne gold no4': '磨砂香槟金', 'champange gold no4': '磨砂香槟金',
   'dark black no4': '磨砂黑钛金',
   'bronze no4': '拉丝古铜', '磨砂古铜': '磨砂古铜',
+  '8k mirror': '8K',
+  'red mirror': '8K中国红', 'red mirror 8k': '8K中国红',
   '拉丝古铜哑光抗指纹': '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹': '拉丝古铜亮光抗指纹',
   '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜', 'antique copper hairline': '拉丝古铜',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
@@ -282,5 +284,6 @@ const FILM_ALIASES = {
   // 胶膜组合短名
   '5c+5c': '5C+5C-FILM', '5c+5c-film': '5C+5C-FILM', '5c-film+5c-film': '5C+5C-FILM',
   '7c+5c': '7C+5C-FILM', '7c+5c-film': '7C+5C-FILM', '7c-film+5c-film': '7C+5C-FILM',
-  '7c+7c': '7C+7C-FILM', '7c+7c-film': '7C+7C-FILM', '7c-film+7c-film': '7C+7C-FILM'
+  '7c+7c': '7C+7C-FILM', '7c+7c-film': '7C+7C-FILM', '7c-film+7c-film': '7C+7C-FILM',
+  '胶膜': '7C-FILM'
 };
