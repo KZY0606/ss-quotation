@@ -194,20 +194,22 @@ const AFP_MATTE_FEE = 5;   // 哑光抗指纹
 const FILM_FEES = {
   '垫纸':           0.3,
   '5C-FILM':        1.0,
+  '5C-BLUE-FILM':  0.7,
   'HW 5C-FILM':     1.0,
   '7C-FILM':        1.2,
   'HW 7C-FILM':     1.2,
   '10C-FILM':       2.0,
-  '7C-LASER-FILM':  2.2,
-  '7C-ACHEM-FILM':  3.5,
-  '7C-POLI-FILM':   5.0,
-  '7C-NOVACEL-FILM':6.5,
-  '8C-NOVACEL-FILM':7.5,
-  '10C-NOVACEL-FILM':8.5,
+  '7C-LASER-FILM':  1.5,
+  '7C-ACHEM-FILM':  4.0,
+  '7C-POLI-FILM':   5.5,
+  '7C-NOVACEL-FILM':6.6,
+  '8C-NOVACEL-FILM':7.7,
+  '10C-NOVACEL-FILM':8.8,
   // 胶膜组合
   '5C+5C-FILM':  2.0,
   '7C+5C-FILM':  2.2,
-  '7C+7C-FILM':  2.4
+  '7C+7C-FILM':  2.4,
+  '7C-LASER+5C-FILM':  2.5
 };
 
 // 销售加价 (元/吨)
@@ -285,5 +287,7 @@ const FILM_ALIASES = {
   '5c+5c': '5C+5C-FILM', '5c+5c-film': '5C+5C-FILM', '5c-film+5c-film': '5C+5C-FILM',
   '7c+5c': '7C+5C-FILM', '7c+5c-film': '7C+5C-FILM', '7c-film+5c-film': '7C+5C-FILM',
   '7c+7c': '7C+7C-FILM', '7c+7c-film': '7C+7C-FILM', '7c-film+7c-film': '7C+7C-FILM',
+  '5c蓝色': '5C-BLUE-FILM', '5c蓝': '5C-BLUE-FILM', '5c蓝膜': '5C-BLUE-FILM', '蓝膜': '5C-BLUE-FILM', '5c blue': '5C-BLUE-FILM', '5c-blue-film': '5C-BLUE-FILM',
+  '7c-laser+5c': '7C-LASER+5C-FILM', '7c-laser+5c-film': '7C-LASER+5C-FILM', '7c激光膜+5c': '7C-LASER+5C-FILM',
   '胶膜': '7C-FILM'
 };
