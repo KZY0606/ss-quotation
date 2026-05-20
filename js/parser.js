@@ -30,15 +30,32 @@ const ExcelParser = (() => {
       return m ? { width: m[1], length: m[2] } : null;
     }
 
-    // 辅助: 读取一组数据（thkIdx, surfIdx, wgtIdx 是row中的列索引）
+    // 辅助: 读取一组数据并提取括号膜
     function parseGroup(row, thkIdx, surfIdx, wgtIdx, defW, defL) {
       const thkVal = stripThk(row[thkIdx]);
       if (!thkVal || isNaN(parseFloat(thkVal))) return null;
-      const surfRaw = String(row[surfIdx] || '').trim();
+      let surfRaw = String(row[surfIdx] || '').trim();
       if (!surfRaw || surfRaw.toUpperCase() === 'TOTAL') return null;
+
+      // 提取括号内的膜信息: "GOLD MIRROR(7C-FILM+5C-FILM)"
+      let film1 = '', film2 = '';
+      const parenMatch = surfRaw.match(/\(([^)]+)\)/);
+      if (parenMatch) {
+        const parts = parenMatch[1].split('+').map(s => s.trim());
+        for (const p of parts) {
+          const norm = PricingEngine.normalizeFilm(p);
+          if (norm) {
+            if (!film1) film1 = norm;
+            else if (!film2 && norm !== film1) film2 = norm;
+          }
+        }
+        surfRaw = surfRaw.replace(parenMatch[0], '').trim();
+      }
+
       return {
         surface: surfRaw, thickness: thkVal,
-        width: defW, length: defL
+        width: defW, length: defL,
+        film1, film2
       };
     }
 
@@ -74,7 +91,7 @@ const ExcelParser = (() => {
       if (left) {
         items.push({ origin: '宏旺', material, surface: left.surface,
           thickness: left.thickness, width: left.width, length: left.length,
-          film1: '', film2: '', isYanYan: false, basePrice: 0 });
+          film1: left.film1 || '', film2: left.film2 || '', isYanYan: false, basePrice: 0 });
       }
 
       // 右组
@@ -83,7 +100,7 @@ const ExcelParser = (() => {
       if (right) {
         items.push({ origin: '宏旺', material, surface: right.surface,
           thickness: right.thickness, width: right.width, length: right.length,
-          film1: '', film2: '', isYanYan: false, basePrice: 0 });
+          film1: right.film1 || '', film2: right.film2 || '', isYanYan: false, basePrice: 0 });
       }
     }
 
@@ -186,6 +203,7 @@ const ExcelParser = (() => {
               items.push.apply(items, containerItems);
             } else {
               // 无表头且非集装箱：每行作为自由文本解析
+              // 先用 join 空格，再用 enhanced parseFreeText
               for (const row of rows) {
                 const text = row.join(' ').trim();
                 if (!text) continue;
