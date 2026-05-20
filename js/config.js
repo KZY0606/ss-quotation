@@ -136,12 +136,12 @@ const SURFACE_FEES = {
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
   ],
   '拉丝古铜哑光抗指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 14.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 18.5, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 15,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 19,  unit: 'sqm' }
   ],
   '拉丝古铜亮光抗指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 11.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 15.5, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 16,  unit: 'sqm' }
   ],
 
   '8K香槟金': [
@@ -179,7 +179,11 @@ const FILM_FEES = {
   '7C-POLI-FILM':   5.0,
   '7C-NOVACEL-FILM':6.5,
   '8C-NOVACEL-FILM':7.5,
-  '10C-NOVACEL-FILM':8.5
+  '10C-NOVACEL-FILM':8.5,
+  // 胶膜组合
+  '5C+5C-FILM':  2.0,
+  '7C+5C-FILM':  2.2,
+  '7C+7C-FILM':  2.4
 };
 
 // 销售加价 (元/吨)
@@ -217,6 +221,7 @@ const SURFACE_ALIASES = {
   '中国红': '8K中国红', '8k中国红': '8K中国红', '镜面中国红': '8K中国红', '镜面8k中国红': '8K中国红',
   '古铜': '8K古铜', '8k古铜': '8K古铜', '镜面古铜': '8K古铜', '镜面8k古铜': '8K古铜',
   'bronze mirror 8k': '8K古铜', 'bronze mirror': '8K古铜',
+  '青古铜': '8K古铜', '黄古铜': '8K古铜', '红古铜': '8K古铜',
   '拉丝黄钛金': '拉丝黄钛金', '拉丝玫瑰金': '拉丝玫瑰金', '拉丝黑钛金': '拉丝黑钛金',
   'gold no4': '拉丝黄钛金',
   'rosegold no4': '磨砂玫瑰金', '磨砂玫瑰金': '磨砂玫瑰金', '砂面玫瑰金': '磨砂玫瑰金',
@@ -245,5 +250,9 @@ const FILM_ALIASES = {
   '7c-novacel': '7C-NOVACEL-FILM', '7c-novacel-film': '7C-NOVACEL-FILM', '7c novacell laser film pvc': '7C-NOVACEL-FILM',
   '8c-novacel': '8C-NOVACEL-FILM', '8c-novacel-film': '8C-NOVACEL-FILM',
   '10c-novacel': '10C-NOVACEL-FILM', '10c-novacel-film': '10C-NOVACEL-FILM',
-  '垫纸': '垫纸'
+  '垫纸': '垫纸',
+  // 胶膜组合短名
+  '5c+5c': '5C+5C-FILM', '5c+5c-film': '5C+5C-FILM', '5c-film+5c-film': '5C+5C-FILM',
+  '7c+5c': '7C+5C-FILM', '7c+5c-film': '7C+5C-FILM', '7c-film+5c-film': '7C+5C-FILM',
+  '7c+7c': '7C+7C-FILM', '7c+7c-film': '7C+7C-FILM', '7c-film+7c-film': '7C+7C-FILM'
 };
