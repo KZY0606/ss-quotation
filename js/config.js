@@ -164,6 +164,14 @@ const SURFACE_FEES = {
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
+  '拉丝古铜': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14,  unit: 'sqm' }
+  ],
+  '磨砂古铜': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14,  unit: 'sqm' }
+  ],
 
   '单面抛光': [
     { tMin: 0.20, tMax: 0.29, price: 200 },
@@ -242,9 +250,11 @@ const SURFACE_ALIASES = {
   'gold no4': '拉丝黄钛金',
   'rosegold no4': '磨砂玫瑰金', '磨砂玫瑰金': '磨砂玫瑰金', '砂面玫瑰金': '磨砂玫瑰金',
   '磨砂黄钛金': '磨砂黄钛金', '磨砂黑钛金': '磨砂黑钛金', '磨砂香槟金': '磨砂香槟金',
-  'champagne gold no4': '磨砂香槟金',
+  'champagne gold no4': '磨砂香槟金', 'champange gold no4': '磨砂香槟金',
+  'dark black no4': '磨砂黑钛金',
+  'bronze no4': '拉丝古铜', '磨砂古铜': '磨砂古铜',
   '拉丝古铜哑光抗指纹': '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹': '拉丝古铜亮光抗指纹',
-  '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜',
+  '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜', 'antique copper hairline': '拉丝古铜',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
   '拉丝香槟金': '拉丝香槟金',
   // 小珠光 (linen) 复合表面
