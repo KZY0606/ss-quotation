@@ -198,7 +198,7 @@ const ExcelParser = (() => {
       ds['!cols'] = [
         { wch: 5 },  { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 10 },
         { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 12 },
-        { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 },
+        { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
         { wch: 16 }, { wch: 16 },
         { wch: 10 }, { wch: 10 }, { wch: 12 },
         { wch: 16 }, { wch: 16 }
@@ -213,7 +213,7 @@ const ExcelParser = (() => {
     rows.push([
       '序号', '产地', '材质', '表面', '厚度(mm)', '宽度(mm)', '长度',
       '保护膜1', '保护膜2', '基价(元/吨)',
-      '厚度加价(元/吨)', '表面加工费(元/吨)', '膜1费用(元/吨)', '膜2费用(元/吨)',
+      '厚度加价(元/吨)', '表面加工费(元/吨)', '小珠光(元/吨)', '抗指纹(元/吨)', '膜1费用(元/吨)', '膜2费用(元/吨)',
       '含税成本(元/吨)', '不含税成本(元/吨)',
       '毛边/齐边', '卷板/平板', '销售加价(元/吨)',
       '含税售价(元/吨)', '不含税售价(元/吨)'
@@ -228,7 +228,8 @@ const ExcelParser = (() => {
         r.index, d.origin || '', d.material || '', d.surface || '',
         d.thickness, d.width, d.length,
         d.film1 || '', d.film2 || '', d.basePrice,
-        d.thickSurcharge, d.surfaceFeePerTon, d.film1PerTon, d.film2PerTon,
+        d.thickSurcharge, d.surfaceFeePerTon, d.linenFeePerTon, d.afpPerTon,
+        d.film1PerTon, d.film2PerTon,
         d.costTax, d.costNoTax,
         d.edgeType === 'rough' ? '毛边' : '齐边',
         d.boardType === 'coil' ? '卷板' : '平板',
