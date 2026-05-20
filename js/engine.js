@@ -97,7 +97,64 @@ const PricingEngine = (() => {
     if (SURFACE_FEES[s]) return s;
     const lower = s.toLowerCase();
     if (SURFACE_ALIASES[lower]) return SURFACE_ALIASES[lower];
-    return s;
+    // 模糊匹配：别名匹配失败时，用Levenshtein找最接近的表面
+    return fuzzyMatchSurface(lower) || s;
+  }
+
+  let _fuzzyCache = null;
+  function _buildFuzzyDict() {
+    if (_fuzzyCache) return _fuzzyCache;
+    const seen = new Set();
+    const dict = [];
+    // 收集所有表面别名key
+    for (const key of Object.keys(SURFACE_ALIASES)) {
+      const norm = SURFACE_ALIASES[key];
+      if (!seen.has(key)) {
+        dict.push({ key, norm, label: key });
+        seen.add(key);
+      }
+    }
+    // 收集所有直接表面名（中文）
+    for (const key of Object.keys(SURFACE_FEES)) {
+      if (!seen.has(key)) {
+        dict.push({ key, norm: key, label: key });
+        seen.add(key);
+      }
+    }
+    _fuzzyCache = dict;
+    return dict;
+  }
+
+  // Levenshtein距离
+  function levenshtein(a, b) {
+    const al = a.length, bl = b.length;
+    const m = Array.from({length: al + 1}, () => new Uint8Array(bl + 1));
+    for (let i = 0; i <= al; i++) m[i][0] = i;
+    for (let j = 0; j <= bl; j++) m[0][j] = j;
+    for (let i = 1; i <= al; i++) {
+      for (let j = 1; j <= bl; j++) {
+        const cost = a[i-1] === b[j-1] ? 0 : 1;
+        m[i][j] = Math.min(m[i-1][j] + 1, m[i][j-1] + 1, m[i-1][j-1] + cost);
+      }
+    }
+    return m[al][bl];
+  }
+
+  // 模糊匹配：用Levenshtein找最接近的已知表面名
+  function fuzzyMatchSurface(input) {
+    const dict = _buildFuzzyDict();
+    let bestScore = 0;
+    let bestNorm = null;
+    for (const entry of dict) {
+      const dist = levenshtein(input, entry.key);
+      const maxLen = Math.max(input.length, entry.key.length);
+      const score = maxLen > 0 ? 1 - dist / maxLen : 0;
+      if (score > bestScore && score >= 0.55) {
+        bestScore = score;
+        bestNorm = entry.norm;
+      }
+    }
+    return bestNorm;
   }
 
   function normalizeFilm(raw) {
@@ -170,20 +227,32 @@ const PricingEngine = (() => {
     const boardType = getBoardType(length);
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
 
-    // 检测小珠光(LINEN)附加工艺
-    const linenMatch = surface.match(/^(.+)-LINEN$/i);
-    const hasLinen = linenMatch || /^LINEN$/.test(surface);
-    const baseName = hasLinen && linenMatch ? linenMatch[1] : surface;
-    let baseSurface = normalizeSurface(baseName);
+    // ---- 附加工艺检测 ----
+    const rawTrimmed = (item.surface || '').trim();
+    const rawLower = rawTrimmed.toLowerCase();
+    const aliasedName = normalizeSurface(rawTrimmed); // 可以有模糊匹配
+    const isExactAlias = SURFACE_FEES[rawTrimmed] || SURFACE_ALIASES[rawLower];
 
-    // 检测AFP(抗指纹)附加工艺 — 仅当表面本身不存在于SURFACE_FEES时进行
+    // LINEN: 在别名归一化后的名称上检测（别名已把小珠光等转为-LINEN后缀）
+    const linenSuffix = aliasedName.match(/^(.+)-LINEN$/i);
+    const hasLinen = linenSuffix || /^LINEN$/.test(aliasedName);
+
+    // AFP: 仅在原始输入不是直接表面命中时检测
     let afpSqmFee = 0;
-    if (!SURFACE_FEES[baseSurface]) {
-      const afpInfo = detectAFP(baseSurface);
+    let baseSurface = aliasedName;
+
+    if (hasLinen && linenSuffix) {
+      // 剥离linen，归一化基础表面
+      const linBase = normalizeSurface(linenSuffix[1]);
+      if (linBase && SURFACE_FEES[linBase]) baseSurface = linBase;
+    } else if (!SURFACE_FEES[rawTrimmed] && !isExactAlias) {
+      const afpInfo = detectAFP(rawTrimmed);
       if (afpInfo) {
         const afpBase = normalizeSurface(afpInfo.baseName);
-        if (afpBase && SURFACE_FEES[afpBase]) baseSurface = afpBase;
-        afpSqmFee = afpInfo.isMatte ? AFP_MATTE_FEE : AFP_BRIGHT_FEE;
+        if (afpBase && SURFACE_FEES[afpBase]) {
+          baseSurface = afpBase;
+          afpSqmFee = afpInfo.isMatte ? AFP_MATTE_FEE : AFP_BRIGHT_FEE;
+        }
       }
     }
 
@@ -227,7 +296,7 @@ const PricingEngine = (() => {
       success: true,
       detail: {
         origin: item.origin || '',
-        material, surface, thickness, width, length, film1, film2, basePrice,
+        material, surface: item.surface || '', normSurface: surface, thickness, width, length, film1, film2, basePrice,
         isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),
         thickSurcharge, thickTable: isYanYan ? '压延料' : '常规',
