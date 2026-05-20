@@ -3,6 +3,93 @@
  */
 const ExcelParser = (() => {
 
+
+
+  // 集装箱格式解析：装货清单，每行两组数据
+  function parseContainerFormat(rows) {
+    const items = [];
+
+    // 提取材质：""201 GRADE""
+    let material = '201J2';
+    for (const row of rows) {
+      const t = String(row[1] || row[0] || '').toUpperCase();
+      const m = t.match(/(\d{3})\s*GRADE/i);
+      if (m) { material = m[1] + 'J2'; break; }
+    }
+
+    // 辅助: 提取厚度值
+    function stripThk(v) {
+      const s = String(v || '').trim().replace(/\s*MM\s*/i, '').trim();
+      return s;
+    }
+
+    // 辅助: 从容器标题提取规格
+    function extractSpec(cell) {
+      const s = String(cell || '');
+      const m = s.match(/(\d+)\s*X\s*(\d+)/i);
+      return m ? { width: m[1], length: m[2] } : null;
+    }
+
+    // 辅助: 读取一组数据（thkIdx, surfIdx, wgtIdx 是row中的列索引）
+    function parseGroup(row, thkIdx, surfIdx, wgtIdx, defW, defL) {
+      const thkVal = stripThk(row[thkIdx]);
+      if (!thkVal || isNaN(parseFloat(thkVal))) return null;
+      const surfRaw = String(row[surfIdx] || '').trim();
+      if (!surfRaw || surfRaw.toUpperCase() === 'TOTAL') return null;
+      return {
+        surface: surfRaw, thickness: thkVal,
+        width: defW, length: defL
+      };
+    }
+
+    // 首次遍历：收集所有容器标题中的规格
+    const specs = {}; // colIdx -> {width, length}
+    let hasContainer = false;
+    for (const row of rows) {
+      for (let c = 0; c < row.length; c++) {
+        const cell = String(row[c] || '').toUpperCase();
+        if (cell.includes('CONTAINER')) {
+          hasContainer = true;
+          const spec = extractSpec(cell);
+          if (spec) specs[c] = spec;
+        }
+      }
+    }
+
+    if (!hasContainer) return null; // 不是集装箱格式
+
+    // 默认规格
+    const defaultSpec = { width: '1240', length: '2500' };
+
+    // 第二遍：解析数据行
+    // 左组: col 1(thk), 2(surf), 3(wgt); 右组: col 6(thk), 7(surf), 8(wgt)
+    for (const row of rows) {
+      // 跳过空行和标题行
+      const rowText = row.map(c => String(c || '')).join(' ').toUpperCase();
+      if (rowText.includes('CONTAINER') || rowText.includes('GRADE') || rowText.trim() === '') continue;
+
+      // 左组
+      const s1 = specs[1] || specs[0] || defaultSpec;
+      const left = parseGroup(row, 1, 2, 3, s1.width, s1.length);
+      if (left) {
+        items.push({ origin: '宏旺', material, surface: left.surface,
+          thickness: left.thickness, width: left.width, length: left.length,
+          film1: '', film2: '', isYanYan: false, basePrice: 0 });
+      }
+
+      // 右组
+      const s2 = specs[6] || specs[7] || defaultSpec;
+      const right = parseGroup(row, 6, 7, 8, s2.width, s2.length);
+      if (right) {
+        items.push({ origin: '宏旺', material, surface: right.surface,
+          thickness: right.thickness, width: right.width, length: right.length,
+          film1: '', film2: '', isYanYan: false, basePrice: 0 });
+      }
+    }
+
+    return items;
+  }
+
   function parseExcel(file, basePrice) {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -93,12 +180,18 @@ const ExcelParser = (() => {
               }
             }
           } else {
-            // 无表头：每行作为自由文本解析
-            for (const row of rows) {
-              const text = row.join(' ').trim();
-              if (!text) continue;
-              const parsed = PricingEngine.parseFreeText(text, basePrice);
-              if (typeof parsed === 'object') items.push(parsed);
+            // 尝试集装箱格式解析
+            const containerItems = parseContainerFormat(rows);
+            if (containerItems && containerItems.length > 0) {
+              items.push.apply(items, containerItems);
+            } else {
+              // 无表头且非集装箱：每行作为自由文本解析
+              for (const row of rows) {
+                const text = row.join(' ').trim();
+                if (!text) continue;
+                const parsed = PricingEngine.parseFreeText(text, basePrice);
+                if (typeof parsed === 'object') items.push(parsed);
+              }
             }
           }
 
@@ -240,5 +333,5 @@ const ExcelParser = (() => {
     return rows;
   }
 
-  return { parseExcel, exportToExcel };
+  return { parseExcel, exportToExcel, parseContainerFormat };
 })();
