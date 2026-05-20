@@ -57,14 +57,13 @@ const ExcelParser = (() => {
                 // 跳过分类标题行（没有厚度数字的纯文本行）
                 if (isNaN(parseFloat(thkRaw))) continue;
 
-                // 标准化表面和膜名（通过 engine 的别名系统）
-                const surface = PricingEngine.normalizeSurface(surfRaw);
-                const film = PricingEngine.normalizeFilm(filmRaw);
+                // 标准化表面名（仅用于计算，原文保留）
+                const normSurface = PricingEngine.normalizeSurface(surfRaw);
 
                 items.push({
                   origin: '宏旺',
                   material: defaultMaterial,
-                  surface: surface || surfRaw,
+                  surface: surfRaw, // 保持原始英文
                   thickness: thkRaw,
                   width: defaultWidth,
                   length: defaultLength,
