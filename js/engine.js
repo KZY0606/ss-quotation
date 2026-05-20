@@ -109,6 +109,39 @@ const PricingEngine = (() => {
     return s;
   }
 
+  // AFP检测：从表面名称中提取AFP变种
+  // 支持的格式：
+  //   "表面 + AFP" / "表面+AFP(M)" / "表面(AFP)" / "表面(AFP(M))"
+  //   "表面哑光抗指纹" / "表面亮光抗指纹"
+  function detectAFP(surface) {
+    if (!surface) return null;
+    const s = surface.trim();
+
+    // 格式1: "表面 + AFP" / "表面+AFP(B)" / "表面+AFP(M)"
+    let m = s.match(/^(.+?)\s*[+]\s*AFP\s*(?:\(([^)]*)\))?\s*$/i);
+    if (m) {
+      const spec = (m[2] || '').toLowerCase();
+      return { baseName: m[1].trim(), isMatte: spec === 'm' || spec === 'matte' };
+    }
+
+    // 格式2: "表面(AFP)" / "表面(AFP(M))"
+    m = s.match(/^(.+?)\s*\(AFP\s*(?:\(?([^)]*)\)?)?\)\s*$/i);
+    if (m) {
+      const spec = (m[2] || '').toLowerCase();
+      return { baseName: m[1].trim(), isMatte: spec === 'm' || spec === 'matte' };
+    }
+
+    // 格式3: "表面哑光抗指纹" / "表面哑光无指纹"
+    m = s.match(/^(.+?)(?:哑光抗指纹|哑光无指纹)$/);
+    if (m) return { baseName: m[1].trim(), isMatte: true };
+
+    // 格式4: "表面亮光抗指纹" / "表面亮光无指纹"
+    m = s.match(/^(.+?)(?:亮光抗指纹|亮光无指纹)$/);
+    if (m) return { baseName: m[1].trim(), isMatte: false };
+
+    return null;
+  }
+
   function calculate(item) {
     const errors = [];
     const material = (item.material || '').trim();
@@ -141,7 +174,18 @@ const PricingEngine = (() => {
     const linenMatch = surface.match(/^(.+)-LINEN$/i);
     const hasLinen = linenMatch || /^LINEN$/.test(surface);
     const baseName = hasLinen && linenMatch ? linenMatch[1] : surface;
-    const baseSurface = normalizeSurface(baseName);
+    let baseSurface = normalizeSurface(baseName);
+
+    // 检测AFP(抗指纹)附加工艺 — 仅当表面本身不存在于SURFACE_FEES时进行
+    let afpSqmFee = 0;
+    if (!SURFACE_FEES[baseSurface]) {
+      const afpInfo = detectAFP(baseSurface);
+      if (afpInfo) {
+        const afpBase = normalizeSurface(afpInfo.baseName);
+        if (afpBase && SURFACE_FEES[afpBase]) baseSurface = afpBase;
+        afpSqmFee = afpInfo.isMatte ? AFP_MATTE_FEE : AFP_BRIGHT_FEE;
+      }
+    }
 
     let surfaceFeePerTon = 0;
     let linenFeePerTon = hasLinen ? LINEN_FEE : 0;
@@ -164,12 +208,13 @@ const PricingEngine = (() => {
     }
     const film1PerTon = film1Fee ? round2(film1Fee * sqmPerTon) : 0;
     const film2PerTon = film2Fee ? round2(film2Fee * sqmPerTon) : 0;
+    const afpPerTon = round2(afpSqmFee * sqmPerTon);
 
     if (errors.length > 0) {
       return { success: false, errors };
     }
 
-    const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + linenFeePerTon + film1PerTon + film2PerTon);
+    const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon);
     const taxExcluded = round2(subtotal * 0.92);
     const costTax = round10(subtotal);
     const costNoTax = round10(taxExcluded);
@@ -189,6 +234,7 @@ const PricingEngine = (() => {
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
         surfaceFeePerTon: round2(surfaceFeePerTon),
         linenFeePerTon,
+        afpFeeSqm: afpSqmFee, afpPerTon,
         film1FeeSqm: film1Fee || 0, film1PerTon,
         film2FeeSqm: film2Fee || 0, film2PerTon,
         costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded),
