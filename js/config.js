@@ -123,6 +123,10 @@ const SURFACE_FEES = {
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9,   unit: 'sqm' }
   ],
+  '磨砂黄钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9,   unit: 'sqm' }
+  ],
   '拉丝玫瑰金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
@@ -132,6 +136,10 @@ const SURFACE_FEES = {
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
   '拉丝黑钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
+  ],
+  '磨砂黑钛金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
   ],
@@ -149,6 +157,10 @@ const SURFACE_FEES = {
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' }
   ],
   '拉丝香槟金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
+  '磨砂香槟金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
@@ -229,6 +241,8 @@ const SURFACE_ALIASES = {
   '拉丝黄钛金': '拉丝黄钛金', '拉丝玫瑰金': '拉丝玫瑰金', '拉丝黑钛金': '拉丝黑钛金',
   'gold no4': '拉丝黄钛金',
   'rosegold no4': '磨砂玫瑰金', '磨砂玫瑰金': '磨砂玫瑰金', '砂面玫瑰金': '磨砂玫瑰金',
+  '磨砂黄钛金': '磨砂黄钛金', '磨砂黑钛金': '磨砂黑钛金', '磨砂香槟金': '磨砂香槟金',
+  'champagne gold no4': '磨砂香槟金',
   '拉丝古铜哑光抗指纹': '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹': '拉丝古铜亮光抗指纹',
   '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
