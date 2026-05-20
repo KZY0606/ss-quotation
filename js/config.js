@@ -166,6 +166,10 @@ const SURFACE_FEES = {
 // 小珠光压花附加费 (元/吨)
 const LINEN_FEE = 300;
 
+// AFP抗指纹价格 (元/平米)
+const AFP_BRIGHT_FEE = 2;  // 亮光无指纹 (默认)
+const AFP_MATTE_FEE = 5;   // 哑光抗指纹
+
 // 保护膜 (元/平米)
 const FILM_FEES = {
   '垫纸':           0.3,
