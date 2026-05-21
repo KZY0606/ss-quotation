@@ -497,10 +497,6 @@ const App = (() => {
       }
     }
 
-    coloredDisplay.forEach(item => {
-      const cfg = SURFACE_FEES[item.key || item.keys[0]];
-      if (cfg) renderSurfaceRows(item.display, cfg);
-    });
     standardSurfaces.forEach(name => {
       if (name === '砂面/拉丝(NO.4/HL)') {
         const cfg = SURFACE_FEES['NO.4'];
@@ -509,6 +505,10 @@ const App = (() => {
         const cfg = SURFACE_FEES[name];
         if (cfg) renderSurfaceRows(name, cfg);
       }
+    });
+    coloredDisplay.forEach(item => {
+      const cfg = SURFACE_FEES[item.key || item.keys[0]];
+      if (cfg) renderSurfaceRows(item.display, cfg);
     });
     h.push('</table>');
 
