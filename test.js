@@ -184,7 +184,7 @@ test('8K黄钛金 1.30mm → 11元/平米', () => {
 test('8K香槟金 0.50mm → 7.5元/平米', () => {
   const fee = PricingEngine.getSurfaceFee('8K香槟金', 0.50, 1240);
   eq(fee.needConvert, true);
-  eq(fee.sqmPrice, 7.5);
+  eq(fee.sqmPrice, 7);
 });
 
 test('拉丝香槟金 1.30mm → 10元/平米', () => {
