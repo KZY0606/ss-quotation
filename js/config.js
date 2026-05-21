@@ -64,6 +64,43 @@ const THICKNESS_SURCHARGE_304 = [
   { min: 0.80, max: 3.00, price: 300 }
 ];
 
+// 产地特异性厚度加价表 (201系列)
+// 未列出的产地使用默认 THICKNESS_SURCHARGE（宏旺/德龙标准）
+const ORIGIN_THICKNESS_SURCHARGE = {
+  '甬金': [
+    { min: 0.25, max: 0.27, price: 2100 },
+    { min: 0.28, max: 0.29, price: 1300 },
+    { min: 0.30, max: 0.32, price: 1200 },
+    { min: 0.33, max: 0.37, price: 1100 },
+    { min: 0.38, max: 0.39, price: 900 },
+    { min: 0.40, max: 0.40, price: 850 },
+    { min: 0.41, max: 0.49, price: 800 },
+    { min: 0.50, max: 0.50, price: 700 },
+    { min: 0.51, max: 0.59, price: 650 },
+    { min: 0.60, max: 0.69, price: 600 },
+    { min: 0.70, max: 0.79, price: 500 },
+    { min: 0.80, max: 1.20, price: 400 },
+    { min: 1.21, max: 1.50, price: 300 },
+    { min: 1.51, max: 3.00, price: 300 }
+  ],
+  '上克': [
+    { min: 0.25, max: 0.27, price: 2100 },
+    { min: 0.28, max: 0.29, price: 1300 },
+    { min: 0.30, max: 0.32, price: 1200 },
+    { min: 0.33, max: 0.37, price: 1100 },
+    { min: 0.38, max: 0.39, price: 850 },
+    { min: 0.40, max: 0.40, price: 850 },
+    { min: 0.41, max: 0.49, price: 800 },
+    { min: 0.50, max: 0.50, price: 700 },
+    { min: 0.51, max: 0.59, price: 650 },
+    { min: 0.60, max: 0.69, price: 600 },
+    { min: 0.70, max: 0.79, price: 450 },
+    { min: 0.80, max: 1.20, price: 350 },
+    { min: 1.21, max: 1.50, price: 300 },
+    { min: 1.51, max: 3.00, price: 300 }
+  ]
+};
+
 // 表面加工费 — 304 特例（与201不同价格的表面）
 const SURFACE_FEES_304 = {
   '8K黑钛金': [
