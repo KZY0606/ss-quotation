@@ -473,15 +473,15 @@ const App = (() => {
       { display: '8K紫红', key: '8K紫红' },
       { display: '8K中国红', key: '8K中国红' },
       { display: '8K古铜', key: '8K古铜' },
-      { display: '砂面/拉丝黄钛金', keys: ['拉丝黄钛金','磨砂黄钛金'] },
-      { display: '砂面/拉丝玫瑰金', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
-      { display: '砂面/拉丝香槟金', keys: ['拉丝香槟金','磨砂香槟金'] },
-      { display: '砂面/拉丝黑钛金', keys: ['拉丝黑钛金','磨砂黑钛金'] },
-      { display: '拉丝/砂面古铜', keys: ['拉丝古铜','磨砂古铜'] },
-      { display: '拉丝/砂面古铜哑光抗指纹', key: '拉丝古铜哑光抗指纹' },
-      { display: '拉丝/砂面古铜亮光抗指纹', key: '拉丝古铜亮光抗指纹' }
+      { display: '砂面/拉丝(NO.4/HL)黄钛金', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金', keys: ['拉丝香槟金','磨砂香槟金'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)古铜', keys: ['拉丝古铜','磨砂古铜'] },
+      { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹', key: '拉丝古铜哑光抗指纹' },
+      { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹', key: '拉丝古铜亮光抗指纹' }
     ];
-    const standardSurfaces = ['NO.4', 'HL', '8K', '双面8K', '6K', '双面6K', '单面抛光', '双面抛光'];
+    const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '双面8K'];
 
     function renderSurfaceRows(displayName, cfg) {
       if (Array.isArray(cfg)) {
@@ -502,8 +502,13 @@ const App = (() => {
       if (cfg) renderSurfaceRows(item.display, cfg);
     });
     standardSurfaces.forEach(name => {
-      const cfg = SURFACE_FEES[name];
-      if (cfg) renderSurfaceRows(name, cfg);
+      if (name === '砂面/拉丝(NO.4/HL)') {
+        const cfg = SURFACE_FEES['NO.4'];
+        if (cfg) renderSurfaceRows(name, cfg);
+      } else {
+        const cfg = SURFACE_FEES[name];
+        if (cfg) renderSurfaceRows(name, cfg);
+      }
     });
     h.push('</table>');
 
