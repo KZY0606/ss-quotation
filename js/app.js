@@ -6,10 +6,13 @@ const App = (() => {
   let results = [];
   let allExpanded = false;
 
-  // 各产地 J2 基价
+  // 各产地 J2 基价 (201)
   let originPrices = {};
   let originOrder = [...ORIGIN_PRESETS];
-  let lockedOrigins = {}; // { "宏旺": true, "青山": ... } 锁定状态
+  let lockedOrigins = {};
+  // 各产地 J2 基价 (304)
+  let originPrices304 = {};
+  let lockedOrigins304 = {};
   let j5Price = 0;
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
@@ -17,6 +20,10 @@ const App = (() => {
 
   // ========== 基价计算 ==========
   function getMaterialPrice(origin, material) {
+    if (material === '304' || material.startsWith('304')) {
+      const p = originPrices304[origin];
+      return (p && p > 0) ? p : null;
+    }
     const j2 = originPrices[origin];
     if (!j2 || j2 <= 0) return null;
     if (material === '201J5') return j5Price;
@@ -33,7 +40,8 @@ const App = (() => {
     // Initialize origin prices
     originOrder.forEach(o => { originPrices[o] = 0; });
     originPrices['宏旺'] = 7800; // default
-    loadLockedPrices(); // 恢复已锁定的价格
+    originOrder.forEach(o => { originPrices304[o] = 0; });
+    loadLockedPrices(); // 恢复已锁定的价格（201 + 304）
     loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
     PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
 
@@ -121,93 +129,52 @@ const App = (() => {
   function renderOriginGrid() {
     els.originRows.innerHTML = '';
     originOrder.forEach(origin => {
-      const div = document.createElement('div');
-      div.className = 'origin-row';
       const price = originPrices[origin] || 0;
       const locked = !!lockedOrigins[origin];
       const j1 = price ? price + 900 : 0;
       const j3 = price ? price + 400 : 0;
       const j4 = price ? price + 1600 : 0;
+      const price304 = originPrices304[origin] || 0;
+      const locked304 = !!lockedOrigins304[origin];
+      const div = document.createElement('div');
+      div.className = 'origin-row';
       div.innerHTML = `
-        <span class="oname">${origin}</span>
-        <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" title="${locked ? '点击解锁' : '点击锁定'}">
-          ${locked ? '🔒' : '🔓'}
-        </button>
-        <div class="oj2"><label>J2</label><input type="number" class="origin-j2-input" data-origin="${origin}" value="${price || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
+        <span class="oname" style="min-width:60px">${origin}</span>
+        <div class="oj2"><label>201 J2</label><input type="number" class="origin-j2-input" data-origin="${origin}" value="${price || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
+        <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" data-mat="201" title="${locked ? '点击解锁' : '点击锁定'}">${locked ? '🔒' : '🔓'}</button>
         <span class="oarrow">→</span>
         <span class="oderived">
           ${price > 0 
             ? `J1: <b>${j1.toLocaleString()}</b>  J3: <b>${j3.toLocaleString()}</b>  J4: <b>${j4.toLocaleString()}</b>`
-            : '<span class="oderived-hint">请填写 J2 基价</span>'}
+            : '<span class="oderived-hint">请填写 201 J2 基价</span>'}
+        </span>
+        <br>
+        <div class="oj2" style="margin-top:4px"><label>304 J2</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" ${locked304 ? 'readonly' : ''}></div>
+        <button class="o-lock ${locked304 ? 'locked' : ''}" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
+        <span class="oarrow" style="visibility:hidden">→</span>
+        <span class="oderived304">
+          ${price304 > 0 ? `304 J2: <b>${price304.toLocaleString()}</b>` : '<span class="oderived-hint" style="font-size:0.85em">请填写 304 J2 基价</span>'}
         </span>
         ${originOrder.length > ORIGIN_PRESETS.length ? `<button class="o-remove" data-origin="${origin}" title="删除">✕</button>` : ''}
       `;
       els.originRows.appendChild(div);
     });
-    // Bind origin J2 inputs - keyboard nav + paste support
-    const originInputs = document.querySelectorAll('.origin-j2-input');
-    originInputs.forEach((inp, i) => {
-      inp.addEventListener('input', () => {
-        const o = inp.dataset.origin;
-        originPrices[o] = parseFloat(inp.value) || 0;
-        updateDerivedDisplay(o);  // 只更新文本，不重建DOM
-        updateAllDerived();
-      });
-      // Enter → 下一个产地
-      inp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          if (e.shiftKey && i > 0) originInputs[i - 1].focus();
-          else if (!e.shiftKey && i < originInputs.length - 1) originInputs[i + 1].focus();
-        }
-      });
-      // 批量粘贴：支持 "7800, 7900, 7700" 分布到多个产地
-      inp.addEventListener('paste', (e) => {
-        setTimeout(() => {
-          const val = inp.value;
-          const nums = val.split(/[,，\s]+/).filter(x => x && !isNaN(parseFloat(x))).map(x => parseFloat(x.trim()));
-          if (nums.length > 1) {
-            e.preventDefault();
-            // 从当前产地开始，依次填入
-            for (let j = 0; j < nums.length && i + j < originInputs.length; j++) {
-              const target = originInputs[i + j];
-              const o2 = target.dataset.origin;
-              originPrices[o2] = nums[j];
-              target.value = nums[j];
-              updateDerivedDisplay(o2);  // 只更新文本
-            }
-            updateAllDerived();
-            // 焦点移到下一个未填的
-            const newInputs = document.querySelectorAll('.origin-j2-input');
-            if (i + nums.length < newInputs.length) newInputs[i + nums.length].focus();
-            showToast(`已填入 ${Math.min(nums.length, originInputs.length - i)} 个产地`, 'success');
-            return;
-          }
-          // 单个数字粘贴：直接填入当前
-          if (nums.length === 1) {
-            const o = inp.dataset.origin;
-            originPrices[o] = nums[0];
-            updateDerivedDisplay(o);  // 只更新文本
-            updateAllDerived();
-            // 焦点移到下一个
-            const newInputs = document.querySelectorAll('.origin-j2-input');
-            if (i < newInputs.length - 1) newInputs[i + 1].focus();
-          }
-        }, 10);
-      });
-    });
-    document.querySelectorAll('.o-remove').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const o = btn.dataset.origin;
-        originOrder = originOrder.filter(x => x !== o);
-        delete originPrices[o];
-        renderOriginGrid();
-      });
-    });
+    // Bind 201 inputs
+    bindOriginInputs('.origin-j2-input', originPrices, '201');
+    // Bind 304 inputs
+    bindOriginInputs('.origin-304-input', originPrices304, '304');
+
     // Lock toggle
     document.querySelectorAll('.o-lock').forEach(btn => {
       btn.addEventListener('click', () => {
-        toggleLock(btn.dataset.origin);
+        const mat = btn.dataset.mat;
+        if (mat === '304') {
+          lockedOrigins304[btn.dataset.origin] = !lockedOrigins304[btn.dataset.origin];
+          saveLockedPrices();
+          renderOriginGrid();
+        } else {
+          toggleLock(btn.dataset.origin);
+        }
       });
     });
     // Manual add dropdown
@@ -216,6 +183,26 @@ const App = (() => {
       sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
       syncManualPrices();
     }
+  }
+
+  function bindOriginInputs(selector, priceMap) {
+    const inputs = document.querySelectorAll(selector);
+    inputs.forEach((inp, i) => {
+      inp.addEventListener('input', () => {
+        const o = inp.dataset.origin;
+        priceMap[o] = parseFloat(inp.value) || 0;
+        renderOriginGrid(); // 刷新显示（包含派生价格）
+        updateAllDerived();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const all = document.querySelectorAll(selector);
+          if (e.shiftKey && i > 0) all[i - 1].focus();
+          else if (!e.shiftKey && i < all.length - 1) all[i + 1].focus();
+        }
+      });
+    });
   }
 
   function updateDerivedDisplay(origin) {
@@ -254,6 +241,7 @@ const App = (() => {
     if (originOrder.includes(name)) { showToast('该产地已存在', 'error'); return; }
     originOrder.push(name);
     originPrices[name] = 0;
+    originPrices304[name] = 0;
     els.newOriginInput.value = '';
     renderOriginGrid();
     showToast(`已添加产地: ${name}`, 'success');
@@ -272,6 +260,12 @@ const App = (() => {
         if (lockedOrigins[o]) data[o] = p;
       }
       localStorage.setItem('kk_locked_prices', JSON.stringify(data));
+      // 304 locked prices
+      const data304 = {};
+      for (const [o, p] of Object.entries(originPrices304)) {
+        if (lockedOrigins304[o]) data304[o] = p;
+      }
+      localStorage.setItem('kk_locked_prices_304', JSON.stringify(data304));
     } catch (e) { /* ignore */ }
   }
 
@@ -284,6 +278,17 @@ const App = (() => {
         if (originPrices.hasOwnProperty(o) || originOrder.includes(o)) {
           originPrices[o] = p;
           lockedOrigins[o] = true;
+        }
+      }
+    } catch (e) { /* ignore */ }
+    try {
+      const raw304 = localStorage.getItem('kk_locked_prices_304');
+      if (!raw304) return;
+      const data304 = JSON.parse(raw304);
+      for (const [o, p] of Object.entries(data304)) {
+        if (originPrices304.hasOwnProperty(o) || originOrder.includes(o)) {
+          originPrices304[o] = p;
+          lockedOrigins304[o] = true;
         }
       }
     } catch (e) { /* ignore */ }
