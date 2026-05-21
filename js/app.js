@@ -365,55 +365,84 @@ const App = (() => {
     const wrap = dom('surfaceConfigTable');
     if (!wrap) return;
     const surfOrder = [
-      '2B', 'NO.4', 'HL', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '双面8K',
-      '8K黄钛金', '8K玫瑰金', '8K香槟金', '8K黑钛金', '8K宝石蓝', '8K紫罗兰', '8K翡翠绿', '8K紫红', '8K中国红', '8K古铜',
-      '拉丝黄钛金', '磨砂黄钛金', '拉丝玫瑰金', '磨砂玫瑰金', '拉丝香槟金', '磨砂香槟金', '拉丝黑钛金', '磨砂黑钛金',
-      '拉丝古铜', '磨砂古铜', '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹'
+      { display: '2B', key: '2B' },
+      { display: 'NO.4', key: 'NO.4' },
+      { display: 'HL', key: 'HL' },
+      { display: '单面抛光', key: '单面抛光' },
+      { display: '双面抛光', key: '双面抛光' },
+      { display: '6K', key: '6K' },
+      { display: '双面6K', key: '双面6K' },
+      { display: '8K', key: '8K' },
+      { display: '双面8K', key: '双面8K' },
+      // 8K 彩色
+      { display: '8K黄钛金', key: '8K黄钛金' },
+      { display: '8K玫瑰金', key: '8K玫瑰金' },
+      { display: '8K香槟金', key: '8K香槟金' },
+      { display: '8K黑钛金', key: '8K黑钛金' },
+      { display: '8K宝石蓝', key: '8K宝石蓝' },
+      { display: '8K紫罗兰', key: '8K紫罗兰' },
+      { display: '8K翡翠绿', key: '8K翡翠绿' },
+      { display: '8K紫红', key: '8K紫红' },
+      { display: '8K中国红', key: '8K中国红' },
+      { display: '8K古铜', key: '8K古铜' },
+      // 砂面/拉丝 合并
+      { display: '砂面/拉丝(NO.4/HL)黄钛金', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金', keys: ['拉丝香槟金','磨砂香槟金'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)古铜', keys: ['拉丝古铜','磨砂古铜'] },
+      { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹', key: '拉丝古铜哑光抗指纹' },
+      { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹', key: '拉丝古铜亮光抗指纹' }
     ];
     let html = '<table><thead><tr><th>表面名称</th><th>覆盖价(元/平米)</th><th>阶梯默认价</th><th></th></tr></thead><tbody>';
-    surfOrder.forEach(name => {
-      const cfg = SURFACE_FEES[name];
+    surfOrder.forEach(item => {
+      const cfgKey = item.key || item.keys[0];
+      const cfg = SURFACE_FEES[cfgKey];
       if (!cfg) return;
+      const names = item.key ? item.key : item.keys.join(',');
+      const display = item.display;
       if (typeof cfg === 'object' && cfg.price !== undefined && !Array.isArray(cfg)) {
         const defaultPrice = cfg.price;
-        const val = priceOverrides.surfaceFees[name] ?? defaultPrice;
-        const locked = !!priceOverrides.surfaceLocked[name];
+        const val = priceOverrides.surfaceFees[cfgKey] ?? defaultPrice;
+        const locked = !!priceOverrides.surfaceLocked[cfgKey];
         html += `<tr>
-          <td><span class="cfg-name">${name}</span></td>
-          <td><input type="number" class="cfg-price-input surf-price-inp" data-name="${name}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
+          <td><span class="cfg-name">${display}</span></td>
+          <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${names}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
           <td><span class="cfg-default">${defaultPrice}</span></td>
-          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
+          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${names}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
         </tr>`;
       } else if (Array.isArray(cfg)) {
         const tiers = cfg.filter(t => t.unit === 'sqm' || !t.unit);
         if (tiers.length === 0) return;
         const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
-        const val = priceOverrides.surfaceFees[name] ?? tiers[0].price;
-        const locked = !!priceOverrides.surfaceLocked[name];
+        const val = priceOverrides.surfaceFees[cfgKey] ?? tiers[0].price;
+        const locked = !!priceOverrides.surfaceLocked[cfgKey];
         html += `<tr>
-          <td><span class="cfg-name">${name}</span></td>
-          <td><input type="number" class="cfg-price-input surf-price-inp" data-name="${name}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
+          <td><span class="cfg-name">${display}</span></td>
+          <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${names}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
           <td><span class="cfg-default">${tierDesc}</span></td>
-          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
+          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${names}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
         </tr>`;
       }
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
 
-    // 绑定输入事件
+    // 绑定输入事件 (支持合并名)
     wrap.querySelectorAll('.surf-price-inp').forEach(inp => {
       inp.addEventListener('input', () => {
-        const name = inp.dataset.name;
-        priceOverrides.surfaceFees[name] = parseFloat(inp.value) || 0;
+        const names = inp.dataset.names.split(',');
+        const v = parseFloat(inp.value) || 0;
+        names.forEach(n => { priceOverrides.surfaceFees[n] = v; });
         savePriceOverrides();
       });
     });
-    // 绑定锁定事件
+    // 绑定锁定事件 (支持合并名)
     wrap.querySelectorAll('.cfg-lock-btn[data-type="surf"]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const name = btn.dataset.name;
-        priceOverrides.surfaceLocked[name] = !priceOverrides.surfaceLocked[name];
+        const names = btn.dataset.names.split(',');
+        const locked = !priceOverrides.surfaceLocked[names[0]];
+        names.forEach(n => { priceOverrides.surfaceLocked[n] = locked; });
         savePriceOverrides();
         renderSurfaceConfig();
       });
