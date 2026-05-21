@@ -422,7 +422,7 @@ const App = (() => {
     // ===== 1. 厚度加价总表 =====
     h.push('<div class="ref-section"><h3 class="ref-title">📐 厚度加价总表</h3>');
     // 默认表
-    h.push('<h4 class="ref-subtitle">宏旺201(J2)</h4>');
+    h.push('<h4 class="ref-subtitle">宏旺201(正材）</h4>');
     h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
     THICKNESS_SURCHARGE.forEach(t => {
       h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
@@ -430,7 +430,7 @@ const App = (() => {
     h.push('</table>');
 
     // 压延料表
-    h.push('<h4 class="ref-subtitle">201 压延料</h4>');
+    h.push('<h4 class="ref-subtitle">本地201(压延）</h4>');
     h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
     YANYAN_THICKNESS_SURCHARGE.forEach(t => {
       h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
