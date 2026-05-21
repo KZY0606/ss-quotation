@@ -189,7 +189,6 @@ const App = (() => {
       inp.addEventListener('input', () => {
         const o = inp.dataset.origin;
         priceMap[o] = parseFloat(inp.value) || 0;
-        renderOriginGrid(); // 刷新显示（包含派生价格）
         updateAllDerived();
       });
       inp.addEventListener('keydown', (e) => {
@@ -199,6 +198,12 @@ const App = (() => {
           if (e.shiftKey && i > 0) all[i - 1].focus();
           else if (!e.shiftKey && i < all.length - 1) all[i + 1].focus();
         }
+      });
+      inp.addEventListener('blur', () => {
+        const o = inp.dataset.origin;
+        priceMap[o] = parseFloat(inp.value) || 0;
+        if (selector === '.origin-j2-input') updateDerivedDisplay(o);
+        saveLockedPrices();
       });
     });
   }
