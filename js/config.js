@@ -280,7 +280,7 @@ const FILM_FEES = {
   '7C-FILM':        1.2,
   'HW 7C-FILM':     1.2,
   '10C-FILM':       2.0,
-  '7C-LASER-FILM':  1.5,
+  '7C-LASER-FILM':  2.0,
   '7C-ACHEM-FILM':  4.0,
   '7C-POLI-FILM':   5.5,
   '7C-NOVACEL-FILM':6.6,
@@ -290,7 +290,7 @@ const FILM_FEES = {
   '5C+5C-FILM':  2.0,
   '7C+5C-FILM':  2.2,
   '7C+7C-FILM':  2.4,
-  '7C-LASER+5C-FILM':  2.5
+  '7C-LASER+5C-FILM':  3.0
 };
 
 // 销售加价 (元/吨)
