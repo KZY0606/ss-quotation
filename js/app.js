@@ -460,21 +460,50 @@ const App = (() => {
     h.push('<div class="ref-section"><h3 class="ref-title">✨ 表面加工费总表</h3>');
     h.push('<h4 class="ref-subtitle">201 表面加工费</h4>');
     h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
-    Object.entries(SURFACE_FEES).forEach(([name, cfg]) => {
+
+    // 自定义排列顺序：8K彩色 → 砂面/拉丝 → 其他标准表面
+    const coloredDisplay = [
+      { display: '8K黄钛金', key: '8K黄钛金' },
+      { display: '8K玫瑰金', key: '8K玫瑰金' },
+      { display: '8K香槟金', key: '8K香槟金' },
+      { display: '8K黑钛金', key: '8K黑钛金' },
+      { display: '8K宝石蓝', key: '8K宝石蓝' },
+      { display: '8K紫罗兰', key: '8K紫罗兰' },
+      { display: '8K翡翠绿', key: '8K翡翠绿' },
+      { display: '8K紫红', key: '8K紫红' },
+      { display: '8K中国红', key: '8K中国红' },
+      { display: '8K古铜', key: '8K古铜' },
+      { display: '砂面/拉丝黄钛金', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+      { display: '砂面/拉丝玫瑰金', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+      { display: '砂面/拉丝香槟金', keys: ['拉丝香槟金','磨砂香槟金'] },
+      { display: '砂面/拉丝黑钛金', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+      { display: '拉丝/砂面古铜', keys: ['拉丝古铜','磨砂古铜'] },
+      { display: '拉丝/砂面古铜哑光抗指纹', key: '拉丝古铜哑光抗指纹' },
+      { display: '拉丝/砂面古铜亮光抗指纹', key: '拉丝古铜亮光抗指纹' }
+    ];
+    const standardSurfaces = ['NO.4', 'HL', '8K', '双面8K', '6K', '双面6K', '单面抛光', '双面抛光'];
+
+    function renderSurfaceRows(displayName, cfg) {
       if (Array.isArray(cfg)) {
         cfg.forEach((tier, i) => {
           const thick = `${tier.tMin ?? '—'}～${tier.tMax ?? '—'}`;
           const wide = (tier.wMin || tier.wMax) ? `${tier.wMin ?? '—'}～${tier.wMax ?? '—'}` : '—';
           const unit = tier.unit === 'sqm' ? '元/㎡' : '元/吨';
-          h.push(`<tr><td>${i === 0 ? name : ''}</td><td>${thick}</td><td>${wide}</td><td class="ref-num">${tier.price} ${unit}</td></tr>`);
+          h.push(`<tr><td>${i === 0 ? displayName : ''}</td><td>${thick}</td><td>${wide}</td><td class="ref-num">${tier.price} ${unit}</td></tr>`);
         });
       } else if (typeof cfg === 'object' && cfg.price !== undefined) {
-        // 单条 flat 价格（如 单面抛光、双面抛光）
         const unit = cfg.type === 'sqm' ? '元/㎡' : '元/吨';
-        h.push(`<tr><td>${name}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg.price} ${unit}</td></tr>`);
-      } else if (typeof cfg === 'number') {
-        h.push(`<tr><td>${name}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg} 元/吨</td></tr>`);
+        h.push(`<tr><td>${displayName}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg.price} ${unit}</td></tr>`);
       }
+    }
+
+    coloredDisplay.forEach(item => {
+      const cfg = SURFACE_FEES[item.key || item.keys[0]];
+      if (cfg) renderSurfaceRows(item.display, cfg);
+    });
+    standardSurfaces.forEach(name => {
+      const cfg = SURFACE_FEES[name];
+      if (cfg) renderSurfaceRows(name, cfg);
     });
     h.push('</table>');
 
