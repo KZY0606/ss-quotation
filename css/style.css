@@ -640,6 +640,7 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .ref-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 12px; border-radius: 6px; overflow: hidden; }
 .ref-table th { background: var(--steel-2); color: var(--primary-dark); font-weight: 600; padding: 5px 8px; border: 1px solid var(--border); text-align: left; }
 .ref-table td { padding: 3px 8px; border: 1px solid var(--border); }
-.ref-table tr:nth-child(even) { background: var(--primary-bg); }
-.ref-table tr:hover { background: var(--steel-2); }
+.ref-table tr:nth-child(even) { background: #f1f5f9; }
+.ref-table tr:hover { background: #d4dce8 !important; }
+.ref-table tr:hover td { background: #d4dce8 !important; }
 .ref-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
