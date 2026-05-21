@@ -52,6 +52,34 @@ const YANYAN_THICKNESS_SURCHARGE = [
   { min: 0.76, max: 3.00, price: 300  }
 ];
 
+// 304 厚度加价表 (元/吨) — 德龙/宏旺相同
+const THICKNESS_SURCHARGE_304 = [
+  { min: 0.28, max: 0.30, price: 1300 },
+  { min: 0.31, max: 0.35, price: 1000 },
+  { min: 0.36, max: 0.40, price: 800 },
+  { min: 0.41, max: 0.49, price: 700 },
+  { min: 0.50, max: 0.59, price: 600 },
+  { min: 0.60, max: 0.69, price: 500 },
+  { min: 0.70, max: 0.79, price: 400 },
+  { min: 0.80, max: 3.00, price: 300 }
+];
+
+// 表面加工费 — 304 特例（与201不同价格的表面）
+const SURFACE_FEES_304 = {
+  '8K黑钛金': [
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 15, unit: 'sqm' }
+  ],
+  '拉丝黑钛金': [
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+  ],
+  '磨砂黑钛金': [
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+  ]
+};
+
 // 表面加工费
 const SURFACE_FEES = {
   '2B': { type: 'none', price: 0 },
