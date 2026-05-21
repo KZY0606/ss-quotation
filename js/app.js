@@ -364,9 +364,17 @@ const App = (() => {
   function renderSurfaceConfig() {
     const wrap = dom('surfaceConfigTable');
     if (!wrap) return;
+    const surfOrder = [
+      '2B', 'NO.4', 'HL', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '双面8K',
+      '8K黄钛金', '8K玫瑰金', '8K香槟金', '8K黑钛金', '8K宝石蓝', '8K紫罗兰', '8K翡翠绿', '8K紫红', '8K中国红', '8K古铜',
+      '拉丝黄钛金', '磨砂黄钛金', '拉丝玫瑰金', '磨砂玫瑰金', '拉丝香槟金', '磨砂香槟金', '拉丝黑钛金', '磨砂黑钛金',
+      '拉丝古铜', '磨砂古铜', '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹'
+    ];
     let html = '<table><thead><tr><th>表面名称</th><th>覆盖价(元/平米)</th><th>阶梯默认价</th><th></th></tr></thead><tbody>';
-    for (const [name, cfg] of Object.entries(SURFACE_FEES)) {
-      if (typeof cfg === 'object' && cfg.type === 'sqm') {
+    surfOrder.forEach(name => {
+      const cfg = SURFACE_FEES[name];
+      if (!cfg) return;
+      if (typeof cfg === 'object' && cfg.price !== undefined && !Array.isArray(cfg)) {
         const defaultPrice = cfg.price;
         const val = priceOverrides.surfaceFees[name] ?? defaultPrice;
         const locked = !!priceOverrides.surfaceLocked[name];
@@ -377,10 +385,8 @@ const App = (() => {
           <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
         </tr>`;
       } else if (Array.isArray(cfg)) {
-        // 跳过 单面抛光/双面抛光（元/吨），只显示元/平米的有色表面
-        if (name === '单面抛光' || name === '双面抛光') continue;
         const tiers = cfg.filter(t => t.unit === 'sqm' || !t.unit);
-        if (tiers.length === 0) continue;
+        if (tiers.length === 0) return;
         const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
         const val = priceOverrides.surfaceFees[name] ?? tiers[0].price;
         const locked = !!priceOverrides.surfaceLocked[name];
@@ -391,7 +397,7 @@ const App = (() => {
           <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
         </tr>`;
       }
-    }
+    });
     html += '</tbody></table>';
     wrap.innerHTML = html;
 
