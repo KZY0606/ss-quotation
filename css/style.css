@@ -1,4 +1,4 @@
-﻿:root {
+﻿﻿:root {
   --primary: #475569;
   --primary-light: #64748b;
   --primary-dark: #334155;
@@ -632,3 +632,13 @@ tr.main-row:hover .delete-btn { opacity:1; }
   .calc-breakdown { grid-template-columns:1fr; }
 }
 
+
+/* ===== 价格参考表 ===== */
+.ref-section { margin-bottom: 24px; }
+.ref-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); }
+.ref-subtitle { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin: 12px 0 6px; }
+.ref-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
+.ref-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; padding: 6px 10px; border: 1px solid var(--border); text-align: left; }
+.ref-table td { padding: 4px 10px; border: 1px solid var(--border); }
+.ref-table tr:nth-child(even) { background: var(--bg-secondary); }
+.ref-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
