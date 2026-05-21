@@ -141,22 +141,18 @@ const App = (() => {
       const div = document.createElement('div');
       div.className = 'origin-row';
       div.innerHTML = `
-        <span class="oname" style="min-width:60px">${origin}</span>
-        <div class="oj2"><label>201 J2</label><input type="number" class="origin-j2-input" data-origin="${origin}" value="${price || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
+        <span class="oname" style="min-width:56px">${origin}</span>
+        <div class="oj2"><label>J2</label><input type="number" class="origin-j2-input" data-origin="${origin}" value="${price || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
         <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" data-mat="201" title="${locked ? '点击解锁' : '点击锁定'}">${locked ? '🔒' : '🔓'}</button>
         <span class="oarrow">→</span>
         <span class="oderived">
           ${price > 0 
             ? `J1: <b>${j1.toLocaleString()}</b>  J3: <b>${j3.toLocaleString()}</b>  J4: <b>${j4.toLocaleString()}</b>`
-            : '<span class="oderived-hint">请填写 201 J2 基价</span>'}
+            : '<span class="oderived-hint">请填写 J2 基价</span>'}
         </span>
-        <br>
-        <div class="oj2" style="margin-top:4px"><label>304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" ${locked304 ? 'readonly' : ''}></div>
-        <button class="o-lock ${locked304 ? 'locked' : ''}" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
-        <span class="oarrow" style="visibility:hidden">→</span>
-        <span class="oderived304">
-          ${price304 > 0 ? `304: <b>${price304.toLocaleString()}</b>` : '<span class="oderived-hint" style="font-size:0.85em">请填写 304 基价</span>'}
-        </span>
+        <span class="o304sep" style="margin:0 6px;color:var(--border);font-weight:200">|</span>
+        <div class="oj2" style="width:80px"><label style="font-size:10px">304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" style="width:60px;font-size:12px;padding:4px 6px;" ${locked304 ? 'readonly' : ''}></div>
+        <button class="o-lock ${locked304 ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
         ${originOrder.length > ORIGIN_PRESETS.length ? `<button class="o-remove" data-origin="${origin}" title="删除">✕</button>` : ''}
       `;
       els.originRows.appendChild(div);
