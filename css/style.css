@@ -12,7 +12,7 @@
   --warning: #d97706;
   --warning-bg: #fffbeb;
   --info: #0284c7;
-  --bg: #f8fafc;
+  --bg: #f1f5f9;
   --card: #ffffff;
   --text: #0f172a;
   --text-secondary: #64748b;
@@ -634,7 +634,7 @@ tr.main-row:hover .delete-btn { opacity:1; }
 
 
 /* ===== 价格参考表 ===== */
-.ref-section { margin-bottom: 24px; }
+.ref-section { margin-bottom: 24px; padding: 16px; background: var(--primary-bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
 .ref-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--steel-4); }
 .ref-subtitle { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin: 12px 0 6px; }
 .ref-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; border-radius: 6px; overflow: hidden; }
