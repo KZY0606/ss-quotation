@@ -218,7 +218,7 @@ const SURFACE_FEES = {
   ],
 
   '8K香槟金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7.5, unit: 'sqm' },
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' }
   ],
   '拉丝香槟金': [
