@@ -1,4 +1,4 @@
-﻿/**
+﻿﻿/**
  * KK不锈钢报价系统 - 主应用逻辑
  */
 const App = (() => {
@@ -50,6 +50,7 @@ const App = (() => {
     renderOriginGrid();
     renderFilmConfig();
     renderSurfaceConfig();
+    renderPriceReference();
     updateAllDerived();
     render();
   }
@@ -88,6 +89,7 @@ const App = (() => {
         // 渲染对应面板
         if (btn.dataset.config === 'films') renderFilmConfig();
         if (btn.dataset.config === 'surfaces') renderSurfaceConfig();
+        if (btn.dataset.config === 'reference') renderPriceReference();
       });
     });
 
@@ -409,6 +411,113 @@ const App = (() => {
         renderSurfaceConfig();
       });
     });
+  }
+
+  function renderPriceReference() {
+    const el = dom('priceReferenceTable');
+    if (!el) return;
+    let h = [];
+
+    // ===== 1. 厚度加价总表 =====
+    h.push('<div class="ref-section"><h3 class="ref-title">📐 厚度加价总表</h3>');
+    // 默认表
+    h.push('<h4 class="ref-subtitle">宏旺/德龙 (201 正材默认)</h4>');
+    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+    THICKNESS_SURCHARGE.forEach(t => {
+      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+    });
+    h.push('</table>');
+
+    // 压延料表
+    h.push('<h4 class="ref-subtitle">201 压延料</h4>');
+    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+    YANYAN_THICKNESS_SURCHARGE.forEach(t => {
+      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+    });
+    h.push('</table>');
+
+    // 304 表
+    h.push('<h4 class="ref-subtitle">304 加价</h4>');
+    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+    THICKNESS_SURCHARGE_304.forEach(t => {
+      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+    });
+    h.push('</table>');
+
+    // 产地特异性表
+    Object.entries(ORIGIN_THICKNESS_SURCHARGE).forEach(([origin, table]) => {
+      h.push(`<h4 class="ref-subtitle">${origin} (201 正材)</h4>`);
+      h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+      table.forEach(t => {
+        h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+      });
+      h.push('</table>');
+    });
+    h.push('</div>');
+
+    // ===== 2. 表面加工费总表 =====
+    h.push('<div class="ref-section"><h3 class="ref-title">✨ 表面加工费总表</h3>');
+    h.push('<h4 class="ref-subtitle">201 表面加工费</h4>');
+    h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围</th><th>宽度范围</th><th>单价</th></tr>');
+    Object.entries(SURFACE_FEES).forEach(([name, cfg]) => {
+      if (Array.isArray(cfg)) {
+        cfg.forEach((tier, i) => {
+          const thick = `${tier.minT ?? '—'}～${tier.maxT ?? '—'}`;
+          const wide = tier.minW || tier.maxW ? `${tier.minW ?? '—'}～${tier.maxW ?? '—'}` : '—';
+          const unit = tier.needConvert ? '元/㎡' : '元/吨';
+          const val = tier.needConvert ? tier.sqmPrice : tier.price;
+          h.push(`<tr><td>${i === 0 ? name : ''}</td><td>${thick} mm</td><td>${wide}</td><td class="ref-num">${val} ${unit}</td></tr>`);
+        });
+      } else if (cfg.price !== undefined) {
+        h.push(`<tr><td>${name}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg.price} 元/吨</td></tr>`);
+      }
+    });
+    h.push('</table>');
+
+    // 304 特例表面
+    if (Object.keys(SURFACE_FEES_304).length > 0) {
+      h.push('<h4 class="ref-subtitle">304 特例表面加工费 (与 201 不同的)</h4>');
+      h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围</th><th>宽度范围</th><th>单价</th></tr>');
+      Object.entries(SURFACE_FEES_304).forEach(([name, cfg]) => {
+        if (Array.isArray(cfg)) {
+          cfg.forEach((tier, i) => {
+            const thick = `${tier.minT ?? '—'}～${tier.maxT ?? '—'}`;
+            const wide = tier.minW || tier.maxW ? `${tier.minW ?? '—'}～${tier.maxW ?? '—'}` : '—';
+            const val = tier.sqmPrice;
+            h.push(`<tr><td>${i === 0 ? name : ''}</td><td>${thick} mm</td><td>${wide}</td><td class="ref-num">${val} 元/㎡</td></tr>`);
+          });
+        }
+      });
+      h.push('</table>');
+    }
+    h.push('</div>');
+
+    // ===== 3. 保护膜价格表 =====
+    h.push('<div class="ref-section"><h3 class="ref-title">🔖 保护膜价格</h3>');
+    h.push('<table class="ref-table"><tr><th>膜型号</th><th>单价 (元/㎡)</th></tr>');
+    Object.entries(FILM_FEES).forEach(([name, price]) => {
+      h.push(`<tr><td>${name}</td><td class="ref-num">${price}</td></tr>`);
+    });
+    h.push('</table></div>');
+
+    // ===== 4. 辅助参数 =====
+    h.push('<div class="ref-section"><h3 class="ref-title">⚙️ 辅助参数</h3>');
+    h.push('<table class="ref-table">');
+    h.push('<tr><td>密度 (201)</td><td class="ref-num">' + DENSITY['201'] + '</td></tr>');
+    h.push('<tr><td>密度 (304)</td><td class="ref-num">' + DENSITY['304'] + '</td></tr>');
+    h.push('<tr><td>不含税系数</td><td class="ref-num">0.92</td></tr>');
+    h.push('<tr><td>小珠光压花附加费</td><td class="ref-num">' + LINEN_FEE + ' 元/吨</td></tr>');
+    h.push('<tr><td>亮光抗指纹 (AFP Bright)</td><td class="ref-num">' + AFP_BRIGHT_FEE + ' 元/㎡</td></tr>');
+    h.push('<tr><td>哑光抗指纹 (AFP Matte)</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
+    h.push('<tr><td colspan="2" style="padding:4px"></td></tr>');
+    h.push('<tr><th>销售加价</th><th class="ref-num">元/吨</th></tr>');
+    Object.entries(SALES_MARKUP).forEach(([key, val]) => {
+      const label = key === 'roughCoil' ? '毛边卷板' : key === 'trimCoil' ? '齐边卷板' : key === 'roughSheet' ? '毛边平板' : key === 'trimSheet' ? '齐边平板' : key;
+      h.push(`<tr><td>${label}</td><td class="ref-num">+${val}</td></tr>`);
+    });
+    h.push('</table></div>');
+
+    el.innerHTML = h.join('');
   }
 
   // ========== 数据操作 ==========
