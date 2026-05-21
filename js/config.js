@@ -33,10 +33,10 @@ const THICKNESS_SURCHARGE = [
   { min: 0.36, max: 0.40, price: 1100 },
   { min: 0.41, max: 0.45, price: 900  },
   { min: 0.46, max: 0.49, price: 700  },
-  { min: 0.50, max: 0.59, price: 500  },
+  { min: 0.50, max: 0.59, price: 600  },
   { min: 0.60, max: 0.75, price: 400  },
   { min: 0.76, max: 0.79, price: 300  },
-  { min: 0.80, max: 3.00, price: 200  }
+  { min: 0.80, max: 3.00, price: 300  }
 ];
 
 // 压延料厚度加价表 (元/吨)
