@@ -149,11 +149,11 @@ const App = (() => {
             : '<span class="oderived-hint">请填写 201 J2 基价</span>'}
         </span>
         <br>
-        <div class="oj2" style="margin-top:4px"><label>304 J2</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" ${locked304 ? 'readonly' : ''}></div>
+        <div class="oj2" style="margin-top:4px"><label>304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" ${locked304 ? 'readonly' : ''}></div>
         <button class="o-lock ${locked304 ? 'locked' : ''}" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
         <span class="oarrow" style="visibility:hidden">→</span>
         <span class="oderived304">
-          ${price304 > 0 ? `304 J2: <b>${price304.toLocaleString()}</b>` : '<span class="oderived-hint" style="font-size:0.85em">请填写 304 J2 基价</span>'}
+          ${price304 > 0 ? `304: <b>${price304.toLocaleString()}</b>` : '<span class="oderived-hint" style="font-size:0.85em">请填写 304 基价</span>'}
         </span>
         ${originOrder.length > ORIGIN_PRESETS.length ? `<button class="o-remove" data-origin="${origin}" title="删除">✕</button>` : ''}
       `;
