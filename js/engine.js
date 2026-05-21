@@ -30,8 +30,15 @@ const PricingEngine = (() => {
     return (l === 'C' || l === 'COIL') ? 'coil' : 'sheet';
   }
 
-  function getThicknessSurcharge(thickness, isYanYan) {
+  function getThicknessSurcharge(thickness, isYanYan, material) {
     const t = parseFloat(thickness);
+    // 304 使用独立加价表
+    if (material && (material === '304' || material.startsWith('304'))) {
+      for (const tier of THICKNESS_SURCHARGE_304) {
+        if (t >= tier.min && t <= tier.max) return tier.price;
+      }
+      return null;
+    }
     const table = isYanYan ? YANYAN_THICKNESS_SURCHARGE : THICKNESS_SURCHARGE;
     for (const tier of table) {
       if (t >= tier.min && t <= tier.max) return tier.price;
@@ -43,10 +50,23 @@ const PricingEngine = (() => {
   let userOverrides = null;
   function setUserOverrides(overrides) { userOverrides = overrides; }
 
-  function getSurfaceFee(surface, thickness, width) {
+  function getSurfaceFee(surface, thickness, width, material) {
     const t = parseFloat(thickness);
     const w = parseFloat(width);
-    // 用户覆盖：简单单价（元/平米）模式
+    // 304 特例表面：优先查 304 专用表
+    const is304 = material && (material === '304' || material.startsWith('304'));
+    if (is304 && SURFACE_FEES_304[surface]) {
+      const fee304 = SURFACE_FEES_304[surface];
+      if (Array.isArray(fee304)) {
+        for (const tier of fee304) {
+          if (t >= tier.tMin && t <= tier.tMax && w >= tier.wMin && w <= tier.wMax) {
+            if (tier.unit === 'ton') return tier.price;
+            return { sqmPrice: tier.price, needConvert: true };
+          }
+        }
+      }
+    }
+    // 用户覆盖：简单单价（元/平米）模式（不分材质）
     if (userOverrides && userOverrides.surfaceFees && userOverrides.surfaceFees[surface] !== undefined) {
       const val = userOverrides.surfaceFees[surface];
       if (typeof val === 'number') {
@@ -224,7 +244,7 @@ const PricingEngine = (() => {
     const density = getDensity(material);
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
 
-    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan);
+    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material);
     if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
 
     const edgeType = getEdgeType(width);
@@ -264,7 +284,7 @@ const PricingEngine = (() => {
 
     let surfaceFeePerTon = 0;
     let linenFeePerTon = hasLinen ? LINEN_FEE : 0;
-    const surfaceRaw = getSurfaceFee(baseSurface, thickness, width);
+    const surfaceRaw = getSurfaceFee(baseSurface, thickness, width, material);
     if (surfaceRaw === null) {
       errors.push(`表面 "${surface}" 在 厚度${thickness}mm × 宽度${width}mm 下无匹配加工费`);
     } else if (typeof surfaceRaw === 'number') {
@@ -471,7 +491,7 @@ const PricingEngine = (() => {
     normalizeSurface, normalizeFilm, getDensity, getEdgeType,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,
-    DENSITY, THICKNESS_SURCHARGE, YANYAN_THICKNESS_SURCHARGE,
-    SURFACE_FEES, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS
+    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
+    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS
   };
 })();
