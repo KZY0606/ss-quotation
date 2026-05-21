@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const code = fs.readFileSync(__dirname + '/js/config.js', 'utf8') + '\n' + fs.readFileSync(__dirname + '/js/engine.js', 'utf8') + '\nreturn PricingEngine;';
 const PricingEngine = new Function(code)();
 
@@ -9,27 +9,27 @@ function eq(a, b, l) { if (a !== b) throw new Error(`${l}: ${a} !== ${b}`); }
 // === 原有测试 ===
 test('用户示例: NO.4 5C-FILM 0.50*1240*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'NO.4',thickness:'0.50',width:'1240',length:'C',film1:'5C-FILM',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8780); eq(r.detail.costNoTax, 8080); eq(r.detail.saleTax, 8980);
+  eq(r.success, true); eq(r.detail.costTax, 8680); eq(r.detail.costNoTax, 7990); eq(r.detail.saleTax, 8880);
 });
 
 test('2B 无膜 1.00*1240*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'2B',thickness:'1.00',width:'1240',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8100); eq(r.detail.saleTax, 8300);
+  eq(r.success, true); eq(r.detail.costTax, 8000); eq(r.detail.saleTax, 8200);
 });
 
 test('8K 镜面 0.50*1219*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K',thickness:'0.50',width:'1219',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 9040);
+  eq(r.success, true); eq(r.detail.costTax, 8940);
 });
 
 test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 10310); eq(r.detail.saleTax, 10810);
+  eq(r.success, true); eq(r.detail.costTax, 10210); eq(r.detail.saleTax, 10710);
 });
 
 test('双面抛光 0.50*1000*2000', () => {
   const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8700); eq(r.detail.saleTax, 9200);
+  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9100);
 });
 
 test('拉丝黑钛金 0.60*1219*C', () => {
@@ -44,12 +44,12 @@ test('错误处理: 无效厚度', () => {
 
 test('8K 宽板 1.00*1500*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K',thickness:'1.00',width:'1500',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 9120); eq(r.detail.saleTax, 9520);
+  eq(r.success, true); eq(r.detail.costTax, 9020); eq(r.detail.saleTax, 9420);
 });
 
 test('NO.4 宽板 1.50*1500*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'NO.4',thickness:'1.50',width:'1500',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8300);
+  eq(r.success, true); eq(r.detail.costTax, 8200);
 });
 
 // === 新增：压延料测试 ===
@@ -74,18 +74,18 @@ test('压延料 0.80*1240*C (压延>0.75=+300)', () => {
   eq(r.detail.costTax, 8100);
 });
 
-test('常规 0.80*1240*C (常规0.80+=+300)', () => {
+test('常规 0.80*1240*C (常规0.80+=+200)', () => {
   const r = PricingEngine.calculate({material:'201J2',surface:'2B',thickness:'0.80',width:'1240',length:'C',film1:'',film2:'',basePrice:7800,isYanYan:false});
-  eq(r.success, true); eq(r.detail.thickSurcharge, 300);
-  eq(r.detail.costTax, 8100);
+  eq(r.success, true); eq(r.detail.thickSurcharge, 200);
+  eq(r.detail.costTax, 8000);
 });
 
 // === 新增：材质基价测试 ===
 test('201J1 基价 (J2+900)', () => {
   const r = PricingEngine.calculate({material:'201J1',surface:'2B',thickness:'1.00',width:'1240',length:'C',film1:'',film2:'',basePrice:8700});
   eq(r.success, true); eq(r.detail.basePrice, 8700);
-  // 8700+300=9000
-  eq(r.detail.costTax, 9000);
+  // 8700+200=8900
+  eq(r.detail.costTax, 8900);
 });
 
 test('201J4 基价 (J2+1600)', () => {
