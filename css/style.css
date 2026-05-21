@@ -635,10 +635,10 @@ tr.main-row:hover .delete-btn { opacity:1; }
 
 /* ===== 价格参考表 ===== */
 .ref-section { margin-bottom: 24px; }
-.ref-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); }
+.ref-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--steel-4); }
 .ref-subtitle { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin: 12px 0 6px; }
-.ref-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
-.ref-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; padding: 6px 10px; border: 1px solid var(--border); text-align: left; }
+.ref-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; border-radius: 6px; overflow: hidden; }
+.ref-table th { background: var(--steel-2); color: var(--primary-dark); font-weight: 600; padding: 6px 10px; border: 1px solid var(--border); text-align: left; }
 .ref-table td { padding: 4px 10px; border: 1px solid var(--border); }
-.ref-table tr:nth-child(even) { background: var(--bg-secondary); }
+.ref-table tr:nth-child(even) { background: var(--primary-bg); }
 .ref-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
