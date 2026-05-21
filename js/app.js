@@ -458,18 +458,21 @@ const App = (() => {
     // ===== 2. 表面加工费总表 =====
     h.push('<div class="ref-section"><h3 class="ref-title">✨ 表面加工费总表</h3>');
     h.push('<h4 class="ref-subtitle">201 表面加工费</h4>');
-    h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围</th><th>宽度范围</th><th>单价</th></tr>');
+    h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
     Object.entries(SURFACE_FEES).forEach(([name, cfg]) => {
       if (Array.isArray(cfg)) {
         cfg.forEach((tier, i) => {
-          const thick = `${tier.minT ?? '—'}～${tier.maxT ?? '—'}`;
-          const wide = tier.minW || tier.maxW ? `${tier.minW ?? '—'}～${tier.maxW ?? '—'}` : '—';
-          const unit = tier.needConvert ? '元/㎡' : '元/吨';
-          const val = tier.needConvert ? tier.sqmPrice : tier.price;
-          h.push(`<tr><td>${i === 0 ? name : ''}</td><td>${thick} mm</td><td>${wide}</td><td class="ref-num">${val} ${unit}</td></tr>`);
+          const thick = `${tier.tMin ?? '—'}～${tier.tMax ?? '—'}`;
+          const wide = (tier.wMin || tier.wMax) ? `${tier.wMin ?? '—'}～${tier.wMax ?? '—'}` : '—';
+          const unit = tier.unit === 'sqm' ? '元/㎡' : '元/吨';
+          h.push(`<tr><td>${i === 0 ? name : ''}</td><td>${thick}</td><td>${wide}</td><td class="ref-num">${tier.price} ${unit}</td></tr>`);
         });
-      } else if (cfg.price !== undefined) {
-        h.push(`<tr><td>${name}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg.price} 元/吨</td></tr>`);
+      } else if (typeof cfg === 'object' && cfg.price !== undefined) {
+        // 单条 flat 价格（如 单面抛光、双面抛光）
+        const unit = cfg.type === 'sqm' ? '元/㎡' : '元/吨';
+        h.push(`<tr><td>${name}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg.price} ${unit}</td></tr>`);
+      } else if (typeof cfg === 'number') {
+        h.push(`<tr><td>${name}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg} 元/吨</td></tr>`);
       }
     });
     h.push('</table>');
@@ -477,15 +480,16 @@ const App = (() => {
     // 304 特例表面
     if (Object.keys(SURFACE_FEES_304).length > 0) {
       h.push('<h4 class="ref-subtitle">304 特例表面加工费 (与 201 不同的)</h4>');
-      h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围</th><th>宽度范围</th><th>单价</th></tr>');
+      h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
       Object.entries(SURFACE_FEES_304).forEach(([name, cfg]) => {
         if (Array.isArray(cfg)) {
           cfg.forEach((tier, i) => {
-            const thick = `${tier.minT ?? '—'}～${tier.maxT ?? '—'}`;
-            const wide = tier.minW || tier.maxW ? `${tier.minW ?? '—'}～${tier.maxW ?? '—'}` : '—';
-            const val = tier.sqmPrice;
-            h.push(`<tr><td>${i === 0 ? name : ''}</td><td>${thick} mm</td><td>${wide}</td><td class="ref-num">${val} 元/㎡</td></tr>`);
+            const thick = `${tier.tMin ?? '—'}～${tier.tMax ?? '—'}`;
+            const wide = (tier.wMin || tier.wMax) ? `${tier.wMin ?? '—'}～${tier.wMax ?? '—'}` : '—';
+            h.push(`<tr><td>${i === 0 ? name : ''}</td><td>${thick}</td><td>${wide}</td><td class="ref-num">${tier.price} 元/㎡</td></tr>`);
           });
+        } else if (typeof cfg === 'object' && cfg.price !== undefined) {
+          h.push(`<tr><td>${name}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg.price} 元/㎡</td></tr>`);
         }
       });
       h.push('</table>');
