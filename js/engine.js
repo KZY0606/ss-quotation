@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KK不锈钢报价系统 - 计算引擎
  */
 
@@ -333,7 +333,7 @@ const PricingEngine = (() => {
         material, surface: item.surface || '', normSurface: surface, thickness, width, length, film1, film2, basePrice,
         isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),
-        thickSurcharge, thickTable: isYanYan ? '压延料' : '常规',
+        thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin),
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
         surfaceFeePerTon: round2(surfaceFeePerTon),
         linenFeePerTon,
@@ -346,6 +346,13 @@ const PricingEngine = (() => {
         saleTax, saleNoTax
       }
     };
+  }
+
+  function getThickTableName(isYanYan, material, origin) {
+    if (material && (material === '304' || material.startsWith('304'))) return '304 加价';
+    if (isYanYan) return '压延料';
+    if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
+    return '常规';
   }
 
   function calculateBatch(items) {
