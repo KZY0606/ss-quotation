@@ -516,17 +516,11 @@ const App = (() => {
     if (Object.keys(SURFACE_FEES_304).length > 0) {
       h.push('<h4 class="ref-subtitle">304 特例表面加工费 (与 201 不同的)</h4>');
       h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
-      Object.entries(SURFACE_FEES_304).forEach(([name, cfg]) => {
-        if (Array.isArray(cfg)) {
-          cfg.forEach((tier, i) => {
-            const thick = `${tier.tMin ?? '—'}～${tier.tMax ?? '—'}`;
-            const wide = (tier.wMin || tier.wMax) ? `${tier.wMin ?? '—'}～${tier.wMax ?? '—'}` : '—';
-            h.push(`<tr><td>${i === 0 ? name : ''}</td><td>${thick}</td><td>${wide}</td><td class="ref-num">${tier.price} 元/㎡</td></tr>`);
-          });
-        } else if (typeof cfg === 'object' && cfg.price !== undefined) {
-          h.push(`<tr><td>${name}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg.price} 元/㎡</td></tr>`);
-        }
-      });
+      // 8K黑钛金 单独显示；拉丝+磨砂黑钛金合并
+      const cfg8k = SURFACE_FEES_304['8K黑钛金'];
+      if (cfg8k) renderSurfaceRows('8K黑钛金', cfg8k);
+      const cfgWire = SURFACE_FEES_304['拉丝黑钛金'];
+      if (cfgWire) renderSurfaceRows('砂面/拉丝(NO.4/HL)黑钛金', cfgWire);
       h.push('</table>');
     }
     h.push('</div>');
