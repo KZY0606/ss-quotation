@@ -44,7 +44,7 @@ const YANYAN_THICKNESS_SURCHARGE = [
   { min: 0.24, max: 0.26, price: 1500 },
   { min: 0.27, max: 0.28, price: 1200 },
   { min: 0.29, max: 0.33, price: 1000 },
-  { min: 0.34, max: 0.43, price: 900  },
+  { min: 0.34, max: 0.43, price: 800  },
   { min: 0.44, max: 0.46, price: 700  },
   { min: 0.47, max: 0.49, price: 600  },
   { min: 0.50, max: 0.59, price: 500  },
