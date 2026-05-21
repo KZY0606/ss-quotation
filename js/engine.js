@@ -7,6 +7,13 @@ const PricingEngine = (() => {
   function round2(v) { return Math.round(v * 100) / 100; }
   function round10(v) { return Math.round(v / 10) * 10; }
 
+  function findInTable(table, t) {
+    for (const tier of table) {
+      if (t >= tier.min && t <= tier.max) return tier.price;
+    }
+    return null;
+  }
+
   function getDensity(material) {
     const key = material.replace(/\s/g, '').toUpperCase();
     if (DENSITY[key]) return DENSITY[key];
@@ -30,20 +37,21 @@ const PricingEngine = (() => {
     return (l === 'C' || l === 'COIL') ? 'coil' : 'sheet';
   }
 
-  function getThicknessSurcharge(thickness, isYanYan, material) {
+  function getThicknessSurcharge(thickness, isYanYan, material, origin) {
     const t = parseFloat(thickness);
-    // 304 使用独立加价表
+    // 304 使用独立加价表（不分产地）
     if (material && (material === '304' || material.startsWith('304'))) {
-      for (const tier of THICKNESS_SURCHARGE_304) {
-        if (t >= tier.min && t <= tier.max) return tier.price;
-      }
-      return null;
+      return findInTable(THICKNESS_SURCHARGE_304, t);
     }
-    const table = isYanYan ? YANYAN_THICKNESS_SURCHARGE : THICKNESS_SURCHARGE;
-    for (const tier of table) {
-      if (t >= tier.min && t <= tier.max) return tier.price;
+    // 压延料使用独立加价表（不分产地）
+    if (isYanYan) {
+      return findInTable(YANYAN_THICKNESS_SURCHARGE, t);
     }
-    return null;
+    // 201 正材：有产地特异性加价表则用，否则用默认（宏旺/德龙标准）
+    if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
+      return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
+    }
+    return findInTable(THICKNESS_SURCHARGE, t);
   }
 
   // 用户价格覆盖（由 App 注入，存于 localStorage）
@@ -244,7 +252,7 @@ const PricingEngine = (() => {
     const density = getDensity(material);
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
 
-    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material);
+    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin);
     if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
 
     const edgeType = getEdgeType(width);
@@ -491,7 +499,7 @@ const PricingEngine = (() => {
     normalizeSurface, normalizeFilm, getDensity, getEdgeType,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,
-    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
+    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS
   };
 })();
