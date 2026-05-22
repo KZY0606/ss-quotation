@@ -150,12 +150,12 @@ const SURFACE_FEES = {
   ],
 
   '8K黄钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10.5,unit: 'sqm' }
   ],
   '8K玫瑰金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11.5,unit: 'sqm' }
   ],
   '8K黑钛金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
@@ -220,16 +220,16 @@ const SURFACE_FEES = {
   ],
 
   '8K香槟金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12.5,unit: 'sqm' }
   ],
   '拉丝香槟金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11,  unit: 'sqm' }
   ],
   '磨砂香槟金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11,  unit: 'sqm' }
   ],
   '拉丝古铜': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' },
@@ -404,6 +404,17 @@ const SURFACE_ALIASES = {
   '双面8k': '双面8K', '双面8K': '双面8K', '双面镜面8K': '双面8K', '双面镜面8k': '双面8K',
   '6k': '6K', '6K': '6K', '镜面6K': '6K', '镜面6k': '6K',
   '双面6k': '双面6K', '双面6K': '双面6K', '双面镜面6K': '双面6K', '双面镜面6k': '双面6K',
+
+  // (板) 后缀别名 —— 不锈钢板
+  '8k黄钛金(板)': '8K黄钛金', '8k玫瑰金(板)': '8K玫瑰金',
+  '8k黑钛金(板)': '8K黑钛金', '8k宝石蓝(板)': '8K宝石蓝',
+  '8k紫罗兰(板)': '8K紫罗兰', '8k翡翠绿(板)': '8K翡翠绿',
+  '8k紫红(板)': '8K紫红', '8k中国红(板)': '8K中国红',
+  '8k古铜(板)': '8K古铜', '8k香槟金(板)': '8K香槟金',
+  '拉丝黄钛金(板)': '拉丝黄钛金', '拉丝玫瑰金(板)': '拉丝玫瑰金',
+  '拉丝香槟金(板)': '拉丝香槟金', '拉丝黑钛金(板)': '拉丝黑钛金',
+  '磨砂黄钛金(板)': '磨砂黄钛金', '磨砂玫瑰金(板)': '磨砂玫瑰金',
+  '磨砂香槟金(板)': '磨砂香槟金', '磨砂黑钛金(板)': '磨砂黑钛金',
 };
 
 // 保护膜名称标准化映射
