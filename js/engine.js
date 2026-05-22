@@ -256,12 +256,13 @@ const PricingEngine = (() => {
     const rawFilm1 = (item.film1 || '').trim();
     const rawFilm2 = (item.film2 || '').trim();
     let splitFilm1 = rawFilm1, splitFilm2 = rawFilm2;
-    if (rawFilm1.includes('/')) {
+    // 先检查原始输入是否匹配 FILM_FEES（含打包价如 "5C膜/5C膜=3"），匹配则不拆分
+    if (rawFilm1 && !FILM_FEES[rawFilm1] && rawFilm1.includes('/')) {
       const parts = rawFilm1.split('/').map(s => s.trim());
       splitFilm1 = parts[0] || '';
       if (parts.length > 1 && !rawFilm2) splitFilm2 = parts[1] || '';
     }
-    if (rawFilm2.includes('/')) {
+    if (rawFilm2 && !FILM_FEES[rawFilm2] && rawFilm2.includes('/')) {
       const parts = rawFilm2.split('/').map(s => s.trim());
       splitFilm2 = parts[0] || '';
     }
