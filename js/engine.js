@@ -106,6 +106,18 @@ const PricingEngine = (() => {
     return null;
   }
 
+  // 卷材自动映射：当输入未指定 (板)/(卷) 后缀时，根据 boardType 自动使用 (卷) 定价
+  function autoMapCoilSurface(surface, boardType, rawInput) {
+    if (!surface) return surface;
+    // 用户明确输入了 (板)，尊重选择不自动映射
+    if (rawInput && rawInput.endsWith('(板)')) return surface;
+    if (boardType === 'coil' && !surface.endsWith('(卷)')) {
+      const coilKey = surface + '(卷)';
+      if (SURFACE_FEES[coilKey] !== undefined) return coilKey;
+    }
+    return surface;
+  }
+
   function getFilmFee(filmName) {
     if (!filmName || filmName.trim() === '' || filmName.trim() === '无' || filmName.trim() === '/') return 0;
     // 优先使用用户覆盖
@@ -292,9 +304,11 @@ const PricingEngine = (() => {
 
     let surfaceFeePerTon = 0;
     let linenFeePerTon = hasLinen ? LINEN_FEE : 0;
+    // 板/卷自动映射：卷材自动使用 (卷) 定价
+    baseSurface = autoMapCoilSurface(baseSurface, boardType, rawTrimmed);
     const surfaceRaw = getSurfaceFee(baseSurface, thickness, width, material);
     if (surfaceRaw === null) {
-      errors.push(`表面 "${surface}" 在 厚度${thickness}mm × 宽度${width}mm 下无匹配加工费`);
+      errors.push(`表面 "${baseSurface}" 在 厚度${thickness}mm × 宽度${width}mm 下无匹配加工费`);
     } else if (typeof surfaceRaw === 'number') {
       surfaceFeePerTon = surfaceRaw;
     } else if (surfaceRaw.needConvert) {
@@ -330,7 +344,7 @@ const PricingEngine = (() => {
       success: true,
       detail: {
         origin: item.origin || '',
-        material, surface: item.surface || '', normSurface: surface, thickness, width, length, film1, film2, basePrice,
+        material, surface: item.surface || '', normSurface: baseSurface, thickness, width, length, film1, film2, basePrice,
         isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),
         thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin),
