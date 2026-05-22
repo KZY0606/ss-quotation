@@ -341,17 +341,19 @@ const FILM_FEES = {
   '垫纸':           0.3,
   '5C-FILM':        1.0,
   'BLUE-5C-FILM':  0.7,
+  'BLUE+KBE-5C-FILM': 1.0,
+  'RED+KBE-5C-FILM':  1.0,
   'HW-5C-FILM':     1.0,
   '7C-FILM':        1.2,
   'HW-7C-FILM':     1.2,
   '10C-FILM':       2.0,
+  '7C-ZIYE-LASER-FILM':   2.0,
   '7C-LASER-FILM':  2.0,
   '7C-ACHEM-LASER-FILM':  4.0,
   '7C-POLI-LASER-FILM':   5.5,
   '7C-NOVACEL-LASER-FILM':6.6,
   '8C-NOVACEL-LASER-FILM':7.7,
   '10C-NOVACEL-LASER-FILM':8.8,
-  '7C-ZIYE-LASER-FILM':   2.0,
   // 胶膜组合
   '5C+5C-FILM':  2.0,
   '7C+5C-FILM':  2.2,
@@ -361,10 +363,7 @@ const FILM_FEES = {
   '7C古铜膜': 1.6,
   // 双面贴膜
   '5C膜/5C膜': 3.0,
-  '7C膜/7C膜': 3.4,
-  // KBE 膜
-  'BLUE+KBE-5C-FILM': 1.0,
-  'RED+KBE-5C-FILM':  1.0
+  '7C膜/7C膜': 3.4
 };
 
 // 销售加价 (元/吨)
@@ -513,12 +512,15 @@ const FILM_ALIASES = {
   '7c novacell laser film pvc': '7C-NOVACEL-LASER-FILM',
   '诺凡赛尔7c': '7C-NOVACEL-LASER-FILM', '诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
   '诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM',
+  '法国诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM', '法国诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
   '8c-novacel': '8C-NOVACEL-LASER-FILM', '8c-novacel-film': '8C-NOVACEL-LASER-FILM',
   '8c-novacel-laser-film': '8C-NOVACEL-LASER-FILM',
   '诺凡赛尔8c膜': '8C-NOVACEL-LASER-FILM', '诺凡赛尔8c激光膜': '8C-NOVACEL-LASER-FILM',
+  '法国诺凡赛尔8c激光膜': '8C-NOVACEL-LASER-FILM', '法国诺凡赛尔8c膜': '8C-NOVACEL-LASER-FILM',
   '10c-novacel': '10C-NOVACEL-LASER-FILM', '10c-novacel-film': '10C-NOVACEL-LASER-FILM',
   '10c-novacel-laser-film': '10C-NOVACEL-LASER-FILM',
   '诺凡赛尔10c膜': '10C-NOVACEL-LASER-FILM', '诺凡赛尔10c激光膜': '10C-NOVACEL-LASER-FILM',
+  '法国诺凡赛尔10c激光膜': '10C-NOVACEL-LASER-FILM', '法国诺凡赛尔10c膜': '10C-NOVACEL-LASER-FILM',
   // 梓烨 / ZIYE 激光膜
   '7c-ziye-laser-film': '7C-ZIYE-LASER-FILM', '7c ziye laser film': '7C-ZIYE-LASER-FILM',
   'ziye 7c激光膜': '7C-ZIYE-LASER-FILM', '梓烨7c激光膜': '7C-ZIYE-LASER-FILM',
