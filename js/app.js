@@ -412,7 +412,25 @@ const App = (() => {
       { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(板)', key: '拉丝香槟金亮光无指纹' },
       { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(板)', key: '拉丝香槟金哑光无指纹' },
       { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(板)', key: '拉丝黑钛金亮光无指纹' },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(板)', key: '拉丝黑钛金哑光无指纹' }
+      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(板)', key: '拉丝黑钛金哑光无指纹' },
+      // ===== 卷材 =====
+      { display: '8K黄钛金(卷)', key: '8K黄钛金(卷)' },
+      { display: '8K玫瑰金(卷)', key: '8K玫瑰金(卷)' },
+      { display: '8K香槟金(卷)', key: '8K香槟金(卷)' },
+      { display: '8K黑钛金(卷)', key: '8K黑钛金(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金(卷)', keys: ['拉丝黄钛金(卷)','磨砂黄钛金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金(卷)', keys: ['拉丝玫瑰金(卷)','磨砂玫瑰金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金(卷)', keys: ['拉丝香槟金(卷)','磨砂香槟金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金(卷)', keys: ['拉丝黑钛金(卷)','磨砂黑钛金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(卷)', key: '拉丝黄钛金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(卷)', key: '拉丝黄钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(卷)', key: '拉丝玫瑰金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(卷)', key: '拉丝玫瑰金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(卷)', key: '拉丝香槟金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(卷)', key: '拉丝黑钛金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(卷)', key: '拉丝黑钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)灰钛金哑光无指纹(卷)', key: '拉丝灰钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
     ];
     let html = '<table><thead><tr><th>表面名称</th><th>覆盖价(元/平米)</th><th>阶梯默认价</th><th></th></tr></thead><tbody>';
     surfOrder.forEach(item => {
@@ -545,6 +563,26 @@ const App = (() => {
       { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(板)', key: '拉丝黑钛金亮光无指纹' },
       { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(板)', key: '拉丝黑钛金哑光无指纹' }
     ];
+    // 卷材表面
+    const coilDisplay = [
+      { display: '8K黄钛金(卷)', key: '8K黄钛金(卷)' },
+      { display: '8K玫瑰金(卷)', key: '8K玫瑰金(卷)' },
+      { display: '8K香槟金(卷)', key: '8K香槟金(卷)' },
+      { display: '8K黑钛金(卷)', key: '8K黑钛金(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金(卷)', keys: ['拉丝黄钛金(卷)','磨砂黄钛金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金(卷)', keys: ['拉丝玫瑰金(卷)','磨砂玫瑰金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金(卷)', keys: ['拉丝香槟金(卷)','磨砂香槟金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金(卷)', keys: ['拉丝黑钛金(卷)','磨砂黑钛金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(卷)', key: '拉丝黄钛金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(卷)', key: '拉丝黄钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(卷)', key: '拉丝玫瑰金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(卷)', key: '拉丝玫瑰金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(卷)', key: '拉丝香槟金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(卷)', key: '拉丝黑钛金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(卷)', key: '拉丝黑钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)灰钛金哑光无指纹(卷)', key: '拉丝灰钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
+    ];
     const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '双面8K'];
 
     function renderSurfaceRows(displayName, cfg) {
@@ -571,6 +609,15 @@ const App = (() => {
       }
     });
     coloredDisplay.forEach(item => {
+      const cfg = SURFACE_FEES[item.key || item.keys[0]];
+      if (cfg) renderSurfaceRows(item.display, cfg);
+    });
+    h.push('</table>');
+
+    // 卷材彩色表面
+    h.push('<h4 class="ref-subtitle" style="margin-top:12px">彩色卷材表面加工费 (0.24~1.20mm)</h4>');
+    h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
+    coilDisplay.forEach(item => {
       const cfg = SURFACE_FEES[item.key || item.keys[0]];
       if (cfg) renderSurfaceRows(item.display, cfg);
     });
