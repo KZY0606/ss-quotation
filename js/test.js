@@ -181,16 +181,16 @@ test('8K黄钛金 1.30mm → 10.5元/平米', () => {
   eq(fee.sqmPrice, 10.5);
 });
 
-test('8K香槟金 0.50mm → 7.5元/平米', () => {
+test('8K香槟金 0.50mm → 6.5元/平米', () => {
   const fee = PricingEngine.getSurfaceFee('8K香槟金', 0.50, 1240);
   eq(fee.needConvert, true);
-  eq(fee.sqmPrice, 7.5);
+  eq(fee.sqmPrice, 6.5);
 });
 
-test('拉丝香槟金 1.30mm → 11元/平米', () => {
+test('拉丝香槟金 1.30mm → 10元/平米', () => {
   const fee = PricingEngine.getSurfaceFee('拉丝香槟金', 1.30, 1240);
   eq(fee.needConvert, true);
-  eq(fee.sqmPrice, 11);
+  eq(fee.sqmPrice, 10);
 });
 
 test('NO.4 和 HL 价格相同 0.50mm', () => {
@@ -303,8 +303,8 @@ test('磨砂黑钛金 = 拉丝黑钛金 价格相同', () => {
 });
 
 test('磨砂香槟金 = 拉丝香槟金 价格相同', () => {
-  eq(PricingEngine.getSurfaceFee('磨砂香槟金', 0.50, 1240).sqmPrice, 7);
-  eq(PricingEngine.getSurfaceFee('拉丝香槟金', 0.50, 1240).sqmPrice, 7);
+  eq(PricingEngine.getSurfaceFee('磨砂香槟金', 0.50, 1240).sqmPrice, 6);
+  eq(PricingEngine.getSurfaceFee('拉丝香槟金', 0.50, 1240).sqmPrice, 6);
 });
 
 test('别名: Champagne Gold No4 → 磨砂香槟金', () => {
