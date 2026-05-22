@@ -477,9 +477,9 @@ const SURFACE_ALIASES = {
 
 // 保护膜名称标准化映射
 const FILM_ALIASES = {
-  '5c': '5C-FILM', '5c-film': '5C-FILM', 'hw5c': 'HW 5C-FILM', 'hw 5c': 'HW 5C-FILM', 'hw5c-film': 'HW 5C-FILM', 'hw 5c-film': 'HW 5C-FILM',
-  '7c': '7C-FILM', '7c-film': '7C-FILM', 'hw7c': 'HW 7C-FILM', 'hw 7c': 'HW 7C-FILM', 'hw7c-film': 'HW 7C-FILM', 'hw 7c-film': 'HW 7C-FILM',
-  '10c': '10C-FILM', '10c-film': '10C-FILM',
+  '5c': '5C-FILM', '5c-film': '5C-FILM', '5c膜': '5C-FILM', 'hw5c': 'HW 5C-FILM', 'hw 5c': 'HW 5C-FILM', 'hw5c-film': 'HW 5C-FILM', 'hw 5c-film': 'HW 5C-FILM',
+  '7c': '7C-FILM', '7c-film': '7C-FILM', '7c膜': '7C-FILM', 'hw7c': 'HW 7C-FILM', 'hw 7c': 'HW 7C-FILM', 'hw7c-film': 'HW 7C-FILM', 'hw 7c-film': 'HW 7C-FILM',
+  '10c': '10C-FILM', '10c-film': '10C-FILM', '10c膜': '10C-FILM',
   '7c-laser': '7C-LASER-FILM', '7c-laser-film': '7C-LASER-FILM', '7c laser-film': '7C-LASER-FILM', '7c laser film': '7C-LASER-FILM', '7c laser film pvc': '7C-LASER-FILM',
   '7c-achem': '7C-ACHEM-FILM', '7c-achem-film': '7C-ACHEM-FILM',
   '7c-poli': '7C-POLI-FILM', '7c-poli-film': '7C-POLI-FILM',
