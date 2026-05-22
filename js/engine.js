@@ -460,12 +460,27 @@ const PricingEngine = (() => {
 
     // 提取保护膜（如果括号里没找到）
     if (!film1) {
-      for (const [alias, standard] of Object.entries(FILM_ALIASES)) {
-        const regex = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-        if (regex.test(remaining)) {
-          if (!film1) film1 = standard;
-          else if (!film2 && standard !== film1) film2 = standard;
-          remaining = remaining.replace(regex, ' ').trim();
+      // "/" 自动拆分：5C膜/5C膜 → film1=5C-FILM, film2=5C-FILM
+      const slashSplit = remaining.match(/^(.+?)\s*\/\s*(.+?)$/);
+      if (slashSplit) {
+        const left = slashSplit[1].trim();
+        const right = slashSplit[2].trim();
+        // 仅在两侧都能归一化为同一标准膜时拆分
+        const nl = normalizeFilm(left);
+        const nr = normalizeFilm(right);
+        if (nl && nr && nl === nr) {
+          film1 = nl; film2 = nr;
+          remaining = remaining.replace(left, ' ').replace(right, ' ').trim();
+        }
+      }
+      if (!film1) {
+        for (const [alias, standard] of Object.entries(FILM_ALIASES)) {
+          const regex = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+          if (regex.test(remaining)) {
+            if (!film1) film1 = standard;
+            else if (!film2 && standard !== film1) film2 = standard;
+            remaining = remaining.replace(regex, ' ').trim();
+          }
         }
       }
       for (const fname of Object.keys(FILM_FEES)) {
