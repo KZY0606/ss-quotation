@@ -482,7 +482,7 @@ const SURFACE_ALIASES = {
 const FILM_ALIASES = {
   // 基础膜
   '5c': '5C-FILM', '5c-film': '5C-FILM', '5c膜': '5C-FILM', '5c黑白膜': '5C-FILM',
-  '7c': '7C-FILM', '7c-film': '7C-FILM', '7c膜': '7C-FILM',
+  '7c': '7C-FILM', '7c-film': '7C-FILM', '7c膜': '7C-FILM', '7c黑白膜': '7C-FILM',
   '10c': '10C-FILM', '10c-film': '10C-FILM', '10c膜': '10C-FILM',
   // 蓝膜 / BLUE-5C-FILM
   '5c蓝色': 'BLUE-5C-FILM', '5c蓝': 'BLUE-5C-FILM', '5c蓝膜': 'BLUE-5C-FILM', '蓝膜': 'BLUE-5C-FILM',
@@ -513,6 +513,7 @@ const FILM_ALIASES = {
   '诺凡赛尔7c': '7C-NOVACEL-LASER-FILM', '诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
   '诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM',
   '法国诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM', '法国诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
+  '德国宝丽菲母7c激光膜': '7C-NOVACEL-LASER-FILM',
   '8c-novacel': '8C-NOVACEL-LASER-FILM', '8c-novacel-film': '8C-NOVACEL-LASER-FILM',
   '8c-novacel-laser-film': '8C-NOVACEL-LASER-FILM',
   '诺凡赛尔8c膜': '8C-NOVACEL-LASER-FILM', '诺凡赛尔8c激光膜': '8C-NOVACEL-LASER-FILM',
