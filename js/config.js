@@ -261,6 +261,40 @@ const SURFACE_FEES = {
   '双面抛光': [
     { tMin: 0.20, tMax: 0.29, price: 400 },
     { tMin: 0.30, tMax: 1.20, price: 300 }
+  ],
+
+  // AFP 彩色表面（砂面/拉丝+抗指纹组合）
+  '拉丝黄钛金亮光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11, unit: 'sqm' }
+  ],
+  '拉丝黄钛金哑光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+  ],
+  '拉丝玫瑰金亮光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+  ],
+  '拉丝玫瑰金哑光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14, unit: 'sqm' }
+  ],
+  '拉丝香槟金亮光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+  ],
+  '拉丝香槟金哑光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14, unit: 'sqm' }
+  ],
+  '拉丝黑钛金亮光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' }
+  ],
+  '拉丝黑钛金哑光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
   ]
 };
 
@@ -347,6 +381,15 @@ const SURFACE_ALIASES = {
   '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜', 'antique copper hairline': '拉丝古铜',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
   '拉丝香槟金': '拉丝香槟金',
+  // AFP 彩色表面（砂面/拉丝+抗指纹）
+  '砂面/拉丝(no.4/hl)黄钛金亮光无指纹': '拉丝黄钛金亮光无指纹', '拉丝黄钛金亮光无指纹': '拉丝黄钛金亮光无指纹',
+  '砂面/拉丝(no.4/hl)黄钛金哑光无指纹': '拉丝黄钛金哑光无指纹', '拉丝黄钛金哑光无指纹': '拉丝黄钛金哑光无指纹',
+  '砂面/拉丝(no.4/hl)玫瑰金亮光无指纹': '拉丝玫瑰金亮光无指纹', '拉丝玫瑰金亮光无指纹': '拉丝玫瑰金亮光无指纹',
+  '砂面/拉丝(no.4/hl)玫瑰金哑光无指纹': '拉丝玫瑰金哑光无指纹', '拉丝玫瑰金哑光无指纹': '拉丝玫瑰金哑光无指纹',
+  '砂面/拉丝(no.4/hl)香槟金亮光无指纹': '拉丝香槟金亮光无指纹', '拉丝香槟金亮光无指纹': '拉丝香槟金亮光无指纹',
+  '砂面/拉丝(no.4/hl)香槟金哑光无指纹': '拉丝香槟金哑光无指纹', '拉丝香槟金哑光无指纹': '拉丝香槟金哑光无指纹',
+  '砂面/拉丝(no.4/hl)黑钛金亮光无指纹': '拉丝黑钛金亮光无指纹', '拉丝黑钛金亮光无指纹': '拉丝黑钛金亮光无指纹',
+  '砂面/拉丝(no.4/hl)黑钛金哑光无指纹': '拉丝黑钛金哑光无指纹', '拉丝黑钛金哑光无指纹': '拉丝黑钛金哑光无指纹',
   // 小珠光 (linen) 复合表面
   '小珠光': 'LINEN', 'linen': 'LINEN',
   'ba linen': 'BA-LINEN', 'ba-linen': 'BA-LINEN', 'ba小珠光': 'BA-LINEN', 'ba': '单面抛光',
