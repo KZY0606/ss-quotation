@@ -298,8 +298,8 @@ test('磨砂黄钛金 = 拉丝黄钛金 价格相同', () => {
 });
 
 test('磨砂黑钛金 = 拉丝黑钛金 价格相同', () => {
-  eq(PricingEngine.getSurfaceFee('磨砂黑钛金', 0.50, 1240).sqmPrice, 2.5);
-  eq(PricingEngine.getSurfaceFee('拉丝黑钛金', 0.50, 1240).sqmPrice, 2.5);
+  eq(PricingEngine.getSurfaceFee('磨砂黑钛金', 0.50, 1240).sqmPrice, 4);
+  eq(PricingEngine.getSurfaceFee('拉丝黑钛金', 0.50, 1240).sqmPrice, 4);
 });
 
 test('磨砂香槟金 = 拉丝香槟金 价格相同', () => {
