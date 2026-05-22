@@ -6,7 +6,7 @@
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="css/style.css?v2">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
 
@@ -17,17 +17,19 @@
       <div class="header-left">
         <div class="header-logo">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            <rect x="4" y="4" width="7" height="7" rx="1"/>
+            <rect x="13" y="4" width="7" height="7" rx="1"/>
+            <rect x="4" y="13" width="7" height="7" rx="1"/>
+            <rect x="13" y="13" width="7" height="7" rx="1"/>
           </svg>
         </div>
         <div>
-          <h1>KK不锈钢报价系统</h1>
-          <div class="header-subtitle">Stainless Steel Batch Quotation</div>
+          <h1><span class="kk-text">KK</span>不锈钢报价系统</h1>
+          <div class="header-subtitle">Stainless Steel Batch Quotation · <span id="versionBadge">v2.2</span></div>
         </div>
       </div>
       <div class="header-badges">
-        <span class="badge">201 系列</span>
-        <span class="badge badge-accent">v2.1</span>
+        <span class="badge" id="materialBadge">201/304 全系列</span>
       </div>
     </div>
   </div>
@@ -250,6 +252,17 @@
       });
     });
   </script>
+
+  <!-- Footer -->
+  <div class="app-footer">
+    <span class="kk-watermark">KK</span>
+    <a href="#" onclick="return false">KK不锈钢报价系统</a>
+    &nbsp;·&nbsp;
+    <span id="footerVersion">v2.2</span>
+    &nbsp;·&nbsp;
+    <span>Built with ❤️</span>
+  </div>
+
 </body>
 </html>
 
