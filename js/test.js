@@ -164,8 +164,8 @@ test('英文膜: 7C Laser FILM PVC → 7C-LASER-FILM', () => {
   eq(PricingEngine.normalizeFilm('7C Laser FILM PVC'), '7C-LASER-FILM');
 });
 
-test('英文膜: 7C Novacell Laser FILM PVC → 7C-NOVACEL-FILM', () => {
-  eq(PricingEngine.normalizeFilm('7C Novacell Laser FILM PVC'), '7C-NOVACEL-FILM');
+test('英文膜: 7C Novacell Laser FILM PVC → 7C-NOVACEL-LASER-FILM', () => {
+  eq(PricingEngine.normalizeFilm('7C Novacell Laser FILM PVC'), '7C-NOVACEL-LASER-FILM');
 });
 
 // === 新表面加工费测试（二级定价）===
