@@ -252,8 +252,21 @@ const PricingEngine = (() => {
     const thickness = parseFloat(item.thickness);
     const width = parseFloat(item.width);
     const length = (item.length || '').trim();
-    const film1 = normalizeFilm(item.film1);
-    const film2 = normalizeFilm(item.film2);
+    // "/" 自动拆分膜：5C-FILM/5C-FILM → film1=5C-FILM, film2=5C-FILM
+    const rawFilm1 = (item.film1 || '').trim();
+    const rawFilm2 = (item.film2 || '').trim();
+    let splitFilm1 = rawFilm1, splitFilm2 = rawFilm2;
+    if (rawFilm1.includes('/')) {
+      const parts = rawFilm1.split('/').map(s => s.trim());
+      splitFilm1 = parts[0] || '';
+      if (parts.length > 1 && !rawFilm2) splitFilm2 = parts[1] || '';
+    }
+    if (rawFilm2.includes('/')) {
+      const parts = rawFilm2.split('/').map(s => s.trim());
+      splitFilm2 = parts[0] || '';
+    }
+    const film1 = normalizeFilm(splitFilm1);
+    const film2 = normalizeFilm(splitFilm2);
     const basePrice = parseFloat(item.basePrice);
     const isYanYan = !!item.isYanYan;
 
