@@ -1,0 +1,3390 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KK不锈钢报价系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  
+  <rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
+<style>﻿:root {
+  --primary: #475569;
+  --primary-light: #64748b;
+  --primary-dark: #334155;
+  --primary-bg: #f1f5f9;
+  --accent: #0ea5e9;
+  --accent-bg: #f0f9ff;
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --info: #0284c7;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.06), 0 4px 6px -4px rgba(0,0,0,0.02);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  --steel-1: #e2e8f0;
+  --steel-2: #cbd5e1;
+  --steel-3: #94a3b8;
+  --steel-4: #64748b;
+  --steel-5: #475569;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ===== Header ===== */
+.header {
+  position: relative;
+  color: white;
+  z-index: 100;
+}
+
+.header-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 40%, #475569 100%);
+  z-index: -1;
+}
+
+/* Brushed steel texture overlay */
+.header-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,0.02) 0px,
+    rgba(255,255,255,0.04) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+}
+
+.header-inner {
+  max-width: 1640px;
+  margin: 0 auto;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-logo {
+  width: 42px;
+  height: 42px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.9);
+  backdrop-filter: blur(4px);
+}
+
+.header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.header-subtitle {
+  font-size: 11px;
+  opacity: 0.5;
+  font-weight: 400;
+  margin-top: 1px;
+  letter-spacing: 0.5px;
+}
+
+.header-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badge {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+.badge-accent {
+  background: rgba(14,165,233,0.25);
+  border-color: rgba(14,165,233,0.3);
+}
+
+/* ===== Container ===== */
+.container {
+  max-width: 1640px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== Cards ===== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  transition: box-shadow 0.2s;
+}
+.card:hover { box-shadow: var(--shadow-md); }
+
+.card-header {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, #fafbfc, var(--card));
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-icon {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-xs);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+.card-icon-steel { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); }
+.card-icon-amber { background: var(--warning-bg); }
+.card-icon-green { background: var(--success-bg); }
+
+.card-header h2 { font-size: 14px; font-weight: 600; }
+.card-body { padding: 20px 24px; }
+
+/* ===== Price Config ===== */
+.price-config {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.price-input-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: var(--border-light);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.price-input-group:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+}
+
+.price-primary {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-color: #bae6fd;
+  padding: 14px 20px;
+}
+
+.price-input-group label {
+  font-size: 12px; color: var(--text-secondary); font-weight: 600; white-space: nowrap;
+}
+
+.price-input-group input {
+  border: none; background: transparent;
+  font-size: 22px; font-weight: 800; color: var(--primary-dark);
+  width: 110px; font-family: var(--font); outline: none;
+}
+.price-input-group input::-webkit-outer-spin-button,
+.price-input-group input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.price-input-group .unit { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+.price-derive {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--success-bg), #f0fdfa);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid #a7f3d0;
+}
+.price-derive-label { font-size: 12px; color: var(--text-secondary); }
+.price-derive-value { font-size: 18px; font-weight: 800; color: var(--success); font-variant-numeric: tabular-nums; }
+
+.price-j5 {
+  flex: 0 0 auto;
+}
+.price-j5 input {
+  width: 90px !important;
+  font-size: 16px !important;
+}
+
+.price-derivatives {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.price-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px 6px 10px;
+  transition: border-color 0.2s;
+}
+.price-chip:hover { border-color: var(--steel-3); }
+
+.chip-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  background: var(--steel-4);
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+}
+
+.chip-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip-offset {
+  font-size: 11px;
+  color: var(--success);
+  font-weight: 600;
+  background: var(--success-bg);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 9px 18px; border: none; border-radius: var(--radius-xs);
+  font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  white-space: nowrap; font-family: var(--font); position: relative; overflow: hidden;
+}
+.btn::after { content:''; position:absolute; inset:0; background:white; opacity:0; transition:opacity 0.15s; }
+.btn:active::after { opacity:0.1; }
+
+.btn-primary { background: var(--steel-5); color: white; box-shadow: 0 1px 2px rgba(71,85,105,0.3); }
+.btn-primary:hover { background: var(--steel-4); }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { background: #047857; }
+.btn-outline { background: var(--card); color: var(--steel-5); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--primary-bg); border-color: var(--steel-3); }
+.btn-danger-outline { background: var(--card); color: var(--danger); border: 1px solid #fecaca; }
+.btn-danger-outline:hover { background: var(--danger-bg); }
+.btn-ghost { background: transparent; color: var(--text-secondary); padding: 6px 10px; }
+.btn-ghost:hover { background: var(--border-light); color: var(--text); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn:disabled::after { display: none; }
+.btn-icon { width: 32px; height: 32px; padding: 0; border-radius: var(--radius-xs); }
+
+/* ===== Toolbar ===== */
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ===== File Upload ===== */
+.file-upload { position: relative; overflow: hidden; display: inline-flex; }
+.file-upload input[type="file"] { position:absolute; left:0;top:0; width:100%;height:100%; opacity:0; cursor:pointer; }
+
+/* ===== Tabs ===== */
+.tab-bar { display:flex; gap:0; border-bottom:2px solid var(--border-light); margin-bottom:20px; }
+.tab-btn {
+  padding:10px 20px; font-size:13px; font-weight:500; color:var(--text-secondary);
+  background:transparent; border:none; border-bottom:2px solid transparent;
+  margin-bottom:-2px; cursor:pointer; transition:all 0.15s; font-family:var(--font);
+  display:flex; align-items:center; gap:6px;
+}
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* ===== Textarea ===== */
+.free-text-area {
+  width:100%; min-height:110px; padding:14px 16px;
+  border:1.5px solid var(--border); border-radius:var(--radius-sm);
+  font-size:13px; font-family:var(--font-mono); resize:vertical; line-height:2;
+  transition:border-color 0.2s, box-shadow 0.2s; background:var(--card); color:var(--text);
+}
+.free-text-area:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(14,165,233,0.08); }
+.free-text-area::placeholder { color:var(--text-muted); font-family:var(--font); }
+.text-hint { font-size:12px; color:var(--text-muted); margin-top:8px; display:flex; align-items:center; gap:6px; }
+.text-hint code { background:var(--border-light); padding:1px 6px; border-radius:4px; font-size:11px; font-family:var(--font-mono); }
+
+/* ===== Manual Add ===== */
+.manual-row {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));
+  gap:10px; align-items:end;
+}
+.input-group { display:flex; flex-direction:column; gap:4px; }
+.input-group label { font-size:11px; color:var(--text-secondary); font-weight:600; letter-spacing:0.3px; }
+.input-group input, .input-group select {
+  padding:8px 12px; border:1.5px solid var(--border); border-radius:var(--radius-xs);
+  font-size:13px; font-family:var(--font); transition:border-color 0.2s, box-shadow 0.2s;
+  background:var(--card); color:var(--text); width:100%;
+}
+.input-group input:focus, .input-group select:focus {
+  outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(14,165,233,0.08);
+}
+.input-group input::placeholder { color:var(--text-muted); font-size:12px; }
+
+/* ===== Stats ===== */
+.stats-bar { display:flex; padding:0; background:var(--card); border-bottom:1px solid var(--border-light); }
+.stat-item {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  gap:8px; padding:12px 16px; border-right:1px solid var(--border-light);
+}
+.stat-item:last-child { border-right:none; }
+.stat-dot { width:8px; height:8px; border-radius:50%; }
+.stat-dot-total { background:var(--steel-4); }
+.stat-dot-success { background:var(--success); }
+.stat-dot-error { background:var(--danger); }
+.stat-dot-price { background:var(--accent); }
+.stat-label { color:var(--text-secondary); font-size:12px; }
+.stat-value { font-weight:700; font-variant-numeric:tabular-nums; }
+
+/* ===== Table ===== */
+.table-wrapper { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead th {
+  padding:11px 12px; text-align:center; font-weight:600; color:var(--text-secondary);
+  font-size:11px; background:linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  border-bottom:1px solid var(--border); white-space:nowrap; position:sticky; top:0; z-index:2;
+}
+tbody td {
+  padding:10px 12px; text-align:center; border-bottom:1px solid var(--border-light);
+  white-space:nowrap; font-variant-numeric:tabular-nums;
+}
+tbody tr.main-row { transition:background 0.1s; }
+tbody tr.main-row:hover { background:var(--accent-bg); }
+tbody tr.error-row { background:var(--danger-bg); }
+tbody tr.error-row:hover { background:#fee2e2; }
+tbody tr.error-row td { color:var(--danger); font-size:12px; }
+
+/* Detail row */
+tbody tr.detail-row td { padding:0; background:#fafbfc; border-bottom:1px solid var(--border); }
+.detail-content { padding:0; max-height:0; overflow:hidden; transition:max-height 0.3s ease, padding 0.3s ease; }
+.detail-row.open .detail-content { max-height:600px; padding:16px 24px; }
+
+.calc-breakdown { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:900px; }
+.calc-section { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; }
+.calc-section-title {
+  font-size:11px; font-weight:600; color:var(--text-secondary);
+  margin-bottom:10px; display:flex; align-items:center; gap:6px;
+}
+.calc-section-title::before { content:''; width:3px; height:14px; border-radius:2px; background:var(--steel-4); }
+
+.calc-step { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px dashed var(--border-light); font-size:13px; }
+.calc-step:last-child { border-bottom:none; }
+.calc-step-label { color:var(--text-secondary); }
+.calc-step-value { font-weight:600; font-variant-numeric:tabular-nums; }
+.calc-step-value.positive { color:var(--warning); }
+.calc-step-value.zero { color:var(--text-muted); }
+
+.calc-total { display:flex; justify-content:space-between; align-items:center; padding:10px 0 0; margin-top:6px; border-top:2px solid var(--border); font-weight:700; font-size:14px; }
+.calc-total-label { color:var(--text); }
+.calc-total-value { font-variant-numeric:tabular-nums; }
+.calc-total-value.tax { color:var(--steel-5); }
+.calc-total-value.notax { color:var(--success); }
+.calc-total-value.sale { color:var(--accent); }
+
+.expand-btn {
+  background:none; border:none; cursor:pointer; font-size:12px; color:var(--text-muted);
+  padding:3px 5px; border-radius:4px; transition:all 0.15s; line-height:1;
+}
+.expand-btn:hover { background:var(--accent-bg); color:var(--accent); }
+.expand-btn.open { transform:rotate(90deg); color:var(--accent); }
+
+/* ===== Tags ===== */
+.tag { display:inline-flex; align-items:center; gap:3px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.tag-rough { background:#fef3c7; color:#92400e; }
+.tag-trim { background:#e0e7ff; color:#3730a3; }
+.tag-coil { background:#ede9fe; color:#5b21b6; }
+.tag-sheet { background:#d1fae5; color:#065f46; }
+.tag-yanyan { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-size:10px; padding:2px 7px; }
+
+/* ===== Price Cells ===== */
+.price-cell { font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; }
+.price-cost { color:var(--steel-5); }
+.price-sale { color:var(--accent); }
+.price-subtle { color:var(--text-muted); font-weight:500; }
+
+/* ===== Empty State ===== */
+.empty-state { text-align:center; padding:80px 20px; color:var(--text-muted); }
+.empty-icon { font-size:56px; margin-bottom:16px; opacity:0.5; }
+.empty-state h3 { font-size:16px; color:var(--text-secondary); margin-bottom:6px; font-weight:600; }
+.empty-state p { font-size:13px; }
+
+/* ===== Toast ===== */
+.toast-container { position:fixed; top:80px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast {
+  padding:12px 20px; border-radius:var(--radius-sm); color:white;
+  font-size:13px; font-weight:500; box-shadow:var(--shadow-lg);
+  animation:toastIn 0.3s cubic-bezier(0.16,1,0.3,1); max-width:380px;
+  display:flex; align-items:center; gap:8px;
+}
+.toast-success { background:var(--success); }
+.toast-error { background:var(--danger); }
+.toast-info { background:var(--info); }
+@keyframes toastIn { from{transform:translateX(120%);opacity:0;} to{transform:translateX(0);opacity:1;} }
+
+.error-text { color:var(--danger); font-size:12px; text-align:left; max-width:360px; line-height:1.5; }
+
+.index-cell { display:flex; align-items:center; gap:6px; justify-content:center; }
+.index-num { font-weight:600; color:var(--text-secondary); font-size:12px; min-width:22px; }
+.delete-btn { opacity:0; transition:opacity 0.15s; }
+tr.main-row:hover .delete-btn { opacity:1; }
+
+.footer { text-align:center; padding:20px; color:var(--text-muted); font-size:12px; letter-spacing:0.3px; }
+
+/* ===== Origin Grid ===== */
+.origin-grid { display:flex; flex-direction:column; gap:12px; }
+.origin-grid-header { display:flex; align-items:center; justify-content:space-between; }
+.origin-grid-header > span:first-child { font-weight:600; font-size:14px; color:var(--text); }
+.og-hint { font-size:11px; color:var(--text-muted); }
+
+.origin-rows {
+  display:flex; flex-direction:column; gap:6px;
+  max-height:320px; overflow-y:auto;
+  padding-right:4px;
+}
+.origin-rows::-webkit-scrollbar { width:5px; }
+.origin-rows::-webkit-scrollbar-thumb { background:var(--steel-3); border-radius:4px; }
+
+.origin-row {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 14px;
+  background:var(--border-light);
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-xs);
+  transition:border-color 0.15s;
+}
+.origin-row:focus-within, .origin-row:hover { border-color:var(--steel-3); }
+
+.oname {
+  font-weight:700; font-size:14px;
+  min-width:48px; color:var(--primary-dark);
+}
+
+.oj2 { display:flex; align-items:center; gap:4px; }
+.oj2 label { font-size:11px; font-weight:600; color:var(--text-muted); }
+.oj2 input {
+  width:90px; padding:4px 8px;
+  border:1.5px solid var(--border); border-radius:5px;
+  font-size:15px; font-weight:700;
+  font-family:var(--font);
+  background:var(--card);
+  color:var(--primary-dark);
+  outline:none;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+.oj2 input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(14,165,233,0.1); }
+.oj2 input::-webkit-outer-spin-button, .oj2 input::-webkit-inner-spin-button { -webkit-appearance:none; }
+
+.oarrow { color:var(--text-muted); font-size:14px; }
+
+.oderived { font-size:12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.oderived b { color:var(--success); font-size:13px; }
+.oderived-hint { color:var(--warning); font-size:11px; font-weight:500; }
+
+.o-remove {
+  margin-left:auto;
+  background:none; border:none;
+  color:var(--text-muted); cursor:pointer;
+  padding:3px 6px; border-radius:4px;
+  font-size:12px; transition:all 0.15s;
+}
+.o-remove:hover { background:var(--danger-bg); color:var(--danger); }
+
+/* Lock button */
+.o-lock {
+  background:none; border:none; cursor:pointer;
+  padding:2px 4px; border-radius:4px;
+  font-size:15px; line-height:1;
+  opacity:0.4; transition:all 0.15s;
+}
+.o-lock:hover { opacity:1; background:var(--border-light); }
+.o-lock.locked { opacity:1; }
+.o-lock.locked + .oj2 input {
+  background:var(--success-bg);
+  border-color:var(--success);
+  color:var(--success);
+  font-weight:700;
+}
+
+.origin-footer {
+  display:flex; align-items:center;
+  justify-content:space-between;
+  padding-top:8px; margin-top:4px;
+  border-top:1px solid var(--border-light);
+  flex-wrap:wrap; gap:8px;
+}
+
+/* ===== Price Config Tabs ===== */
+.config-tabs {
+  display:flex; gap:4px; margin-bottom:14px;
+  background:var(--border-light);
+  padding:4px; border-radius:var(--radius-xs);
+}
+.config-tab {
+  flex:1; padding:8px 12px;
+  border:none; border-radius:5px;
+  background:transparent; cursor:pointer;
+  font-size:13px; font-weight:600;
+  color:var(--text-secondary);
+  transition:all 0.15s;
+}
+.config-tab:hover { color:var(--text); background:var(--card); }
+.config-tab.active { background:var(--card); color:var(--primary-dark); box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+.config-panel { display:none; }
+.config-panel.active { display:block; }
+
+.config-hint { font-size:12px; color:var(--text-muted); margin-bottom:10px; }
+
+.config-table-wrap {
+  max-height:400px; overflow-y:auto;
+  border:1px solid var(--border);
+  border-radius:var(--radius-xs);
+}
+.config-table-wrap table { width:100%; border-collapse:collapse; font-size:13px; }
+.config-table-wrap th {
+  background:var(--steel-2); color:var(--text-secondary);
+  padding:8px 10px; text-align:left; font-size:12px;
+  position:sticky; top:0; z-index:1;
+}
+.config-table-wrap td { padding:5px 10px; border-bottom:1px solid var(--border-light); vertical-align:middle; }
+.config-table-wrap tr:hover td { background:var(--primary-bg); }
+.config-table-wrap tr:last-child td { border-bottom:none; }
+
+.cfg-name { font-weight:600; color:var(--text); font-size:13px; }
+.cfg-price-input {
+  width:90px; padding:4px 8px;
+  border:1.5px solid var(--border); border-radius:5px;
+  font-size:14px; font-weight:700; text-align:right;
+  font-family:var(--font); color:var(--primary-dark);
+  outline:none; transition:all 0.15s;
+}
+.cfg-price-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(14,165,233,0.1); }
+.cfg-price-input[readonly] { background:var(--success-bg); border-color:var(--success); color:var(--success); }
+.cfg-default { font-size:11px; color:var(--text-muted); margin-left:6px; }
+.cfg-unit { font-size:11px; color:var(--text-muted); margin-left:4px; }
+.cfg-lock-btn {
+  background:none; border:none; cursor:pointer;
+  font-size:15px; opacity:0.4; transition:all 0.15s;
+  padding:2px 6px; border-radius:4px;
+}
+.cfg-lock-btn:hover { opacity:1; background:var(--border-light); }
+.cfg-lock-btn.locked { opacity:1; }
+
+/* ===== Responsive ===== */
+@media (max-width:1024px) { .calc-breakdown { grid-template-columns:1fr; } }
+@media (max-width:768px) {
+  .container { padding:12px; gap:12px; }
+  .header-inner { padding:12px 16px; }
+  .header h1 { font-size:15px; }
+  .card-body { padding:16px; }
+  .price-config { flex-direction:column; align-items:stretch; }
+  .toolbar { flex-direction:column; }
+  .stat-item { padding:8px 10px; }
+  .manual-row { grid-template-columns:1fr 1fr; }
+  .calc-breakdown { grid-template-columns:1fr; }
+}
+
+
+/* ===== 价格参考表 ===== */
+.ref-section { margin-bottom: 12px; padding: 10px 14px; background: var(--primary-bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.ref-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 2px solid var(--steel-4); }
+.ref-subtitle { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin: 8px 0 4px; }
+.ref-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 12px; border-radius: 6px; overflow: hidden; }
+.ref-table th { background: var(--steel-2); color: var(--primary-dark); font-weight: 600; padding: 5px 8px; border: 1px solid var(--border); text-align: left; }
+.ref-table td { padding: 3px 8px; border: 1px solid var(--border); }
+.ref-table tr:nth-child(even) { background: #f1f5f9; }
+.ref-table tr:hover { background: #d4dce8 !important; }
+.ref-table tr:hover td { background: #d4dce8 !important; }
+.ref-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* ===== KK 品牌元素 ===== */
+.kk-text { color: var(--accent); font-weight: 800; }
+
+.app-footer {
+  text-align: center;
+  padding: 20px 16px 12px;
+  font-size: 11px;
+  color: var(--steel-4);
+  position: relative;
+  overflow: hidden;
+}
+.app-footer .kk-watermark {
+  position: absolute;
+  right: 20px;
+  bottom: 4px;
+  font-size: 48px;
+  font-weight: 900;
+  color: #e2e8f0;
+  opacity: 0.35;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.app-footer a { color: var(--steel-4); text-decoration: none; }
+.app-footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-bg"></div>
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="header-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="7" height="7" rx="1"/>
+            <rect x="13" y="4" width="7" height="7" rx="1"/>
+            <rect x="4" y="13" width="7" height="7" rx="1"/>
+            <rect x="13" y="13" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <div>
+          <h1><span class="kk-text">KK</span>不锈钢报价系统</h1>
+          <div class="header-subtitle">Stainless Steel Batch Quotation · <span id="versionBadge">v2.2</span></div>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge" id="materialBadge">201/304 全系列</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="container">
+
+    <!-- ===== 价格参数 ===== -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-icon card-icon-steel">💰</div>
+          <h2>价格参数</h2>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="config-tabs">
+          <button class="config-tab active" data-config="origins">🏢 基价</button>
+          <button class="config-tab" data-config="films">🔖 保护膜</button>
+          <button class="config-tab" data-config="surfaces">✨ 表面加工</button>
+          <button class="config-tab" data-config="reference">📋 价格参考</button>
+        </div>
+
+        <!-- 基价 -->
+        <div class="config-panel active" data-config="origins">
+          <div class="origin-grid">
+            <div class="origin-rows" id="originRows"></div>
+            <div class="origin-footer">
+              <div class="add-origin" style="display:flex;gap:6px;align-items:center;">
+                <input id="newOriginInput" placeholder="输入新产地" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:120px;">
+                <button class="btn btn-sm btn-outline" id="addOriginBtn">+ 添加</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">J5 统一基价</label>
+                <input type="number" id="j5BasePrice" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;" placeholder="手动">
+                <span style="font-size:11px;color:var(--text-muted);">→ <b id="j5PriceShow" style="color:var(--accent);">未设置</b> 元/吨</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 保护膜配置 -->
+        <div class="config-panel" data-config="films">
+          <div class="config-hint">修改单价后点击 🔒 锁定，刷新不会丢失</div>
+          <div id="filmConfigTable" class="config-table-wrap"></div>
+        </div>
+
+        <!-- 表面加工费配置 -->
+        <div class="config-panel" data-config="surfaces">
+          <div class="config-hint">修改单价后点击 🔒 锁定，刷新不会丢失</div>
+          <div id="surfaceConfigTable" class="config-table-wrap"></div>
+        </div>
+
+        <!-- 价格参考总表 -->
+        <div class="config-panel" data-config="reference">
+          <div class="config-hint">所有材质/产地的加价规则一览，仅供参考</div>
+          <div id="priceReferenceTable" class="config-table-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 数据录入 ===== -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-icon card-icon-amber">📥</div>
+          <h2>数据录入</h2>
+        </div>
+        <div class="toolbar">
+          <div class="file-upload">
+            <button class="btn btn-primary">📂 上传 Excel</button>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+          </div>
+          <button class="btn btn-success" id="calculateBtn" disabled>⚡ 批量计算</button>
+          <button class="btn btn-outline" id="exportBtn" disabled>📥 导出结果</button>
+          <button class="btn btn-danger-outline" id="clearBtn">🗑️ 清空</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="text"><span>📝</span> 粘贴文本</button>
+          <button class="tab-btn" data-tab="manual"><span>✏️</span> 手动添加</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-text">
+          <textarea id="freeText" class="free-text-area" placeholder="每行一条，格式示例：
+宏旺201J2 NO.4 5C-FILM 0.50*1240*C
+青山201J1压延 8K黄钛金 7C-FILM 0.50*1219*2500
+联众201J4 2B 0.80*1500*C"></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+            <div class="text-hint">
+              支持 <b>产地+材质+表面+保护膜+规格</b>，用 <code>压延</code> 标记压延料，<code>C</code> 表示卷板
+            </div>
+            <button class="btn btn-primary" id="parseTextBtn">解析并添加</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-manual">
+          <div class="manual-row">
+            <div class="input-group">
+              <label>产地</label>
+              <select id="manualOrigin"></select>
+            </div>
+            <div class="input-group">
+              <label>材质</label>
+              <select id="manualMaterial">
+                <option value="201J2">201J2</option>
+                <option value="201J1">201J1</option>
+                <option value="201J3">201J3</option>
+                <option value="201J4">201J4</option>
+                <option value="201J5">201J5 (自定义)</option>
+              </select>
+            </div>
+            <div class="input-group" style="flex-direction:row;align-items:center;gap:6px;padding-top:22px;">
+              <input type="checkbox" id="manualYanYan" style="width:16px;height:16px;accent-color:var(--primary);">
+              <label for="manualYanYan" style="font-size:12px;font-weight:600;color:var(--warning);cursor:pointer;text-transform:uppercase;letter-spacing:0.3px;">压延料</label>
+            </div>
+            <div class="input-group">
+              <label>表面</label>
+              <input type="text" id="manualSurface" placeholder="NO.4 / 8K..." list="surfaceList">
+              <datalist id="surfaceList">
+                <option value="2B"><option value="NO.4"><option value="HL"><option value="8K">
+                <option value="8K黄钛金"><option value="8K玫瑰金"><option value="8K黑钛金">
+                <option value="8K宝石蓝"><option value="8K紫罗兰"><option value="8K翡翠绿">
+                <option value="8K紫红"><option value="8K中国红"><option value="8K古铜">
+                <option value="拉丝黄钛金"><option value="拉丝玫瑰金"><option value="拉丝黑钛金">
+                <option value="拉丝古铜哑光抗指纹"><option value="拉丝古铜亮光抗指纹">
+                <option value="单面抛光"><option value="双面抛光">
+              </datalist>
+            </div>
+            <div class="input-group">
+              <label>厚度 (mm)</label>
+              <input type="text" id="manualThickness" placeholder="0.50">
+            </div>
+            <div class="input-group">
+              <label>宽度 (mm)</label>
+              <input type="text" id="manualWidth" placeholder="1240">
+            </div>
+            <div class="input-group">
+              <label>长度</label>
+              <input type="text" id="manualLength" placeholder="C 或 2500">
+            </div>
+            <div class="input-group">
+              <label>保护膜 1</label>
+              <input type="text" id="manualFilm1" placeholder="5C-FILM" list="filmList">
+              <datalist id="filmList">
+                <option value="垫纸"><option value="5C-FILM"><option value="HW 5C-FILM">
+                <option value="7C-FILM"><option value="HW 7C-FILM"><option value="10C-FILM">
+                <option value="7C-LASER-FILM"><option value="7C-ACHEM-FILM">
+                <option value="7C-POLI-FILM"><option value="7C-NOVACEL-FILM">
+                <option value="8C-NOVACEL-FILM"><option value="10C-NOVACEL-FILM">
+              </datalist>
+            </div>
+            <div class="input-group">
+              <label>保护膜 2</label>
+              <input type="text" id="manualFilm2" placeholder="选填">
+            </div>
+            <div class="input-group" style="justify-content:end;">
+              <button class="btn btn-primary" id="addManualBtn" style="width:100%;">➕ 添加</button>
+            </div>
+          </div>
+          <div id="manualPriceDisplay" style="margin-top:8px;font-size:12px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 报价结果 ===== -->
+    <div class="card" id="resultCard" style="display:none;">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-icon card-icon-green">📊</div>
+          <h2>报价结果</h2>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-ghost" id="expandAllBtn">📋 全部明细</button>
+          <button class="btn btn-outline" id="exportBtn2">📥 导出 Excel</button>
+        </div>
+      </div>
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-item"><span class="stat-dot stat-dot-total"></span><span class="stat-label">总条数</span><span class="stat-value" id="totalCount">0</span></div>
+        <div class="stat-item"><span class="stat-dot stat-dot-success"></span><span class="stat-label">成功</span><span class="stat-value" style="color:var(--success)" id="successCount">0</span></div>
+        <div class="stat-item"><span class="stat-dot stat-dot-error"></span><span class="stat-label">错误</span><span class="stat-value" style="color:var(--danger)" id="errorCount">0</span></div>
+        <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最低含税售价</span><span class="stat-value" style="color:var(--accent)" id="minSaleTax">-</span></div>
+        <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最高含税售价</span><span class="stat-value" style="color:var(--accent)" id="maxSaleTax">-</span></div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px;"></th><th style="width:32px;">#</th><th>产地</th><th>材质</th><th>表面</th><th>厚度</th><th>宽度</th><th>长度</th><th>膜1</th><th>膜2</th><th>含税成本</th><th>不含税成本</th><th>边/板</th><th>含税售价</th><th>不含税售价</th><th style="width:36px;"></th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🔩</div>
+      <h3>KK不锈钢报价系统</h3>
+      <p>上传 Excel、粘贴文本或手动添加数据开始报价</p>
+    </div>
+
+    <div class="footer">KK不锈钢报价系统 · 201系列 · 含压延料 · 多产地</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  
+  
+  
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+  </script>
+
+  <!-- Footer -->
+  <div class="app-footer">
+    <span class="kk-watermark">KK</span>
+    <a href="#" onclick="return false">KK不锈钢报价系统</a>
+    &nbsp;·&nbsp;
+    <span id="footerVersion">v2.2</span>
+    &nbsp;·&nbsp;
+    <span>Built with ❤️</span>
+  </div>
+
+<script>﻿/**
+ * KK不锈钢报价系统 - 价格配置数据
+ * 适用：201 系列（J1/J2/J3/J4/J5）+ 304 + 压延料
+ */
+
+const APP_VERSION = '2.3';
+
+// 密度表 (吨/m³)
+const DENSITY = {
+  '201': 7.85, '201J1': 7.85, '201J2': 7.85, '201J3': 7.85, '201J4': 7.85, '201J5': 7.85,
+  '304': 7.93, '316L': 7.98, '410': 7.75, '430': 7.75
+};
+
+// 201 材质基价偏移（相对于 J2）
+const MATERIAL_OFFSETS = {
+  '201J1': 900,
+  '201J2': 0,
+  '201J3': 400,
+  '201J4': 1600,
+  '201J5': null  // 需手动输入
+};
+
+// 边类型判定
+const EDGE_TYPE = {
+  rough: [1240, 1250, 1260, 1270, 1280, 1530],
+  trim:  [1000, 1030, 1219, 1220, 1500]
+};
+
+// 常规 201 厚度加价表 (元/吨)
+const THICKNESS_SURCHARGE = [
+  { min: 0.24, max: 0.25, price: 2000 },
+  { min: 0.26, max: 0.28, price: 1700 },
+  { min: 0.29, max: 0.30, price: 1500 },
+  { min: 0.31, max: 0.35, price: 1200 },
+  { min: 0.36, max: 0.40, price: 1100 },
+  { min: 0.41, max: 0.45, price: 900  },
+  { min: 0.46, max: 0.49, price: 700  },
+  { min: 0.50, max: 0.59, price: 500  },
+  { min: 0.60, max: 0.75, price: 400  },
+  { min: 0.76, max: 0.79, price: 300  },
+  { min: 0.80, max: 3.00, price: 200  }
+];
+
+// 压延料厚度加价表 (元/吨)
+const YANYAN_THICKNESS_SURCHARGE = [
+  { min: 0.24, max: 0.26, price: 1500 },
+  { min: 0.27, max: 0.28, price: 1200 },
+  { min: 0.29, max: 0.33, price: 1000 },
+  { min: 0.34, max: 0.43, price: 800  },
+  { min: 0.44, max: 0.46, price: 700  },
+  { min: 0.47, max: 0.49, price: 600  },
+  { min: 0.50, max: 0.59, price: 500  },
+  { min: 0.60, max: 0.75, price: 400  },
+  { min: 0.76, max: 3.00, price: 300  }
+];
+
+// 304 厚度加价表 (元/吨) — 德龙/宏旺相同
+const THICKNESS_SURCHARGE_304 = [
+  { min: 0.28, max: 0.30, price: 1300 },
+  { min: 0.31, max: 0.35, price: 1000 },
+  { min: 0.36, max: 0.40, price: 800 },
+  { min: 0.41, max: 0.49, price: 700 },
+  { min: 0.50, max: 0.59, price: 600 },
+  { min: 0.60, max: 0.69, price: 500 },
+  { min: 0.70, max: 0.79, price: 400 },
+  { min: 0.80, max: 3.00, price: 300 }
+];
+
+// 产地特异性厚度加价表 (201系列)
+// 未列出的产地使用默认 THICKNESS_SURCHARGE（宏旺/德龙标准）
+const ORIGIN_THICKNESS_SURCHARGE = {
+  '甬金': [
+    { min: 0.25, max: 0.27, price: 2100 },
+    { min: 0.28, max: 0.29, price: 1300 },
+    { min: 0.30, max: 0.32, price: 1200 },
+    { min: 0.33, max: 0.37, price: 1100 },
+    { min: 0.38, max: 0.39, price: 900 },
+    { min: 0.40, max: 0.40, price: 850 },
+    { min: 0.41, max: 0.49, price: 800 },
+    { min: 0.50, max: 0.50, price: 700 },
+    { min: 0.51, max: 0.59, price: 650 },
+    { min: 0.60, max: 0.69, price: 600 },
+    { min: 0.70, max: 0.79, price: 500 },
+    { min: 0.80, max: 1.20, price: 400 },
+    { min: 1.21, max: 1.50, price: 300 },
+    { min: 1.51, max: 3.00, price: 300 }
+  ],
+  '上克': [
+    { min: 0.25, max: 0.27, price: 2100 },
+    { min: 0.28, max: 0.29, price: 1300 },
+    { min: 0.30, max: 0.32, price: 1200 },
+    { min: 0.33, max: 0.37, price: 1100 },
+    { min: 0.38, max: 0.39, price: 850 },
+    { min: 0.40, max: 0.40, price: 850 },
+    { min: 0.41, max: 0.49, price: 800 },
+    { min: 0.50, max: 0.50, price: 700 },
+    { min: 0.51, max: 0.59, price: 650 },
+    { min: 0.60, max: 0.69, price: 600 },
+    { min: 0.70, max: 0.79, price: 450 },
+    { min: 0.80, max: 1.20, price: 350 },
+    { min: 1.21, max: 1.50, price: 300 },
+    { min: 1.51, max: 3.00, price: 300 }
+  ]
+};
+
+// 表面加工费 — 304 特例（与201不同价格的表面）
+const SURFACE_FEES_304 = {
+  '8K黑钛金': [
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 15, unit: 'sqm' }
+  ],
+  '拉丝黑钛金': [
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+  ],
+  '磨砂黑钛金': [
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+  ]
+};
+
+// 表面加工费
+const SURFACE_FEES = {
+  '2B': { type: 'none', price: 0 },
+
+  'NO.4': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 0.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 3.00, wMin: 1000, wMax: 1250, price: 100, unit: 'ton' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 1.0, unit: 'sqm' },
+    { tMin: 1.21, tMax: 3.00, wMin: 1500, wMax: 1530, price: 200, unit: 'ton' }
+  ],
+  'HL': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 0.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 3.00, wMin: 1000, wMax: 1250, price: 100, unit: 'ton' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 1.0, unit: 'sqm' },
+    { tMin: 1.21, tMax: 3.00, wMin: 1500, wMax: 1530, price: 200, unit: 'ton' }
+  ],
+
+  '8K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 2.5,  unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1250, price: 4.5,  unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1250, price: 8.0,  unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1000, wMax: 1250, price: 12.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1250, price: 15.0, unit: 'sqm' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 8.0,  unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1500, wMax: 1530, price: 10.0, unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1500, wMax: 1530, price: 12.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1500, wMax: 1530, price: 15.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 18.0, unit: 'sqm' }
+  ],
+
+  '8K黄钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10.5,unit: 'sqm' }
+  ],
+  '8K玫瑰金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11.5,unit: 'sqm' }
+  ],
+  '8K黑钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
+  '8K宝石蓝': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 16.5, unit: 'sqm' }
+  ],
+  '8K紫罗兰': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 14.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 20.5, unit: 'sqm' }
+  ],
+  '8K翡翠绿': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 25.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 31.5, unit: 'sqm' }
+  ],
+  '8K紫红': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 17.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 23.5, unit: 'sqm' }
+  ],
+  '8K中国红': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 20.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 26.5, unit: 'sqm' }
+  ],
+  '8K古铜': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 11.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 17.5, unit: 'sqm' }
+  ],
+
+  '拉丝黄钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9,   unit: 'sqm' }
+  ],
+  '磨砂黄钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9,   unit: 'sqm' }
+  ],
+  '拉丝玫瑰金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
+  '磨砂玫瑰金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
+  '拉丝黑钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
+  ],
+  '磨砂黑钛金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
+  ],
+  '拉丝古铜哑光抗指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 15,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 19,  unit: 'sqm' }
+  ],
+  '拉丝古铜亮光抗指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 16,  unit: 'sqm' }
+  ],
+
+  '8K香槟金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11.5,unit: 'sqm' }
+  ],
+  '拉丝香槟金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
+  '磨砂香槟金': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+  ],
+  '拉丝古铜': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14,  unit: 'sqm' }
+  ],
+  '磨砂古铜': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14,  unit: 'sqm' }
+  ],
+
+  '双面8K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1250, price: 9,   unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1250, price: 16,  unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1000, wMax: 1250, price: 24,  unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1250, price: 30,  unit: 'sqm' }
+  ],
+  '6K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 1.6, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1250, price: 3.6, unit: 'sqm' }
+  ],
+  '双面6K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 3.2, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1250, price: 7.2, unit: 'sqm' }
+  ],
+
+  '单面抛光': [
+    { tMin: 0.20, tMax: 0.29, price: 200 },
+    { tMin: 0.30, tMax: 1.20, price: 150 }
+  ],
+  '双面抛光': [
+    { tMin: 0.20, tMax: 0.29, price: 400 },
+    { tMin: 0.30, tMax: 1.20, price: 300 }
+  ],
+
+  // AFP 彩色表面（砂面/拉丝+抗指纹组合）
+  '拉丝黄钛金亮光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11, unit: 'sqm' }
+  ],
+  '拉丝黄钛金哑光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+  ],
+  '拉丝玫瑰金亮光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+  ],
+  '拉丝玫瑰金哑光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14, unit: 'sqm' }
+  ],
+  '拉丝香槟金亮光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+  ],
+  '拉丝香槟金哑光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14, unit: 'sqm' }
+  ],
+  '拉丝黑钛金亮光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' }
+  ],
+  '拉丝黑钛金哑光无指纹': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+  ],
+
+  // ========== 卷材彩色表面 (单档 0.24~1.20mm) ==========
+  '8K黄钛金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:6.5, unit:'sqm' }],
+  '8K玫瑰金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:7.5, unit:'sqm' }],
+  '8K黑钛金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:5,   unit:'sqm' }],
+  '8K香槟金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:7.5, unit:'sqm' }],
+  '拉丝黄钛金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:4.5, unit:'sqm' }],
+  '磨砂黄钛金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:4.5, unit:'sqm' }],
+  '拉丝玫瑰金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:5.5, unit:'sqm' }],
+  '磨砂玫瑰金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:5.5, unit:'sqm' }],
+  '拉丝香槟金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:5.5, unit:'sqm' }],
+  '磨砂香槟金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:5.5, unit:'sqm' }],
+  '拉丝黑钛金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:2.5, unit:'sqm' }],
+  '磨砂黑钛金(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:2.5, unit:'sqm' }],
+  // AFP 卷材
+  '拉丝黑钛金亮光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:4,   unit:'sqm' }],
+  '拉丝黑钛金哑光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:5,   unit:'sqm' }],
+  '拉丝黄钛金亮光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:6.5, unit:'sqm' }],
+  '拉丝黄钛金哑光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:7.5, unit:'sqm' }],
+  '拉丝玫瑰金亮光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:7.5, unit:'sqm' }],
+  '拉丝玫瑰金哑光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:8.5, unit:'sqm' }],
+  '拉丝香槟金亮光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:7.5, unit:'sqm' }],
+  // 灰钛金 — 新颜色
+  '拉丝灰钛金哑光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:4.5, unit:'sqm' }],
+  // 古铜 AFP 卷材
+  '拉丝香槟金哑光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:8.5, unit:'sqm' }],
+  // 古铜 AFP 卷材 (待定，价暂为 0)
+  '拉丝古铜亮光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:0,   unit:'sqm' }],
+  '拉丝古铜哑光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1250, price:0,   unit:'sqm' }],
+};
+
+// 小珠光压花附加费 (元/吨)
+const LINEN_FEE = 300;
+
+// AFP抗指纹价格 (元/平米)
+const AFP_BRIGHT_FEE = 2;  // 亮光无指纹 (默认)
+const AFP_MATTE_FEE = 5;   // 哑光抗指纹
+
+// 保护膜 (元/平米)
+const FILM_FEES = {
+  '垫纸':           0.3,
+  '5C-FILM':        1.0,
+  'BLUE-5C-FILM':  0.7,
+  'BLUE+KBE-5C-FILM': 1.0,
+  'RED+KBE-5C-FILM':  1.0,
+  'HW-5C-FILM':     1.0,
+  '7C-FILM':        1.2,
+  'HW-7C-FILM':     1.2,
+  '10C-FILM':       2.0,
+  '7C-ZIYE-LASER-FILM':   2.0,
+  '7C-LASER-FILM':  2.0,
+  '7C-ACHEM-LASER-FILM':  4.0,
+  '7C-POLI-LASER-FILM':   5.5,
+  '7C-NOVACEL-LASER-FILM':6.6,
+  '8C-NOVACEL-LASER-FILM':7.7,
+  '10C-NOVACEL-LASER-FILM':8.8,
+  // 胶膜组合
+  '5C+5C-FILM':  2.0,
+  '7C+5C-FILM':  2.2,
+  '7C+7C-FILM':  2.4,
+  '7C-LASER+5C-FILM':  3.0,
+  '7C哑光膜': 1.6,
+  '7C古铜膜': 1.6,
+  // 双面贴膜
+  '5C膜/5C膜': 3.0,
+  '7C膜/7C膜': 3.4
+};
+
+// 销售加价 (元/吨)
+const SALES_MARKUP = {
+  'rough_coil':  200,
+  'trim_coil':   400,
+  'rough_sheet': 300,
+  'trim_sheet':  500
+};
+
+// 表面名称标准化映射
+// 预设常用产地
+const ORIGIN_PRESETS = ['宏旺', '青山', '联众', '甬金', '太钢', '德龙', '上克'];
+
+// 自由文本解析中的产地关键词
+const ORIGIN_KEYWORDS = ['宏旺', '青山', '联众', '甬金', '太钢', '德龙', '上克',
+  '北海诚德', '张浦', '酒钢', '宝钢', '鞍钢', '东方特钢'];
+
+const SURFACE_ALIASES = {
+  'no.4': 'NO.4', 'no4': 'NO.4', 'no 4': 'NO.4', 'hl': 'HL',
+  '2b': '2B', '8k': '8K',
+  '磨砂': 'NO.4', '雪花砂': 'NO.4', '砂面': 'NO.4',
+  '拉丝': 'HL',
+  '镜面8k': '8K', '镜面8K': '8K',
+  '黄钛金': '8K黄钛金', '8k黄钛金': '8K黄钛金', '镜面黄钛金': '8K黄钛金', '镜面8k黄钛金': '8K黄钛金',
+  'gold mirror 8k': '8K黄钛金', 'gold mirror': '8K黄钛金',
+  'mirror ti-gold': '8K黄钛金', 'mirror ti gold': '8K黄钛金',
+  '玫瑰金': '8K玫瑰金', '8k玫瑰金': '8K玫瑰金', '镜面玫瑰金': '8K玫瑰金', '镜面8k玫瑰金': '8K玫瑰金',
+  'rosegold mirror 8k': '8K玫瑰金', 'rosegold mirror': '8K玫瑰金',
+  'mirror rose gold': '8K玫瑰金',
+  '黑钛金': '8K黑钛金', '8k黑钛金': '8K黑钛金', '镜面黑钛金': '8K黑钛金', '镜面8k黑钛金': '8K黑钛金',
+  'dark black mirror 8k': '8K黑钛金', 'dark black mirror': '8K黑钛金',
+  '宝石蓝': '8K宝石蓝', '8k宝石蓝': '8K宝石蓝', '镜面宝石蓝': '8K宝石蓝', '镜面8k宝石蓝': '8K宝石蓝',
+  '紫罗兰': '8K紫罗兰', '8k紫罗兰': '8K紫罗兰', '镜面紫罗兰': '8K紫罗兰', '镜面8k紫罗兰': '8K紫罗兰',
+  '翡翠绿': '8K翡翠绿', '8k翡翠绿': '8K翡翠绿', '镜面翡翠绿': '8K翡翠绿', '镜面8k翡翠绿': '8K翡翠绿',
+  '紫红': '8K紫红', '8k紫红': '8K紫红', '镜面紫红': '8K紫红', '镜面8k紫红': '8K紫红',
+  '中国红': '8K中国红', '8k中国红': '8K中国红', '镜面中国红': '8K中国红', '镜面8k中国红': '8K中国红',
+  '古铜': '8K古铜', '8k古铜': '8K古铜', '镜面古铜': '8K古铜', '镜面8k古铜': '8K古铜',
+  'bronze mirror 8k': '8K古铜', 'bronze mirror': '8K古铜',
+  '青古铜': '8K古铜', '黄古铜': '8K古铜', '红古铜': '8K古铜',
+  '拉丝黄钛金': '拉丝黄钛金', '拉丝玫瑰金': '拉丝玫瑰金', '拉丝黑钛金': '拉丝黑钛金',
+  'gold no4': '拉丝黄钛金',
+  'rosegold no4': '磨砂玫瑰金', '磨砂玫瑰金': '磨砂玫瑰金', '砂面玫瑰金': '磨砂玫瑰金',
+  '磨砂黄钛金': '磨砂黄钛金', '磨砂黑钛金': '磨砂黑钛金', '磨砂香槟金': '磨砂香槟金',
+  'champagne gold no4': '磨砂香槟金', 'champange gold no4': '磨砂香槟金',
+  'dark black no4': '磨砂黑钛金',
+  'bronze no4': '拉丝古铜', '磨砂古铜': '磨砂古铜',
+  '8k mirror': '8K',
+  'red mirror': '8K中国红', 'red mirror 8k': '8K中国红',
+  '拉丝古铜哑光抗指纹': '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹': '拉丝古铜亮光抗指纹',
+  '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜', 'antique copper hairline': '拉丝古铜',
+  // Hairline Ti- = 砂面/拉丝(NO.4/HL) 钛金彩色表面
+  'hairline ti-black': '拉丝黑钛金', 'hairline-ti-black': '拉丝黑钛金',
+  'hairline ti-gold': '拉丝黄钛金', 'hairline-ti-gold': '拉丝黄钛金',
+  'hairline ti-rose gold': '拉丝玫瑰金', 'hairline-ti-rose-gold': '拉丝玫瑰金',
+  'hairline ti-rosegold': '拉丝玫瑰金', 'hairline-ti-rosegold': '拉丝玫瑰金',
+  'hairline ti-champagne': '拉丝香槟金', 'hairline-ti-champagne': '拉丝香槟金',
+  'hairline champagne': '拉丝香槟金', 'hairline champagne gold': '拉丝香槟金',
+  'hairline ti-bronze': '拉丝古铜', 'hairline-ti-bronze': '拉丝古铜',
+  // NO.4 Ti- = 砂面/磨砂(NO.4) 钛金彩色表面（价格=拉丝同色）
+  'no.4 ti-black': '磨砂黑钛金', 'no4 ti-black': '磨砂黑钛金',
+  'no.4 ti-gold': '磨砂黄钛金', 'no4 ti-gold': '磨砂黄钛金',
+  'no.4 ti-rose gold': '磨砂玫瑰金', 'no4 ti-rosegold': '磨砂玫瑰金',
+  'no.4 ti-champagne': '磨砂香槟金', 'no4 ti-champagne': '磨砂香槟金',
+  'no.4 ti-bronze': '磨砂古铜', 'no4 ti-bronze': '磨砂古铜',
+  '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
+  '拉丝香槟金': '拉丝香槟金',
+  // AFP 彩色表面（砂面/拉丝+抗指纹）
+  '砂面/拉丝(no.4/hl)黄钛金亮光无指纹': '拉丝黄钛金亮光无指纹', '拉丝黄钛金亮光无指纹': '拉丝黄钛金亮光无指纹',
+  '砂面/拉丝(no.4/hl)黄钛金哑光无指纹': '拉丝黄钛金哑光无指纹', '拉丝黄钛金哑光无指纹': '拉丝黄钛金哑光无指纹',
+  '砂面/拉丝(no.4/hl)玫瑰金亮光无指纹': '拉丝玫瑰金亮光无指纹', '拉丝玫瑰金亮光无指纹': '拉丝玫瑰金亮光无指纹',
+  '砂面/拉丝(no.4/hl)玫瑰金哑光无指纹': '拉丝玫瑰金哑光无指纹', '拉丝玫瑰金哑光无指纹': '拉丝玫瑰金哑光无指纹',
+  '砂面/拉丝(no.4/hl)香槟金亮光无指纹': '拉丝香槟金亮光无指纹', '拉丝香槟金亮光无指纹': '拉丝香槟金亮光无指纹',
+  '砂面/拉丝(no.4/hl)香槟金哑光无指纹': '拉丝香槟金哑光无指纹', '拉丝香槟金哑光无指纹': '拉丝香槟金哑光无指纹',
+  '砂面/拉丝(no.4/hl)黑钛金亮光无指纹': '拉丝黑钛金亮光无指纹', '拉丝黑钛金亮光无指纹': '拉丝黑钛金亮光无指纹',
+  '砂面/拉丝(no.4/hl)黑钛金哑光无指纹': '拉丝黑钛金哑光无指纹', '拉丝黑钛金哑光无指纹': '拉丝黑钛金哑光无指纹',
+  // 小珠光 (linen) 复合表面
+  '小珠光': 'LINEN', 'linen': 'LINEN',
+  'ba linen': 'BA-LINEN', 'ba-linen': 'BA-LINEN', 'ba小珠光': 'BA-LINEN', 'ba': '单面抛光',
+  '8k linen': '8K-LINEN', '8k-linen': '8K-LINEN', '镜面8k小珠光': '8K-LINEN', '镜面8K小珠光': '8K-LINEN',
+  '8k黄钛金小珠光': '8K黄钛金-LINEN', '镜面8k黄钛金小珠光': '8K黄钛金-LINEN',
+  '8k玫瑰金小珠光': '8K玫瑰金-LINEN', '8k黑钛金小珠光': '8K黑钛金-LINEN',
+  '拉丝黄钛金小珠光': '拉丝黄钛金-LINEN', '拉丝玫瑰金小珠光': '拉丝玫瑰金-LINEN',
+  '单面抛光': '单面抛光', '双面抛光': '双面抛光',
+  // 双面8K / 6K / 双面6K
+  '双面8k': '双面8K', '双面8K': '双面8K', '双面镜面8K': '双面8K', '双面镜面8k': '双面8K',
+  '6k': '6K', '6K': '6K', '镜面6K': '6K', '镜面6k': '6K',
+  '双面6k': '双面6K', '双面6K': '双面6K', '双面镜面6K': '双面6K', '双面镜面6k': '双面6K',
+
+  // (板) 后缀别名 —— 不锈钢板
+  '8k黄钛金(板)': '8K黄钛金', '8k玫瑰金(板)': '8K玫瑰金',
+  '8k黑钛金(板)': '8K黑钛金', '8k宝石蓝(板)': '8K宝石蓝',
+  '8k紫罗兰(板)': '8K紫罗兰', '8k翡翠绿(板)': '8K翡翠绿',
+  '8k紫红(板)': '8K紫红', '8k中国红(板)': '8K中国红',
+  '8k古铜(板)': '8K古铜', '8k香槟金(板)': '8K香槟金',
+  '拉丝黄钛金(板)': '拉丝黄钛金', '拉丝玫瑰金(板)': '拉丝玫瑰金',
+  '拉丝香槟金(板)': '拉丝香槟金', '拉丝黑钛金(板)': '拉丝黑钛金',
+  '磨砂黄钛金(板)': '磨砂黄钛金', '磨砂玫瑰金(板)': '磨砂玫瑰金',
+  '磨砂香槟金(板)': '磨砂香槟金', '磨砂黑钛金(板)': '磨砂黑钛金',
+  '拉丝古铜(板)': '拉丝古铜', '磨砂古铜(板)': '磨砂古铜',
+  '拉丝古铜哑光抗指纹(板)': '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹(板)': '拉丝古铜亮光抗指纹',
+  // AFP (板) 别名
+  '拉丝黄钛金亮光无指纹(板)': '拉丝黄钛金亮光无指纹', '拉丝黄钛金哑光无指纹(板)': '拉丝黄钛金哑光无指纹',
+  '拉丝玫瑰金亮光无指纹(板)': '拉丝玫瑰金亮光无指纹', '拉丝玫瑰金哑光无指纹(板)': '拉丝玫瑰金哑光无指纹',
+  '拉丝香槟金亮光无指纹(板)': '拉丝香槟金亮光无指纹', '拉丝香槟金哑光无指纹(板)': '拉丝香槟金哑光无指纹',
+  '拉丝黑钛金亮光无指纹(板)': '拉丝黑钛金亮光无指纹', '拉丝黑钛金哑光无指纹(板)': '拉丝黑钛金哑光无指纹',
+  // (卷) 后缀别名 —— 不锈钢卷
+  '8k黄钛金(卷)': '8K黄钛金(卷)', '8k玫瑰金(卷)': '8K玫瑰金(卷)',
+  '8k黑钛金(卷)': '8K黑钛金(卷)', '8k香槟金(卷)': '8K香槟金(卷)',
+  '砂面/拉丝(no.4/hl)黄钛金(卷)': '拉丝黄钛金(卷)', '拉丝黄钛金(卷)': '拉丝黄钛金(卷)',
+  '砂面/拉丝(no.4/hl)玫瑰金(卷)': '拉丝玫瑰金(卷)', '拉丝玫瑰金(卷)': '拉丝玫瑰金(卷)',
+  '砂面/拉丝(no.4/hl)香槟金(卷)': '拉丝香槟金(卷)', '拉丝香槟金(卷)': '拉丝香槟金(卷)',
+  '砂面/拉丝(no.4/hl)黑钛金(卷)': '拉丝黑钛金(卷)', '拉丝黑钛金(卷)': '拉丝黑钛金(卷)',
+  '磨砂黄钛金(卷)': '磨砂黄钛金(卷)', '磨砂玫瑰金(卷)': '磨砂玫瑰金(卷)',
+  '磨砂香槟金(卷)': '磨砂香槟金(卷)', '磨砂黑钛金(卷)': '磨砂黑钛金(卷)',
+  '砂面/拉丝(no.4/hl)黄钛金亮光无指纹(卷)': '拉丝黄钛金亮光无指纹(卷)', '拉丝黄钛金亮光无指纹(卷)': '拉丝黄钛金亮光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)黄钛金哑光无指纹(卷)': '拉丝黄钛金哑光无指纹(卷)', '拉丝黄钛金哑光无指纹(卷)': '拉丝黄钛金哑光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)玫瑰金亮光无指纹(卷)': '拉丝玫瑰金亮光无指纹(卷)', '拉丝玫瑰金亮光无指纹(卷)': '拉丝玫瑰金亮光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)玫瑰金哑光无指纹(卷)': '拉丝玫瑰金哑光无指纹(卷)', '拉丝玫瑰金哑光无指纹(卷)': '拉丝玫瑰金哑光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)香槟金亮光无指纹(卷)': '拉丝香槟金亮光无指纹(卷)', '拉丝香槟金亮光无指纹(卷)': '拉丝香槟金亮光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)黑钛金亮光无指纹(卷)': '拉丝黑钛金亮光无指纹(卷)', '拉丝黑钛金亮光无指纹(卷)': '拉丝黑钛金亮光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)黑钛金哑光无指纹(卷)': '拉丝黑钛金哑光无指纹(卷)', '拉丝黑钛金哑光无指纹(卷)': '拉丝黑钛金哑光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)灰钛金哑光无指纹(卷)': '拉丝灰钛金哑光无指纹(卷)', '拉丝灰钛金哑光无指纹(卷)': '拉丝灰钛金哑光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)香槟金哑光无指纹(卷)': '拉丝香槟金哑光无指纹(卷)', '拉丝香槟金哑光无指纹(卷)': '拉丝香槟金哑光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)古铜亮光无指纹(卷)': '拉丝古铜亮光无指纹(卷)', '拉丝古铜亮光无指纹(卷)': '拉丝古铜亮光无指纹(卷)',
+  '砂面/拉丝(no.4/hl)古铜哑光无指纹(卷)': '拉丝古铜哑光无指纹(卷)', '拉丝古铜哑光无指纹(卷)': '拉丝古铜哑光无指纹(卷)',
+};
+
+// 保护膜名称标准化映射
+const FILM_ALIASES = {
+  // 基础膜
+  '5c': '5C-FILM', '5c-film': '5C-FILM', '5c膜': '5C-FILM', '5c黑白膜': '5C-FILM',
+  '7c': '7C-FILM', '7c-film': '7C-FILM', '7c膜': '7C-FILM', '7c黑白膜': '7C-FILM',
+  '10c': '10C-FILM', '10c-film': '10C-FILM', '10c膜': '10C-FILM',
+  // 蓝膜 / BLUE-5C-FILM
+  '5c蓝色': 'BLUE-5C-FILM', '5c蓝': 'BLUE-5C-FILM', '5c蓝膜': 'BLUE-5C-FILM', '蓝膜': 'BLUE-5C-FILM',
+  '5c blue': 'BLUE-5C-FILM', '5c-blue-film': 'BLUE-5C-FILM', 'blue-5c-film': 'BLUE-5C-FILM',
+  // 宏旺膜 / HW-5C / HW-7C
+  'hw5c': 'HW-5C-FILM', 'hw 5c': 'HW-5C-FILM', 'hw5c-film': 'HW-5C-FILM', 'hw 5c-film': 'HW-5C-FILM',
+  '宏旺5c膜': 'HW-5C-FILM', '5c宏旺膜': 'HW-5C-FILM', 'hw-5c-film': 'HW-5C-FILM',
+  'hw7c': 'HW-7C-FILM', 'hw 7c': 'HW-7C-FILM', 'hw7c-film': 'HW-7C-FILM', 'hw 7c-film': 'HW-7C-FILM',
+  '宏旺7c膜': 'HW-7C-FILM', '7c宏旺膜': 'HW-7C-FILM', 'hw-7c-film': 'HW-7C-FILM',
+  // 7C 激光膜
+  '7c-laser': '7C-LASER-FILM', '7c-laser-film': '7C-LASER-FILM', '7c laser-film': '7C-LASER-FILM',
+  '7c laser film': '7C-LASER-FILM', '7c laser film pvc': '7C-LASER-FILM',
+  '7c箭头激光膜': '7C-LASER-FILM', '7c激光膜': '7C-LASER-FILM',
+  '7c蓝箭激光膜': '7C-LASER-FILM', '7c兰箭激光膜': '7C-LASER-FILM',
+  // 亚化 / 7C-ACHEM-LASER
+  '7c-achem': '7C-ACHEM-LASER-FILM', '7c-achem-film': '7C-ACHEM-LASER-FILM',
+  '7c-achem-laser-film': '7C-ACHEM-LASER-FILM',
+  '亚化7c激光膜': '7C-ACHEM-LASER-FILM', '亚化7c膜': '7C-ACHEM-LASER-FILM',
+  '台湾亚化7c激光膜': '7C-ACHEM-LASER-FILM',
+  // 宝丽菲母 / 7C-POLI-LASER
+  '7c-poli': '7C-POLI-LASER-FILM', '7c-poli-film': '7C-POLI-LASER-FILM',
+  '7c-poli-laser-film': '7C-POLI-LASER-FILM',
+  '宝丽菲母7c激光膜': '7C-POLI-LASER-FILM', '宝丽菲母7c膜': '7C-POLI-LASER-FILM',
+  '德国宝丽菲母7c激光膜': '7C-POLI-LASER-FILM',
+  // 诺凡赛尔 / NOVACEL LASER
+  '7c-novacel': '7C-NOVACEL-LASER-FILM', '7c-novacel-film': '7C-NOVACEL-LASER-FILM',
+  '7c-novacel-laser-film': '7C-NOVACEL-LASER-FILM',
+  '7c novacell laser film pvc': '7C-NOVACEL-LASER-FILM',
+  '诺凡赛尔7c': '7C-NOVACEL-LASER-FILM', '诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
+  '诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM',
+  '法国诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM', '法国诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
+  '8c-novacel': '8C-NOVACEL-LASER-FILM', '8c-novacel-film': '8C-NOVACEL-LASER-FILM',
+  '8c-novacel-laser-film': '8C-NOVACEL-LASER-FILM',
+  '诺凡赛尔8c膜': '8C-NOVACEL-LASER-FILM', '诺凡赛尔8c激光膜': '8C-NOVACEL-LASER-FILM',
+  '法国诺凡赛尔8c激光膜': '8C-NOVACEL-LASER-FILM', '法国诺凡赛尔8c膜': '8C-NOVACEL-LASER-FILM',
+  '10c-novacel': '10C-NOVACEL-LASER-FILM', '10c-novacel-film': '10C-NOVACEL-LASER-FILM',
+  '10c-novacel-laser-film': '10C-NOVACEL-LASER-FILM',
+  '诺凡赛尔10c膜': '10C-NOVACEL-LASER-FILM', '诺凡赛尔10c激光膜': '10C-NOVACEL-LASER-FILM',
+  '法国诺凡赛尔10c激光膜': '10C-NOVACEL-LASER-FILM', '法国诺凡赛尔10c膜': '10C-NOVACEL-LASER-FILM',
+  // 梓烨 / ZIYE 激光膜
+  '7c-ziye-laser-film': '7C-ZIYE-LASER-FILM', '7c ziye laser film': '7C-ZIYE-LASER-FILM',
+  'ziye 7c激光膜': '7C-ZIYE-LASER-FILM', '梓烨7c激光膜': '7C-ZIYE-LASER-FILM',
+  // KBE 膜
+  'blue+kbe-5c-film': 'BLUE+KBE-5C-FILM', '蓝k膜': 'BLUE+KBE-5C-FILM',
+  '蓝kbe膜': 'BLUE+KBE-5C-FILM', '蓝色kbe膜': 'BLUE+KBE-5C-FILM',
+  'red+kbe-5c-film': 'RED+KBE-5C-FILM', '红k膜': 'RED+KBE-5C-FILM',
+  '红kbe膜': 'RED+KBE-5C-FILM', '红色kbe膜': 'RED+KBE-5C-FILM',
+  // 垫纸
+  '垫纸': '垫纸',
+  // 胶膜组合短名
+  '5c+5c': '5C+5C-FILM', '5c+5c-film': '5C+5C-FILM', '5c-film+5c-film': '5C+5C-FILM',
+  '7c+5c': '7C+5C-FILM', '7c+5c-film': '7C+5C-FILM', '7c-film+5c-film': '7C+5C-FILM',
+  '7c+7c': '7C+7C-FILM', '7c+7c-film': '7C+7C-FILM', '7c-film+7c-film': '7C+7C-FILM',
+  '5c蓝色': 'BLUE-5C-FILM', '5c蓝': 'BLUE-5C-FILM', '5c蓝膜': 'BLUE-5C-FILM', '蓝膜': 'BLUE-5C-FILM', '5c blue': 'BLUE-5C-FILM', '5c-blue-film': 'BLUE-5C-FILM',
+  '7c-laser+5c': '7C-LASER+5C-FILM', '7c-laser+5c-film': '7C-LASER+5C-FILM', '7c laser-film+5c-film': '7C-LASER+5C-FILM', '7c激光膜+5c': '7C-LASER+5C-FILM', '7c激光膜+5c膜': '7C-LASER+5C-FILM',
+  '胶膜': '7C-FILM',
+  '7c哑光膜': '7C哑光膜', '7c哑光': '7C哑光膜',
+  '7c古铜膜': '7C古铜膜', '7c古铜': '7C古铜膜',
+};
+
+﻿/**
+ * KK不锈钢报价系统 - 计算引擎
+ */
+
+const PricingEngine = (() => {
+
+  function round2(v) { return Math.round(v * 100) / 100; }
+  function round10(v) { return Math.round(v / 10) * 10; }
+
+  function findInTable(table, t) {
+    for (const tier of table) {
+      if (t >= tier.min && t <= tier.max) return tier.price;
+    }
+    return null;
+  }
+
+  function getDensity(material) {
+    const key = material.replace(/\s/g, '').toUpperCase();
+    if (DENSITY[key]) return DENSITY[key];
+    for (const [k, v] of Object.entries(DENSITY)) {
+      if (key.startsWith(k) || k.startsWith(key)) return v;
+    }
+    return null;
+  }
+
+  function getEdgeType(width) {
+    const w = parseFloat(width);
+    // 精确匹配齐边
+    if (EDGE_TYPE.trim.includes(w)) return 'trim';
+    // 1240-1280 都是毛边 (粗磨)，以及 1530
+    if ((w >= 1240 && w <= 1280) || w === 1530 || EDGE_TYPE.rough.includes(w)) return 'rough';
+    return null;
+  }
+
+  function getBoardType(length) {
+    const l = String(length).trim().toUpperCase();
+    return (l === 'C' || l === 'COIL') ? 'coil' : 'sheet';
+  }
+
+  function getThicknessSurcharge(thickness, isYanYan, material, origin) {
+    const t = parseFloat(thickness);
+    // 304 使用独立加价表（不分产地）
+    if (material && (material === '304' || material.startsWith('304'))) {
+      return findInTable(THICKNESS_SURCHARGE_304, t);
+    }
+    // 压延料使用独立加价表（不分产地）
+    if (isYanYan) {
+      return findInTable(YANYAN_THICKNESS_SURCHARGE, t);
+    }
+    // 201 正材：有产地特异性加价表则用，否则用默认（宏旺/德龙标准）
+    if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
+      return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
+    }
+    return findInTable(THICKNESS_SURCHARGE, t);
+  }
+
+  // 用户价格覆盖（由 App 注入，存于 localStorage）
+  let userOverrides = null;
+  function setUserOverrides(overrides) { userOverrides = overrides; }
+
+  function getSurfaceFee(surface, thickness, width, material) {
+    const t = parseFloat(thickness);
+    const w = parseFloat(width);
+    // 304 特例表面：优先查 304 专用表
+    const is304 = material && (material === '304' || material.startsWith('304'));
+    if (is304 && SURFACE_FEES_304[surface]) {
+      const fee304 = SURFACE_FEES_304[surface];
+      if (Array.isArray(fee304)) {
+        for (const tier of fee304) {
+          if (t >= tier.tMin && t <= tier.tMax && w >= tier.wMin && w <= tier.wMax) {
+            if (tier.unit === 'ton') return tier.price;
+            return { sqmPrice: tier.price, needConvert: true };
+          }
+        }
+      }
+    }
+    // 用户覆盖：简单单价（元/平米）模式（不分材质）
+    if (userOverrides && userOverrides.surfaceFees && userOverrides.surfaceFees[surface] !== undefined) {
+      const val = userOverrides.surfaceFees[surface];
+      if (typeof val === 'number') {
+        return { sqmPrice: val, needConvert: true };
+      }
+      return val;
+    }
+    const fee = SURFACE_FEES[surface];
+    if (!fee) return null;
+    if (fee.type === 'none') return 0;
+    if (Array.isArray(fee)) {
+      for (const tier of fee) {
+        if (surface === '单面抛光' || surface === '双面抛光') {
+          if (t >= tier.tMin && t <= tier.tMax) return tier.price;
+        } else {
+          if (t >= tier.tMin && t <= tier.tMax && w >= tier.wMin && w <= tier.wMax) {
+            if (tier.unit === 'ton') return tier.price;
+            return { sqmPrice: tier.price, needConvert: true };
+          }
+        }
+      }
+      return null;
+    }
+    if (fee.type === 'sqm') {
+      if (t >= fee.tMin && t <= fee.tMax && w >= fee.wMin && w <= fee.wMax) {
+        return { sqmPrice: fee.price, needConvert: true };
+      }
+    }
+    return null;
+  }
+
+  // 卷材自动映射：当输入未指定 (板)/(卷) 后缀时，根据 boardType 自动使用 (卷) 定价
+  function autoMapCoilSurface(surface, boardType, rawInput) {
+    if (!surface) return surface;
+    // 用户明确输入了 (板)，尊重选择不自动映射
+    if (rawInput && rawInput.endsWith('(板)')) return surface;
+    if (boardType === 'coil' && !surface.endsWith('(卷)')) {
+      const coilKey = surface + '(卷)';
+      if (SURFACE_FEES[coilKey] !== undefined) return coilKey;
+    }
+    return surface;
+  }
+
+  function getFilmFee(filmName) {
+    if (!filmName || filmName.trim() === '' || filmName.trim() === '无' || filmName.trim() === '/') return 0;
+    // 优先使用用户覆盖
+    if (userOverrides && userOverrides.filmFees && userOverrides.filmFees[filmName] !== undefined) {
+      return userOverrides.filmFees[filmName];
+    }
+    return FILM_FEES[filmName] || null;
+  }
+
+  function getSquareMetersPerTon(density, thickness) {
+    return 1000 / density / parseFloat(thickness);
+  }
+
+  function normalizeSurface(raw) {
+    if (!raw) return null;
+    const s = raw.trim();
+    if (SURFACE_FEES[s]) return s;
+    const lower = s.toLowerCase();
+    if (SURFACE_ALIASES[lower]) return SURFACE_ALIASES[lower];
+    // 模糊匹配：别名匹配失败时，用Levenshtein找最接近的表面
+    return fuzzyMatchSurface(lower) || s;
+  }
+
+  let _fuzzyCache = null;
+  function _buildFuzzyDict() {
+    if (_fuzzyCache) return _fuzzyCache;
+    const seen = new Set();
+    const dict = [];
+    // 收集所有表面别名key
+    for (const key of Object.keys(SURFACE_ALIASES)) {
+      const norm = SURFACE_ALIASES[key];
+      if (!seen.has(key)) {
+        dict.push({ key, norm, label: key });
+        seen.add(key);
+      }
+    }
+    // 收集所有直接表面名（中文）
+    for (const key of Object.keys(SURFACE_FEES)) {
+      if (!seen.has(key)) {
+        dict.push({ key, norm: key, label: key });
+        seen.add(key);
+      }
+    }
+    _fuzzyCache = dict;
+    return dict;
+  }
+
+  // Levenshtein距离
+  function levenshtein(a, b) {
+    const al = a.length, bl = b.length;
+    const m = Array.from({length: al + 1}, () => new Uint8Array(bl + 1));
+    for (let i = 0; i <= al; i++) m[i][0] = i;
+    for (let j = 0; j <= bl; j++) m[0][j] = j;
+    for (let i = 1; i <= al; i++) {
+      for (let j = 1; j <= bl; j++) {
+        const cost = a[i-1] === b[j-1] ? 0 : 1;
+        m[i][j] = Math.min(m[i-1][j] + 1, m[i][j-1] + 1, m[i-1][j-1] + cost);
+      }
+    }
+    return m[al][bl];
+  }
+
+  // 模糊匹配：用Levenshtein找最接近的已知表面名
+  function fuzzyMatchSurface(input) {
+    const dict = _buildFuzzyDict();
+    let bestScore = 0;
+    let bestNorm = null;
+    for (const entry of dict) {
+      const dist = levenshtein(input, entry.key);
+      const maxLen = Math.max(input.length, entry.key.length);
+      const score = maxLen > 0 ? 1 - dist / maxLen : 0;
+      if (score > bestScore && score >= 0.55) {
+        bestScore = score;
+        bestNorm = entry.norm;
+      }
+    }
+    return bestNorm;
+  }
+
+  function normalizeFilm(raw) {
+    if (!raw) return null;
+    const s = raw.trim();
+    if (FILM_FEES[s]) return s;
+    const lower = s.toLowerCase();
+    if (FILM_ALIASES[lower]) return FILM_ALIASES[lower];
+    return s;
+  }
+
+  // AFP检测：从表面名称中提取AFP变种
+  // 支持的格式：
+  //   "表面 + AFP" / "表面+AFP(M)" / "表面(AFP)" / "表面(AFP(M))"
+  //   "表面哑光抗指纹" / "表面亮光抗指纹"
+  function detectAFP(surface) {
+    if (!surface) return null;
+    const s = surface.trim();
+
+    // 格式1b: "表面 + BRIGHT AFP" / "表面 + MATTE AFP"（集装箱表格格式）
+    let m = s.match(/^(.+?)\s*[+]\s*(BRIGHT|MATTE)\s+AFP\s*$/i);
+    if (m) {
+      return { baseName: m[1].trim(), isMatte: m[2].toLowerCase() === 'matte' };
+    }
+
+    // 格式1: "表面 + AFP" / "表面+AFP(B)" / "表面+AFP(M)"
+    m = s.match(/^(.+?)\s*[+]\s*AFP\s*(?:\(([^)]*)\))?\s*$/i);
+    if (m) {
+      const spec = (m[2] || '').toLowerCase();
+      return { baseName: m[1].trim(), isMatte: spec === 'm' || spec === 'matte' };
+    }
+
+    // 格式2: "表面(AFP)" / "表面(AFP(M))"
+    m = s.match(/^(.+?)\s*\(AFP\s*(?:\(?([^)]*)\)?)?\)\s*$/i);
+    if (m) {
+      const spec = (m[2] || '').toLowerCase();
+      return { baseName: m[1].trim(), isMatte: spec === 'm' || spec === 'matte' };
+    }
+
+    // 格式3: "表面哑光抗指纹" / "表面哑光无指纹"
+    m = s.match(/^(.+?)(?:哑光抗指纹|哑光无指纹)$/);
+    if (m) return { baseName: m[1].trim(), isMatte: true };
+
+    // 格式4: "表面亮光抗指纹" / "表面亮光无指纹"
+    m = s.match(/^(.+?)(?:亮光抗指纹|亮光无指纹)$/);
+    if (m) return { baseName: m[1].trim(), isMatte: false };
+
+    return null;
+  }
+
+  function calculate(item) {
+    const errors = [];
+    const material = (item.material || '').trim();
+    const surface = normalizeSurface(item.surface);
+    const thickness = parseFloat(item.thickness);
+    const width = parseFloat(item.width);
+    const length = (item.length || '').trim();
+    // "/" 自动拆分膜：5C-FILM/5C-FILM → film1=5C-FILM, film2=5C-FILM
+    const rawFilm1 = (item.film1 || '').trim();
+    const rawFilm2 = (item.film2 || '').trim();
+    let splitFilm1 = rawFilm1, splitFilm2 = rawFilm2;
+    if (rawFilm1.includes('/')) {
+      const parts = rawFilm1.split('/').map(s => s.trim());
+      splitFilm1 = parts[0] || '';
+      if (parts.length > 1 && !rawFilm2) splitFilm2 = parts[1] || '';
+    }
+    if (rawFilm2.includes('/')) {
+      const parts = rawFilm2.split('/').map(s => s.trim());
+      splitFilm2 = parts[0] || '';
+    }
+    const film1 = normalizeFilm(splitFilm1);
+    const film2 = normalizeFilm(splitFilm2);
+    const basePrice = parseFloat(item.basePrice);
+    const isYanYan = !!item.isYanYan;
+
+    if (isNaN(basePrice) || basePrice <= 0) errors.push('基价无效');
+    if (isNaN(thickness) || thickness <= 0) errors.push('厚度无效');
+    if (isNaN(width) || width <= 0) errors.push('宽度无效');
+
+    const density = getDensity(material);
+    if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
+
+    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin);
+    if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
+
+    const edgeType = getEdgeType(width);
+    if (edgeType === null) errors.push(`宽度 ${width}mm 无法判定毛边/齐边`);
+
+    const boardType = getBoardType(length);
+    const sqmPerTon = getSquareMetersPerTon(density, thickness);
+
+    // ---- 附加工艺检测 ----
+    const rawTrimmed = (item.surface || '').trim();
+    const rawLower = rawTrimmed.toLowerCase();
+    const aliasedName = normalizeSurface(rawTrimmed); // 可以有模糊匹配
+    const isExactAlias = SURFACE_FEES[rawTrimmed] || SURFACE_ALIASES[rawLower];
+
+    // LINEN: 在别名归一化后的名称上检测（别名已把小珠光等转为-LINEN后缀）
+    const linenSuffix = aliasedName.match(/^(.+)-LINEN$/i);
+    const hasLinen = linenSuffix || /^LINEN$/.test(aliasedName);
+
+    // AFP: 仅在原始输入不是直接表面命中时检测
+    let afpSqmFee = 0;
+    let baseSurface = aliasedName;
+
+    if (hasLinen && linenSuffix) {
+      // 剥离linen，归一化基础表面
+      const linBase = normalizeSurface(linenSuffix[1]);
+      if (linBase && SURFACE_FEES[linBase]) baseSurface = linBase;
+    } else if (!SURFACE_FEES[rawTrimmed] && !isExactAlias) {
+      const afpInfo = detectAFP(rawTrimmed);
+      if (afpInfo) {
+        const afpBase = normalizeSurface(afpInfo.baseName);
+        if (afpBase && SURFACE_FEES[afpBase]) {
+          baseSurface = afpBase;
+          afpSqmFee = afpInfo.isMatte ? AFP_MATTE_FEE : AFP_BRIGHT_FEE;
+        }
+      }
+    }
+
+    let surfaceFeePerTon = 0;
+    let linenFeePerTon = hasLinen ? LINEN_FEE : 0;
+    // 板/卷自动映射：卷材自动使用 (卷) 定价
+    baseSurface = autoMapCoilSurface(baseSurface, boardType, rawTrimmed);
+    const surfaceRaw = getSurfaceFee(baseSurface, thickness, width, material);
+    if (surfaceRaw === null) {
+      errors.push(`表面 "${baseSurface}" 在 厚度${thickness}mm × 宽度${width}mm 下无匹配加工费`);
+    } else if (typeof surfaceRaw === 'number') {
+      surfaceFeePerTon = surfaceRaw;
+    } else if (surfaceRaw.needConvert) {
+      surfaceFeePerTon = round2(surfaceRaw.sqmPrice * sqmPerTon);
+    }
+
+    const film1Fee = getFilmFee(film1);
+    const film2Fee = getFilmFee(film2);
+    if (film1 !== null && film1 !== undefined && getFilmFee(film1) === null) {
+      errors.push(`保护膜1 "${item.film1}" 无法识别`);
+    }
+    if (film2 !== null && film2 !== undefined && getFilmFee(film2) === null) {
+      errors.push(`保护膜2 "${item.film2}" 无法识别`);
+    }
+    const film1PerTon = film1Fee ? round2(film1Fee * sqmPerTon) : 0;
+    const film2PerTon = film2Fee ? round2(film2Fee * sqmPerTon) : 0;
+    const afpPerTon = round2(afpSqmFee * sqmPerTon);
+
+    if (errors.length > 0) {
+      return { success: false, errors };
+    }
+
+    const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon);
+    const taxExcluded = round2(subtotal * 0.92);
+    const costTax = round10(subtotal);
+    const costNoTax = round10(taxExcluded);
+    const markupKey = `${edgeType}_${boardType}`;
+    const markup = SALES_MARKUP[markupKey];
+    const saleTax = round10(costTax + markup);
+    const saleNoTax = round10(costNoTax + markup);
+
+    return {
+      success: true,
+      detail: {
+        origin: item.origin || '',
+        material, surface: item.surface || '', normSurface: baseSurface, thickness, width, length, film1, film2, basePrice,
+        isYanYan, hasLinen: !!hasLinen,
+        density, sqmPerTon: round2(sqmPerTon),
+        thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin),
+        surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
+        surfaceFeePerTon: round2(surfaceFeePerTon),
+        linenFeePerTon,
+        afpFeeSqm: afpSqmFee, afpPerTon,
+        film1FeeSqm: film1Fee || 0, film1PerTon,
+        film2FeeSqm: film2Fee || 0, film2PerTon,
+        costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded),
+        costTax, costNoTax,
+        edgeType, boardType, markup,
+        saleTax, saleNoTax
+      }
+    };
+  }
+
+  function getThickTableName(isYanYan, material, origin) {
+    if (material && (material === '304' || material.startsWith('304'))) return '304 加价';
+    if (isYanYan) return '压延料';
+    if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
+    return '常规';
+  }
+
+  function calculateBatch(items) {
+    return items.map((item, index) => ({ index: index + 1, ...calculate(item) }));
+  }
+
+  function parseSpec(specStr) {
+    if (!specStr) return null;
+    const s = specStr.replace(/×/g, '*').replace(/x/gi, '*').replace(/\s/g, '');
+    const parts = s.split('*').map(p => p.trim());
+    if (parts.length < 3) return null;
+    return {
+      thickness: parseFloat(parts[0]),
+      width: parseFloat(parts[1]),
+      length: parts[2].toUpperCase() === 'C' || parts[2].toUpperCase() === 'COIL' ? 'C' : parts[2]
+    };
+  }
+
+  function parseFreeText(text, basePriceMap) {
+    if (!text) return null;
+    let remaining = text.trim();
+    // 处理中文逗号和全角符号
+    remaining = remaining.replace(/[，,、；;：:]/g, ' ').trim();
+
+    const specRegex = /(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)\s*[*×xX]\s*(\S+)/;
+    const specMatch = remaining.match(specRegex);
+
+    let thickness = null, width = null, length = null;
+    if (specMatch) {
+      thickness = parseFloat(specMatch[1]);
+      width = parseFloat(specMatch[2]);
+      const lenStr = specMatch[3].toUpperCase();
+      length = (lenStr === 'C' || lenStr === 'COIL') ? 'C' : specMatch[3];
+      remaining = remaining.replace(specRegex, ' ').trim();
+    } else {
+      // 无完整规格，尝试单独提取厚度如 "0.3MM"
+      const thkMatch = remaining.match(/(\d+\.?\d+)\s*MM/i);
+      if (thkMatch) {
+        thickness = parseFloat(thkMatch[0]);
+        width = 1240;
+        length = 'C';
+        remaining = remaining.replace(thkMatch[0], ' ').trim();
+      } else {
+        return null;
+      }
+    }
+
+    // 提取括号里的膜信息: "GOLD MIRROR(7C-FILM+5C-FILM)"
+    let film1 = '', film2 = '';
+    const parenFilm = remaining.match(/\(([^)]+)\)/);
+    if (parenFilm) {
+      const parts = parenFilm[1].split('+').map(s => s.trim());
+      for (const p of parts) {
+        const norm = normalizeFilm(p);
+        if (norm) {
+          if (!film1) film1 = norm;
+          else if (!film2 && norm !== film1) film2 = norm;
+        }
+      }
+      remaining = remaining.replace(parenFilm[0], ' ').trim();
+    }
+
+    // 检测压延
+    let isYanYan = false;
+    if (/压延/.test(remaining)) {
+      isYanYan = true;
+      remaining = remaining.replace(/压延/g, ' ').trim();
+    }
+
+    // 提取材质 (201J5 > 201J4 > ... > 201)
+    const materialPatterns = ['201J5', '201J4', '201J1', '201J3', '201J2', '201', '304', '316L', '410', '430'];
+    let material = '';
+    for (const mp of materialPatterns) {
+      if (remaining.toUpperCase().includes(mp.toUpperCase())) {
+        material = mp;
+        remaining = remaining.replace(new RegExp(mp, 'gi'), ' ').trim();
+        break;
+      }
+    }
+
+    // 提取产地 (使用 ORIGIN_KEYWORDS)
+    const originPatterns = ORIGIN_KEYWORDS;
+    let origin = '';
+    for (const op of originPatterns) {
+      if (remaining.includes(op)) {
+        origin = op;
+        remaining = remaining.replace(op, ' ').trim();
+        break;
+      }
+    }
+
+    // 提取保护膜（如果括号里没找到）
+    if (!film1) {
+      // "/" 自动拆分：5C膜/5C膜 → film1=5C-FILM, film2=5C-FILM
+      const slashSplit = remaining.match(/^(.+?)\s*\/\s*(.+?)$/);
+      if (slashSplit) {
+        const left = slashSplit[1].trim();
+        const right = slashSplit[2].trim();
+        // 仅在两侧都能归一化为同一标准膜时拆分
+        const nl = normalizeFilm(left);
+        const nr = normalizeFilm(right);
+        if (nl && nr && nl === nr) {
+          film1 = nl; film2 = nr;
+          remaining = remaining.replace(left, ' ').replace(right, ' ').trim();
+        }
+      }
+      if (!film1) {
+        for (const [alias, standard] of Object.entries(FILM_ALIASES)) {
+          const regex = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\</body>'), 'gi');
+          if (regex.test(remaining)) {
+            if (!film1) film1 = standard;
+            else if (!film2 && standard !== film1) film2 = standard;
+            remaining = remaining.replace(regex, ' ').trim();
+          }
+        }
+      }
+      for (const fname of Object.keys(FILM_FEES)) {
+        if (remaining.includes(fname) && fname !== film1 && fname !== film2) {
+          if (!film1) film1 = fname;
+          else if (!film2) film2 = fname;
+          remaining = remaining.replace(fname, ' ').trim();
+        }
+      }
+      if (remaining.includes('垫纸')) {
+        if (!film1) film1 = '垫纸';
+        else if (!film2) film2 = '垫纸';
+        remaining = remaining.replace('垫纸', ' ').trim();
+      }
+    }
+
+    // 提取表面 — 用 SURFACE_ALIASES 按长度排序优先匹配
+    let surface = '';
+    const sortedAliases = Object.entries(SURFACE_ALIASES).sort((a,b) => b[0].length - a[0].length);
+    for (const [alias, norm] of sortedAliases) {
+      const re = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\</body>'), 'gi');
+      if (re.test(remaining)) {
+        surface = norm;
+        remaining = remaining.replace(re, ' ').trim();
+        break;
+      }
+    }
+    if (!surface) {
+      // 全文尝试 normalizeSurface
+      const normed = normalizeSurface(remaining.trim());
+      if (normed && normed !== remaining.trim()) {
+        surface = normed;
+        remaining = '';
+      }
+    }
+
+    // 根据材质 + 压延 计算基价
+    let basePrice = 0;
+    if (basePriceMap && material) {
+      const key = isYanYan ? material + '压延' : material;
+      basePrice = basePriceMap[key] || basePriceMap[material] || 0;
+    }
+
+    return {
+      origin, material, surface: normalizeSurface(surface) || surface,
+      thickness, width, length, film1, film2, basePrice, isYanYan
+    };
+  }
+
+  return {
+    calculate, calculateBatch, parseSpec, parseFreeText,
+    normalizeSurface, normalizeFilm, getDensity, getEdgeType,
+    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
+    setUserOverrides,
+    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE,
+    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS
+  };
+})();
+
+﻿/**
+ * KK不锈钢报价系统 - Excel 解析与导出
+ */
+const ExcelParser = (() => {
+
+
+
+  // 集装箱格式解析：装货清单，每行两组数据
+  function parseContainerFormat(rows) {
+    const items = [];
+
+    // 提取材质：""201 GRADE""
+    let material = '201J2';
+    for (const row of rows) {
+      const t = String(row[1] || row[0] || '').toUpperCase();
+      const m = t.match(/(\d{3})\s*GRADE/i);
+      if (m) { material = m[1] + 'J2'; break; }
+    }
+
+    // 辅助: 提取厚度值
+    function stripThk(v) {
+      const s = String(v || '').trim().replace(/\s*MM\s*/i, '').trim();
+      return s;
+    }
+
+    // 辅助: 从容器标题提取规格
+    function extractSpec(cell) {
+      const s = String(cell || '');
+      const m = s.match(/(\d+)\s*X\s*(\d+)/i);
+      return m ? { width: m[1], length: m[2] } : null;
+    }
+
+    // 辅助: 读取一组数据并提取括号膜
+    function parseGroup(row, thkIdx, surfIdx, wgtIdx, defW, defL) {
+      const thkVal = stripThk(row[thkIdx]);
+      if (!thkVal || isNaN(parseFloat(thkVal))) return null;
+      let surfRaw = String(row[surfIdx] || '').trim();
+      if (!surfRaw || surfRaw.toUpperCase() === 'TOTAL') return null;
+
+      // 提取括号内的膜信息: "GOLD MIRROR(7C-FILM+5C-FILM)"
+      let film1 = '', film2 = '';
+      const parenMatch = surfRaw.match(/\(([^)]+)\)/);
+      if (parenMatch) {
+        const parts = parenMatch[1].split('+').map(s => s.trim());
+        for (const p of parts) {
+          const norm = PricingEngine.normalizeFilm(p);
+          if (norm) {
+            if (!film1) film1 = norm;
+            else if (!film2 && norm !== film1) film2 = norm;
+          }
+        }
+        surfRaw = surfRaw.replace(parenMatch[0], '').trim();
+      }
+
+      return {
+        surface: surfRaw, thickness: thkVal,
+        width: defW, length: defL,
+        film1, film2
+      };
+    }
+
+    // 首次遍历：收集所有容器标题中的规格
+    const specs = {}; // colIdx -> {width, length}
+    let hasContainer = false;
+    for (const row of rows) {
+      for (let c = 0; c < row.length; c++) {
+        const cell = String(row[c] || '').toUpperCase();
+        if (cell.includes('CONTAINER')) {
+          hasContainer = true;
+          const spec = extractSpec(cell);
+          if (spec) specs[c] = spec;
+        }
+      }
+    }
+
+    if (!hasContainer) return null; // 不是集装箱格式
+
+    // 默认规格
+    const defaultSpec = { width: '1240', length: '2500' };
+
+    // 第二遍：解析数据行
+    // 左组: col 1(thk), 2(surf), 3(wgt); 右组: col 6(thk), 7(surf), 8(wgt)
+    for (const row of rows) {
+      // 跳过空行和标题行
+      const rowText = row.map(c => String(c || '')).join(' ').toUpperCase();
+      if (rowText.includes('CONTAINER') || rowText.includes('GRADE') || rowText.trim() === '') continue;
+
+      // 左组
+      const s1 = specs[1] || specs[0] || defaultSpec;
+      const left = parseGroup(row, 1, 2, 3, s1.width, s1.length);
+      if (left) {
+        items.push({ origin: '宏旺', material, surface: left.surface,
+          thickness: left.thickness, width: left.width, length: left.length,
+          film1: left.film1 || '', film2: left.film2 || '', isYanYan: false, basePrice: 0 });
+      }
+
+      // 右组
+      const s2 = specs[6] || specs[7] || defaultSpec;
+      const right = parseGroup(row, 6, 7, 8, s2.width, s2.length);
+      if (right) {
+        items.push({ origin: '宏旺', material, surface: right.surface,
+          thickness: right.thickness, width: right.width, length: right.length,
+          film1: right.film1 || '', film2: right.film2 || '', isYanYan: false, basePrice: 0 });
+      }
+    }
+
+    return items;
+  }
+
+  function parseExcel(file, basePrice) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }).filter(r => r.some(c => c !== ''));
+
+          const items = [];
+          let headers = null;
+          let headerRowIdx = -1;
+
+          // 检测表头行
+          for (let i = 0; i < Math.min(5, rows.length); i++) {
+            const rowText = rows[i].join(' ').toLowerCase();
+            if (rowText.includes('材质') || rowText.includes('表面') || rowText.includes('厚度')) {
+              headers = rows[i];
+              headerRowIdx = i;
+              break;
+            }
+            // 检测英文表头: THICKNESS / MATERIAL / PVC
+            if (rowText.includes('thickness') && rowText.includes('material')) {
+              headers = rows[i];
+              headerRowIdx = i;
+              break;
+            }
+          }
+
+          if (headers) {
+            // 判断是否英文表头格式
+            const hText = headers.join(' ').toLowerCase();
+            const isEnglish = hText.includes('thickness');
+
+            if (isEnglish) {
+              // 英文表头格式：THICKNESS | MATERIAL J2 1240 x 2500 | WEIGHT | QTY | PVC
+              // 从 MATERIAL 表头单元格提取材质和规格
+              const matHeader = String(headers[1] || '').trim(); // B1
+              const materialMatch = matHeader.match(/(J\d+)\s+(\d+)\s*x\s*(\d+)/i);
+              const defaultMaterial = materialMatch ? '201' + materialMatch[1].toUpperCase() : '201J2';
+              const defaultWidth = materialMatch ? materialMatch[2] : '1240';
+              const defaultLength = materialMatch ? materialMatch[3] : '2500';
+
+              for (let i = headerRowIdx + 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row[0] && !row[1]) continue; // 跳过空行
+                const thkRaw = String(row[0] || '').trim().replace(/\s*mm\s*/i, '');
+                const surfRaw = String(row[1] || '').trim();
+                const filmRaw = String(row[4] || '').trim();
+                if (!thkRaw || !surfRaw) continue;
+                // 跳过分类标题行（没有厚度数字的纯文本行）
+                if (isNaN(parseFloat(thkRaw))) continue;
+
+                // 标准化表面名（仅用于计算，原文保留）
+                const normSurface = PricingEngine.normalizeSurface(surfRaw);
+                const film = PricingEngine.normalizeFilm(filmRaw);
+
+                items.push({
+                  origin: '宏旺',
+                  material: defaultMaterial,
+                  surface: surfRaw, // 保持原始英文
+                  thickness: thkRaw,
+                  width: defaultWidth,
+                  length: defaultLength,
+                  film1: film || '',
+                  film2: '',
+                  isYanYan: false,
+                  basePrice: 0
+                });
+              }
+            } else {
+              // 有表头：从表头下一行开始解析
+              for (let i = headerRowIdx + 1; i < rows.length; i++) {
+                const item = parseRow(rows[i], headers, basePrice);
+                if (item) {
+                  // 如果 row 里没有规格, 看是否有 厚度/宽度/长度 列
+                  if (!item.thickness) {
+                    const thicknessIdx = headers.findIndex(h => h.includes('厚度'));
+                    const widthIdx = headers.findIndex(h => h.includes('宽度'));
+                    const lengthIdx = headers.findIndex(h => h.includes('长度'));
+                    if (thicknessIdx >= 0 && rows[i][thicknessIdx]) item.thickness = String(rows[i][thicknessIdx]).trim();
+                    if (widthIdx >= 0 && rows[i][widthIdx]) item.width = String(rows[i][widthIdx]).trim();
+                    if (lengthIdx >= 0 && rows[i][lengthIdx]) item.length = String(rows[i][lengthIdx]).trim();
+                  }
+                  items.push(item);
+                }
+              }
+            }
+          } else {
+            // 尝试集装箱格式解析
+            const containerItems = parseContainerFormat(rows);
+            if (containerItems && containerItems.length > 0) {
+              items.push.apply(items, containerItems);
+            } else {
+              // 无表头且非集装箱：每行作为自由文本解析
+              // 先用 join 空格，再用 enhanced parseFreeText
+              for (const row of rows) {
+                const text = row.join(' ').trim();
+                if (!text) continue;
+                const parsed = PricingEngine.parseFreeText(text, basePrice);
+                if (typeof parsed === 'object') items.push(parsed);
+              }
+            }
+          }
+
+          resolve(items);
+        } catch (err) {
+          console.error('Excel parse error:', err);
+          resolve([]);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function parseRow(row, headers, basePrice) {
+    if (headers) {
+      const item = { basePrice };
+      for (let i = 0; i < headers.length; i++) {
+        const val = String(row[i] || '').trim();
+        const h = headers[i];
+
+        if (h.includes('产地') || h.includes('origin')) item.origin = val;
+        else if (h.includes('材质')) item.material = val;
+        else if (h.includes('表面')) item.surface = val;
+        else if (h.includes('厚度') || h.includes('thickness')) item.thickness = val;
+        else if (h.includes('宽度') || h.includes('width')) item.width = val;
+        else if (h.includes('长度') || h.includes('length')) item.length = val;
+        else if (h.includes('规格') || h.includes('spec')) {
+          const spec = PricingEngine.parseSpec(val);
+          if (spec) { item.thickness = spec.thickness; item.width = spec.width; item.length = spec.length; }
+        }
+        else if (h.includes('膜1') || h === '保护膜' || h.includes('film1') || h.includes('膜一')) item.film1 = val;
+        else if (h.includes('膜2') || h.includes('film2') || h.includes('膜二')) item.film2 = val;
+        else if (h.includes('压延') || h.includes('yan') || h.includes('yanyan')) item.isYanYan = val === '是' || val === 'Y' || val === 'yes';
+      }
+      return item;
+    }
+
+    // 无表头：自由文本
+    const text = row.join(' ').trim();
+    if (!text) return null;
+    const specRegex = /(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)\s*[*×xX]\s*(\S+)/;
+    if (specRegex.test(text)) {
+      const parsed = PricingEngine.parseFreeText(text, basePrice);
+      if (typeof parsed === 'object') return parsed;
+    }
+    const spec = PricingEngine.parseSpec(text);
+    if (spec) return { ...spec, basePrice };
+    return null;
+  }
+
+  function exportToExcel(results, filename) {
+    const rows = [];
+    // 给客户看的简洁表头
+    rows.push(['产地', '材质', '表面', '规格', '膜', '价格']);
+
+    for (const r of results) {
+      if (!r.success) {
+        rows.push([r.index, '', '', '', '', `错误: ${r.errors.join('; ')}`]);
+        continue;
+      }
+      const d = r.detail;
+      // 规格: 厚度*宽度*长度
+      const spec = `${d.thickness}*${d.width}*${d.length}`;
+      // 膜: 合并膜1+膜2
+      const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
+      // 价格 = 不含税售价（对外就叫"价格"）
+      rows.push([
+        d.origin || '',
+        d.material || '',
+        d.surface || '',
+        spec,
+        film,
+        d.saleNoTax
+      ]);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 10 }, // 产地
+      { wch: 10 }, // 材质
+      { wch: 16 }, // 表面
+      { wch: 22 }, // 规格
+      { wch: 24 }, // 膜
+      { wch: 14 }  // 价格
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '报价单');
+
+    // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
+    const detailRows = _buildDetailRows(results);
+    if (detailRows.length > 0) {
+      const ds = XLSX.utils.aoa_to_sheet(detailRows);
+      XLSX.utils.book_append_sheet(wb, ds, '内部明细');
+      wb.Sheets['内部明细'].hidden = true; // Excel 隐藏工作表
+      // 列宽
+      ds['!cols'] = [
+        { wch: 5 },  { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 10 },
+        { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 12 },
+        { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+        { wch: 16 }, { wch: 16 },
+        { wch: 10 }, { wch: 10 }, { wch: 12 },
+        { wch: 16 }, { wch: 16 }
+      ];
+    }
+
+    XLSX.writeFile(wb, filename || 'KK报价.xlsx');
+  }
+
+  function _buildDetailRows(results) {
+    const rows = [];
+    rows.push([
+      '序号', '产地', '材质', '表面', '厚度(mm)', '宽度(mm)', '长度',
+      '保护膜1', '保护膜2', '基价(元/吨)',
+      '厚度加价(元/吨)', '表面加工费(元/吨)', '小珠光(元/吨)', '抗指纹(元/吨)', '膜1费用(元/吨)', '膜2费用(元/吨)',
+      '含税成本(元/吨)', '不含税成本(元/吨)',
+      '毛边/齐边', '卷板/平板', '销售加价(元/吨)',
+      '含税售价(元/吨)', '不含税售价(元/吨)'
+    ]);
+    for (const r of results) {
+      if (!r.success) {
+        rows.push([r.index, '', '', '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`]);
+        continue;
+      }
+      const d = r.detail;
+      rows.push([
+        r.index, d.origin || '', d.material || '', d.surface || '',
+        d.thickness, d.width, d.length,
+        d.film1 || '', d.film2 || '', d.basePrice,
+        d.thickSurcharge, d.surfaceFeePerTon, d.linenFeePerTon, d.afpPerTon,
+        d.film1PerTon, d.film2PerTon,
+        d.costTax, d.costNoTax,
+        d.edgeType === 'rough' ? '毛边' : '齐边',
+        d.boardType === 'coil' ? '卷板' : '平板',
+        d.markup,
+        d.saleTax, d.saleNoTax
+      ]);
+    }
+    return rows;
+  }
+
+  return { parseExcel, exportToExcel, parseContainerFormat };
+})();
+
+﻿/**
+ * KK不锈钢报价系统 - 主应用逻辑
+ */
+const App = (() => {
+  let dataItems = [];
+  let results = [];
+  let allExpanded = false;
+
+  // 各产地 J2 基价 (201)
+  let originPrices = {};
+  let originOrder = [...ORIGIN_PRESETS];
+  let lockedOrigins = {};
+  // 各产地 J2 基价 (304)
+  let originPrices304 = {};
+  let lockedOrigins304 = {};
+  let j5Price = 0;
+
+  // 用户自定义价格覆盖（保护膜、表面加工费等）
+  let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
+
+  // ========== 基价计算 ==========
+  function getMaterialPrice(origin, material) {
+    if (material === '304' || material.startsWith('304')) {
+      const p = originPrices304[origin];
+      return (p && p > 0) ? p : null;
+    }
+    const j2 = originPrices[origin];
+    if (!j2 || j2 <= 0) return null;
+    if (material === '201J5') return j5Price;
+    const offset = MATERIAL_OFFSETS[material];
+    if (offset === undefined) return j2;
+    return j2 + (offset || 0);
+  }
+
+  // ========== DOM Cache ==========
+  const els = {};
+  function dom(id) { return document.getElementById(id); }
+
+  function init() {
+    // Initialize origin prices
+    originOrder.forEach(o => { originPrices[o] = 0; });
+    originPrices['宏旺'] = 7800; // default
+    originOrder.forEach(o => { originPrices304[o] = 0; });
+    loadLockedPrices(); // 恢复已锁定的价格（201 + 304）
+    loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
+    PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
+
+    cacheDom();
+    bindEvents();
+    renderOriginGrid();
+    renderFilmConfig();
+    renderSurfaceConfig();
+    renderPriceReference();
+    // 更新版本号
+    const vb = document.getElementById('versionBadge');
+    if (vb && typeof APP_VERSION !== 'undefined') vb.textContent = 'v' + APP_VERSION;
+    const fv = document.getElementById('footerVersion');
+    if (fv && typeof APP_VERSION !== 'undefined') fv.textContent = 'v' + APP_VERSION;
+    // 材质标签动态化
+    const mb = document.getElementById('materialBadge');
+    if (mb) {
+      mb.textContent = '201/304 全系列';
+      mb.className = 'badge badge-accent';
+    }
+    updateAllDerived();
+    render();
+  }
+
+  function cacheDom() {
+    els.calcBtn = dom('calculateBtn'); els.expBtn = dom('exportBtn'); els.expBtn2 = dom('exportBtn2');
+    els.clearBtn = dom('clearBtn'); els.addBtn = dom('addManualBtn');
+    els.fileInput = dom('fileInput'); els.tBody = dom('resultBody');
+    els.emptyState = dom('emptyState'); els.resultCard = dom('resultCard');
+    els.totalC = dom('totalCount'); els.okC = dom('successCount'); els.errC = dom('errorCount');
+    els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
+    els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
+    els.originRows = dom('originRows'); els.newOriginInput = dom('newOriginInput');
+    els.addOriginBtn = dom('addOriginBtn'); els.expandAllBtn = dom('expandAllBtn');
+  }
+
+  function bindEvents() {
+    els.calcBtn.addEventListener('click', runCalc);
+    els.expBtn.addEventListener('click', exportResults);
+    els.expBtn2.addEventListener('click', exportResults);
+    els.clearBtn.addEventListener('click', clearAll);
+    els.addBtn.addEventListener('click', addManual);
+    els.fileInput.addEventListener('change', handleFile);
+    els.parseTextBtn.addEventListener('click', parseText);
+    els.addOriginBtn.addEventListener('click', addOrigin);
+    els.expandAllBtn.addEventListener('click', toggleAllExpand);
+
+    // 价格参数配置选项卡切换
+    document.querySelectorAll('.config-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.config-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = document.querySelector(`.config-panel[data-config="${btn.dataset.config}"]`);
+        if (panel) panel.classList.add('active');
+        // 渲染对应面板
+        if (btn.dataset.config === 'films') renderFilmConfig();
+        if (btn.dataset.config === 'surfaces') renderSurfaceConfig();
+        if (btn.dataset.config === 'reference') renderPriceReference();
+      });
+    });
+
+    dom('manualOrigin')?.addEventListener('change', () => {
+      syncManualPrices();
+      dom('manualMaterial')?.focus();
+    });
+
+    // J5 基价输入
+    const j5Inp = dom('j5BasePrice');
+    if (j5Inp) {
+      j5Inp.addEventListener('input', () => {
+        j5Price = parseFloat(j5Inp.value) || 0;
+        const j5Show = dom('j5PriceShow');
+        if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
+      });
+    }
+
+    // 手动添加表单：Enter 跳转下一个字段，最后一个字段 Enter 直接添加
+    const manualFields = ['manualOrigin', 'manualMaterial', 'manualSurface', 'manualThickness', 'manualWidth', 'manualLength', 'manualFilm1', 'manualFilm2'];
+    manualFields.forEach((id, i) => {
+      const el = dom(id);
+      if (!el) return;
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (i < manualFields.length - 1) {
+            const next = dom(manualFields[i + 1]);
+            if (next) { next.focus(); if (typeof next.select === 'function') next.select(); }
+          } else {
+            addManual();
+          }
+        }
+      });
+    });
+  }
+
+  // ========== 产地价格管理 ==========
+  function renderOriginGrid() {
+    els.originRows.innerHTML = '';
+    originOrder.forEach(origin => {
+      const price = originPrices[origin] || 0;
+      const locked = !!lockedOrigins[origin];
+      const j1 = price ? price + 900 : 0;
+      const j3 = price ? price + 400 : 0;
+      const j4 = price ? price + 1600 : 0;
+      const price304 = originPrices304[origin] || 0;
+      const locked304 = !!lockedOrigins304[origin];
+      const div = document.createElement('div');
+      div.className = 'origin-row';
+      div.innerHTML = `
+        <span class="oname" style="min-width:56px">${origin}</span>
+        <div class="oj2"><label>J2</label><input type="number" class="origin-j2-input" data-origin="${origin}" value="${price || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
+        <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" data-mat="201" title="${locked ? '点击解锁' : '点击锁定'}">${locked ? '🔒' : '🔓'}</button>
+        <span class="oarrow">→</span>
+        <span class="oderived">
+          ${price > 0 
+            ? `J1: <b>${j1.toLocaleString()}</b>  J3: <b>${j3.toLocaleString()}</b>  J4: <b>${j4.toLocaleString()}</b>`
+            : '<span class="oderived-hint">请填写 J2 基价</span>'}
+        </span>
+        <span class="o304sep" style="margin:0 6px;color:var(--border);font-weight:200">|</span>
+        <div class="oj2" style="width:80px"><label style="font-size:10px">304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" style="width:60px;font-size:12px;padding:4px 6px;" ${locked304 ? 'readonly' : ''}></div>
+        <button class="o-lock ${locked304 ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
+        ${originOrder.length > ORIGIN_PRESETS.length ? `<button class="o-remove" data-origin="${origin}" title="删除">✕</button>` : ''}
+      `;
+      els.originRows.appendChild(div);
+    });
+    // Bind 201 inputs
+    bindOriginInputs('.origin-j2-input', originPrices, '201');
+    // Bind 304 inputs
+    bindOriginInputs('.origin-304-input', originPrices304, '304');
+
+    // Lock toggle
+    document.querySelectorAll('.o-lock').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mat = btn.dataset.mat;
+        if (mat === '304') {
+          lockedOrigins304[btn.dataset.origin] = !lockedOrigins304[btn.dataset.origin];
+          saveLockedPrices();
+          renderOriginGrid();
+        } else {
+          toggleLock(btn.dataset.origin);
+        }
+      });
+    });
+    // Manual add dropdown
+    const sel = dom('manualOrigin');
+    if (sel) {
+      sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
+      syncManualPrices();
+    }
+  }
+
+  function bindOriginInputs(selector, priceMap) {
+    const inputs = document.querySelectorAll(selector);
+    inputs.forEach((inp, i) => {
+      inp.addEventListener('input', () => {
+        const o = inp.dataset.origin;
+        priceMap[o] = parseFloat(inp.value) || 0;
+        updateAllDerived();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const all = document.querySelectorAll(selector);
+          if (e.shiftKey && i > 0) all[i - 1].focus();
+          else if (!e.shiftKey && i < all.length - 1) all[i + 1].focus();
+        }
+      });
+      inp.addEventListener('blur', () => {
+        const o = inp.dataset.origin;
+        priceMap[o] = parseFloat(inp.value) || 0;
+        if (selector === '.origin-j2-input') updateDerivedDisplay(o);
+        saveLockedPrices();
+      });
+    });
+  }
+
+  function updateDerivedDisplay(origin) {
+    const rows = document.querySelectorAll('.origin-row');
+    for (const row of rows) {
+      if (row.querySelector('.oname')?.textContent === origin) {
+        const derived = row.querySelector('.oderived');
+        const p = originPrices[origin] || 0;
+        derived.innerHTML = p > 0
+          ? `J1: <b>${(p+900).toLocaleString()}</b>  J3: <b>${(p+400).toLocaleString()}</b>  J4: <b>${(p+1600).toLocaleString()}</b>`
+          : '<span class="oderived-hint">请填写 J2 基价</span>';
+        break;
+      }
+    }
+  }
+
+  function syncManualPrices() {
+    const sel = dom('manualOrigin');
+    const display = dom('manualPriceDisplay');
+    if (!sel || !display) return;
+    const o = sel.value;
+    const j2 = originPrices[o] || 0;
+    if (j2 > 0) {
+      const j1 = j2 + 900, j3 = j2 + 400, j4 = j2 + 1600;
+      display.innerHTML = `J2 <b>${j2.toLocaleString()}</b> → J1 <b>${j1.toLocaleString()}</b>  J3 <b>${j3.toLocaleString()}</b>  J4 <b>${j4.toLocaleString()}</b>`;
+      display.style.color = 'var(--text-secondary)';
+    } else {
+      display.textContent = '⚠️ 该产地未设置基价';
+      display.style.color = 'var(--danger)';
+    }
+  }
+
+  function addOrigin() {
+    const name = els.newOriginInput.value.trim();
+    if (!name) { showToast('请输入产地名称', 'error'); return; }
+    if (originOrder.includes(name)) { showToast('该产地已存在', 'error'); return; }
+    originOrder.push(name);
+    originPrices[name] = 0;
+    originPrices304[name] = 0;
+    els.newOriginInput.value = '';
+    renderOriginGrid();
+    showToast(`已添加产地: ${name}`, 'success');
+  }
+
+  function updateAllDerived() {
+    const j5Show = dom('j5PriceShow');
+    if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
+  }
+
+  // ========== 锁定价格持久化 ==========
+  function saveLockedPrices() {
+    try {
+      const data = {};
+      for (const [o, p] of Object.entries(originPrices)) {
+        if (lockedOrigins[o]) data[o] = p;
+      }
+      localStorage.setItem('kk_locked_prices', JSON.stringify(data));
+      // 304 locked prices
+      const data304 = {};
+      for (const [o, p] of Object.entries(originPrices304)) {
+        if (lockedOrigins304[o]) data304[o] = p;
+      }
+      localStorage.setItem('kk_locked_prices_304', JSON.stringify(data304));
+    } catch (e) { /* ignore */ }
+  }
+
+  function loadLockedPrices() {
+    try {
+      const raw = localStorage.getItem('kk_locked_prices');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      for (const [o, p] of Object.entries(data)) {
+        if (originPrices.hasOwnProperty(o) || originOrder.includes(o)) {
+          originPrices[o] = p;
+          lockedOrigins[o] = true;
+        }
+      }
+    } catch (e) { /* ignore */ }
+    try {
+      const raw304 = localStorage.getItem('kk_locked_prices_304');
+      if (!raw304) return;
+      const data304 = JSON.parse(raw304);
+      for (const [o, p] of Object.entries(data304)) {
+        if (originPrices304.hasOwnProperty(o) || originOrder.includes(o)) {
+          originPrices304[o] = p;
+          lockedOrigins304[o] = true;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function toggleLock(origin) {
+    lockedOrigins[origin] = !lockedOrigins[origin];
+    if (!lockedOrigins[origin] && originPrices[origin] === 0) {
+      // 解锁且价格为 0 → 恢复默认提示
+    }
+    saveLockedPrices();
+    renderOriginGrid();
+    updateAllDerived();
+  }
+
+  // ========== 价格覆盖管理 ==========
+  function savePriceOverrides() {
+    try { localStorage.setItem('kk_price_overrides', JSON.stringify(priceOverrides)); }
+    catch (e) { /* ignore */ }
+  }
+
+  function loadPriceOverrides() {
+    try {
+      const raw = localStorage.getItem('kk_price_overrides');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      priceOverrides.filmFees = data.filmFees || {};
+      priceOverrides.surfaceFees = data.surfaceFees || {};
+      priceOverrides.filmLocked = data.filmLocked || {};
+      priceOverrides.surfaceLocked = data.surfaceLocked || {};
+    } catch (e) { /* ignore */ }
+  }
+
+  function renderFilmConfig() {
+    const wrap = dom('filmConfigTable');
+    if (!wrap) return;
+    let html = '<table><thead><tr><th>保护膜名称</th><th>单价(元/平米)</th><th>默认</th><th></th></tr></thead><tbody>';
+    for (const [name, defaultPrice] of Object.entries(FILM_FEES)) {
+      const val = priceOverrides.filmFees[name] ?? defaultPrice;
+      const locked = !!priceOverrides.filmLocked[name];
+      html += `<tr>
+        <td><span class="cfg-name">${name}</span></td>
+        <td><input type="number" class="cfg-price-input film-price-inp" data-name="${name}" value="${val}" step="0.1" ${locked ? 'readonly' : ''}></td>
+        <td><span class="cfg-default">${defaultPrice}</span></td>
+        <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="film">${locked ? '🔒' : '🔓'}</button></td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+
+    // 绑定输入事件
+    wrap.querySelectorAll('.film-price-inp').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const name = inp.dataset.name;
+        priceOverrides.filmFees[name] = parseFloat(inp.value) || 0;
+        savePriceOverrides();
+      });
+    });
+    // 绑定锁定事件
+    wrap.querySelectorAll('.cfg-lock-btn[data-type="film"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        priceOverrides.filmLocked[name] = !priceOverrides.filmLocked[name];
+        savePriceOverrides();
+        renderFilmConfig(); // 刷新显示
+      });
+    });
+  }
+
+  function renderSurfaceConfig() {
+    const wrap = dom('surfaceConfigTable');
+    if (!wrap) return;
+    const surfOrder = [
+      { display: '2B', key: '2B' },
+      { display: 'NO.4', key: 'NO.4' },
+      { display: 'HL', key: 'HL' },
+      { display: '单面抛光', key: '单面抛光' },
+      { display: '双面抛光', key: '双面抛光' },
+      { display: '6K', key: '6K' },
+      { display: '双面6K', key: '双面6K' },
+      { display: '8K', key: '8K' },
+      { display: '双面8K', key: '双面8K' },
+      // 8K 彩色
+      { display: '8K黄钛金(板)', key: '8K黄钛金' },
+      { display: '8K玫瑰金(板)', key: '8K玫瑰金' },
+      { display: '8K香槟金(板)', key: '8K香槟金' },
+      { display: '8K黑钛金(板)', key: '8K黑钛金' },
+      { display: '8K宝石蓝(板)', key: '8K宝石蓝' },
+      { display: '8K紫罗兰(板)', key: '8K紫罗兰' },
+      { display: '8K翡翠绿(板)', key: '8K翡翠绿' },
+      { display: '8K紫红(板)', key: '8K紫红' },
+      { display: '8K中国红(板)', key: '8K中国红' },
+      { display: '8K古铜(板)', key: '8K古铜' },
+      // 砂面/拉丝 合并
+      { display: '砂面/拉丝(NO.4/HL)黄钛金(板)', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金(板)', keys: ['拉丝香槟金','磨砂香槟金'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金(板)', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)古铜(板)', keys: ['拉丝古铜','磨砂古铜'] },
+      { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹(板)', key: '拉丝古铜哑光抗指纹' },
+      { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹(板)', key: '拉丝古铜亮光抗指纹' },
+      // AFP 彩色表面
+      { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(板)', key: '拉丝黄钛金亮光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(板)', key: '拉丝黄钛金哑光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(板)', key: '拉丝玫瑰金亮光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(板)', key: '拉丝玫瑰金哑光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(板)', key: '拉丝香槟金亮光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(板)', key: '拉丝香槟金哑光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(板)', key: '拉丝黑钛金亮光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(板)', key: '拉丝黑钛金哑光无指纹' },
+      // ===== 卷材 =====
+      { display: '8K黄钛金(卷)', key: '8K黄钛金(卷)' },
+      { display: '8K玫瑰金(卷)', key: '8K玫瑰金(卷)' },
+      { display: '8K香槟金(卷)', key: '8K香槟金(卷)' },
+      { display: '8K黑钛金(卷)', key: '8K黑钛金(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金(卷)', keys: ['拉丝黄钛金(卷)','磨砂黄钛金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金(卷)', keys: ['拉丝玫瑰金(卷)','磨砂玫瑰金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金(卷)', keys: ['拉丝香槟金(卷)','磨砂香槟金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金(卷)', keys: ['拉丝黑钛金(卷)','磨砂黑钛金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(卷)', key: '拉丝黄钛金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(卷)', key: '拉丝黄钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(卷)', key: '拉丝玫瑰金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(卷)', key: '拉丝玫瑰金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(卷)', key: '拉丝香槟金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(卷)', key: '拉丝香槟金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(卷)', key: '拉丝黑钛金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(卷)', key: '拉丝黑钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)灰钛金哑光无指纹(卷)', key: '拉丝灰钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)古铜亮光无指纹(卷)', key: '拉丝古铜亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
+    ];
+    let html = '<table><thead><tr><th>表面名称</th><th>覆盖价(元/平米)</th><th>阶梯默认价</th><th></th></tr></thead><tbody>';
+    surfOrder.forEach(item => {
+      const cfgKey = item.key || item.keys[0];
+      const cfg = SURFACE_FEES[cfgKey];
+      if (!cfg) return;
+      const names = item.key ? item.key : item.keys.join(',');
+      const display = item.display;
+      if (typeof cfg === 'object' && cfg.price !== undefined && !Array.isArray(cfg)) {
+        const defaultPrice = cfg.price;
+        const val = priceOverrides.surfaceFees[cfgKey] ?? defaultPrice;
+        const locked = !!priceOverrides.surfaceLocked[cfgKey];
+        html += `<tr>
+          <td><span class="cfg-name">${display}</span></td>
+          <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${names}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
+          <td><span class="cfg-default">${defaultPrice}</span></td>
+          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${names}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
+        </tr>`;
+      } else if (Array.isArray(cfg)) {
+        const tiers = cfg.filter(t => t.unit === 'sqm' || !t.unit);
+        if (tiers.length === 0) return;
+        const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
+        const val = priceOverrides.surfaceFees[cfgKey] ?? tiers[0].price;
+        const locked = !!priceOverrides.surfaceLocked[cfgKey];
+        html += `<tr>
+          <td><span class="cfg-name">${display}</span></td>
+          <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${names}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
+          <td><span class="cfg-default">${tierDesc}</span></td>
+          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${names}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
+        </tr>`;
+      }
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+
+    // 绑定输入事件 (支持合并名)
+    wrap.querySelectorAll('.surf-price-inp').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const names = inp.dataset.names.split(',');
+        const v = parseFloat(inp.value) || 0;
+        names.forEach(n => { priceOverrides.surfaceFees[n] = v; });
+        savePriceOverrides();
+      });
+    });
+    // 绑定锁定事件 (支持合并名)
+    wrap.querySelectorAll('.cfg-lock-btn[data-type="surf"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const names = btn.dataset.names.split(',');
+        const locked = !priceOverrides.surfaceLocked[names[0]];
+        names.forEach(n => { priceOverrides.surfaceLocked[n] = locked; });
+        savePriceOverrides();
+        renderSurfaceConfig();
+      });
+    });
+  }
+
+  function renderPriceReference() {
+    const el = dom('priceReferenceTable');
+    if (!el) return;
+    let h = [];
+
+    // ===== 1. 厚度加价总表 =====
+    h.push('<div class="ref-section"><h3 class="ref-title">📐 厚度加价总表</h3>');
+    // 默认表
+    h.push('<h4 class="ref-subtitle">宏旺201(正材）</h4>');
+    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+    THICKNESS_SURCHARGE.forEach(t => {
+      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+    });
+    h.push('</table>');
+
+    // 压延料表
+    h.push('<h4 class="ref-subtitle">本地201(压延）</h4>');
+    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+    YANYAN_THICKNESS_SURCHARGE.forEach(t => {
+      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+    });
+    h.push('</table>');
+
+    // 304 表
+    h.push('<h4 class="ref-subtitle">宏旺304/德龙304</h4>');
+    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+    THICKNESS_SURCHARGE_304.forEach(t => {
+      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+    });
+    h.push('</table>');
+
+    // 产地特异性表
+    Object.entries(ORIGIN_THICKNESS_SURCHARGE).forEach(([origin, table]) => {
+      h.push(`<h4 class="ref-subtitle">${origin} (304正材)</h4>`);
+      h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+      table.forEach(t => {
+        h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+      });
+      h.push('</table>');
+    });
+    h.push('</div>');
+
+    // ===== 2. 表面加工费总表 =====
+    h.push('<div class="ref-section"><h3 class="ref-title">✨ 表面加工费总表</h3>');
+    h.push('<h4 class="ref-subtitle">201 表面加工费</h4>');
+    h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
+
+    // 自定义排列顺序：8K彩色 → 砂面/拉丝 → 其他标准表面
+    const coloredDisplay = [
+      { display: '8K黄钛金(板)', key: '8K黄钛金' },
+      { display: '8K玫瑰金(板)', key: '8K玫瑰金' },
+      { display: '8K香槟金(板)', key: '8K香槟金' },
+      { display: '8K黑钛金(板)', key: '8K黑钛金' },
+      { display: '8K宝石蓝(板)', key: '8K宝石蓝' },
+      { display: '8K紫罗兰(板)', key: '8K紫罗兰' },
+      { display: '8K翡翠绿(板)', key: '8K翡翠绿' },
+      { display: '8K紫红(板)', key: '8K紫红' },
+      { display: '8K中国红(板)', key: '8K中国红' },
+      { display: '8K古铜(板)', key: '8K古铜' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金(板)', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金(板)', keys: ['拉丝香槟金','磨砂香槟金'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金(板)', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)古铜(板)', keys: ['拉丝古铜','磨砂古铜'] },
+      { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹(板)', key: '拉丝古铜哑光抗指纹' },
+      { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹(板)', key: '拉丝古铜亮光抗指纹' },
+      // AFP 彩色表面
+      { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(板)', key: '拉丝黄钛金亮光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(板)', key: '拉丝黄钛金哑光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(板)', key: '拉丝玫瑰金亮光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(板)', key: '拉丝玫瑰金哑光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(板)', key: '拉丝香槟金亮光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(板)', key: '拉丝香槟金哑光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(板)', key: '拉丝黑钛金亮光无指纹' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(板)', key: '拉丝黑钛金哑光无指纹' }
+    ];
+    // 卷材表面
+    const coilDisplay = [
+      { display: '8K黄钛金(卷)', key: '8K黄钛金(卷)' },
+      { display: '8K玫瑰金(卷)', key: '8K玫瑰金(卷)' },
+      { display: '8K香槟金(卷)', key: '8K香槟金(卷)' },
+      { display: '8K黑钛金(卷)', key: '8K黑钛金(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金(卷)', keys: ['拉丝黄钛金(卷)','磨砂黄钛金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金(卷)', keys: ['拉丝玫瑰金(卷)','磨砂玫瑰金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金(卷)', keys: ['拉丝香槟金(卷)','磨砂香槟金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金(卷)', keys: ['拉丝黑钛金(卷)','磨砂黑钛金(卷)'] },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(卷)', key: '拉丝黄钛金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(卷)', key: '拉丝黄钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(卷)', key: '拉丝玫瑰金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(卷)', key: '拉丝玫瑰金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(卷)', key: '拉丝香槟金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(卷)', key: '拉丝香槟金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(卷)', key: '拉丝黑钛金亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(卷)', key: '拉丝黑钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)灰钛金哑光无指纹(卷)', key: '拉丝灰钛金哑光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)古铜亮光无指纹(卷)', key: '拉丝古铜亮光无指纹(卷)' },
+      { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
+    ];
+    const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '双面8K'];
+
+    function renderSurfaceRows(displayName, cfg) {
+      if (Array.isArray(cfg)) {
+        cfg.forEach((tier, i) => {
+          const thick = `${tier.tMin ?? '—'}～${tier.tMax ?? '—'}`;
+          const wide = (tier.wMin || tier.wMax) ? `${tier.wMin ?? '—'}～${tier.wMax ?? '—'}` : '—';
+          const unit = tier.unit === 'sqm' ? '元/㎡' : '元/吨';
+          h.push(`<tr><td>${i === 0 ? displayName : ''}</td><td>${thick}</td><td>${wide}</td><td class="ref-num">${tier.price} ${unit}</td></tr>`);
+        });
+      } else if (typeof cfg === 'object' && cfg.price !== undefined) {
+        const unit = cfg.type === 'sqm' ? '元/㎡' : '元/吨';
+        h.push(`<tr><td>${displayName}</td><td colspan="2">所有厚度</td><td class="ref-num">${cfg.price} ${unit}</td></tr>`);
+      }
+    }
+
+    standardSurfaces.forEach(name => {
+      if (name === '砂面/拉丝(NO.4/HL)') {
+        const cfg = SURFACE_FEES['NO.4'];
+        if (cfg) renderSurfaceRows(name, cfg);
+      } else {
+        const cfg = SURFACE_FEES[name];
+        if (cfg) renderSurfaceRows(name, cfg);
+      }
+    });
+    coloredDisplay.forEach(item => {
+      const cfg = SURFACE_FEES[item.key || item.keys[0]];
+      if (cfg) renderSurfaceRows(item.display, cfg);
+    });
+    h.push('</table>');
+
+    // 卷材彩色表面
+    h.push('<h4 class="ref-subtitle" style="margin-top:12px">彩色卷材表面加工费 (0.24~1.20mm)</h4>');
+    h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
+    coilDisplay.forEach(item => {
+      const cfg = SURFACE_FEES[item.key || item.keys[0]];
+      if (cfg) renderSurfaceRows(item.display, cfg);
+    });
+    h.push('</table>');
+
+    // 304 特例表面
+    if (Object.keys(SURFACE_FEES_304).length > 0) {
+      h.push('<h4 class="ref-subtitle">304 特例表面加工费 (与 201 不同的)</h4>');
+      h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
+      // 8K黑钛金 单独显示；拉丝+磨砂黑钛金合并
+      const cfg8k = SURFACE_FEES_304['8K黑钛金'];
+      if (cfg8k) renderSurfaceRows('8K黑钛金(板)', cfg8k);
+      const cfgWire = SURFACE_FEES_304['拉丝黑钛金'];
+      if (cfgWire) renderSurfaceRows('砂面/拉丝(NO.4/HL)黑钛金(板)', cfgWire);
+      h.push('</table>');
+    }
+    h.push('</div>');
+
+    // ===== 3. 保护膜价格表 =====
+    h.push('<div class="ref-section"><h3 class="ref-title">🔖 保护膜价格</h3>');
+    h.push('<table class="ref-table"><tr><th>膜型号</th><th>单价 (元/㎡)</th></tr>');
+    Object.entries(FILM_FEES).forEach(([name, price]) => {
+      h.push(`<tr><td>${name}</td><td class="ref-num">${price}</td></tr>`);
+    });
+    h.push('</table></div>');
+
+    // ===== 4. 辅助参数 =====
+    h.push('<div class="ref-section"><h3 class="ref-title">⚙️ 辅助参数</h3>');
+    h.push('<table class="ref-table">');
+    h.push('<tr><td>密度 (201)</td><td class="ref-num">' + DENSITY['201'] + '</td></tr>');
+    h.push('<tr><td>密度 (304)</td><td class="ref-num">' + DENSITY['304'] + '</td></tr>');
+    h.push('<tr><td>不含税系数</td><td class="ref-num">0.92</td></tr>');
+    h.push('<tr><td>小珠光压花附加费</td><td class="ref-num">' + LINEN_FEE + ' 元/吨</td></tr>');
+    h.push('<tr><td>亮光抗指纹 (AFP Bright)</td><td class="ref-num">' + AFP_BRIGHT_FEE + ' 元/㎡</td></tr>');
+    h.push('<tr><td>哑光抗指纹 (AFP Matte)</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
+    h.push('<tr><td colspan="2" style="padding:4px"></td></tr>');
+    h.push('<tr><th>销售加价</th><th class="ref-num">元/吨</th></tr>');
+    Object.entries(SALES_MARKUP).forEach(([key, val]) => {
+      const label = key === 'rough_coil' ? '毛边卷板' : key === 'trim_coil' ? '齐边卷板' : key === 'rough_sheet' ? '毛边平板' : key === 'trim_sheet' ? '齐边平板' : key;
+      h.push(`<tr><td>${label}</td><td class="ref-num">+${val}</td></tr>`);
+    });
+    h.push('</table></div>');
+
+    el.innerHTML = h.join('');
+  }
+
+  // ========== 数据操作 ==========
+  function handleFile(e) {
+    const f = e.target.files[0];
+    if (!f) return;
+    showToast('解析中...', 'info');
+    ExcelParser.parseExcel(f, 0).then(items => {
+      if (!items.length) { showToast('未解析出数据', 'error'); return; }
+      items.forEach(item => {
+        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material) || 0;
+      });
+      dataItems = dataItems.concat(items);
+      results = [];
+      showToast(`导入 ${items.length} 条`, 'success');
+      render();
+    }).catch(err => showToast('解析失败: ' + err.message, 'error'));
+    e.target.value = '';
+  }
+
+  function addManual() {
+    const origin = dom('manualOrigin').value;
+    const mat = dom('manualMaterial').value;
+    const yan = dom('manualYanYan').checked;
+    const thk = dom('manualThickness').value.trim();
+    const wid = dom('manualWidth').value.trim();
+    const len = dom('manualLength').value.trim();
+    const surf = dom('manualSurface').value.trim();
+    let f1 = dom('manualFilm1').value.trim();
+    let f2 = dom('manualFilm2').value.trim();
+    // "/" 自动拆分：5C膜/5C膜 → film1=5C-FILM, film2=5C-FILM
+    if (f1.includes('/')) {
+      const parts = f1.split('/').map(s => s.trim());
+      f1 = parts[0] || '';
+      if (parts.length > 1 && !f2) f2 = parts[1] || '';
+    }
+    if (f2.includes('/')) {
+      const parts = f2.split('/').map(s => s.trim());
+      f2 = parts[0] || '';
+    }
+    f1 = PricingEngine.normalizeFilm(f1) || f1;
+    f2 = PricingEngine.normalizeFilm(f2) || f2;
+    const bp = getMaterialPrice(origin, mat);
+    if (!bp || bp <= 0) { showToast(`${origin} ${mat} 基价未设置`, 'error'); return; }
+    if (!thk || !wid) { showToast('请填写厚度和宽度', 'error'); return; }
+    dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp });
+    results = []; showToast('已添加', 'success');
+    render();
+    ['manualThickness','manualWidth','manualLength','manualSurface','manualFilm1','manualFilm2'].forEach(id => dom(id).value = '');
+    dom('manualThickness').focus();
+  }
+
+  function parseText() {
+    const text = els.freeText.value.trim();
+    if (!text) { showToast('请输入数据', 'error'); return; }
+
+    // Detect grouped format: 第一行有公共信息（产地/材质/基础规格），后续有"表面："行
+    function isGroupedFormat(lines) {
+      const first = lines[0] || '';
+      const hasSurface = lines.some(l => /表面[：:]/.test(l));
+      const hasSpec = /\d+\.?\d*\s*[*×xX]\s*\d+/.test(first);
+      const hasOrigin = ORIGIN_KEYWORDS.some(o => first.includes(o));
+      return hasSurface && hasSpec && (hasOrigin || lines.length > 3);
+    }
+
+    function extractCommonInfo(raw) {
+      let s = raw.replace(/[，,、；;：:]/g, ' ').trim();
+      let origin = '', material = '';
+      for (const op of ORIGIN_KEYWORDS) { if (s.includes(op)) { origin = op; s = s.replace(op, ' ').trim(); break; } }
+      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410','430'];
+      for (const mp of mps) { if (s.toUpperCase().includes(mp)) { material = mp; s = s.replace(new RegExp(mp,'gi'), ' ').trim(); break; } }
+      let width = 1240, length = 'C';
+      const sp = s.match(/(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)(?:\s*MM)?/i);
+      if (sp) { width = parseFloat(sp[1]); length = sp[2]; }
+      else { const sp2 = s.match(/(\d+)\s*[*×xX]\s*(\d+)/); if (sp2) { width = parseFloat(sp2[1]); length = sp2[2]; } }
+      return { origin, material, width, length };
+    }
+
+    function extractSurfaceFilm(line) {
+      const m = line.match(/表面[：:]\s*(.+?)\s*膜[：:]\s*(.+)/);
+      if (!m) return null;
+      const surface = m[1].trim();
+      const filmPart = m[2].trim();
+      const fps = filmPart.split('+').map(s => s.trim());
+      let f1 = '', f2 = '';
+      const normed = PricingEngine.normalizeFilm(fps[0]) || fps[0];
+      f1 = normed;
+      if (fps.length > 1) f2 = PricingEngine.normalizeFilm(fps[1]) || fps[1];
+      return { surface, film1: f1, film2: f2 };
+    }
+
+    function extractThickness(line) {
+      const m = line.match(/(\d+\.?\d+)\s*MM/i);
+      return m ? parseFloat(m[1]) : null;
+    }
+
+    const rawLines = text.split('\n');
+    const trimmed = rawLines.map(l => l.trim());
+
+    // 如果数量少，先尝试原始逐行解析
+    let count = 0;
+    const useGrouped = isGroupedFormat(trimmed);
+    let items = [];
+
+    if (useGrouped) {
+      const common = extractCommonInfo(trimmed[0]);
+      let curSurface = '', curFilm1 = '', curFilm2 = '';
+      for (let i = 1; i < trimmed.length; i++) {
+        const line = trimmed[i];
+        if (!line) continue;
+        const sf = extractSurfaceFilm(line);
+        if (sf) { curSurface = sf.surface; curFilm1 = sf.film1; curFilm2 = sf.film2; continue; }
+        const thk = extractThickness(line);
+        if (thk !== null && curSurface) {
+          const fakeLine = `${common.origin || '宏旺'}${common.material} ${curSurface} ${curFilm1}${curFilm2 ? '+' + curFilm2 : ''} ${thk}*${common.width}*${common.length}`;
+          const p = PricingEngine.parseFreeText(fakeLine, {});
+          if (p && p.thickness && p.width) items.push(p);
+        }
+      }
+    } else {
+      // 原始逐行解析
+      for (const line of trimmed) {
+        if (!line) continue;
+        const p = PricingEngine.parseFreeText(line, {});
+        if (p && p.thickness && p.width) items.push(p);
+      }
+    }
+
+    for (const p of items) {
+      if (p.origin && !originOrder.includes(p.origin)) {
+        originOrder.push(p.origin);
+        originPrices[p.origin] = 0;
+      }
+      const bp = getMaterialPrice(p.origin || '宏旺', p.material);
+      if (bp && bp > 0) {
+        p.basePrice = bp;
+        dataItems.push(p);
+        count++;
+      }
+    }
+    if (count > 0) {
+      results = []; renderOriginGrid();
+      showToast(`解析 ${count} 条`, 'success');
+      els.freeText.value = '';
+      render();
+    } else { showToast('未能解析（检查各产地基价是否已设置）', 'error'); }
+  }
+
+  function runCalc() {
+    if (!dataItems.length) { showToast('请先添加数据', 'error'); return; }
+    // Sync J5
+    const j5Inp = dom('j5BasePrice');
+    if (j5Inp) j5Price = parseFloat(j5Inp.value) || 0;
+    // Inject user price overrides
+    PricingEngine.setUserOverrides(priceOverrides);
+    // Update base prices
+    let missing = [];
+    dataItems.forEach(item => {
+      const bp = getMaterialPrice(item.origin || '宏旺', item.material);
+      if (!bp || bp <= 0) missing.push(`[${item.origin||'?'}] ${item.material}`);
+      item.basePrice = bp || 0;
+    });
+    if (missing.length > 0) {
+      showToast(`以下产地/材质基价未设置：\n${missing.slice(0,3).join(', ')}${missing.length > 3 ? '...' : ''}`, 'error');
+      return;
+    }
+    results = PricingEngine.calculateBatch(dataItems);
+    const ok = results.filter(r => r.success).length;
+    const fail = results.filter(r => !r.success).length;
+    showToast(`完成：${ok} 成功，${fail} 失败`, ok > 0 ? 'success' : 'error');
+    renderResults();
+  }
+
+  function clearAll() { dataItems = []; results = []; allExpanded = false; render(); showToast('已清空', 'info'); }
+  function removeRow(idx) { dataItems.splice(idx - 1, 1); results = []; render(); }
+
+  function exportResults() {
+    if (!results.length) { showToast('请先计算', 'error'); return; }
+    const d = new Date(); const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    ExcelParser.exportToExcel(results, `KK报价_${ds}.xlsx`);
+    showToast('导出成功', 'success');
+  }
+
+  function toggleExpand(idx) {
+    dom(`detail-${idx}`)?.classList.toggle('open');
+    dom(`expand-btn-${idx}`)?.classList.toggle('open');
+  }
+
+  function toggleAllExpand() {
+    allExpanded = !allExpanded;
+    results.forEach((r, i) => {
+      if (r.success) {
+        const idx = i + 1;
+        dom(`detail-${idx}`)?.classList.toggle('open', allExpanded);
+        dom(`expand-btn-${idx}`)?.classList.toggle('open', allExpanded);
+      }
+    });
+    els.expandAllBtn.textContent = allExpanded ? '📋 收起明细' : '📋 全部明细';
+  }
+
+  // ========== 渲染 ==========
+  function render() { renderStats(); renderTable(); }
+  function renderResults() { renderStats(); renderTable(); }
+
+  function renderStats() {
+    const sr = results.filter(r => r.success);
+    els.totalC.textContent = dataItems.length;
+    els.okC.textContent = sr.length;
+    els.errC.textContent = results.filter(r => !r.success).length;
+    if (sr.length > 0) {
+      const sp = sr.map(r => r.detail.saleTax);
+      els.minP.textContent = Math.min(...sp).toLocaleString();
+      els.maxP.textContent = Math.max(...sp).toLocaleString();
+    } else { els.minP.textContent = '-'; els.maxP.textContent = '-'; }
+    els.expBtn.disabled = els.expBtn2.disabled = sr.length === 0;
+    els.calcBtn.disabled = dataItems.length === 0;
+    if (dataItems.length > 0) { els.emptyState.style.display = 'none'; els.resultCard.style.display = 'block'; }
+    else { els.emptyState.style.display = 'block'; els.resultCard.style.display = 'none'; }
+  }
+
+  function renderTable() {
+    const h = [];
+    dataItems.forEach((item, i) => {
+      const idx = i + 1, r = results[i];
+      const isErr = r && !r.success, isOk = r && r.success;
+      const d = r?.detail;
+
+      h.push(`<tr class="${isErr ? 'error-row' : 'main-row'}">`);
+      h.push(isOk ? `<td><button class="expand-btn" id="expand-btn-${idx}" onclick="App.toggleExpand(${idx})">▶</button></td>` : '<td></td>');
+      h.push(`<td><div class="index-cell"><span class="index-num">${idx}</span></div></td>`);
+      h.push(`<td>${item.origin || '<span style="color:var(--text-muted)">-</span>'}</td>`);
+      let mat = item.material || '';
+      if (item.isYanYan) mat += ' <span class="tag tag-yanyan">压延</span>';
+      h.push(`<td>${mat}</td>`);
+      h.push(`<td>${item.surface || '<span style="color:var(--text-muted)">2B</span>'}</td>`);
+      h.push(`<td>${item.thickness}</td><td>${item.width}</td>`);
+      h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
+      h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
+      h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
+      if (isOk) {
+        h.push(`<td class="price-cell price-cost">${d.costTax.toLocaleString()}</td>`);
+        h.push(`<td class="price-cell price-subtle">${d.costNoTax.toLocaleString()}</td>`);
+        h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-${d.boardType}">${d.boardType === 'coil' ? '卷' : '板'}</span></td>`);
+        h.push(`<td class="price-cell price-sale">${d.saleTax.toLocaleString()}</td>`);
+        h.push(`<td class="price-cell price-subtle">${d.saleNoTax.toLocaleString()}</td>`);
+      } else if (isErr) { h.push(`<td colspan="6" class="error-text">⚠️ ${r.errors.join('；')}</td>`); }
+      else { h.push(`<td colspan="6" style="color:var(--text-muted);font-size:12px">待计算</td>`); }
+      h.push(`<td><button class="btn-icon btn-ghost delete-btn" onclick="App.removeRow(${idx})">✕</button></td></tr>`);
+
+      if (isOk) {
+        h.push(`<tr class="detail-row" id="detail-${idx}"><td colspan="16"><div class="detail-content">`);
+        h.push(renderBreakdown(d, item));
+        h.push('</div></td></tr>');
+      }
+    });
+    els.tBody.innerHTML = h.join('');
+  }
+
+  const fmt = (v) => v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtI = (v) => v.toLocaleString();
+
+  function renderBreakdown(d, item) {
+    const spec = `${d.thickness} × ${d.width} × ${d.length}`;
+    const mat = d.material + (d.isYanYan ? ' 压延料' : '');
+    const bt = (d.edgeType === 'rough' ? '毛边' : '齐边') + (d.boardType === 'coil' ? '卷板' : '平板');
+    const hd = `规格：${spec}　｜　产地：${item.origin||''}　｜　材质：${mat}　｜　表面：${d.surface}　｜　类型：${bt}`;
+
+    let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">含税成本计算过程</div>`;
+    html += step('① 基价', d.basePrice, '元/吨', true);
+    html += step(`② 厚度加价 (${d.thickness}mm, ${d.thickTable})`, d.thickSurcharge, '元/吨', d.thickSurcharge > 0);
+    if (d.surfaceFeeSqm > 0) html += step(`③ 表面加工费 (${d.surface}, ${fmt(d.surfaceFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.surfaceFeePerTon, '元/吨', true);
+    else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.surface})`, d.surfaceFeePerTon, '元/吨', true);
+    else html += step(`③ 表面加工费 (${d.surface})`, 0, '', false);
+    if (d.linenFeePerTon) html += step(`④ 小珠光压花`, d.linenFeePerTon, '元/吨', true);
+    let stepN = d.linenFeePerTon ? 5 : 4;
+    if (d.afpPerTon) html += step(`④ 抗指纹${d.afpFeeSqm === 5 ? '(哑光)' : '(亮光)'}`, d.afpPerTon, '元/吨', true);
+    if (d.film1PerTon > 0) html += step(`⑤ 保护膜1 (${d.film1}, ${d.film1FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film1PerTon, '元/吨', true);
+    else html += step(`⑤ 保护膜1`, 0, '', false);
+    if (d.film2PerTon > 0) html += step(`⑥ 保护膜2 (${d.film2}, ${d.film2FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film2PerTon, '元/吨', true);
+    else if (d.film2?.trim()) html += step(`⑥ 保护膜2`, 0, '', false);
+    html += total('含税成本小计', d.costRaw, 'tax');
+    html += total('四舍五入 (十位)', d.costTax, 'tax');
+    html += '</div><div class="calc-section"><div class="calc-section-title">不含税成本 & 销售价</div>';
+    html += step(`不含税成本 (${fmtI(d.costTax)} × 0.92)`, d.costNoTaxRaw, '元/吨', true);
+    html += total('四舍五入 (十位)', d.costNoTax, 'notax');
+    html += '<div style="height:8px;"></div>';
+    html += step(`销售加价 (${bt})`, d.markup, '元/吨', d.markup > 0);
+    html += total('含税售价', d.saleTax, 'sale');
+    html += total('不含税售价', d.saleNoTax, 'sale');
+    html += '</div></div>';
+    return html;
+  }
+
+  const step = (l, v, u, p) => `<div class="calc-step"><span class="calc-step-label">${l}</span><span class="calc-step-value ${p?'positive':'zero'}">${p?'+'+fmt(v):'0'} ${u}</span></div>`;
+  const total = (l, v, t) => `<div class="calc-total"><span class="calc-total-label">${l}</span><span class="calc-total-value ${t}">${fmtI(v)} 元/吨</span></div>`;
+
+  function showToast(msg, type = 'info') {
+    const c = dom('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||''}</span> ${msg}`;
+    c.appendChild(t);
+    setTimeout(() => { t.style.animation = 'toastIn 0.3s ease reverse'; setTimeout(() => t.remove(), 300); }, 3500);
+  }
+
+  return { init, removeRow, toggleExpand };
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);
+
+</script>
+</body>
+</html>
+
