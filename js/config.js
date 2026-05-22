@@ -340,17 +340,18 @@ const AFP_MATTE_FEE = 5;   // 哑光抗指纹
 const FILM_FEES = {
   '垫纸':           0.3,
   '5C-FILM':        1.0,
-  '5C-BLUE-FILM':  0.7,
-  'HW 5C-FILM':     1.0,
+  'BLUE-5C-FILM':  0.7,
+  'HW-5C-FILM':     1.0,
   '7C-FILM':        1.2,
-  'HW 7C-FILM':     1.2,
+  'HW-7C-FILM':     1.2,
   '10C-FILM':       2.0,
   '7C-LASER-FILM':  2.0,
-  '7C-ACHEM-FILM':  4.0,
-  '7C-POLI-FILM':   5.5,
-  '7C-NOVACEL-FILM':6.6,
-  '8C-NOVACEL-FILM':7.7,
-  '10C-NOVACEL-FILM':8.8,
+  '7C-ACHEM-LASER-FILM':  4.0,
+  '7C-POLI-LASER-FILM':   5.5,
+  '7C-NOVACEL-LASER-FILM':6.6,
+  '8C-NOVACEL-LASER-FILM':7.7,
+  '10C-NOVACEL-LASER-FILM':8.8,
+  '7C-ZIYE-LASER-FILM':   2.0,
   // 胶膜组合
   '5C+5C-FILM':  2.0,
   '7C+5C-FILM':  2.2,
@@ -358,9 +359,12 @@ const FILM_FEES = {
   '7C-LASER+5C-FILM':  3.0,
   '7C哑光膜': 1.6,
   '7C古铜膜': 1.6,
-  // 双面贴膜（膜1/膜2：斜杠左边=膜1，右边=膜2）
+  // 双面贴膜
   '5C膜/5C膜': 3.0,
-  '7C膜/7C膜': 3.4
+  '7C膜/7C膜': 3.4,
+  // KBE 膜
+  'BLUE+KBE-5C-FILM': 1.0,
+  'RED+KBE-5C-FILM':  1.0
 };
 
 // 销售加价 (元/吨)
@@ -477,22 +481,60 @@ const SURFACE_ALIASES = {
 
 // 保护膜名称标准化映射
 const FILM_ALIASES = {
-  '5c': '5C-FILM', '5c-film': '5C-FILM', '5c膜': '5C-FILM', 'hw5c': 'HW 5C-FILM', 'hw 5c': 'HW 5C-FILM', 'hw5c-film': 'HW 5C-FILM', 'hw 5c-film': 'HW 5C-FILM',
-  '7c': '7C-FILM', '7c-film': '7C-FILM', '7c膜': '7C-FILM', 'hw7c': 'HW 7C-FILM', 'hw 7c': 'HW 7C-FILM', 'hw7c-film': 'HW 7C-FILM', 'hw 7c-film': 'HW 7C-FILM',
+  // 基础膜
+  '5c': '5C-FILM', '5c-film': '5C-FILM', '5c膜': '5C-FILM', '5c黑白膜': '5C-FILM',
+  '7c': '7C-FILM', '7c-film': '7C-FILM', '7c膜': '7C-FILM',
   '10c': '10C-FILM', '10c-film': '10C-FILM', '10c膜': '10C-FILM',
-  '7c-laser': '7C-LASER-FILM', '7c-laser-film': '7C-LASER-FILM', '7c laser-film': '7C-LASER-FILM', '7c laser film': '7C-LASER-FILM', '7c laser film pvc': '7C-LASER-FILM',
-  '7c-achem': '7C-ACHEM-FILM', '7c-achem-film': '7C-ACHEM-FILM',
-  '7c-poli': '7C-POLI-FILM', '7c-poli-film': '7C-POLI-FILM',
-  '7c-novacel': '7C-NOVACEL-FILM', '7c-novacel-film': '7C-NOVACEL-FILM', '7c novacell laser film pvc': '7C-NOVACEL-FILM',
-  '8c-novacel': '8C-NOVACEL-FILM', '8c-novacel-film': '8C-NOVACEL-FILM',
-  '10c-novacel': '10C-NOVACEL-FILM', '10c-novacel-film': '10C-NOVACEL-FILM',
+  // 蓝膜 / BLUE-5C-FILM
+  '5c蓝色': 'BLUE-5C-FILM', '5c蓝': 'BLUE-5C-FILM', '5c蓝膜': 'BLUE-5C-FILM', '蓝膜': 'BLUE-5C-FILM',
+  '5c blue': 'BLUE-5C-FILM', '5c-blue-film': 'BLUE-5C-FILM', 'blue-5c-film': 'BLUE-5C-FILM',
+  // 宏旺膜 / HW-5C / HW-7C
+  'hw5c': 'HW-5C-FILM', 'hw 5c': 'HW-5C-FILM', 'hw5c-film': 'HW-5C-FILM', 'hw 5c-film': 'HW-5C-FILM',
+  '宏旺5c膜': 'HW-5C-FILM', '5c宏旺膜': 'HW-5C-FILM', 'hw-5c-film': 'HW-5C-FILM',
+  'hw7c': 'HW-7C-FILM', 'hw 7c': 'HW-7C-FILM', 'hw7c-film': 'HW-7C-FILM', 'hw 7c-film': 'HW-7C-FILM',
+  '宏旺7c膜': 'HW-7C-FILM', '7c宏旺膜': 'HW-7C-FILM', 'hw-7c-film': 'HW-7C-FILM',
+  // 7C 激光膜
+  '7c-laser': '7C-LASER-FILM', '7c-laser-film': '7C-LASER-FILM', '7c laser-film': '7C-LASER-FILM',
+  '7c laser film': '7C-LASER-FILM', '7c laser film pvc': '7C-LASER-FILM',
+  '7c箭头激光膜': '7C-LASER-FILM', '7c激光膜': '7C-LASER-FILM',
+  '7c蓝箭激光膜': '7C-LASER-FILM', '7c兰箭激光膜': '7C-LASER-FILM',
+  // 亚化 / 7C-ACHEM-LASER
+  '7c-achem': '7C-ACHEM-LASER-FILM', '7c-achem-film': '7C-ACHEM-LASER-FILM',
+  '7c-achem-laser-film': '7C-ACHEM-LASER-FILM',
+  '亚化7c激光膜': '7C-ACHEM-LASER-FILM', '亚化7c膜': '7C-ACHEM-LASER-FILM',
+  '台湾亚化7c激光膜': '7C-ACHEM-LASER-FILM',
+  // 宝丽菲母 / 7C-POLI-LASER
+  '7c-poli': '7C-POLI-LASER-FILM', '7c-poli-film': '7C-POLI-LASER-FILM',
+  '7c-poli-laser-film': '7C-POLI-LASER-FILM',
+  '宝丽菲母7c激光膜': '7C-POLI-LASER-FILM', '宝丽菲母7c膜': '7C-POLI-LASER-FILM',
+  // 诺凡赛尔 / NOVACEL LASER
+  '7c-novacel': '7C-NOVACEL-LASER-FILM', '7c-novacel-film': '7C-NOVACEL-LASER-FILM',
+  '7c-novacel-laser-film': '7C-NOVACEL-LASER-FILM',
+  '7c novacell laser film pvc': '7C-NOVACEL-LASER-FILM',
+  '诺凡赛尔7c': '7C-NOVACEL-LASER-FILM', '诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
+  '诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM',
+  '8c-novacel': '8C-NOVACEL-LASER-FILM', '8c-novacel-film': '8C-NOVACEL-LASER-FILM',
+  '8c-novacel-laser-film': '8C-NOVACEL-LASER-FILM',
+  '诺凡赛尔8c膜': '8C-NOVACEL-LASER-FILM', '诺凡赛尔8c激光膜': '8C-NOVACEL-LASER-FILM',
+  '10c-novacel': '10C-NOVACEL-LASER-FILM', '10c-novacel-film': '10C-NOVACEL-LASER-FILM',
+  '10c-novacel-laser-film': '10C-NOVACEL-LASER-FILM',
+  '诺凡赛尔10c膜': '10C-NOVACEL-LASER-FILM', '诺凡赛尔10c激光膜': '10C-NOVACEL-LASER-FILM',
+  // 梓烨 / ZIYE 激光膜
+  '7c-ziye-laser-film': '7C-ZIYE-LASER-FILM', '7c ziye laser film': '7C-ZIYE-LASER-FILM',
+  'ziye 7c激光膜': '7C-ZIYE-LASER-FILM', '梓烨7c激光膜': '7C-ZIYE-LASER-FILM',
+  // KBE 膜
+  'blue+kbe-5c-film': 'BLUE+KBE-5C-FILM', '蓝k膜': 'BLUE+KBE-5C-FILM',
+  '蓝kbe膜': 'BLUE+KBE-5C-FILM', '蓝色kbe膜': 'BLUE+KBE-5C-FILM',
+  'red+kbe-5c-film': 'RED+KBE-5C-FILM', '红k膜': 'RED+KBE-5C-FILM',
+  '红kbe膜': 'RED+KBE-5C-FILM', '红色kbe膜': 'RED+KBE-5C-FILM',
+  // 垫纸
   '垫纸': '垫纸',
   // 胶膜组合短名
   '5c+5c': '5C+5C-FILM', '5c+5c-film': '5C+5C-FILM', '5c-film+5c-film': '5C+5C-FILM',
   '7c+5c': '7C+5C-FILM', '7c+5c-film': '7C+5C-FILM', '7c-film+5c-film': '7C+5C-FILM',
   '7c+7c': '7C+7C-FILM', '7c+7c-film': '7C+7C-FILM', '7c-film+7c-film': '7C+7C-FILM',
-  '5c蓝色': '5C-BLUE-FILM', '5c蓝': '5C-BLUE-FILM', '5c蓝膜': '5C-BLUE-FILM', '蓝膜': '5C-BLUE-FILM', '5c blue': '5C-BLUE-FILM', '5c-blue-film': '5C-BLUE-FILM',
-  '7c-laser+5c': '7C-LASER+5C-FILM', '7c-laser+5c-film': '7C-LASER+5C-FILM', '7c laser-film+5c-film': '7C-LASER+5C-FILM', '7c激光膜+5c': '7C-LASER+5C-FILM',
+  '5c蓝色': 'BLUE-5C-FILM', '5c蓝': 'BLUE-5C-FILM', '5c蓝膜': 'BLUE-5C-FILM', '蓝膜': 'BLUE-5C-FILM', '5c blue': 'BLUE-5C-FILM', '5c-blue-film': 'BLUE-5C-FILM',
+  '7c-laser+5c': '7C-LASER+5C-FILM', '7c-laser+5c-film': '7C-LASER+5C-FILM', '7c laser-film+5c-film': '7C-LASER+5C-FILM', '7c激光膜+5c': '7C-LASER+5C-FILM', '7c激光膜+5c膜': '7C-LASER+5C-FILM',
   '胶膜': '7C-FILM',
   '7c哑光膜': '7C哑光膜', '7c哑光': '7C哑光膜',
   '7c古铜膜': '7C古铜膜', '7c古铜': '7C古铜膜',
