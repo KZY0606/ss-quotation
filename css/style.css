@@ -644,3 +644,29 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .ref-table tr:hover { background: #d4dce8 !important; }
 .ref-table tr:hover td { background: #d4dce8 !important; }
 .ref-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* ===== KK 品牌元素 ===== */
+.kk-text { color: var(--accent); font-weight: 800; }
+
+.app-footer {
+  text-align: center;
+  padding: 20px 16px 12px;
+  font-size: 11px;
+  color: var(--steel-4);
+  position: relative;
+  overflow: hidden;
+}
+.app-footer .kk-watermark {
+  position: absolute;
+  right: 20px;
+  bottom: 4px;
+  font-size: 48px;
+  font-weight: 900;
+  color: #e2e8f0;
+  opacity: 0.35;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.app-footer a { color: var(--steel-4); text-decoration: none; }
+.app-footer a:hover { color: var(--accent); }
