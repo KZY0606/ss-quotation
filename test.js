@@ -24,7 +24,7 @@ test('8K 镜面 0.50*1219*C', () => {
 
 test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 10210); eq(r.detail.saleTax, 10710);
+  eq(r.success, true); eq(r.detail.costTax, 10080); eq(r.detail.saleTax, 10580);
 });
 
 test('双面抛光 0.50*1000*2000', () => {
@@ -169,28 +169,28 @@ test('英文膜: 7C Novacell Laser FILM PVC → 7C-NOVACEL-FILM', () => {
 });
 
 // === 新表面加工费测试（二级定价）===
-test('8K黄钛金 0.50mm → 6元/平米', () => {
+test('8K黄钛金 0.50mm → 5.5元/平米', () => {
   const fee = PricingEngine.getSurfaceFee('8K黄钛金', 0.50, 1240);
   eq(fee.needConvert, true);
-  eq(fee.sqmPrice, 6);
+  eq(fee.sqmPrice, 5.5);
 });
 
-test('8K黄钛金 1.30mm → 11元/平米', () => {
+test('8K黄钛金 1.30mm → 10.5元/平米', () => {
   const fee = PricingEngine.getSurfaceFee('8K黄钛金', 1.30, 1240);
   eq(fee.needConvert, true);
-  eq(fee.sqmPrice, 11);
+  eq(fee.sqmPrice, 10.5);
 });
 
 test('8K香槟金 0.50mm → 7.5元/平米', () => {
   const fee = PricingEngine.getSurfaceFee('8K香槟金', 0.50, 1240);
   eq(fee.needConvert, true);
-  eq(fee.sqmPrice, 7);
+  eq(fee.sqmPrice, 7.5);
 });
 
-test('拉丝香槟金 1.30mm → 10元/平米', () => {
+test('拉丝香槟金 1.30mm → 11元/平米', () => {
   const fee = PricingEngine.getSurfaceFee('拉丝香槟金', 1.30, 1240);
   eq(fee.needConvert, true);
-  eq(fee.sqmPrice, 10);
+  eq(fee.sqmPrice, 11);
 });
 
 test('NO.4 和 HL 价格相同 0.50mm', () => {
@@ -231,7 +231,7 @@ test('小珠光 alias: 镜面8k黄钛金小珠光 0.50mm', () => {
   eq(r.success, true);
   eq(r.detail.hasLinen, true);
   eq(r.detail.linenFeePerTon, 300);
-  eq(r.detail.surfaceFeePerTon, 1528.66);
+  eq(r.detail.surfaceFeePerTon, 1401.27);
 });
 
 test('别名: RoseGold No4 → 磨砂玫瑰金', () => {
@@ -303,8 +303,8 @@ test('磨砂黑钛金 = 拉丝黑钛金 价格相同', () => {
 });
 
 test('磨砂香槟金 = 拉丝香槟金 价格相同', () => {
-  eq(PricingEngine.getSurfaceFee('磨砂香槟金', 0.50, 1240).sqmPrice, 6);
-  eq(PricingEngine.getSurfaceFee('拉丝香槟金', 0.50, 1240).sqmPrice, 6);
+  eq(PricingEngine.getSurfaceFee('磨砂香槟金', 0.50, 1240).sqmPrice, 7);
+  eq(PricingEngine.getSurfaceFee('拉丝香槟金', 0.50, 1240).sqmPrice, 7);
 });
 
 test('别名: Champagne Gold No4 → 磨砂香槟金', () => {
