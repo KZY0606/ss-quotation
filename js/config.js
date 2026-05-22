@@ -506,6 +506,7 @@ const FILM_ALIASES = {
   '7c-poli': '7C-POLI-LASER-FILM', '7c-poli-film': '7C-POLI-LASER-FILM',
   '7c-poli-laser-film': '7C-POLI-LASER-FILM',
   '宝丽菲母7c激光膜': '7C-POLI-LASER-FILM', '宝丽菲母7c膜': '7C-POLI-LASER-FILM',
+  '德国宝丽菲母7c激光膜': '7C-POLI-LASER-FILM',
   // 诺凡赛尔 / NOVACEL LASER
   '7c-novacel': '7C-NOVACEL-LASER-FILM', '7c-novacel-film': '7C-NOVACEL-LASER-FILM',
   '7c-novacel-laser-film': '7C-NOVACEL-LASER-FILM',
@@ -513,7 +514,6 @@ const FILM_ALIASES = {
   '诺凡赛尔7c': '7C-NOVACEL-LASER-FILM', '诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
   '诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM',
   '法国诺凡赛尔7c激光膜': '7C-NOVACEL-LASER-FILM', '法国诺凡赛尔7c膜': '7C-NOVACEL-LASER-FILM',
-  '德国宝丽菲母7c激光膜': '7C-NOVACEL-LASER-FILM',
   '8c-novacel': '8C-NOVACEL-LASER-FILM', '8c-novacel-film': '8C-NOVACEL-LASER-FILM',
   '8c-novacel-laser-film': '8C-NOVACEL-LASER-FILM',
   '诺凡赛尔8c膜': '8C-NOVACEL-LASER-FILM', '诺凡赛尔8c激光膜': '8C-NOVACEL-LASER-FILM',
