@@ -436,6 +436,13 @@ const SURFACE_ALIASES = {
   'mirror ti-rosegold': '8K玫瑰金', 'mirror-ti-rosegold': '8K玫瑰金',
   'mirror ti-champagne': '8K香槟金', 'mirror-ti-champagne': '8K香槟金',
   'mirror ti-bronze': '8K古铜', 'mirror-ti-bronze': '8K古铜',
+  // Mirror + 颜色（无 Ti 前缀）
+  'mirror champagne gold': '8K香槟金',
+  'mirror champagne': '8K香槟金',
+  'mirror rose gold': '8K玫瑰金', 'mirror rosegold': '8K玫瑰金',
+  'mirror bronze': '8K古铜',
+  'mirror black': '8K黑钛金',
+  'mirror gold': '8K黄钛金',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
   '拉丝香槟金': '拉丝香槟金',
   // AFP 彩色表面（砂面/拉丝+抗指纹）
