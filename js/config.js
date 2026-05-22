@@ -3,7 +3,7 @@
  * 适用：201 系列（J1/J2/J3/J4/J5）+ 304 + 压延料
  */
 
-const APP_VERSION = '2.2';
+const APP_VERSION = '2.3';
 
 // 密度表 (吨/m³)
 const DENSITY = {
