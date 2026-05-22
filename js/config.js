@@ -422,6 +422,12 @@ const SURFACE_ALIASES = {
   'hairline ti-rosegold': '拉丝玫瑰金', 'hairline-ti-rosegold': '拉丝玫瑰金',
   'hairline ti-champagne': '拉丝香槟金', 'hairline-ti-champagne': '拉丝香槟金',
   'hairline ti-bronze': '拉丝古铜', 'hairline-ti-bronze': '拉丝古铜',
+  // NO.4 Ti- = 砂面/磨砂(NO.4) 钛金彩色表面（价格=拉丝同色）
+  'no.4 ti-black': '磨砂黑钛金', 'no4 ti-black': '磨砂黑钛金',
+  'no.4 ti-gold': '磨砂黄钛金', 'no4 ti-gold': '磨砂黄钛金',
+  'no.4 ti-rose gold': '磨砂玫瑰金', 'no4 ti-rosegold': '磨砂玫瑰金',
+  'no.4 ti-champagne': '磨砂香槟金', 'no4 ti-champagne': '磨砂香槟金',
+  'no.4 ti-bronze': '磨砂古铜', 'no4 ti-bronze': '磨砂古铜',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
   '拉丝香槟金': '拉丝香槟金',
   // AFP 彩色表面（砂面/拉丝+抗指纹）
