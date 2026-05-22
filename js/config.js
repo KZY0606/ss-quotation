@@ -415,6 +415,13 @@ const SURFACE_ALIASES = {
   'red mirror': '8K中国红', 'red mirror 8k': '8K中国红',
   '拉丝古铜哑光抗指纹': '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹': '拉丝古铜亮光抗指纹',
   '拉丝古铜': '拉丝古铜', 'antique bronze hairline': '拉丝古铜', 'antique copper hairline': '拉丝古铜',
+  // Hairline Ti- = 砂面/拉丝(NO.4/HL) 钛金彩色表面
+  'hairline ti-black': '拉丝黑钛金', 'hairline-ti-black': '拉丝黑钛金',
+  'hairline ti-gold': '拉丝黄钛金', 'hairline-ti-gold': '拉丝黄钛金',
+  'hairline ti-rose gold': '拉丝玫瑰金', 'hairline-ti-rose-gold': '拉丝玫瑰金',
+  'hairline ti-rosegold': '拉丝玫瑰金', 'hairline-ti-rosegold': '拉丝玫瑰金',
+  'hairline ti-champagne': '拉丝香槟金', 'hairline-ti-champagne': '拉丝香槟金',
+  'hairline ti-bronze': '拉丝古铜', 'hairline-ti-bronze': '拉丝古铜',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
   '拉丝香槟金': '拉丝香槟金',
   // AFP 彩色表面（砂面/拉丝+抗指纹）
