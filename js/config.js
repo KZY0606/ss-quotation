@@ -344,7 +344,7 @@ const FILM_FEES = {
   'BLUE+KBE-5C-FILM': 1.0,
   'RED+KBE-5C-FILM':  1.0,
   'HW-5C-FILM':     1.0,
-  '7C-FILM':        1.2,
+  '7C-FILM':        1.4,
   'HW-7C-FILM':     1.2,
   '10C-FILM':       2.0,
   '7C-ZIYE-LASER-FILM':   2.0,
@@ -356,14 +356,11 @@ const FILM_FEES = {
   '10C-NOVACEL-LASER-FILM':8.8,
   // 胶膜组合
   '5C+5C-FILM':  2.0,
-  '7C+5C-FILM':  2.2,
-  '7C+7C-FILM':  2.4,
+  '7C+5C-FILM':  2.4,
+  '7C+7C-FILM':  2.8,
   '7C-LASER+5C-FILM':  3.0,
   '7C哑光膜': 1.6,
   '7C古铜膜': 1.6,
-  // 双面贴膜
-  '5C膜/5C膜': 3.0,
-  '7C膜/7C膜': 3.4
 };
 
 // 销售加价 (元/吨)
