@@ -39,18 +39,18 @@ const PricingEngine = (() => {
 
   function getThicknessSurcharge(thickness, isYanYan, material, origin) {
     const t = parseFloat(thickness);
-    // 304 使用独立加价表（不分产地）
-    if (material && (material === '304' || material.startsWith('304'))) {
-      return findInTable(THICKNESS_SURCHARGE_304, t);
-    }
     // 压延料使用独立加价表（不分产地）
     if (isYanYan) {
       return findInTable(YANYAN_THICKNESS_SURCHARGE, t);
     }
-    // 201 正材：有产地特异性加价表则用，否则用默认（宏旺/德龙标准）
-    if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
-      return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
+    // 304：有产地特异性加价则用，否则用统一宏旺/德龙标准
+    if (material && (material === '304' || material.startsWith('304'))) {
+      if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
+        return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
+      }
+      return findInTable(THICKNESS_SURCHARGE_304, t);
     }
+    // 201（正材）：暂时不分产地，统一标准
     return findInTable(THICKNESS_SURCHARGE, t);
   }
 
@@ -377,9 +377,11 @@ const PricingEngine = (() => {
   }
 
   function getThickTableName(isYanYan, material, origin) {
-    if (material && (material === '304' || material.startsWith('304'))) return '304 加价';
     if (isYanYan) return '压延料';
-    if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
+    if (material && (material === '304' || material.startsWith('304'))) {
+      if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
+      return '304 加价';
+    }
     return '常规';
   }
 
