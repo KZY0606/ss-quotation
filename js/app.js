@@ -386,21 +386,21 @@ const App = (() => {
       { display: '8K', key: '8K' },
       { display: '双面8K', key: '双面8K' },
       // 8K 彩色
-      { display: '8K黄钛金', key: '8K黄钛金' },
-      { display: '8K玫瑰金', key: '8K玫瑰金' },
-      { display: '8K香槟金', key: '8K香槟金' },
-      { display: '8K黑钛金', key: '8K黑钛金' },
-      { display: '8K宝石蓝', key: '8K宝石蓝' },
-      { display: '8K紫罗兰', key: '8K紫罗兰' },
-      { display: '8K翡翠绿', key: '8K翡翠绿' },
-      { display: '8K紫红', key: '8K紫红' },
-      { display: '8K中国红', key: '8K中国红' },
-      { display: '8K古铜', key: '8K古铜' },
+      { display: '8K黄钛金(板)', key: '8K黄钛金' },
+      { display: '8K玫瑰金(板)', key: '8K玫瑰金' },
+      { display: '8K香槟金(板)', key: '8K香槟金' },
+      { display: '8K黑钛金(板)', key: '8K黑钛金' },
+      { display: '8K宝石蓝(板)', key: '8K宝石蓝' },
+      { display: '8K紫罗兰(板)', key: '8K紫罗兰' },
+      { display: '8K翡翠绿(板)', key: '8K翡翠绿' },
+      { display: '8K紫红(板)', key: '8K紫红' },
+      { display: '8K中国红(板)', key: '8K中国红' },
+      { display: '8K古铜(板)', key: '8K古铜' },
       // 砂面/拉丝 合并
-      { display: '砂面/拉丝(NO.4/HL)黄钛金', keys: ['拉丝黄钛金','磨砂黄钛金'] },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
-      { display: '砂面/拉丝(NO.4/HL)香槟金', keys: ['拉丝香槟金','磨砂香槟金'] },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金(板)', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金(板)', keys: ['拉丝香槟金','磨砂香槟金'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金(板)', keys: ['拉丝黑钛金','磨砂黑钛金'] },
       { display: '砂面/拉丝(NO.4/HL)古铜', keys: ['拉丝古铜','磨砂古铜'] },
       { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹', key: '拉丝古铜哑光抗指纹' },
       { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹', key: '拉丝古铜亮光抗指纹' },
@@ -518,20 +518,20 @@ const App = (() => {
 
     // 自定义排列顺序：8K彩色 → 砂面/拉丝 → 其他标准表面
     const coloredDisplay = [
-      { display: '8K黄钛金', key: '8K黄钛金' },
-      { display: '8K玫瑰金', key: '8K玫瑰金' },
-      { display: '8K香槟金', key: '8K香槟金' },
-      { display: '8K黑钛金', key: '8K黑钛金' },
-      { display: '8K宝石蓝', key: '8K宝石蓝' },
-      { display: '8K紫罗兰', key: '8K紫罗兰' },
-      { display: '8K翡翠绿', key: '8K翡翠绿' },
-      { display: '8K紫红', key: '8K紫红' },
-      { display: '8K中国红', key: '8K中国红' },
-      { display: '8K古铜', key: '8K古铜' },
-      { display: '砂面/拉丝(NO.4/HL)黄钛金', keys: ['拉丝黄钛金','磨砂黄钛金'] },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
-      { display: '砂面/拉丝(NO.4/HL)香槟金', keys: ['拉丝香槟金','磨砂香槟金'] },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+      { display: '8K黄钛金(板)', key: '8K黄钛金' },
+      { display: '8K玫瑰金(板)', key: '8K玫瑰金' },
+      { display: '8K香槟金(板)', key: '8K香槟金' },
+      { display: '8K黑钛金(板)', key: '8K黑钛金' },
+      { display: '8K宝石蓝(板)', key: '8K宝石蓝' },
+      { display: '8K紫罗兰(板)', key: '8K紫罗兰' },
+      { display: '8K翡翠绿(板)', key: '8K翡翠绿' },
+      { display: '8K紫红(板)', key: '8K紫红' },
+      { display: '8K中国红(板)', key: '8K中国红' },
+      { display: '8K古铜(板)', key: '8K古铜' },
+      { display: '砂面/拉丝(NO.4/HL)黄钛金(板)', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+      { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+      { display: '砂面/拉丝(NO.4/HL)香槟金(板)', keys: ['拉丝香槟金','磨砂香槟金'] },
+      { display: '砂面/拉丝(NO.4/HL)黑钛金(板)', keys: ['拉丝黑钛金','磨砂黑钛金'] },
       { display: '砂面/拉丝(NO.4/HL)古铜', keys: ['拉丝古铜','磨砂古铜'] },
       { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹', key: '拉丝古铜哑光抗指纹' },
       { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹', key: '拉丝古铜亮光抗指纹' },
@@ -582,9 +582,9 @@ const App = (() => {
       h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
       // 8K黑钛金 单独显示；拉丝+磨砂黑钛金合并
       const cfg8k = SURFACE_FEES_304['8K黑钛金'];
-      if (cfg8k) renderSurfaceRows('8K黑钛金', cfg8k);
+      if (cfg8k) renderSurfaceRows('8K黑钛金(板)', cfg8k);
       const cfgWire = SURFACE_FEES_304['拉丝黑钛金'];
-      if (cfgWire) renderSurfaceRows('砂面/拉丝(NO.4/HL)黑钛金', cfgWire);
+      if (cfgWire) renderSurfaceRows('砂面/拉丝(NO.4/HL)黑钛金(板)', cfgWire);
       h.push('</table>');
     }
     h.push('</div>');
