@@ -694,8 +694,20 @@ const App = (() => {
     const wid = dom('manualWidth').value.trim();
     const len = dom('manualLength').value.trim();
     const surf = dom('manualSurface').value.trim();
-    const f1 = dom('manualFilm1').value.trim();
-    const f2 = dom('manualFilm2').value.trim();
+    let f1 = dom('manualFilm1').value.trim();
+    let f2 = dom('manualFilm2').value.trim();
+    // "/" 自动拆分：5C膜/5C膜 → film1=5C-FILM, film2=5C-FILM
+    if (f1.includes('/')) {
+      const parts = f1.split('/').map(s => s.trim());
+      f1 = parts[0] || '';
+      if (parts.length > 1 && !f2) f2 = parts[1] || '';
+    }
+    if (f2.includes('/')) {
+      const parts = f2.split('/').map(s => s.trim());
+      f2 = parts[0] || '';
+    }
+    f1 = PricingEngine.normalizeFilm(f1) || f1;
+    f2 = PricingEngine.normalizeFilm(f2) || f2;
     const bp = getMaterialPrice(origin, mat);
     if (!bp || bp <= 0) { showToast(`${origin} ${mat} 基价未设置`, 'error'); return; }
     if (!thk || !wid) { showToast('请填写厚度和宽度', 'error'); return; }
