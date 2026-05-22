@@ -936,7 +936,7 @@ tr.main-row:hover .delete-btn { opacity:1; }
     <span>Built with ❤️</span>
   </div>
 
-<script>﻿/**
+<script>/**
  * KK不锈钢报价系统 - 价格配置数据
  * 适用：201 系列（J1/J2/J3/J4/J5）+ 304 + 压延料
  */
@@ -1344,9 +1344,15 @@ const SURFACE_ALIASES = {
   '青古铜': '8K古铜', '黄古铜': '8K古铜', '红古铜': '8K古铜',
   '拉丝黄钛金': '拉丝黄钛金', '拉丝玫瑰金': '拉丝玫瑰金', '拉丝黑钛金': '拉丝黑钛金',
   'gold no4': '拉丝黄钛金',
-  'rosegold no4': '磨砂玫瑰金', '磨砂玫瑰金': '磨砂玫瑰金', '砂面玫瑰金': '磨砂玫瑰金',
+  '玫瑰金no.4': '磨砂玫瑰金', 'rosegold no4': '磨砂玫瑰金', '磨砂玫瑰金': '磨砂玫瑰金', '砂面玫瑰金': '磨砂玫瑰金',
   '磨砂黄钛金': '磨砂黄钛金', '磨砂黑钛金': '磨砂黑钛金', '磨砂香槟金': '磨砂香槟金',
+  '砂面黄钛金': '磨砂黄钛金', '砂面黑钛金': '磨砂黑钛金', '砂面香槟金': '磨砂香槟金', '砂面古铜': '磨砂古铜',
   'champagne gold no4': '磨砂香槟金', 'champange gold no4': '磨砂香槟金',
+  'no.4 champagne gold': '磨砂香槟金', 'no4 champagne gold': '磨砂香槟金', 'no.4 champagne': '磨砂香槟金',
+  'no.4 black': '磨砂黑钛金', 'no4 black': '磨砂黑钛金',
+  'no.4 gold': '磨砂黄钛金', 'no4 gold': '磨砂黄钛金',
+  'no.4 rose gold': '磨砂玫瑰金', 'no4 rose gold': '磨砂玫瑰金', 'no.4 rosegold': '磨砂玫瑰金',
+  'no.4 bronze': '磨砂古铜', 'no4 bronze': '磨砂古铜',
   'dark black no4': '磨砂黑钛金',
   'bronze no4': '拉丝古铜', '磨砂古铜': '磨砂古铜',
   '8k mirror': '8K',
@@ -1367,6 +1373,20 @@ const SURFACE_ALIASES = {
   'no.4 ti-rose gold': '磨砂玫瑰金', 'no4 ti-rosegold': '磨砂玫瑰金',
   'no.4 ti-champagne': '磨砂香槟金', 'no4 ti-champagne': '磨砂香槟金',
   'no.4 ti-bronze': '磨砂古铜', 'no4 ti-bronze': '磨砂古铜',
+  // Mirror Ti- = 8K镜面 钛金彩色表面
+  'mirror ti-black': '8K黑钛金', 'mirror-ti-black': '8K黑钛金',
+  'mirror ti-gold': '8K黄钛金', 'mirror-ti-gold': '8K黄钛金',
+  'mirror ti-rose gold': '8K玫瑰金', 'mirror-ti-rose-gold': '8K玫瑰金',
+  'mirror ti-rosegold': '8K玫瑰金', 'mirror-ti-rosegold': '8K玫瑰金',
+  'mirror ti-champagne': '8K香槟金', 'mirror-ti-champagne': '8K香槟金',
+  'mirror ti-bronze': '8K古铜', 'mirror-ti-bronze': '8K古铜',
+  // Mirror + 颜色（无 Ti 前缀）
+  'mirror champagne gold': '8K香槟金',
+  'mirror champagne': '8K香槟金',
+  'mirror rose gold': '8K玫瑰金', 'mirror rosegold': '8K玫瑰金',
+  'mirror bronze': '8K古铜',
+  'mirror black': '8K黑钛金',
+  'mirror gold': '8K黄钛金',
   '香槟金': '8K香槟金', '镜面8k香槟金': '8K香槟金', '镜面8K香槟金': '8K香槟金',
   '拉丝香槟金': '拉丝香槟金',
   // AFP 彩色表面（砂面/拉丝+抗指纹）
@@ -1494,7 +1514,6 @@ const FILM_ALIASES = {
   '7c哑光膜': '7C哑光膜', '7c哑光': '7C哑光膜',
   '7c古铜膜': '7C古铜膜', '7c古铜': '7C古铜膜',
 };
-
 ﻿/**
  * KK不锈钢报价系统 - 计算引擎
  */
@@ -3357,7 +3376,7 @@ const App = (() => {
     html += total('含税成本小计', d.costRaw, 'tax');
     html += total('四舍五入 (十位)', d.costTax, 'tax');
     html += '</div><div class="calc-section"><div class="calc-section-title">不含税成本 & 销售价</div>';
-    html += step(`不含税成本 (${fmtI(d.costTax)} × 0.92)`, d.costNoTaxRaw, '元/吨', true);
+    html += step(`不含税成本 (${fmtI(d.costRaw)} × 0.92)`, d.costNoTaxRaw, '元/吨', true);
     html += total('四舍五入 (十位)', d.costNoTax, 'notax');
     html += '<div style="height:8px;"></div>';
     html += step(`销售加价 (${bt})`, d.markup, '元/吨', d.markup > 0);
