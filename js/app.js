@@ -580,7 +580,7 @@ const App = (() => {
     h.push('<tr><td colspan="2" style="padding:4px"></td></tr>');
     h.push('<tr><th>销售加价</th><th class="ref-num">元/吨</th></tr>');
     Object.entries(SALES_MARKUP).forEach(([key, val]) => {
-      const label = key === 'roughCoil' ? '毛边卷板' : key === 'trimCoil' ? '齐边卷板' : key === 'roughSheet' ? '毛边平板' : key === 'trimSheet' ? '齐边平板' : key;
+      const label = key === 'rough_coil' ? '毛边卷板' : key === 'trim_coil' ? '齐边卷板' : key === 'rough_sheet' ? '毛边平板' : key === 'trim_sheet' ? '齐边平板' : key;
       h.push(`<tr><td>${label}</td><td class="ref-num">+${val}</td></tr>`);
     });
     h.push('</table></div>');
