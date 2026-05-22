@@ -629,27 +629,94 @@ const App = (() => {
   function parseText() {
     const text = els.freeText.value.trim();
     if (!text) { showToast('请输入数据', 'error'); return; }
-    const lines = text.split('\n').filter(l => l.trim());
+
+    // Detect grouped format: 第一行有公共信息（产地/材质/基础规格），后续有"表面："行
+    function isGroupedFormat(lines) {
+      const first = lines[0] || '';
+      const hasSurface = lines.some(l => /表面[：:]/.test(l));
+      const hasSpec = /\d+\.?\d*\s*[*×xX]\s*\d+/.test(first);
+      const hasOrigin = ORIGIN_KEYWORDS.some(o => first.includes(o));
+      return hasSurface && hasSpec && (hasOrigin || lines.length > 3);
+    }
+
+    function extractCommonInfo(raw) {
+      let s = raw.replace(/[，,、；;：:]/g, ' ').trim();
+      let origin = '', material = '';
+      for (const op of ORIGIN_KEYWORDS) { if (s.includes(op)) { origin = op; s = s.replace(op, ' ').trim(); break; } }
+      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410','430'];
+      for (const mp of mps) { if (s.toUpperCase().includes(mp)) { material = mp; s = s.replace(new RegExp(mp,'gi'), ' ').trim(); break; } }
+      let width = 1240, length = 'C';
+      const sp = s.match(/(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)(?:\s*MM)?/i);
+      if (sp) { width = parseFloat(sp[1]); length = sp[2]; }
+      else { const sp2 = s.match(/(\d+)\s*[*×xX]\s*(\d+)/); if (sp2) { width = parseFloat(sp2[1]); length = sp2[2]; } }
+      return { origin, material, width, length };
+    }
+
+    function extractSurfaceFilm(line) {
+      const m = line.match(/表面[：:]\s*(.+?)\s*膜[：:]\s*(.+)/);
+      if (!m) return null;
+      const surface = m[1].trim();
+      const filmPart = m[2].trim();
+      const fps = filmPart.split('+').map(s => s.trim());
+      let f1 = '', f2 = '';
+      const normed = PricingEngine.normalizeFilm(fps[0]) || fps[0];
+      f1 = normed;
+      if (fps.length > 1) f2 = PricingEngine.normalizeFilm(fps[1]) || fps[1];
+      return { surface, film1: f1, film2: f2 };
+    }
+
+    function extractThickness(line) {
+      const m = line.match(/(\d+\.?\d+)\s*MM/i);
+      return m ? parseFloat(m[1]) : null;
+    }
+
+    const rawLines = text.split('\n');
+    const trimmed = rawLines.map(l => l.trim());
+
+    // 如果数量少，先尝试原始逐行解析
     let count = 0;
-    for (const line of lines) {
-      const p = PricingEngine.parseFreeText(line.trim(), {});
-      if (p && p.thickness && p.width) {
-        // Detect new origins
-        if (p.origin && !originOrder.includes(p.origin)) {
-          originOrder.push(p.origin);
-          originPrices[p.origin] = 0;
+    const useGrouped = isGroupedFormat(trimmed);
+    let items = [];
+
+    if (useGrouped) {
+      const common = extractCommonInfo(trimmed[0]);
+      let curSurface = '', curFilm1 = '', curFilm2 = '';
+      for (let i = 1; i < trimmed.length; i++) {
+        const line = trimmed[i];
+        if (!line) continue;
+        const sf = extractSurfaceFilm(line);
+        if (sf) { curSurface = sf.surface; curFilm1 = sf.film1; curFilm2 = sf.film2; continue; }
+        const thk = extractThickness(line);
+        if (thk !== null && curSurface) {
+          const fakeLine = `${common.origin || '宏旺'}${common.material} ${curSurface} ${curFilm1}${curFilm2 ? '+' + curFilm2 : ''} ${thk}*${common.width}*${common.length}`;
+          const p = PricingEngine.parseFreeText(fakeLine, {});
+          if (p && p.thickness && p.width) items.push(p);
         }
-        const bp = getMaterialPrice(p.origin || '宏旺', p.material);
-        if (bp && bp > 0) {
-          p.basePrice = bp;
-          dataItems.push(p);
-          count++;
-        }
+      }
+    } else {
+      // 原始逐行解析
+      for (const line of trimmed) {
+        if (!line) continue;
+        const p = PricingEngine.parseFreeText(line, {});
+        if (p && p.thickness && p.width) items.push(p);
+      }
+    }
+
+    for (const p of items) {
+      if (p.origin && !originOrder.includes(p.origin)) {
+        originOrder.push(p.origin);
+        originPrices[p.origin] = 0;
+      }
+      const bp = getMaterialPrice(p.origin || '宏旺', p.material);
+      if (bp && bp > 0) {
+        p.basePrice = bp;
+        dataItems.push(p);
+        count++;
       }
     }
     if (count > 0) {
       results = []; renderOriginGrid();
-      showToast(`解析 ${count} / ${lines.length} 条`, 'success');
+      showToast(`解析 ${count} 条`, 'success');
       els.freeText.value = '';
       render();
     } else { showToast('未能解析（检查各产地基价是否已设置）', 'error'); }
