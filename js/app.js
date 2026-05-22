@@ -949,7 +949,7 @@ const App = (() => {
     html += total('含税成本小计', d.costRaw, 'tax');
     html += total('四舍五入 (十位)', d.costTax, 'tax');
     html += '</div><div class="calc-section"><div class="calc-section-title">不含税成本 & 销售价</div>';
-    html += step(`不含税成本 (${fmtI(d.costTax)} × 0.92)`, d.costNoTaxRaw, '元/吨', true);
+    html += step(`不含税成本 (${fmtI(d.costRaw)} × 0.92)`, d.costNoTaxRaw, '元/吨', true);
     html += total('四舍五入 (十位)', d.costNoTax, 'notax');
     html += '<div style="height:8px;"></div>';
     html += step(`销售加价 (${bt})`, d.markup, '元/吨', d.markup > 0);
