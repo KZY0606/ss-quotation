@@ -203,11 +203,11 @@ const SURFACE_FEES = {
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
   '拉丝黑钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 2.5,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
   ],
   '磨砂黑钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 2.5,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
   ],
   '拉丝古铜哑光抗指纹': [
