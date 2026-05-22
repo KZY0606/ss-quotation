@@ -1,4 +1,4 @@
-﻿/**
+/**
  * KK不锈钢报价系统 - 价格配置数据
  * 适用：201 系列（J1/J2/J3/J4/J5）+ 304 + 压延料
  */
@@ -203,11 +203,11 @@ const SURFACE_FEES = {
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
   '拉丝黑钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 2.5,   unit: 'sqm' },
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
   ],
   '磨砂黑钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 2.5,   unit: 'sqm' },
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
   ],
   '拉丝古铜哑光抗指纹': [
