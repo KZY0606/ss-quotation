@@ -345,7 +345,7 @@ const FILM_FEES = {
   'RED+KBE-5C-FILM':  1.0,
   'HW-5C-FILM':     1.0,
   '7C-FILM':        1.4,
-  'HW-7C-FILM':     1.2,
+  'HW-7C-FILM':     1.4,
   '10C-FILM':       2.0,
   '7C-ZIYE-LASER-FILM':   2.0,
   '7C-LASER-FILM':  2.0,
