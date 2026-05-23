@@ -10,6 +10,8 @@ const App = (() => {
   let originPrices = {};
   let originOrder = [...ORIGIN_PRESETS];
   let lockedOrigins = {};
+  const ORIGINS_201 = ['宏旺', '青山'];
+  const ORIGINS_304 = ORIGIN_PRESETS.filter(o => o !== '瑞钢');
   // 各产地 J2 基价 (304)
   let originPrices304 = {};
   let lockedOrigins304 = {};
@@ -84,7 +86,8 @@ const App = (() => {
     els.totalC = dom('totalCount'); els.okC = dom('successCount'); els.errC = dom('errorCount');
     els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
-    els.originRows = dom('originRows'); els.newOriginInput = dom('newOriginInput');
+    els.originRows201 = dom('originRows201'); els.originRows304 = dom('originRows304');
+    els.newOriginInput = dom('newOriginInput');
     els.addOriginBtn = dom('addOriginBtn'); els.expandAllBtn = dom('expandAllBtn');
   }
 
@@ -150,15 +153,19 @@ const App = (() => {
 
   // ========== 产地价格管理 ==========
   function renderOriginGrid() {
-    els.originRows.innerHTML = '';
-    originOrder.forEach(origin => {
+    renderOriginGrid201();
+    renderOriginGrid304();
+    renderPrices400();
+  }
+
+  function renderOriginGrid201() {
+    els.originRows201.innerHTML = '';
+    ORIGINS_201.forEach(origin => {
       const price = originPrices[origin] || 0;
       const locked = !!lockedOrigins[origin];
       const j1 = price ? price + 900 : 0;
       const j3 = price ? price + 400 : 0;
       const j4 = price ? price + 1600 : 0;
-      const price304 = originPrices304[origin] || 0;
-      const locked304 = !!lockedOrigins304[origin];
       const div = document.createElement('div');
       div.className = 'origin-row';
       div.innerHTML = `
@@ -171,92 +178,86 @@ const App = (() => {
             ? `J1: <b>${j1.toLocaleString()}</b>  J3: <b>${j3.toLocaleString()}</b>  J4: <b>${j4.toLocaleString()}</b>`
             : '<span class="oderived-hint">请填写 J2 基价</span>'}
         </span>
-        <span class="o304sep" style="margin:0 6px;color:var(--border);font-weight:200">|</span>
-        <div class="oj2" style="width:80px"><label style="font-size:10px">304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" style="width:60px;font-size:12px;padding:4px 6px;" ${locked304 ? 'readonly' : ''}></div>
-        <button class="o-lock ${locked304 ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
-        ${originOrder.length > ORIGIN_PRESETS.length ? `<button class="o-remove" data-origin="${origin}" title="删除">✕</button>` : ''}
       `;
-      els.originRows.appendChild(div);
+      els.originRows201.appendChild(div);
     });
-    // Bind 201 inputs
-    bindOriginInputs('.origin-j2-input', originPrices, '201');
-    // Bind 304 inputs
-    bindOriginInputs('.origin-304-input', originPrices304, '304');
-
-    // Lock toggle
+    bindOriginInputs('.origin-j2-input', originPrices);
     document.querySelectorAll('.o-lock').forEach(btn => {
       btn.addEventListener('click', () => {
-        const mat = btn.dataset.mat;
-        if (mat === '304') {
-          lockedOrigins304[btn.dataset.origin] = !lockedOrigins304[btn.dataset.origin];
-          saveLockedPrices();
-          renderOriginGrid();
-        } else {
-          toggleLock(btn.dataset.origin);
-        }
+        toggleLock(btn.dataset.origin);
       });
     });
-    // Manual add dropdown
-    const sel = dom('manualOrigin');
-    if (sel) {
-      sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
-      syncManualPrices();
-    }
-    renderPrices400();
+    updateManualDropdown();
+  }
+
+  function renderOriginGrid304() {
+    els.originRows304.innerHTML = '';
+    ORIGINS_304.forEach(origin => {
+      const price304 = originPrices304[origin] || 0;
+      const locked304 = !!lockedOrigins304[origin];
+      const div = document.createElement('div');
+      div.className = 'origin-row';
+      div.innerHTML = `
+        <span class="oname" style="min-width:56px">${origin}</span>
+        <div class="oj2" style="width:90px"><label>304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" style="width:70px;font-size:13px;" ${locked304 ? 'readonly' : ''}></div>
+        <button class="o-lock ${locked304 ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
+        <span class="oderived" style="margin-left:4px;font-size:12px;color:var(--text-secondary);">
+          ${price304 > 0 ? `基价: <b>${price304.toLocaleString()}</b>` : '<span class="oderived-hint">请填写基价</span>'}
+        </span>
+      `;
+      els.originRows304.appendChild(div);
+    });
+    bindOriginInputs('.origin-304-input', originPrices304);
+    document.querySelectorAll('.o-lock[data-mat="304"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        lockedOrigins304[btn.dataset.origin] = !lockedOrigins304[btn.dataset.origin];
+        saveLockedPrices();
+        renderOriginGrid304();
+      });
+    });
+  }
+
+  function updateAllDerived() {
+    const j5Show = dom('j5PriceShow');
+    if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
+    // 刷新 201 区域以更新 J1/J3/J4
+    renderOriginGrid201();
   }
 
   function bindOriginInputs(selector, priceMap) {
     const inputs = document.querySelectorAll(selector);
-    inputs.forEach((inp, i) => {
+    inputs.forEach(inp => {
       inp.addEventListener('input', () => {
-        const o = inp.dataset.origin;
-        priceMap[o] = parseFloat(inp.value) || 0;
-        updateAllDerived();
-      });
-      inp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const all = document.querySelectorAll(selector);
-          if (e.shiftKey && i > 0) all[i - 1].focus();
-          else if (!e.shiftKey && i < all.length - 1) all[i + 1].focus();
-        }
+        priceMap[inp.dataset.origin] = parseFloat(inp.value) || 0;
+        if (selector === '.origin-j2-input') updateAllDerived();
+        else saveLockedPrices();
       });
       inp.addEventListener('blur', () => {
-        const o = inp.dataset.origin;
-        priceMap[o] = parseFloat(inp.value) || 0;
-        if (selector === '.origin-j2-input') updateDerivedDisplay(o);
+        priceMap[inp.dataset.origin] = parseFloat(inp.value) || 0;
         saveLockedPrices();
+        if (selector === '.origin-j2-input') {
+          renderOriginGrid201();
+        }
       });
     });
   }
 
-  function updateDerivedDisplay(origin) {
-    const rows = document.querySelectorAll('.origin-row');
-    for (const row of rows) {
-      if (row.querySelector('.oname')?.textContent === origin) {
-        const derived = row.querySelector('.oderived');
-        const p = originPrices[origin] || 0;
-        derived.innerHTML = p > 0
-          ? `J1: <b>${(p+900).toLocaleString()}</b>  J3: <b>${(p+400).toLocaleString()}</b>  J4: <b>${(p+1600).toLocaleString()}</b>`
-          : '<span class="oderived-hint">请填写 J2 基价</span>';
-        break;
-      }
-    }
-  }
-
-  function syncManualPrices() {
+  function updateManualDropdown() {
     const sel = dom('manualOrigin');
     const display = dom('manualPriceDisplay');
-    if (!sel || !display) return;
-    const o = sel.value;
-    const j2 = originPrices[o] || 0;
-    if (j2 > 0) {
-      const j1 = j2 + 900, j3 = j2 + 400, j4 = j2 + 1600;
-      display.innerHTML = `J2 <b>${j2.toLocaleString()}</b> → J1 <b>${j1.toLocaleString()}</b>  J3 <b>${j3.toLocaleString()}</b>  J4 <b>${j4.toLocaleString()}</b>`;
-      display.style.color = 'var(--text-secondary)';
-    } else {
-      display.textContent = '⚠️ 该产地未设置基价';
-      display.style.color = 'var(--danger)';
+    if (!sel) return;
+    sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
+    if (display) {
+      const o = sel.value;
+      const j2 = originPrices[o] || 0;
+      if (j2 > 0) {
+        const j1 = j2 + 900, j3 = j2 + 400, j4 = j2 + 1600;
+        display.innerHTML = `J2 <b>${j2.toLocaleString()}</b> → J1 <b>${j1.toLocaleString()}</b>  J3 <b>${j3.toLocaleString()}</b>  J4 <b>${j4.toLocaleString()}</b>`;
+        display.style.color = 'var(--text-secondary)';
+      } else {
+        display.textContent = '⚠️ 该产地未设置基价';
+        display.style.color = 'var(--danger)';
+      }
     }
   }
 
@@ -267,14 +268,11 @@ const App = (() => {
     originOrder.push(name);
     originPrices[name] = 0;
     originPrices304[name] = 0;
+    // 添加到 304 列表
+    if (!ORIGINS_304.includes(name)) ORIGINS_304.push(name);
     els.newOriginInput.value = '';
     renderOriginGrid();
     showToast(`已添加产地: ${name}`, 'success');
-  }
-
-  function updateAllDerived() {
-    const j5Show = dom('j5PriceShow');
-    if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
   }
 
   // ========== 锁定价格持久化 ==========
