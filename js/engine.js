@@ -41,26 +41,37 @@ const PricingEngine = (() => {
     const t = parseFloat(thickness);
     // 400系：按材质+表面(+产地)对应独立加价，无匹配则返回 null
     if (material && THICKNESS_SURCHARGE_400) {
-      // 生成待尝试的表面键：首选 surface，若为'单面抛光'则额外尝试'BA'
-      const surfaceKeys = [surface];
-      if (surface === '单面抛光') surfaceKeys.push('BA');
+      // 标准化：Excel中"非标"可能没有括号
+      let normMaterial = (material || '').replace(/\(?非标\)?/g, '(非标)').replace(/（非标）/g, '(非标)');
+      // 400系材质名如 '410S/BA' 含嵌入表面名 → 拆分为 baseMaterial='410S', embeddedSurface='BA'
+      let baseMaterial = normMaterial;
+      let embeddedSurface = null;
+      if (normMaterial.includes('/')) {
+        const parts = normMaterial.split('/');
+        baseMaterial = parts[0];
+        embeddedSurface = parts[1];
+      }
+      // 生成待尝试的表面键：嵌入表面优先，其次参数 surface，额外尝试 'BA'（兼容单面抛光）
+      const surfaceKeys = [embeddedSurface || surface];
+      if ((embeddedSurface || surface) === '单面抛光') surfaceKeys.push('BA');
 
       for (const s of surfaceKeys) {
+        if (!s) continue;
         // 优先尝试产地特异性键 (如 '410S-2BA-瑞钢')
         if (origin) {
-          const originKey = material + '-' + s + '-' + origin;
+          const originKey = baseMaterial + '-' + s + '-' + origin;
           if (THICKNESS_SURCHARGE_400[originKey]) {
             return findInTable(THICKNESS_SURCHARGE_400[originKey], t);
           }
         }
         // 再尝试通用键 (如 '410S-BA')
-        const key = material + '-' + s;
+        const key = baseMaterial + '-' + s;
         if (THICKNESS_SURCHARGE_400[key]) {
           return findInTable(THICKNESS_SURCHARGE_400[key], t);
         }
       }
-      // 如果材质是400系已知材料但该表面未配置 → 返回 null
-      if (material === '410S' || material === '430' || material === '430B') return null;
+      // 如果基材是400系已知材料但该组合未配置 → 返回 null
+      if (baseMaterial === '410S' || baseMaterial === '430' || baseMaterial === '430B') return null;
     }
     // 压延料使用独立加价表（不分产地）
     if (isYanYan) {
@@ -402,13 +413,24 @@ const PricingEngine = (() => {
   function getThickTableName(isYanYan, material, origin, surface) {
     if (isYanYan) return '压延料';
     if (material && THICKNESS_SURCHARGE_400) {
-      const surfaceKeys = [surface];
-      if (surface === '单面抛光') surfaceKeys.push('BA');
+      // 标准化：Excel中"非标"可能没有括号
+      let normMaterial = (material || '').replace(/\(?非标\)?/g, '(非标)').replace(/（非标）/g, '(非标)');
+      // 400系材质名如 '410S/BA' 含嵌入表面
+      let baseMaterial = normMaterial;
+      let embeddedSurface = null;
+      if (normMaterial.includes('/')) {
+        const parts = normMaterial.split('/');
+        baseMaterial = parts[0];
+        embeddedSurface = parts[1];
+      }
+      const surfaceKeys = [embeddedSurface || surface];
+      if ((embeddedSurface || surface) === '单面抛光') surfaceKeys.push('BA');
       for (const s of surfaceKeys) {
-        const key = material + '-' + s;
+        if (!s) continue;
+        const key = baseMaterial + '-' + s;
         if (THICKNESS_SURCHARGE_400[key]) return '400系(' + key + ')';
         if (origin) {
-          const originKey = material + '-' + s + '-' + origin;
+          const originKey = baseMaterial + '-' + s + '-' + origin;
           if (THICKNESS_SURCHARGE_400[originKey]) return '400系(' + originKey + ')';
         }
       }
