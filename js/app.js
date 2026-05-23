@@ -761,8 +761,8 @@ const App = (() => {
     ExcelParser.parseExcel(f, 0).then(items => {
       if (!items.length) { showToast('未解析出数据', 'error'); return; }
       items.forEach(item => {
-        // 400系表面为空时显示"无"
-        if (item.material && item.material.includes('/') && !item.surface) {
+        // 400系表面与材质名无关，一律显示"无"
+        if (item.material && item.material.includes('/')) {
           item.surface = '无';
         }
         item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material) || 0;
