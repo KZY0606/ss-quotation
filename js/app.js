@@ -21,13 +21,13 @@ const App = (() => {
   let prices400 = {};
   let lockedPrices400 = {};
   const PRODUCTS_400 = [
-    { key: '410S-BA', origins: ['甬金', '上克'] },
-    { key: '410S-2BA', origins: ['瑞钢'] },
-    { key: '410S-2BA(非标)', origins: ['瑞钢'] },
-    { key: '430-BA', origins: [] },
-    { key: '430-2BA', origins: [] },
-    { key: '430B-BA', origins: [] },
-    { key: '430B-2BA', origins: [] },
+    { key: '410S/BA', origins: ['甬金', '上克'] },
+    { key: '410S/2BA', origins: ['瑞钢'] },
+    { key: '410S/2BA(非标)', origins: ['瑞钢'] },
+    { key: '430/BA', origins: [] },
+    { key: '430/2BA', origins: [] },
+    { key: '430B/BA', origins: [] },
+    { key: '430B/2BA', origins: [] },
   ];
   // 获取400系产品的完整键名（含产地）
   function get400PriceKey(productKey, origin) { return productKey + '-' + origin; }
@@ -40,7 +40,7 @@ const App = (() => {
     // 400系：查独立基价表（按材质+表面+产地）
     if (material && (material === '410S' || material === '430' || material === '430B')) {
       if (origin && !ORIGINS_400.includes(origin)) return null;
-      // 400系的表面可能被别名从 BA 映射成 单面抛光，需要同时尝试
+      // 400系的使用 / 分隔（如 410S/BA），但BA别名可能被映射成单面抛光需兼容
       const surfacesToTry = [];
       if (surface) {
         surfacesToTry.push(surface);
@@ -49,7 +49,7 @@ const App = (() => {
         surfacesToTry.push('BA');
       }
       for (const surf of surfacesToTry) {
-        const productKey = material + '-' + surf;
+        const productKey = material + '/' + surf;
         // 先查产地特异性价格
         if (origin) {
           const originKey = get400PriceKey(productKey, origin);
@@ -57,6 +57,15 @@ const App = (() => {
         }
         // 再查通用价格（兼容旧数据）
         if (prices400[productKey]) return prices400[productKey];
+      }
+      // 兼容旧格式（-分隔）：410S-BA-甬金
+      for (const surf of surfacesToTry) {
+        const altKey = material + '-' + surf;
+        if (origin) {
+          const originAlt = get400PriceKey(altKey, origin);
+          if (prices400[originAlt]) return prices400[originAlt];
+        }
+        if (prices400[altKey]) return prices400[altKey];
       }
       return null;
     }
@@ -311,10 +320,16 @@ const App = (() => {
       const raw = localStorage.getItem('kk_prices_400');
       if (!raw) return;
       const data = JSON.parse(raw);
-      // 兼容旧数据（无产地后缀）和高精度新数据（产品-产地）
+      // 迁移旧格式键（410S-BA → 410S/BA, 410S-BA-甬金 → 410S/BA-甬金）
+      let migrated = false;
       for (const [k, v] of Object.entries(data)) {
-        if (v > 0) prices400[k] = v;
+        if (v > 0) {
+          let nk = k.replace(/^(410S|430|430B)-(BA|2BA(?:\(非标\))?)/, '$1/$2');
+          if (nk !== k) migrated = true;
+          prices400[nk] = v;
+        }
       }
+      if (migrated) savePrices400();
     } catch (e) { /* ignore */ }
   }
   function renderPrices400() {
