@@ -17,7 +17,7 @@ const App = (() => {
   // 400系基价（按材质+表面）
   let prices400 = {};
   let lockedPrices400 = {};
-  const PRODUCTS_400 = ['410S-BA', '410S-2BA', '430-BA', '430-2BA', '430B-BA', '430B-2BA'];
+  const PRODUCTS_400 = ['410S-BA', '410S-2BA', '430-BA', '430-2BA', '430B-BA', '430B-2BA', '410S-2BA(非标)'];
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
