@@ -743,6 +743,11 @@ tr.main-row:hover .delete-btn { opacity:1; }
               </div>
             </div>
           </div>
+          <div class="origin-grid" style="margin-top:12px;">
+            <div class="origin-footer" style="flex-wrap:wrap;gap:6px;" id="prices400Section">
+              <span style="font-size:12px;font-weight:600;color:var(--text-secondary);width:100%;margin-bottom:4px;">400系列基价</span>
+            </div>
+          </div>
         </div>
 
         <!-- 保护膜配置 -->
@@ -946,7 +951,7 @@ const APP_VERSION = '2.3';
 // 密度表 (吨/m³)
 const DENSITY = {
   '201': 7.85, '201J1': 7.85, '201J2': 7.85, '201J3': 7.85, '201J4': 7.85, '201J5': 7.85,
-  '304': 7.93, '316L': 7.98, '410': 7.75, '430': 7.75
+  '304': 7.93, '316L': 7.98, '410': 7.75, '410S': 7.75, '430': 7.75, '430B': 7.75
 };
 
 // 201 材质基价偏移（相对于 J2）
@@ -1041,6 +1046,20 @@ const ORIGIN_THICKNESS_SURCHARGE = {
   ]
 };
 
+// 400系厚度加价表 — 按材质+表面对应独立加价（甬金/上克同价）
+const THICKNESS_SURCHARGE_400 = {
+  '410S-BA': [
+    { min: 0.23, max: 0.24, price: 1300 },
+    { min: 0.25, max: 0.26, price: 1000 },
+    { min: 0.27, max: 0.29, price: 900  },
+    { min: 0.30, max: 0.35, price: 650  },
+    { min: 0.36, max: 0.39, price: 400  },
+    { min: 0.40, max: 0.49, price: 200  },
+    { min: 0.50, max: 1.20, price: 0    },
+    { min: 1.21, max: 1.50, price: 100  }
+  ]
+};
+
 // 表面加工费 — 304 特例（与201不同价格的表面）
 const SURFACE_FEES_304 = {
   '8K黑钛金': [
@@ -1048,12 +1067,12 @@ const SURFACE_FEES_304 = {
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 15, unit: 'sqm' }
   ],
   '拉丝黑钛金': [
-    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
   ],
   '磨砂黑钛金': [
-    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
   ]
 };
 
@@ -1283,7 +1302,7 @@ const FILM_FEES = {
   'RED+KBE-5C-FILM':  1.0,
   'HW-5C-FILM':     1.0,
   '7C-FILM':        1.4,
-  'HW-7C-FILM':     1.2,
+  'HW-7C-FILM':     1.4,
   '10C-FILM':       2.0,
   '7C-ZIYE-LASER-FILM':   2.0,
   '7C-LASER-FILM':  2.0,
@@ -1550,20 +1569,29 @@ const PricingEngine = (() => {
     return (l === 'C' || l === 'COIL') ? 'coil' : 'sheet';
   }
 
-  function getThicknessSurcharge(thickness, isYanYan, material, origin) {
+  function getThicknessSurcharge(thickness, isYanYan, material, origin, surface) {
     const t = parseFloat(thickness);
-    // 304 使用独立加价表（不分产地）
-    if (material && (material === '304' || material.startsWith('304'))) {
-      return findInTable(THICKNESS_SURCHARGE_304, t);
+    // 400系：按材质+表面对应独立加价，无匹配则返回 null
+    if (material && THICKNESS_SURCHARGE_400) {
+      const key = material + '-' + surface;
+      if (THICKNESS_SURCHARGE_400[key]) {
+        return findInTable(THICKNESS_SURCHARGE_400[key], t);
+      }
+      // 如果材质是400系已知材料但该表面未配置 → 返回 null
+      if (material === '410S' || material === '430' || material === '430B') return null;
     }
     // 压延料使用独立加价表（不分产地）
     if (isYanYan) {
       return findInTable(YANYAN_THICKNESS_SURCHARGE, t);
     }
-    // 201 正材：有产地特异性加价表则用，否则用默认（宏旺/德龙标准）
-    if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
-      return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
+    // 304：有产地特异性加价则用，否则用统一宏旺/德龙标准
+    if (material && (material === '304' || material.startsWith('304'))) {
+      if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
+        return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
+      }
+      return findInTable(THICKNESS_SURCHARGE_304, t);
     }
+    // 201（正材）：暂时不分产地，统一标准
     return findInTable(THICKNESS_SURCHARGE, t);
   }
 
@@ -1791,7 +1819,7 @@ const PricingEngine = (() => {
     const density = getDensity(material);
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
 
-    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin);
+    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, item.normSurface);
     if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
 
     const edgeType = getEdgeType(width);
@@ -1874,7 +1902,7 @@ const PricingEngine = (() => {
         material, surface: item.surface || '', normSurface: baseSurface, thickness, width, length, film1, film2, basePrice,
         isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),
-        thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin),
+        thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
         surfaceFeePerTon: round2(surfaceFeePerTon),
         linenFeePerTon,
@@ -1889,10 +1917,16 @@ const PricingEngine = (() => {
     };
   }
 
-  function getThickTableName(isYanYan, material, origin) {
-    if (material && (material === '304' || material.startsWith('304'))) return '304 加价';
+  function getThickTableName(isYanYan, material, origin, surface) {
     if (isYanYan) return '压延料';
-    if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
+    if (material && THICKNESS_SURCHARGE_400) {
+      const key = material + '-' + surface;
+      if (THICKNESS_SURCHARGE_400[key]) return '400系(' + key + ')';
+    }
+    if (material && (material === '304' || material.startsWith('304'))) {
+      if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
+      return '304 加价';
+    }
     return '常规';
   }
 
@@ -1964,7 +1998,7 @@ const PricingEngine = (() => {
     }
 
     // 提取材质 (201J5 > 201J4 > ... > 201)
-    const materialPatterns = ['201J5', '201J4', '201J1', '201J3', '201J2', '201', '304', '316L', '410', '430'];
+    const materialPatterns = ['201J5', '201J4', '201J1', '201J3', '201J2', '201', '304', '316L', '410S', '430B', '410', '430'];
     let material = '';
     for (const mp of materialPatterns) {
       if (remaining.toUpperCase().includes(mp.toUpperCase())) {
@@ -2063,7 +2097,7 @@ const PricingEngine = (() => {
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE,
-    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS
+    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400
   };
 })();
 
@@ -2439,12 +2473,21 @@ const App = (() => {
   let originPrices304 = {};
   let lockedOrigins304 = {};
   let j5Price = 0;
+  // 400系基价（按材质+表面）
+  let prices400 = {};
+  let lockedPrices400 = {};
+  const PRODUCTS_400 = ['410S-BA', '410S-2BA', '430-BA', '430-2BA', '430B-BA', '430B-2BA'];
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
 
   // ========== 基价计算 ==========
-  function getMaterialPrice(origin, material) {
+  function getMaterialPrice(origin, material, surface) {
+    // 400系：查独立基价表（按材质+表面）
+    if (material && (material === '410S' || material === '430' || material === '430B')) {
+      const key = material + '-' + (surface || 'BA');
+      return prices400[key] || null;
+    }
     if (material === '304' || material.startsWith('304')) {
       const p = originPrices304[origin];
       return (p && p > 0) ? p : null;
@@ -2467,6 +2510,7 @@ const App = (() => {
     originPrices['宏旺'] = 7800; // default
     originOrder.forEach(o => { originPrices304[o] = 0; });
     loadLockedPrices(); // 恢复已锁定的价格（201 + 304）
+    loadPrices400();    // 恢复400系基价
     loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
     PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
 
@@ -2617,6 +2661,7 @@ const App = (() => {
       sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
       syncManualPrices();
     }
+    renderPrices400();
   }
 
   function bindOriginInputs(selector, priceMap) {
@@ -2731,6 +2776,62 @@ const App = (() => {
         }
       }
     } catch (e) { /* ignore */ }
+  }
+
+  // ========== 400系基价 ==========
+  function savePrices400() {
+    try { localStorage.setItem('kk_prices_400', JSON.stringify(prices400)); }
+    catch (e) { /* ignore */ }
+  }
+  function loadPrices400() {
+    try {
+      const raw = localStorage.getItem('kk_prices_400');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      for (const key of PRODUCTS_400) {
+        if (data[key] && data[key] > 0) prices400[key] = data[key];
+      }
+    } catch (e) { /* ignore */ }
+  }
+  function renderPrices400() {
+    const section = document.getElementById('prices400Section');
+    if (!section) return;
+    section.querySelectorAll('.p400-row').forEach(el => el.remove());
+    PRODUCTS_400.forEach(key => {
+      const val = prices400[key] || 0;
+      const locked = !!lockedPrices400[key];
+      const div = document.createElement('div');
+      div.className = 'p400-row';
+      div.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+      div.innerHTML = `
+        <label style="font-size:11px;font-weight:500;color:var(--text-secondary);min-width:72px;">${key}</label>
+        <input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" style="width:72px;padding:4px 6px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;" ${locked ? 'readonly' : ''}>
+        <button class="p400-lock ${locked ? 'locked' : ''}" data-key="${key}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
+      `;
+      section.appendChild(div);
+    });
+    document.querySelectorAll('.p400-input').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const key = inp.dataset.key;
+        const v = parseFloat(inp.value);
+        prices400[key] = (v > 0) ? v : 0;
+        if (lockedPrices400[key]) savePrices400();
+      });
+      inp.addEventListener('blur', () => {
+        const key = inp.dataset.key;
+        const v = parseFloat(inp.value);
+        prices400[key] = (v > 0) ? v : 0;
+        if (lockedPrices400[key]) savePrices400();
+      });
+    });
+    document.querySelectorAll('.p400-lock').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        lockedPrices400[key] = !lockedPrices400[key];
+        savePrices400();
+        renderPrices400();
+      });
+    });
   }
 
   function toggleLock(origin) {
@@ -3133,7 +3234,7 @@ const App = (() => {
     }
     f1 = PricingEngine.normalizeFilm(f1) || f1;
     f2 = PricingEngine.normalizeFilm(f2) || f2;
-    const bp = getMaterialPrice(origin, mat);
+    const bp = getMaterialPrice(origin, mat, surf);
     if (!bp || bp <= 0) { showToast(`${origin} ${mat} 基价未设置`, 'error'); return; }
     if (!thk || !wid) { showToast('请填写厚度和宽度', 'error'); return; }
     dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp });
@@ -3160,7 +3261,7 @@ const App = (() => {
       let s = raw.replace(/[，,、；;：:]/g, ' ').trim();
       let origin = '', material = '';
       for (const op of ORIGIN_KEYWORDS) { if (s.includes(op)) { origin = op; s = s.replace(op, ' ').trim(); break; } }
-      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410','430'];
+      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S','430B','410','430'];
       for (const mp of mps) { if (s.toUpperCase().includes(mp)) { material = mp; s = s.replace(new RegExp(mp,'gi'), ' ').trim(); break; } }
       let width = 1240, length = 'C';
       const sp = s.match(/(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)(?:\s*MM)?/i);
