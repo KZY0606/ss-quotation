@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KK不锈钢报价系统 - Excel 解析与导出
  */
 const ExcelParser = (() => {
@@ -183,14 +183,28 @@ const ExcelParser = (() => {
               for (let i = headerRowIdx + 1; i < rows.length; i++) {
                 const item = parseRow(rows[i], headers, basePrice);
                 if (item) {
-                  // 如果 row 里没有规格, 看是否有 厚度/宽度/长度 列
+                  // 如果 row 里没有规格, 看是否有 厚度/宽度/长度 列，或组合"规格"列
                   if (!item.thickness) {
-                    const thicknessIdx = headers.findIndex(h => h.includes('厚度'));
-                    const widthIdx = headers.findIndex(h => h.includes('宽度'));
-                    const lengthIdx = headers.findIndex(h => h.includes('长度'));
-                    if (thicknessIdx >= 0 && rows[i][thicknessIdx]) item.thickness = String(rows[i][thicknessIdx]).trim();
-                    if (widthIdx >= 0 && rows[i][widthIdx]) item.width = String(rows[i][widthIdx]).trim();
-                    if (lengthIdx >= 0 && rows[i][lengthIdx]) item.length = String(rows[i][lengthIdx]).trim();
+                    // 优先检查组合"规格"列：如 "0.24*1000*2000" → 厚度*宽度*长度
+                    const specIdx = headers.findIndex(h => /规格|spec/i.test(h));
+                    if (specIdx >= 0 && rows[i][specIdx]) {
+                      const specStr = String(rows[i][specIdx]).replace(/×/g, '*').replace(/x/gi, '*').trim();
+                      const parts = specStr.split('*').map(p => p.trim());
+                      if (parts.length >= 3) {
+                        item.thickness = parts[0];
+                        item.width = parts[1];
+                        item.length = parts.slice(2).join('*');
+                      }
+                    }
+                    // 无组合规格列则尝试单独列
+                    if (!item.thickness) {
+                      const thicknessIdx = headers.findIndex(h => /厚度|thickness/i.test(h));
+                      const widthIdx = headers.findIndex(h => /宽度|width/i.test(h));
+                      const lengthIdx = headers.findIndex(h => /长度|length/i.test(h));
+                      if (thicknessIdx >= 0 && rows[i][thicknessIdx]) item.thickness = String(rows[i][thicknessIdx]).trim();
+                      if (widthIdx >= 0 && rows[i][widthIdx]) item.width = String(rows[i][widthIdx]).trim();
+                      if (lengthIdx >= 0 && rows[i][lengthIdx]) item.length = String(rows[i][lengthIdx]).trim();
+                    }
                   }
                   items.push(item);
                 }
