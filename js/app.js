@@ -14,12 +14,21 @@ const App = (() => {
   let originPrices304 = {};
   let lockedOrigins304 = {};
   let j5Price = 0;
+  // 400系基价（按材质+表面）
+  let prices400 = {};
+  let lockedPrices400 = {};
+  const PRODUCTS_400 = ['410S-BA', '410S-2BA', '430-BA', '430-2BA', '430B-BA', '430B-2BA'];
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
 
   // ========== 基价计算 ==========
-  function getMaterialPrice(origin, material) {
+  function getMaterialPrice(origin, material, surface) {
+    // 400系：查独立基价表（按材质+表面）
+    if (material && (material === '410S' || material === '430' || material === '430B')) {
+      const key = material + '-' + (surface || 'BA');
+      return prices400[key] || null;
+    }
     if (material === '304' || material.startsWith('304')) {
       const p = originPrices304[origin];
       return (p && p > 0) ? p : null;
@@ -42,6 +51,7 @@ const App = (() => {
     originPrices['宏旺'] = 7800; // default
     originOrder.forEach(o => { originPrices304[o] = 0; });
     loadLockedPrices(); // 恢复已锁定的价格（201 + 304）
+    loadPrices400();    // 恢复400系基价
     loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
     PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
 
@@ -192,6 +202,7 @@ const App = (() => {
       sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
       syncManualPrices();
     }
+    renderPrices400();
   }
 
   function bindOriginInputs(selector, priceMap) {
@@ -306,6 +317,62 @@ const App = (() => {
         }
       }
     } catch (e) { /* ignore */ }
+  }
+
+  // ========== 400系基价 ==========
+  function savePrices400() {
+    try { localStorage.setItem('kk_prices_400', JSON.stringify(prices400)); }
+    catch (e) { /* ignore */ }
+  }
+  function loadPrices400() {
+    try {
+      const raw = localStorage.getItem('kk_prices_400');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      for (const key of PRODUCTS_400) {
+        if (data[key] && data[key] > 0) prices400[key] = data[key];
+      }
+    } catch (e) { /* ignore */ }
+  }
+  function renderPrices400() {
+    const section = document.getElementById('prices400Section');
+    if (!section) return;
+    section.querySelectorAll('.p400-row').forEach(el => el.remove());
+    PRODUCTS_400.forEach(key => {
+      const val = prices400[key] || 0;
+      const locked = !!lockedPrices400[key];
+      const div = document.createElement('div');
+      div.className = 'p400-row';
+      div.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+      div.innerHTML = `
+        <label style="font-size:11px;font-weight:500;color:var(--text-secondary);min-width:72px;">${key}</label>
+        <input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" style="width:72px;padding:4px 6px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;" ${locked ? 'readonly' : ''}>
+        <button class="p400-lock ${locked ? 'locked' : ''}" data-key="${key}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
+      `;
+      section.appendChild(div);
+    });
+    document.querySelectorAll('.p400-input').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const key = inp.dataset.key;
+        const v = parseFloat(inp.value);
+        prices400[key] = (v > 0) ? v : 0;
+        if (lockedPrices400[key]) savePrices400();
+      });
+      inp.addEventListener('blur', () => {
+        const key = inp.dataset.key;
+        const v = parseFloat(inp.value);
+        prices400[key] = (v > 0) ? v : 0;
+        if (lockedPrices400[key]) savePrices400();
+      });
+    });
+    document.querySelectorAll('.p400-lock').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        lockedPrices400[key] = !lockedPrices400[key];
+        savePrices400();
+        renderPrices400();
+      });
+    });
   }
 
   function toggleLock(origin) {
@@ -708,7 +775,7 @@ const App = (() => {
     }
     f1 = PricingEngine.normalizeFilm(f1) || f1;
     f2 = PricingEngine.normalizeFilm(f2) || f2;
-    const bp = getMaterialPrice(origin, mat);
+    const bp = getMaterialPrice(origin, mat, surf);
     if (!bp || bp <= 0) { showToast(`${origin} ${mat} 基价未设置`, 'error'); return; }
     if (!thk || !wid) { showToast('请填写厚度和宽度', 'error'); return; }
     dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp });
@@ -735,7 +802,7 @@ const App = (() => {
       let s = raw.replace(/[，,、；;：:]/g, ' ').trim();
       let origin = '', material = '';
       for (const op of ORIGIN_KEYWORDS) { if (s.includes(op)) { origin = op; s = s.replace(op, ' ').trim(); break; } }
-      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410','430'];
+      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S','430B','410','430'];
       for (const mp of mps) { if (s.toUpperCase().includes(mp)) { material = mp; s = s.replace(new RegExp(mp,'gi'), ' ').trim(); break; } }
       let width = 1240, length = 'C';
       const sp = s.match(/(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)(?:\s*MM)?/i);
