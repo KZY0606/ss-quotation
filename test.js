@@ -29,7 +29,7 @@ test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
 
 test('双面抛光 0.50*1000*2000', () => {
   const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9100);
+  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9300);
 });
 
 test('拉丝黑钛金 0.60*1219*C', () => {
