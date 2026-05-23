@@ -93,6 +93,8 @@ const PricingEngine = (() => {
   function setUserOverrides(overrides) { userOverrides = overrides; }
 
   function getSurfaceFee(surface, thickness, width, material) {
+    // 表面为"无"或空 → 无加工费（常见于400系，表面已嵌入材质名）
+    if (!surface || surface === '无') return 0;
     const t = parseFloat(thickness);
     const w = parseFloat(width);
     // 304 特例表面：优先查 304 专用表
