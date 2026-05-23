@@ -23,6 +23,7 @@ const App = (() => {
     { origin: '甬金', material: '410S/BA' },
     { origin: '上克', material: '410S/BA' },
     { origin: '瑞钢', material: '410S/2BA' },
+    { origin: '瑞钢', material: '410S/2BA(非标)' },
   ];
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
