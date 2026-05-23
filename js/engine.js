@@ -386,7 +386,11 @@ const PricingEngine = (() => {
     const costTax = round10(subtotal);
     const costNoTax = round10(taxExcluded);
     const markupKey = `${edgeType}_${boardType}`;
-    const markup = SALES_MARKUP[markupKey];
+    let markup = SALES_MARKUP[markupKey];
+    // 1000mm宽度特殊加价：所有材质当规格为1000*2000或1000*C时额外+200元/吨
+    if (width === 1000 && (String(length).trim().toUpperCase() === '2000' || String(length).trim().toUpperCase() === 'C' || String(length).trim().toUpperCase() === 'COIL')) {
+      markup += 200;
+    }
     const saleTax = round10(costTax + markup);
     const saleNoTax = round10(costNoTax + markup);
 
