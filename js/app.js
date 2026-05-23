@@ -19,16 +19,20 @@ const App = (() => {
   // 400系基价（按材质+表面）
   let prices400 = {};
   let lockedPrices400 = {};
-  const PRODUCTS_400 = ['410S-BA', '410S-2BA', '430-BA', '430-2BA', '430B-BA', '430B-2BA', '410S-2BA(非标)'];
+  const PRODUCTS_400 = [
+    { origin: '甬金', material: '410S/BA' },
+    { origin: '上克', material: '410S/BA' },
+    { origin: '瑞钢', material: '410S/2BA' },
+  ];
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
 
   // ========== 基价计算 ==========
   function getMaterialPrice(origin, material, surface) {
-    // 400系：查独立基价表（按材质+表面）
-    if (material && (material === '410S' || material === '430' || material === '430B')) {
-      const key = material + '-' + (surface || 'BA');
+    // 400系：查独立基价表（按产地+材质），410S/BA 是一个整体材质名
+    if (origin && material && PRODUCTS_400.some(p => p.origin === origin && p.material === material)) {
+      const key = origin + '-' + material;
       return prices400[key] || null;
     }
     if (material === '304' || material.startsWith('304')) {
@@ -318,6 +322,8 @@ const App = (() => {
   }
 
   // ========== 400系基价 ==========
+  function get400Key(origin, material) { return origin + '-' + material; }
+
   function savePrices400() {
     try { localStorage.setItem('kk_prices_400', JSON.stringify(prices400)); }
     catch (e) { /* ignore */ }
@@ -325,27 +331,33 @@ const App = (() => {
   function loadPrices400() {
     try {
       const raw = localStorage.getItem('kk_prices_400');
-      if (!raw) return;
+      if (!raw) { prices400 = {}; return; }
       const data = JSON.parse(raw);
-      for (const key of PRODUCTS_400) {
-        if (data[key] && data[key] > 0) prices400[key] = data[key];
+      // 旧格式数据（纯键值对）直接废弃，以新格式覆盖
+      prices400 = {};
+      for (const [k, v] of Object.entries(data)) {
+        if (v > 0) prices400[k] = v;
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) { prices400 = {}; }
   }
   function renderPrices400() {
     const section = document.getElementById('prices400Section');
     if (!section) return;
-    section.querySelectorAll('.p400-row').forEach(el => el.remove());
-    PRODUCTS_400.forEach(key => {
+    // 清除旧行（保留标题span）
+    const rows = section.querySelectorAll('.p400-row');
+    rows.forEach(el => el.remove());
+
+    PRODUCTS_400.forEach(item => {
+      const key = get400Key(item.origin, item.material);
       const val = prices400[key] || 0;
       const locked = !!lockedPrices400[key];
       const div = document.createElement('div');
-      div.className = 'p400-row';
-      div.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+      div.className = 'origin-row p400-row'; // reuse origin-row styles
       div.innerHTML = `
-        <label style="font-size:11px;font-weight:500;color:var(--text-secondary);min-width:72px;">${key}</label>
-        <input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" style="width:72px;padding:4px 6px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;" ${locked ? 'readonly' : ''}>
-        <button class="p400-lock ${locked ? 'locked' : ''}" data-key="${key}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
+        <span class="oname" style="min-width:42px">${item.origin}</span>
+        <span style="font-size:12px;font-weight:500;color:var(--text-secondary);min-width:90px;">${item.material}</span>
+        <div class="oj2" style="width:90px"><label>基价</label><input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" style="width:70px;font-size:13px;" ${locked ? 'readonly' : ''}></div>
+        <button class="o-lock ${locked ? 'locked' : ''}" data-key="${key}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
       `;
       section.appendChild(div);
     });
@@ -363,7 +375,7 @@ const App = (() => {
         if (lockedPrices400[key]) savePrices400();
       });
     });
-    document.querySelectorAll('.p400-lock').forEach(btn => {
+    document.querySelectorAll('.p400-row .o-lock').forEach(btn => {
       btn.addEventListener('click', () => {
         const key = btn.dataset.key;
         lockedPrices400[key] = !lockedPrices400[key];
