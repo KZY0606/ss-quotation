@@ -590,6 +590,8 @@ const FILM_ALIASES = {
   '红kbe膜': 'RED+KBE-5C-FILM', '红色kbe膜': 'RED+KBE-5C-FILM',
   // 垫纸
   '垫纸': '垫纸',
+  '纸': '垫纸',
+  'paper': '垫纸',
   // 胶膜组合短名
   '5c+5c': '5C+5C-FILM', '5c+5c-film': '5C+5C-FILM', '5c-film+5c-film': '5C+5C-FILM',
   '7c+5c': '7C+5C-FILM', '7c+5c-film': '7C+5C-FILM', '7c-film+5c-film': '7C+5C-FILM',
