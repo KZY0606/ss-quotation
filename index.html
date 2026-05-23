@@ -56,24 +56,27 @@
 
         <!-- 基价 -->
         <div class="config-panel active" data-config="origins">
-          <div class="origin-grid">
-            <div class="origin-rows" id="originRows"></div>
-            <div class="origin-footer">
-              <div class="add-origin" style="display:flex;gap:6px;align-items:center;">
-                <input id="newOriginInput" placeholder="输入新产地" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:120px;">
-                <button class="btn btn-sm btn-outline" id="addOriginBtn">+ 添加</button>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">J5 统一基价</label>
-                <input type="number" id="j5BasePrice" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;" placeholder="手动">
-                <span style="font-size:11px;color:var(--text-muted);">→ <b id="j5PriceShow" style="color:var(--accent);">未设置</b> 元/吨</span>
-              </div>
+          <!-- 201 基价（仅宏旺） -->
+          <div class="origin-grid" style="margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;">201 基价</div>
+            <div id="prices201Section" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"></div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">J5 统一基价</label>
+              <input type="number" id="j5BasePrice" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;" placeholder="手动">
+              <span style="font-size:11px;color:var(--text-muted);">→ <b id="j5PriceShow" style="color:var(--accent);">未设置</b> 元/吨</span>
             </div>
           </div>
-          <div class="origin-grid" style="margin-top:12px;">
-            <div class="origin-footer" style="flex-wrap:wrap;gap:6px;" id="prices400Section">
-              <span style="font-size:12px;font-weight:600;color:var(--text-secondary);width:100%;margin-bottom:4px;">400系列基价</span>
-            </div>
+
+          <!-- 304 基价 -->
+          <div class="origin-grid" style="margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;">304 基价</div>
+            <div id="prices304Section" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"></div>
+          </div>
+
+          <!-- 400系基价 -->
+          <div class="origin-grid" style="margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;">400系列基价</div>
+            <div id="prices400Section" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"></div>
           </div>
         </div>
 
