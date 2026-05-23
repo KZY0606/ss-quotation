@@ -37,8 +37,17 @@ const PricingEngine = (() => {
     return (l === 'C' || l === 'COIL') ? 'coil' : 'sheet';
   }
 
-  function getThicknessSurcharge(thickness, isYanYan, material, origin) {
+  function getThicknessSurcharge(thickness, isYanYan, material, origin, surface) {
     const t = parseFloat(thickness);
+    // 400系：按材质+表面对应独立加价，无匹配则返回 null
+    if (material && THICKNESS_SURCHARGE_400) {
+      const key = material + '-' + surface;
+      if (THICKNESS_SURCHARGE_400[key]) {
+        return findInTable(THICKNESS_SURCHARGE_400[key], t);
+      }
+      // 如果材质是400系已知材料但该表面未配置 → 返回 null
+      if (material === '410S' || material === '430' || material === '430B') return null;
+    }
     // 压延料使用独立加价表（不分产地）
     if (isYanYan) {
       return findInTable(YANYAN_THICKNESS_SURCHARGE, t);
@@ -278,7 +287,7 @@ const PricingEngine = (() => {
     const density = getDensity(material);
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
 
-    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin);
+    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, item.normSurface);
     if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
 
     const edgeType = getEdgeType(width);
@@ -361,7 +370,7 @@ const PricingEngine = (() => {
         material, surface: item.surface || '', normSurface: baseSurface, thickness, width, length, film1, film2, basePrice,
         isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),
-        thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin),
+        thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
         surfaceFeePerTon: round2(surfaceFeePerTon),
         linenFeePerTon,
@@ -376,8 +385,12 @@ const PricingEngine = (() => {
     };
   }
 
-  function getThickTableName(isYanYan, material, origin) {
+  function getThickTableName(isYanYan, material, origin, surface) {
     if (isYanYan) return '压延料';
+    if (material && THICKNESS_SURCHARGE_400) {
+      const key = material + '-' + surface;
+      if (THICKNESS_SURCHARGE_400[key]) return '400系(' + key + ')';
+    }
     if (material && (material === '304' || material.startsWith('304'))) {
       if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
       return '304 加价';
@@ -453,7 +466,7 @@ const PricingEngine = (() => {
     }
 
     // 提取材质 (201J5 > 201J4 > ... > 201)
-    const materialPatterns = ['201J5', '201J4', '201J1', '201J3', '201J2', '201', '304', '316L', '410', '430'];
+    const materialPatterns = ['201J5', '201J4', '201J1', '201J3', '201J2', '201', '304', '316L', '410S', '430B', '410', '430'];
     let material = '';
     for (const mp of materialPatterns) {
       if (remaining.toUpperCase().includes(mp.toUpperCase())) {
@@ -552,6 +565,6 @@ const PricingEngine = (() => {
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE,
-    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS
+    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400
   };
 })();
