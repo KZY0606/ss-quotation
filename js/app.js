@@ -40,13 +40,25 @@ const App = (() => {
     // 400系：查独立基价表（按材质+表面+产地）
     if (material && (material === '410S' || material === '430' || material === '430B')) {
       if (origin && !ORIGINS_400.includes(origin)) return null;
-      const productKey = material + '-' + (surface || 'BA');
-      // 先查产地特异性价格，再查默认价格（兼容旧数据）
-      if (origin) {
-        const originKey = get400PriceKey(productKey, origin);
-        if (prices400[originKey]) return prices400[originKey];
+      // 400系的表面可能被别名从 BA 映射成 单面抛光，需要同时尝试
+      const surfacesToTry = [];
+      if (surface) {
+        surfacesToTry.push(surface);
+        if (surface === '单面抛光') surfacesToTry.push('BA');
+      } else {
+        surfacesToTry.push('BA');
       }
-      return prices400[productKey] || null;
+      for (const surf of surfacesToTry) {
+        const productKey = material + '-' + surf;
+        // 先查产地特异性价格
+        if (origin) {
+          const originKey = get400PriceKey(productKey, origin);
+          if (prices400[originKey]) return prices400[originKey];
+        }
+        // 再查通用价格（兼容旧数据）
+        if (prices400[productKey]) return prices400[productKey];
+      }
+      return null;
     }
     if (material === '304' || material.startsWith('304')) {
       const key = material + '-' + (surface || 'BA');
@@ -720,7 +732,7 @@ const App = (() => {
     ExcelParser.parseExcel(f, 0).then(items => {
       if (!items.length) { showToast('未解析出数据', 'error'); return; }
       items.forEach(item => {
-        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material) || 0;
+        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material, item.surface) || 0;
       });
       dataItems = dataItems.concat(items);
       results = [];
@@ -839,7 +851,7 @@ const App = (() => {
     }
 
     for (const p of items) {
-      const bp = getMaterialPrice(p.origin || '宏旺', p.material);
+      const bp = getMaterialPrice(p.origin || '宏旺', p.material, p.surface);
       if (bp && bp > 0) {
         p.basePrice = bp;
         dataItems.push(p);
@@ -864,7 +876,7 @@ const App = (() => {
     // Update base prices
     let missing = [];
     dataItems.forEach(item => {
-      const bp = getMaterialPrice(item.origin || '宏旺', item.material);
+      const bp = getMaterialPrice(item.origin || '宏旺', item.material, item.surface);
       if (!bp || bp <= 0) missing.push(`[${item.origin||'?'}] ${item.material}`);
       item.basePrice = bp || 0;
     });
