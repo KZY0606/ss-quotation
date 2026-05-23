@@ -25,6 +25,10 @@ const App = (() => {
     { origin: '瑞钢', material: '410S/2BA' },
     { origin: '瑞钢', material: '410S/2BA(非标)' },
   ];
+  // 400系材质名标准化：Excel中的"非标"可能没有括号
+  function normalize400Material(m) {
+    return (m || '').replace(/\(?非标\)?/g, '(非标)').replace(/（非标）/g, '(非标)');
+  }
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
@@ -32,9 +36,12 @@ const App = (() => {
   // ========== 基价计算 ==========
   function getMaterialPrice(origin, material, surface) {
     // 400系：查独立基价表（按产地+材质），410S/BA 是一个整体材质名
-    if (origin && material && PRODUCTS_400.some(p => p.origin === origin && p.material === material)) {
-      const key = origin + '-' + material;
-      return prices400[key] || null;
+    if (origin && material) {
+      const normMat = normalize400Material(material);
+      if (PRODUCTS_400.some(p => p.origin === origin && p.material === normMat)) {
+        const key = origin + '-' + normMat;
+        return prices400[key] || null;
+      }
     }
     if (material === '304' || material.startsWith('304')) {
       const p = originPrices304[origin];
