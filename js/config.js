@@ -114,6 +114,19 @@ const THICKNESS_SURCHARGE_400 = {
     { min: 0.40, max: 0.49, price: 200  },
     { min: 0.50, max: 1.20, price: 0    },
     { min: 1.21, max: 1.50, price: 100  }
+  ],
+  '410S-2BA-瑞钢': [
+    { min: 0.21, max: 0.25, price: 600  },
+    { min: 0.26, max: 0.30, price: 400  },
+    { min: 0.31, max: 0.35, price: 200  },
+    { min: 0.36, max: 0.50, price: 100  },
+    { min: 0.51, max: 3.00, price: 0    }
+  ],
+  '410S-2BA(非标)': [
+    { min: 0.18, max: 0.20, price: 400  },
+    { min: 0.21, max: 0.25, price: 200  },
+    { min: 0.26, max: 0.30, price: 100  },
+    { min: 0.31, max: 3.00, price: 0    }
   ]
 };
 
@@ -387,15 +400,15 @@ const SALES_MARKUP = {
 
 // 表面名称标准化映射
 // 预设常用产地
-const ORIGIN_PRESETS = ['宏旺', '青山', '联众', '甬金', '太钢', '德龙', '上克'];
+const ORIGIN_PRESETS = ['宏旺', '青山', '联众', '甬金', '太钢', '德龙', '上克', '瑞钢'];
 
 // 自由文本解析中的产地关键词
-const ORIGIN_KEYWORDS = ['宏旺', '青山', '联众', '甬金', '太钢', '德龙', '上克',
+const ORIGIN_KEYWORDS = ['宏旺', '青山', '联众', '甬金', '太钢', '德龙', '上克', '瑞钢',
   '北海诚德', '张浦', '酒钢', '宝钢', '鞍钢', '东方特钢'];
 
 const SURFACE_ALIASES = {
   'no.4': 'NO.4', 'no4': 'NO.4', 'no 4': 'NO.4', 'hl': 'HL',
-  '2b': '2B', '8k': '8K',
+  '2b': '2B', '2ba': '2BA', '2ba(非标)': '2BA(非标)', '2BA': '2BA', '8k': '8K',
   '磨砂': 'NO.4', '雪花砂': 'NO.4', '砂面': 'NO.4',
   '拉丝': 'HL',
   '镜面8k': '8K', '镜面8K': '8K',
