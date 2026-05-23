@@ -559,6 +559,10 @@ const PricingEngine = (() => {
         break;
       }
     }
+    // 400系材质：BA 被 ALIAS 映射成 单面抛光 → 转回 BA
+    if (surface === '单面抛光' && /^(410S|430|430B)/i.test(material)) {
+      surface = 'BA';
+    }
     if (!surface) {
       // 全文尝试 normalizeSurface
       const normed = normalizeSurface(remaining.trim());
