@@ -110,12 +110,12 @@ const SURFACE_FEES_304 = {
     { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 15, unit: 'sqm' }
   ],
   '拉丝黑钛金': [
-    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
   ],
   '磨砂黑钛金': [
-    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
   ]
 };
 
