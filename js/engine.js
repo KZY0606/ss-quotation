@@ -39,11 +39,25 @@ const PricingEngine = (() => {
 
   function getThicknessSurcharge(thickness, isYanYan, material, origin, surface) {
     const t = parseFloat(thickness);
-    // 400系：按材质+表面对应独立加价，无匹配则返回 null
+    // 400系：按材质+表面(+产地)对应独立加价，无匹配则返回 null
     if (material && THICKNESS_SURCHARGE_400) {
-      const key = material + '-' + surface;
-      if (THICKNESS_SURCHARGE_400[key]) {
-        return findInTable(THICKNESS_SURCHARGE_400[key], t);
+      // 生成待尝试的表面键：首选 surface，若为'单面抛光'则额外尝试'BA'
+      const surfaceKeys = [surface];
+      if (surface === '单面抛光') surfaceKeys.push('BA');
+
+      for (const s of surfaceKeys) {
+        // 优先尝试产地特异性键 (如 '410S-2BA-瑞钢')
+        if (origin) {
+          const originKey = material + '-' + s + '-' + origin;
+          if (THICKNESS_SURCHARGE_400[originKey]) {
+            return findInTable(THICKNESS_SURCHARGE_400[originKey], t);
+          }
+        }
+        // 再尝试通用键 (如 '410S-BA')
+        const key = material + '-' + s;
+        if (THICKNESS_SURCHARGE_400[key]) {
+          return findInTable(THICKNESS_SURCHARGE_400[key], t);
+        }
       }
       // 如果材质是400系已知材料但该表面未配置 → 返回 null
       if (material === '410S' || material === '430' || material === '430B') return null;
@@ -287,7 +301,7 @@ const PricingEngine = (() => {
     const density = getDensity(material);
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
 
-    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, item.normSurface);
+    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, surface);
     if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
 
     const edgeType = getEdgeType(width);
@@ -388,8 +402,16 @@ const PricingEngine = (() => {
   function getThickTableName(isYanYan, material, origin, surface) {
     if (isYanYan) return '压延料';
     if (material && THICKNESS_SURCHARGE_400) {
-      const key = material + '-' + surface;
-      if (THICKNESS_SURCHARGE_400[key]) return '400系(' + key + ')';
+      const surfaceKeys = [surface];
+      if (surface === '单面抛光') surfaceKeys.push('BA');
+      for (const s of surfaceKeys) {
+        const key = material + '-' + s;
+        if (THICKNESS_SURCHARGE_400[key]) return '400系(' + key + ')';
+        if (origin) {
+          const originKey = material + '-' + s + '-' + origin;
+          if (THICKNESS_SURCHARGE_400[originKey]) return '400系(' + originKey + ')';
+        }
+      }
     }
     if (material && (material === '304' || material.startsWith('304'))) {
       if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
