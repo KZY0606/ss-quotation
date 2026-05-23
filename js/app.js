@@ -17,21 +17,36 @@ const App = (() => {
   // 400系产地
   const ORIGINS_400 = ['甬金', '上克', '瑞钢'];
   let j5Price = 0;
-  // 400系基价（按材质+表面）
+  // 400系基价（按产品+产地）
   let prices400 = {};
   let lockedPrices400 = {};
-  const PRODUCTS_400 = ['410S-BA', '410S-2BA', '430-BA', '430-2BA', '430B-BA', '430B-2BA', '410S-2BA(非标)'];
+  const PRODUCTS_400 = [
+    { key: '410S-BA', origins: ['甬金', '上克'] },
+    { key: '410S-2BA', origins: ['瑞钢'] },
+    { key: '410S-2BA(非标)', origins: ['瑞钢'] },
+    { key: '430-BA', origins: [] },
+    { key: '430-2BA', origins: [] },
+    { key: '430B-BA', origins: [] },
+    { key: '430B-2BA', origins: [] },
+  ];
+  // 获取400系产品的完整键名（含产地）
+  function get400PriceKey(productKey, origin) { return productKey + '-' + origin; }
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
 
   // ========== 基价计算 ==========
   function getMaterialPrice(origin, material, surface) {
-    // 400系：查独立基价表（按材质+表面），仅 ORIGINS_400 产地可售
+    // 400系：查独立基价表（按材质+表面+产地）
     if (material && (material === '410S' || material === '430' || material === '430B')) {
       if (origin && !ORIGINS_400.includes(origin)) return null;
-      const key = material + '-' + (surface || 'BA');
-      return prices400[key] || null;
+      const productKey = material + '-' + (surface || 'BA');
+      // 先查产地特异性价格，再查默认价格（兼容旧数据）
+      if (origin) {
+        const originKey = get400PriceKey(productKey, origin);
+        if (prices400[originKey]) return prices400[originKey];
+      }
+      return prices400[productKey] || null;
     }
     if (material === '304' || material.startsWith('304')) {
       const key = material + '-' + (surface || 'BA');
@@ -284,8 +299,9 @@ const App = (() => {
       const raw = localStorage.getItem('kk_prices_400');
       if (!raw) return;
       const data = JSON.parse(raw);
-      for (const key of PRODUCTS_400) {
-        if (data[key] && data[key] > 0) prices400[key] = data[key];
+      // 兼容旧数据（无产地后缀）和高精度新数据（产品-产地）
+      for (const [k, v] of Object.entries(data)) {
+        if (v > 0) prices400[k] = v;
       }
     } catch (e) { /* ignore */ }
   }
@@ -293,18 +309,24 @@ const App = (() => {
     const section = document.getElementById('prices400Section');
     if (!section) return;
     section.querySelectorAll('.p400-row').forEach(el => el.remove());
-    PRODUCTS_400.forEach(key => {
-      const val = prices400[key] || 0;
-      const locked = !!lockedPrices400[key];
-      const div = document.createElement('div');
-      div.className = 'p400-row';
-      div.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
-      div.innerHTML = `
-        <label style="font-size:11px;font-weight:500;color:var(--text-secondary);min-width:72px;">${key}</label>
-        <input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" style="width:72px;padding:4px 6px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;" ${locked ? 'readonly' : ''}>
-        <button class="p400-lock ${locked ? 'locked' : ''}" data-key="${key}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
-      `;
-      section.appendChild(div);
+    PRODUCTS_400.forEach(prod => {
+      const origins = prod.origins.length > 0 ? prod.origins : [''];
+      origins.forEach(origin => {
+        const storageKey = origin ? get400PriceKey(prod.key, origin) : prod.key;
+        const fullKey = storageKey;
+        const val = prices400[fullKey] || 0;
+        const locked = !!lockedPrices400[fullKey];
+        const div = document.createElement('div');
+        div.className = 'p400-row';
+        div.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+        const label = origin ? prod.key + '(' + origin + ')' : prod.key;
+        div.innerHTML = `
+          <label style="font-size:11px;font-weight:500;color:var(--text-secondary);min-width:86px;">${label}</label>
+          <input type="number" class="p400-input" data-key="${fullKey}" value="${val || ''}" step="10" placeholder="0" style="width:72px;padding:4px 6px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;" ${locked ? 'readonly' : ''}>
+          <button class="p400-lock ${locked ? 'locked' : ''}" data-key="${fullKey}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
+        `;
+        section.appendChild(div);
+      });
     });
     document.querySelectorAll('.p400-input').forEach(inp => {
       inp.addEventListener('change', () => {
