@@ -761,6 +761,10 @@ const App = (() => {
     ExcelParser.parseExcel(f, 0).then(items => {
       if (!items.length) { showToast('未解析出数据', 'error'); return; }
       items.forEach(item => {
+        // 400系表面为空时显示"无"
+        if (item.material && item.material.includes('/') && !item.surface) {
+          item.surface = '无';
+        }
         item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material) || 0;
       });
       dataItems = dataItems.concat(items);
