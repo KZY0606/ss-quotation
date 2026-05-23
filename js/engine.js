@@ -490,10 +490,19 @@ const PricingEngine = (() => {
     // 提取材质 (201J5 > 201J4 > ... > 201)
     const materialPatterns = ['201J5', '201J4', '201J1', '201J3', '201J2', '201', '304', '316L', '410S', '430B', '410', '430'];
     let material = '';
+    let surface = '';
     for (const mp of materialPatterns) {
       if (remaining.toUpperCase().includes(mp.toUpperCase())) {
         material = mp;
         remaining = remaining.replace(new RegExp(mp, 'gi'), ' ').trim();
+        // 400系材质：检查 /BA、/2BA、(非标) 后缀 → 直接设定表面
+        if (/^(410S|430|430B)$/i.test(material)) {
+          const surfaceSuffix = remaining.match(/^\s*\/\s*(BA|2BA|2BA\(非标\))/i);
+          if (surfaceSuffix) {
+            surface = surfaceSuffix[1].toUpperCase();
+            remaining = remaining.replace(surfaceSuffix[0], ' ').trim();
+          }
+        }
         break;
       }
     }
@@ -549,19 +558,18 @@ const PricingEngine = (() => {
     }
 
     // 提取表面 — 用 SURFACE_ALIASES 按长度排序优先匹配
-    let surface = '';
-    const sortedAliases = Object.entries(SURFACE_ALIASES).sort((a,b) => b[0].length - a[0].length);
-    for (const [alias, norm] of sortedAliases) {
-      const re = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      if (re.test(remaining)) {
-        surface = norm;
-        remaining = remaining.replace(re, ' ').trim();
-        break;
+    if (!surface) {
+      const sortedAliases = Object.entries(SURFACE_ALIASES).sort((a,b) => b[0].length - a[0].length);
+      for (const [alias, norm] of sortedAliases) {
+        const re = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        if (re.test(remaining)) {
+          surface = norm;
+          remaining = remaining.replace(re, ' ').trim();
+          // 400系材质：BA 被 ALIAS 映射成 单面抛光 → 转回 BA
+          if (surface === '单面抛光' && /^(410S|430|430B)/i.test(material)) surface = 'BA';
+          break;
+        }
       }
-    }
-    // 400系材质：BA 被 ALIAS 映射成 单面抛光 → 转回 BA
-    if (surface === '单面抛光' && /^(410S|430|430B)/i.test(material)) {
-      surface = 'BA';
     }
     if (!surface) {
       // 全文尝试 normalizeSurface
