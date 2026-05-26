@@ -386,6 +386,12 @@ const FILM_FEES = {
   '7C+5C-FILM':  2.4,
   '7C+7C-FILM':  2.8,
   '7C-LASER+5C-FILM':  3.0,
+  '7C-LASER-FILM+7C-FILM': 3.4,
+  '7C-LASER+7C-FILM':  3.4,
+  '7C-ACHEM-LASER-FILM+5C-FILM':  5.0,
+  '7C-ACHEM-LASER+5C-FILM':  5.0,
+  '7C-ACHEM-LASER-FILM+7C-FILM':  5.4,
+  '7C-ACHEM-LASER+7C-FILM':  5.4,
   '7C哑光膜': 1.6,
   '7C古铜膜': 1.6,
 };
@@ -588,8 +594,9 @@ const FILM_ALIASES = {
   '蓝kbe膜': 'BLUE+KBE-5C-FILM', '蓝色kbe膜': 'BLUE+KBE-5C-FILM',
   'red+kbe-5c-film': 'RED+KBE-5C-FILM', '红k膜': 'RED+KBE-5C-FILM',
   '红kbe膜': 'RED+KBE-5C-FILM', '红色kbe膜': 'RED+KBE-5C-FILM',
-  // 垫纸
+   // 垫纸
   '垫纸': '垫纸',
+  '衬纸': '垫纸',
   '纸': '垫纸',
   'paper': '垫纸',
   // 胶膜组合短名
@@ -598,6 +605,9 @@ const FILM_ALIASES = {
   '7c+7c': '7C+7C-FILM', '7c+7c-film': '7C+7C-FILM', '7c-film+7c-film': '7C+7C-FILM',
   '5c蓝色': 'BLUE-5C-FILM', '5c蓝': 'BLUE-5C-FILM', '5c蓝膜': 'BLUE-5C-FILM', '蓝膜': 'BLUE-5C-FILM', '5c blue': 'BLUE-5C-FILM', '5c-blue-film': 'BLUE-5C-FILM',
   '7c-laser+5c': '7C-LASER+5C-FILM', '7c-laser+5c-film': '7C-LASER+5C-FILM', '7c laser-film+5c-film': '7C-LASER+5C-FILM', '7c激光膜+5c': '7C-LASER+5C-FILM', '7c激光膜+5c膜': '7C-LASER+5C-FILM',
+  '7c-laser-film+7c-film': '7C-LASER-FILM+7C-FILM', '7c-laser+7c': '7C-LASER+7C-FILM', '7c-laser+7c-film': '7C-LASER+7C-FILM',
+  '7c-achem-laser-film+5c-film': '7C-ACHEM-LASER-FILM+5C-FILM', '7c-achem+5c': '7C-ACHEM-LASER+5C-FILM', '7c-achem+5c-film': '7C-ACHEM-LASER+5C-FILM',
+  '7c-achem-laser-film+7c-film': '7C-ACHEM-LASER-FILM+7C-FILM', '7c-achem+7c': '7C-ACHEM-LASER+7C-FILM', '7c-achem+7c-film': '7C-ACHEM-LASER+7C-FILM',
   '胶膜': '7C-FILM',
   '7c哑光膜': '7C哑光膜', '7c哑光': '7C哑光膜',
   '7c古铜膜': '7C古铜膜', '7c古铜': '7C古铜膜',

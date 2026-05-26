@@ -578,6 +578,11 @@ const PricingEngine = (() => {
         else if (!film2) film2 = '垫纸';
         remaining = remaining.replace('垫纸', ' ').trim();
       }
+      if (remaining.includes('衬纸')) {
+        if (!film1) film1 = '垫纸';
+        else if (!film2) film2 = '垫纸';
+        remaining = remaining.replace('衬纸', ' ').trim();
+      }
     }
 
     // 提取表面 — 用 SURFACE_ALIASES 按长度排序优先匹配
