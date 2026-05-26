@@ -295,7 +295,7 @@ const ExcelParser = (() => {
       // 价格 = 不含税售价（对外就叫"价格"）
       rows.push([
         d.origin || '',
-        d.material || '',
+        (d.material || '') + (d.isYanYan ? '压延' : ''),
         d.surface || '',
         film,
         spec,
