@@ -992,6 +992,7 @@ const App = (() => {
       h.push(`<td>${item.surface || '<span style="color:var(--text-muted)">2B</span>'}</td>`);
       h.push(`<td>${item.thickness}</td><td>${item.width}</td>`);
       h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
+      h.push(`<td>${d && d.weight != null ? d.weight : (item.weight || 0)}</td>`);
       h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
@@ -1005,7 +1006,7 @@ const App = (() => {
       h.push(`<td><button class="btn-icon btn-ghost delete-btn" onclick="App.removeRow(${idx})">✕</button></td></tr>`);
 
       if (isOk) {
-        h.push(`<tr class="detail-row" id="detail-${idx}"><td colspan="16"><div class="detail-content">`);
+        h.push(`<tr class="detail-row" id="detail-${idx}"><td colspan="17"><div class="detail-content">`);
         h.push(renderBreakdown(d, item));
         h.push('</div></td></tr>');
       }
