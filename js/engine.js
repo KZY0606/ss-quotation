@@ -394,11 +394,22 @@ const PricingEngine = (() => {
     const saleTax = round10(costTax + markup);
     const saleNoTax = round10(costNoTax + markup);
 
+    // 计算重量（板/卷）
+    // 优先使用导入的重量，否则自动计算
+    let weight = item.weight ? parseFloat(item.weight) : null;
+    if (weight === null || isNaN(weight)) {
+      if (boardType === 'sheet' && !isNaN(width) && !isNaN(thickness) && parseFloat(length) > 0) {
+        // 平板：重量(kg) = 面积(m²) / 每吨平方数 * 1000
+        const area = (width / 1000) * (parseFloat(length) / 1000);
+        weight = round2(area / sqmPerTon * 1000);
+      }
+    }
+
     return {
       success: true,
       detail: {
         origin: item.origin || '',
-        material, surface: item.surface || '', normSurface: baseSurface, thickness, width, length, film1, film2, basePrice,
+        material, surface: item.surface || '', normSurface: baseSurface, thickness, width, length, weight, film1, film2, basePrice,
         isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),
         thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
