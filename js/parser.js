@@ -256,6 +256,7 @@ const ExcelParser = (() => {
         }
         else if (h.includes('膜1') || h === '保护膜' || h.includes('film1') || h.includes('膜一')) item.film1 = val;
         else if (h.includes('膜2') || h.includes('film2') || h.includes('膜二')) item.film2 = val;
+        else if (h.includes('重量') || h.includes('weight')) item.weight = val;
         else if (h.includes('压延') || h.includes('yan') || h.includes('yanyan')) item.isYanYan = val === '是' || val === 'Y' || val === 'yes';
       }
       return item;
@@ -277,25 +278,28 @@ const ExcelParser = (() => {
   function exportToExcel(results, filename) {
     const rows = [];
     // 给客户看的简洁表头
-    rows.push(['产地', '材质', '表面', '规格', '膜', '价格']);
+    rows.push(['产地', '材质', '表面', '保护膜', '规格', '重量(KG)', '价格']);
 
     for (const r of results) {
       if (!r.success) {
-        rows.push([r.index, '', '', '', '', `错误: ${r.errors.join('; ')}`]);
+        rows.push([r.index, '', '', '', '', '', `错误: ${r.errors.join('; ')}`]);
         continue;
       }
       const d = r.detail;
       // 规格: 厚度*宽度*长度
       const spec = `${d.thickness}*${d.width}*${d.length}`;
-      // 膜: 合并膜1+膜2
+      // 保护膜: 合并膜1+膜2
       const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
+      // 重量（kg），无则为空
+      const weight = d.weight || '';
       // 价格 = 不含税售价（对外就叫"价格"）
       rows.push([
         d.origin || '',
         d.material || '',
         d.surface || '',
-        spec,
         film,
+        spec,
+        weight,
         d.saleNoTax
       ]);
     }
@@ -305,8 +309,9 @@ const ExcelParser = (() => {
       { wch: 10 }, // 产地
       { wch: 10 }, // 材质
       { wch: 16 }, // 表面
+      { wch: 24 }, // 保护膜
       { wch: 22 }, // 规格
-      { wch: 24 }, // 膜
+      { wch: 12 }, // 重量
       { wch: 14 }  // 价格
     ];
 
