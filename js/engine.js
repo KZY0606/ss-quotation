@@ -395,11 +395,8 @@ const PricingEngine = (() => {
     const saleTax = round10(costTax + markup);
     const saleNoTax = round10(costNoTax + markup);
 
-    // 重量：直接取导入数据（不自动计算）
-    let weight = item.weight ? parseFloat(item.weight) : null;
-        weight = round3(area / sqmPerTon);
-      }
-    }
+    // 重量：只读取导入数据（客户填写的吨数），不自动计算
+    const weight = item.weight ? parseFloat(item.weight) : null;
 
     return {
       success: true,
