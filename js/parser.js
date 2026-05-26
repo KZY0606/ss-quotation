@@ -278,7 +278,7 @@ const ExcelParser = (() => {
   function exportToExcel(results, filename) {
     const rows = [];
     // 给客户看的简洁表头
-    rows.push(['产地', '材质', '表面', '保护膜', '规格', '重量(KG)', '价格']);
+    rows.push(['产地', '材质', '表面', '保护膜', '规格', '重量(吨)', '价格']);
 
     for (const r of results) {
       if (!r.success) {
