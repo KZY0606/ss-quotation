@@ -5,6 +5,7 @@
 const PricingEngine = (() => {
 
   function round2(v) { return Math.round(v * 100) / 100; }
+  function round3(v) { return Math.round(v * 1000) / 1000; }
   function round10(v) { return Math.round(v / 10) * 10; }
 
   function findInTable(table, t) {
@@ -399,9 +400,9 @@ const PricingEngine = (() => {
     let weight = item.weight ? parseFloat(item.weight) : null;
     if (weight === null || isNaN(weight)) {
       if (boardType === 'sheet' && !isNaN(width) && !isNaN(thickness) && parseFloat(length) > 0) {
-        // 平板：重量(kg) = 面积(m²) / 每吨平方数 * 1000
+        // 平板：重量(吨) = 面积(m²) / 每吨平方数
         const area = (width / 1000) * (parseFloat(length) / 1000);
-        weight = round2(area / sqmPerTon * 1000);
+        weight = round3(area / sqmPerTon);
       }
     }
 
