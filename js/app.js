@@ -761,6 +761,11 @@ const App = (() => {
     ExcelParser.parseExcel(f, 0).then(items => {
       if (!items.length) { showToast('未解析出数据', 'error'); return; }
       items.forEach(item => {
+        // 压延料检测：材质名含"压延"时剥离，标记压延料
+        if (item.material && /压延/.test(item.material)) {
+          item.material = item.material.replace(/压延/g, '').trim();
+          item.isYanYan = true;
+        }
         // 400系表面与材质名无关，一律显示"无"
         if (item.material && item.material.includes('/')) {
           item.surface = '无';

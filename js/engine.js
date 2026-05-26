@@ -306,7 +306,7 @@ const PricingEngine = (() => {
     const film1 = normalizeFilm(splitFilm1);
     const film2 = normalizeFilm(splitFilm2);
     const basePrice = parseFloat(item.basePrice);
-    const isYanYan = !!item.isYanYan;
+    const isYanYan = !!item.isYanYan || (item.material && /压延/.test(item.material));
 
     if (isNaN(basePrice) || basePrice <= 0) errors.push('基价无效');
     if (isNaN(thickness) || thickness <= 0) errors.push('厚度无效');
