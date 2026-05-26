@@ -395,13 +395,8 @@ const PricingEngine = (() => {
     const saleTax = round10(costTax + markup);
     const saleNoTax = round10(costNoTax + markup);
 
-    // 计算重量（板/卷）
-    // 优先使用导入的重量，否则自动计算
+    // 重量：直接取导入数据（不自动计算）
     let weight = item.weight ? parseFloat(item.weight) : null;
-    if (weight === null || isNaN(weight)) {
-      if (boardType === 'sheet' && !isNaN(width) && !isNaN(thickness) && parseFloat(length) > 0) {
-        // 平板：重量(吨) = 面积(m²) / 每吨平方数
-        const area = (width / 1000) * (parseFloat(length) / 1000);
         weight = round3(area / sqmPerTon);
       }
     }
