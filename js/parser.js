@@ -290,8 +290,8 @@ const ExcelParser = (() => {
       const spec = `${d.thickness}*${d.width}*${d.length}`;
       // 保护膜: 合并膜1+膜2
       const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
-      // 重量（kg），无则为空
-      const weight = d.weight || '';
+      // 重量（kg），无则填0
+      const weight = d.weight || 0;
       // 价格 = 不含税售价（对外就叫"价格"）
       rows.push([
         d.origin || '',
