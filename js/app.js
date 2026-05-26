@@ -990,7 +990,7 @@ const App = (() => {
       if (item.isYanYan) mat += ' <span class="tag tag-yanyan">压延</span>';
       h.push(`<td>${mat}</td>`);
       h.push(`<td>${item.surface || '<span style="color:var(--text-muted)">2B</span>'}</td>`);
-      h.push(`<td>${item.thickness}</td><td>${item.width}</td>`);
+      h.push(`<td>${fmtThk(item.thickness)}</td><td>${item.width}</td>`);
       h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
       const wgt = d && d.weight != null ? d.weight : (item.weight || null);
       h.push(`<td>${wgt != null ? wgt : '<span style="color:var(--text-muted)">-</span>'}</td>`);
@@ -1017,16 +1017,17 @@ const App = (() => {
 
   const fmt = (v) => v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
   const fmtI = (v) => v.toLocaleString();
+  const fmtThk = (v) => { const n = parseFloat(v); return isNaN(n) ? v : n.toFixed(2); };
 
   function renderBreakdown(d, item) {
-    const spec = `${d.thickness} × ${d.width} × ${d.length}`;
+    const spec = `${fmtThk(d.thickness)} × ${d.width} × ${d.length}`;
     const mat = d.material + (d.isYanYan ? ' 压延料' : '');
     const bt = (d.edgeType === 'rough' ? '毛边' : '齐边') + (d.boardType === 'coil' ? '卷板' : '平板');
     const hd = `规格：${spec}　｜　产地：${item.origin||''}　｜　材质：${mat}　｜　表面：${d.surface}　｜　类型：${bt}`;
 
     let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">含税成本计算过程</div>`;
     html += step('① 基价', d.basePrice, '元/吨', true);
-    html += step(`② 厚度加价 (${d.thickness}mm, ${d.thickTable})`, d.thickSurcharge, '元/吨', d.thickSurcharge > 0);
+    html += step(`② 厚度加价 (${fmtThk(d.thickness)}mm, ${d.thickTable})`, d.thickSurcharge, '元/吨', d.thickSurcharge > 0);
     if (d.surfaceFeeSqm > 0) html += step(`③ 表面加工费 (${d.surface}, ${fmt(d.surfaceFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.surfaceFeePerTon, '元/吨', true);
     else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.surface})`, d.surfaceFeePerTon, '元/吨', true);
     else html += step(`③ 表面加工费 (${d.surface})`, 0, '', false);

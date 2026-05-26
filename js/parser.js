@@ -286,8 +286,8 @@ const ExcelParser = (() => {
         continue;
       }
       const d = r.detail;
-      // 规格: 厚度*宽度*长度
-      const spec = `${d.thickness}*${d.width}*${d.length}`;
+      // 规格: 厚度*宽度*长度（厚度保留2位小数）
+      const spec = `${Number(d.thickness).toFixed(2)}*${d.width}*${d.length}`;
       // 保护膜: 合并膜1+膜2
       const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
       // 重量（吨）：取导入数据，无则不填
