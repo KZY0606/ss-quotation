@@ -356,5 +356,16 @@ test('模糊匹配: no4 → NO.4', () => {
   eq(PricingEngine.normalizeSurface('no4'), 'NO.4');
 });
 
+test('430B/BA 0.50*1240*C 甬金 → 表面=无, 厚度加价0', () => {
+  const r = PricingEngine.calculate({
+    origin: '甬金', material: '430B/BA', surface: '无', thickness: '0.50', width: '1240', length: 'C',
+    film1: '', film2: '', isYanYan: false, basePrice: 8000
+  });
+  eq(r.success, true, '430B/BA should succeed');
+  eq(r.detail.thickSurcharge, 0, '430B/BA 0.50mm thick surcharge should be 0');
+  eq(r.detail.surface, '无', '430B/BA surface should be 无');
+  eq(r.detail.surfaceFeePerTon, 0, 'surface fee should be 0');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

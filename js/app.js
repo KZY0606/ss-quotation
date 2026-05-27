@@ -24,6 +24,8 @@ const App = (() => {
     { origin: '上克', material: '410S/BA' },
     { origin: '瑞钢', material: '410S/2BA' },
     { origin: '瑞钢', material: '410S/2BA(非标)' },
+    { origin: '甬金', material: '430B/BA' },
+    { origin: '上克', material: '430B/BA' },
   ];
   // 400系材质名标准化：Excel中的"非标"可能没有括号
   function normalize400Material(m) {
@@ -617,6 +619,7 @@ const App = (() => {
     // 400系厚度加价表
     const THICK_400_LABELS = {
       '410S-BA': '410S/BA（甬金/上克）',
+      '430B-BA': '430B/BA（甬金/上克）',
       '410S-2BA-瑞钢': '410S/2BA（瑞钢）',
       '410S-2BA(非标)': '410S/2BA(非标)（瑞钢）'
     };

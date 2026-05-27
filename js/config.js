@@ -115,6 +115,16 @@ const THICKNESS_SURCHARGE_400 = {
     { min: 0.50, max: 1.20, price: 0    },
     { min: 1.21, max: 1.50, price: 100  }
   ],
+  '430B-BA': [
+    { min: 0.23, max: 0.24, price: 1300 },
+    { min: 0.25, max: 0.26, price: 1000 },
+    { min: 0.27, max: 0.29, price: 900  },
+    { min: 0.30, max: 0.35, price: 650  },
+    { min: 0.36, max: 0.39, price: 400  },
+    { min: 0.40, max: 0.49, price: 200  },
+    { min: 0.50, max: 1.20, price: 0    },
+    { min: 1.21, max: 1.50, price: 100  }
+  ],
   '410S-2BA-瑞钢': [
     { min: 0.21, max: 0.25, price: 600  },
     { min: 0.26, max: 0.30, price: 400  },
