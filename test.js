@@ -367,5 +367,17 @@ test('430B/BA 0.50*1240*C 甬金 → 表面=无, 厚度加价0', () => {
   eq(r.detail.surfaceFeePerTon, 0, 'surface fee should be 0');
 });
 
+test('430B/2BA 瑞钢 8K黑钛金 0.50*1220*2440 → 识别表面, 用304加工费', () => {
+  const r = PricingEngine.calculate({
+    origin: '瑞钢', material: '430B/2BA', surface: '8K黑钛金',
+    thickness: '0.50', width: '1220', length: '2440',
+    film1: '5C-FILM', film2: '', isYanYan: false, basePrice: 8000
+  });
+  eq(r.success, true, '430B/2BA with surface should succeed');
+  eq(r.detail.surfaceFeePerTon > 0, true, 'should have surface fee');
+  eq(r.detail.surface, '8K黑钛金', 'surface should be recognized');
+});
+
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

@@ -788,8 +788,8 @@ const App = (() => {
           item.material = item.material.replace(/压延/g, '').trim();
           item.isYanYan = true;
         }
-        // 400系表面与材质名无关，一律显示"无"
-        if (item.material && item.material.includes('/')) {
+        // 400系：材质含"/"且未填写表面时显示"无"，有表面则保留
+        if (item.material && item.material.includes('/') && !item.surface) {
           item.surface = '无';
         }
         item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material) || 0;
