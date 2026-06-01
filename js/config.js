@@ -151,16 +151,16 @@ const THICKNESS_SURCHARGE_400 = {
 // 表面加工费 — 304 特例（与201不同价格的表面）
 const SURFACE_FEES_304 = {
   '8K黑钛金': [
-    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 15, unit: 'sqm' }
+    { tMin: 0.28, tMax: 1.20, wMin: 1000, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 15, unit: 'sqm' }
   ],
   '拉丝黑钛金': [
-    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+    { tMin: 0.28, tMax: 1.20, wMin: 1000, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 12, unit: 'sqm' }
   ],
   '磨砂黑钛金': [
-    { tMin: 0.28, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+    { tMin: 0.28, tMax: 1.20, wMin: 1000, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 12, unit: 'sqm' }
   ]
 };
 
@@ -195,94 +195,94 @@ const SURFACE_FEES = {
   ],
 
   '8K黄钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10.5,unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 5.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 10.5,unit: 'sqm' }
   ],
   '8K玫瑰金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11.5,unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 6.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 11.5,unit: 'sqm' }
   ],
   '8K黑钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
   '8K宝石蓝': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 16.5, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 10.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 16.5, unit: 'sqm' }
   ],
   '8K紫罗兰': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 14.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 20.5, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 14.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 20.5, unit: 'sqm' }
   ],
   '8K翡翠绿': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 25.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 31.5, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 25.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 31.5, unit: 'sqm' }
   ],
   '8K紫红': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 17.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 23.5, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 17.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 23.5, unit: 'sqm' }
   ],
   '8K中国红': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 20.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 26.5, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 20.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 26.5, unit: 'sqm' }
   ],
   '8K古铜': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 11.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 17.5, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 11.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 17.5, unit: 'sqm' }
   ],
 
   '拉丝黄钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9,   unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 9,   unit: 'sqm' }
   ],
   '磨砂黄钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 5,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9,   unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 9,   unit: 'sqm' }
   ],
   '拉丝玫瑰金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
   '磨砂玫瑰金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
   '拉丝黑钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 4,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 8,   unit: 'sqm' }
   ],
   '磨砂黑钛金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 8,   unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 4,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 8,   unit: 'sqm' }
   ],
   '拉丝古铜哑光抗指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 15,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 19,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 15,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 19,  unit: 'sqm' }
   ],
   '拉丝古铜亮光抗指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 12,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 16,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 12,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 16,  unit: 'sqm' }
   ],
 
   '8K香槟金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6.5, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11.5,unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 6.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 11.5,unit: 'sqm' }
   ],
   '拉丝香槟金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
   '磨砂香槟金': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,   unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 10,  unit: 'sqm' }
   ],
   '拉丝古铜': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 10,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 14,  unit: 'sqm' }
   ],
   '磨砂古铜': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14,  unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 10,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 14,  unit: 'sqm' }
   ],
 
   '双面8K': [
@@ -312,36 +312,36 @@ const SURFACE_FEES = {
 
   // AFP 彩色表面（砂面/拉丝+抗指纹组合）
   '拉丝黄钛金亮光无指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 11, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 7,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 11, unit: 'sqm' }
   ],
   '拉丝黄钛金哑光无指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 9,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 13, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 9,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 13, unit: 'sqm' }
   ],
   '拉丝玫瑰金亮光无指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 12, unit: 'sqm' }
   ],
   '拉丝玫瑰金哑光无指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 14, unit: 'sqm' }
   ],
   '拉丝香槟金亮光无指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 12, unit: 'sqm' }
   ],
   '拉丝香槟金哑光无指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 14, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 10, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 14, unit: 'sqm' }
   ],
   '拉丝黑钛金亮光无指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 6,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 6,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 10, unit: 'sqm' }
   ],
   '拉丝黑钛金哑光无指纹': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 8,  unit: 'sqm' },
-    { tMin: 1.21, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1250, price: 8,  unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1250, price: 12, unit: 'sqm' }
   ],
 
   // ========== 卷材彩色表面 (单档 0.24~1.20mm) ==========
