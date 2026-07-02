@@ -324,8 +324,14 @@ const PricingEngine = (() => {
     const density = getDensity(material);
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
 
-    const thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, surface);
+    let thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, surface);
     if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
+    // 甬金316L 宽度1500~1550mm 额外宽度加价（加入厚度加价）
+    let widthSurcharge = 0;
+    if (thickSurcharge !== null && item.origin === '甬金' && material === '316L' && width >= 1500 && width <= 1550) {
+      widthSurcharge = 300;
+      thickSurcharge += widthSurcharge;
+    }
 
     const edgeType = getEdgeType(width);
     if (edgeType === null) errors.push(`宽度 ${width}mm 无法判定毛边/齐边`);
@@ -397,16 +403,10 @@ const PricingEngine = (() => {
     const costNoTax = round10(taxExcluded);
     const markupKey = `${edgeType}_${boardType}`;
     let markup = SALES_MARKUP[markupKey];
-    // 宽度特殊加价
-    let widthSurcharge = 0;
+    // 1000mm宽度特殊加价：所有材质宽度为1000mm时的切边卷/板额外+200元/吨
     if (width === 1000) {
-      widthSurcharge += 200;
+      markup += 200;
     }
-    // 甬金316L 宽度1500~1550mm 额外+300元/吨（仅甬金316L有此规则）
-    if (item.origin === '甬金' && material === '316L' && width >= 1500 && width <= 1550) {
-      widthSurcharge += 300;
-    }
-    markup += widthSurcharge;
     const saleTax = round10(costTax + markup);
     const saleNoTax = round10(costNoTax + markup);
 

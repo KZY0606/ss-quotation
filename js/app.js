@@ -1113,6 +1113,9 @@ const App = (() => {
     let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">含税成本计算过程</div>`;
     html += step('① 基价', d.basePrice, '元/吨', true);
     html += step(`② 厚度加价 (${fmtThk(d.thickness)}mm, ${d.thickTable})`, d.thickSurcharge, '元/吨', d.thickSurcharge > 0);
+    if (d.widthSurcharge > 0) {
+      html += step(`   宽度加价 (${fmtThk(d.width)}mm × ${fmtThk(d.width)}mm)`, d.widthSurcharge, '元/吨', true);
+    }
     if (d.surfaceFeeSqm > 0) html += step(`③ 表面加工费 (${d.surface}, ${fmt(d.surfaceFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.surfaceFeePerTon, '元/吨', true);
     else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.surface})`, d.surfaceFeePerTon, '元/吨', true);
     else html += step(`③ 表面加工费 (${d.surface})`, 0, '', false);
@@ -1129,9 +1132,6 @@ const App = (() => {
     html += step(`不含税成本 (${fmtI(d.costRaw)} × 0.92)`, d.costNoTaxRaw, '元/吨', true);
     html += total('四舍五入 (十位)', d.costNoTax, 'notax');
     html += '<div style="height:8px;"></div>';
-    if (d.widthSurcharge > 0) {
-      html += step(`宽度加价`, d.widthSurcharge, '元/吨', true);
-    }
     html += step(`销售加价 (${bt})`, d.markup, '元/吨', d.markup > 0);
     html += total('含税售价', d.saleTax, 'sale');
     html += total('不含税售价', d.saleNoTax, 'sale');
