@@ -16,7 +16,7 @@ const App = (() => {
   let originPrices304 = {};
   let lockedOrigins304 = {};
   // 各产地 316L 基价（仅已配置数据的产地）
-  const ORIGINS_316L = ['张浦'];
+  const ORIGINS_316L = ['张浦', '甬金'];
   let originPrices316L = {};
   let lockedOrigins316L = {};
   let j5Price = 0;
@@ -1129,6 +1129,9 @@ const App = (() => {
     html += step(`不含税成本 (${fmtI(d.costRaw)} × 0.92)`, d.costNoTaxRaw, '元/吨', true);
     html += total('四舍五入 (十位)', d.costNoTax, 'notax');
     html += '<div style="height:8px;"></div>';
+    if (d.widthSurcharge > 0) {
+      html += step(`宽度加价`, d.widthSurcharge, '元/吨', true);
+    }
     html += step(`销售加价 (${bt})`, d.markup, '元/吨', d.markup > 0);
     html += total('含税售价', d.saleTax, 'sale');
     html += total('不含税售价', d.saleNoTax, 'sale');

@@ -397,10 +397,16 @@ const PricingEngine = (() => {
     const costNoTax = round10(taxExcluded);
     const markupKey = `${edgeType}_${boardType}`;
     let markup = SALES_MARKUP[markupKey];
-    // 1000mm宽度特殊加价：所有材质宽度为1000mm时的切边卷/板额外+200元/吨
+    // 宽度特殊加价
+    let widthSurcharge = 0;
     if (width === 1000) {
-      markup += 200;
+      widthSurcharge += 200;
     }
+    // 甬金316L 宽度1500~1550mm 额外+300元/吨（仅甬金316L有此规则）
+    if (item.origin === '甬金' && material === '316L' && width >= 1500 && width <= 1550) {
+      widthSurcharge += 300;
+    }
+    markup += widthSurcharge;
     const saleTax = round10(costTax + markup);
     const saleNoTax = round10(costNoTax + markup);
 
@@ -423,7 +429,7 @@ const PricingEngine = (() => {
         film2FeeSqm: film2Fee || 0, film2PerTon,
         costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded),
         costTax, costNoTax,
-        edgeType, boardType, markup,
+        edgeType, boardType, markup, widthSurcharge,
         saleTax, saleNoTax
       }
     };

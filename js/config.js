@@ -22,7 +22,7 @@ const MATERIAL_OFFSETS = {
 
 // 边类型判定
 const EDGE_TYPE = {
-  rough: [1240, 1250, 1260, 1270, 1280, 1530],
+  rough: [1240, 1250, 1260, 1270, 1280, 1520, 1530, 1550],
   trim:  [1000, 1030, 1219, 1220, 1500]
 };
 
@@ -151,6 +151,19 @@ const ORIGIN_THICKNESS_SURCHARGE_316L = {
     { min: 1.21, max: 2.00, price: 400 },
     { min: 2.01, max: 3.00, price: 300 },
     { min: 3.01, max: 999, price: 500 }
+  ],
+  '甬金': [
+    { min: 0.25, max: 0.27, price: 2100 },
+    { min: 0.28, max: 0.29, price: 1400 },
+    { min: 0.30, max: 0.32, price: 1400 },
+    { min: 0.33, max: 0.37, price: 1200 },
+    { min: 0.38, max: 0.42, price: 1000 },
+    { min: 0.43, max: 0.49, price: 800 },
+    { min: 0.50, max: 0.59, price: 700 },
+    { min: 0.60, max: 0.69, price: 600 },
+    { min: 0.70, max: 0.79, price: 500 },
+    { min: 0.80, max: 1.20, price: 400 },
+    { min: 1.21, max: 3.00, price: 300 }
   ]
 };
 
