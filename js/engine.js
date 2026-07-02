@@ -78,6 +78,13 @@ const PricingEngine = (() => {
     if (isYanYan) {
       return findInTable(YANYAN_THICKNESS_SURCHARGE, t);
     }
+    // 316L：有产地特异性加价则用，否则用通用 316L 表
+    if (material === '316L') {
+      if (origin && ORIGIN_THICKNESS_SURCHARGE_316L && ORIGIN_THICKNESS_SURCHARGE_316L[origin]) {
+        return findInTable(ORIGIN_THICKNESS_SURCHARGE_316L[origin], t);
+      }
+      return findInTable(THICKNESS_SURCHARGE_316L, t);
+    }
     // 304：有产地特异性加价则用，否则用统一宏旺/德龙标准
     if (material && (material === '304' || material.startsWith('304'))) {
       if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
@@ -99,7 +106,7 @@ const PricingEngine = (() => {
     const t = parseFloat(thickness);
     const w = parseFloat(width);
     // 304 特例表面：优先查 304 专用表
-    const is304 = material && (material === '304' || material.startsWith('304'));
+    const is304 = material && (material === '304' || material.startsWith('304') || material === '316L');
     // 400系表面加工费与304同价
     const is400 = material && (material.includes('/') || material === '410S' || material === '430' || material === '430B');
     if ((is304 || is400) && SURFACE_FEES_304[surface]) {
@@ -447,6 +454,10 @@ const PricingEngine = (() => {
         }
       }
     }
+    if (material === '316L') {
+      if (origin && ORIGIN_THICKNESS_SURCHARGE_316L && ORIGIN_THICKNESS_SURCHARGE_316L[origin]) return origin + ' 316L加价';
+      return '316L 加价';
+    }
     if (material && (material === '304' || material.startsWith('304'))) {
       if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
       return '304 加价';
@@ -625,7 +636,8 @@ const PricingEngine = (() => {
     normalizeSurface, normalizeFilm, getDensity, getEdgeType,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,
-    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE,
+    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, THICKNESS_SURCHARGE_316L, YANYAN_THICKNESS_SURCHARGE,
+    ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400
   };
 })();

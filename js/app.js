@@ -46,7 +46,7 @@ const App = (() => {
         return prices400[key] || null;
       }
     }
-    if (material === '304' || material.startsWith('304')) {
+    if (material === '304' || material.startsWith('304') || material === '316L') {
       const p = originPrices304[origin];
       return (p && p > 0) ? p : null;
     }
