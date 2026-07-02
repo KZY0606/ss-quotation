@@ -30,6 +30,7 @@ const App = (() => {
     { origin: '瑞钢', material: '410S/2BA(非标)' },
     { origin: '甬金', material: '430B/BA' },
     { origin: '上克', material: '430B/BA' },
+    { origin: '甬金', material: '430/BA' },
     { origin: '瑞钢', material: '430B/2BA' },
   ];
   // 400系材质名标准化：Excel中的"非标"可能没有括号
@@ -679,6 +680,7 @@ const App = (() => {
     const THICK_400_LABELS = {
       '410S-BA': '410S/BA（甬金/上克）',
       '430B-BA': '430B/BA（甬金/上克）',
+      '430-BA': '430/BA（甬金）',
       '430B-2BA-瑞钢': '430B/2BA（瑞钢）',
       '410S-2BA-瑞钢': '410S/2BA（瑞钢）',
       '410S-2BA(非标)': '410S/2BA(非标)（瑞钢）'
@@ -909,7 +911,7 @@ const App = (() => {
       let s = raw.replace(/[，,、；;：:]/g, ' ').trim();
       let origin = '', material = '';
       for (const op of ORIGIN_KEYWORDS) { if (s.includes(op)) { origin = op; s = s.replace(op, ' ').trim(); break; } }
-      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S','430B','410','430'];
+      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S','430B','430/BA','410','430'];
       for (const mp of mps) { if (s.toUpperCase().includes(mp)) { material = mp; s = s.replace(new RegExp(mp,'gi'), ' ').trim(); break; } }
       let width = 1240, length = 'C';
       const sp = s.match(/(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)(?:\s*MM)?/i);

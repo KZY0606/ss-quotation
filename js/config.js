@@ -211,6 +211,8 @@ const THICKNESS_SURCHARGE_400 = {
     { min: 0.31, max: 3.00, price: 0    }
   ]
 };
+// 430/BA 使用与 430B/BA 相同的厚度加价
+THICKNESS_SURCHARGE_400['430-BA'] = THICKNESS_SURCHARGE_400['430B-BA'];
 
 // 表面加工费 — 304 特例（与201不同价格的表面）
 const SURFACE_FEES_304 = {
