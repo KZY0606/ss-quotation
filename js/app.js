@@ -11,10 +11,14 @@ const App = (() => {
   let originOrder = [...ORIGIN_PRESETS];
   let lockedOrigins = {};
   const ORIGINS_201 = ['宏旺', '青山'];
-  const ORIGINS_304 = ORIGIN_PRESETS.filter(o => o !== '瑞钢');
+  const ORIGINS_304 = ORIGIN_PRESETS.filter(o => o !== '瑞钢' && o !== '联众');
   // 各产地 J2 基价 (304)
   let originPrices304 = {};
   let lockedOrigins304 = {};
+  // 各产地 316L 基价（仅已配置数据的产地）
+  const ORIGINS_316L = ['张浦'];
+  let originPrices316L = {};
+  let lockedOrigins316L = {};
   let j5Price = 0;
   // 400系基价（按材质+表面）
   let prices400 = {};
@@ -46,8 +50,12 @@ const App = (() => {
         return prices400[key] || null;
       }
     }
-    if (material === '304' || material.startsWith('304') || material === '316L') {
+    if (material === '304' || material.startsWith('304')) {
       const p = originPrices304[origin];
+      return (p && p > 0) ? p : null;
+    }
+    if (material === '316L') {
+      const p = originPrices316L[origin];
       return (p && p > 0) ? p : null;
     }
     const j2 = originPrices[origin];
@@ -67,7 +75,8 @@ const App = (() => {
     originOrder.forEach(o => { originPrices[o] = 0; });
     originPrices['宏旺'] = 7800; // default
     originOrder.forEach(o => { originPrices304[o] = 0; });
-    loadLockedPrices(); // 恢复已锁定的价格（201 + 304）
+    originOrder.forEach(o => { originPrices316L[o] = 0; });
+    loadLockedPrices(); // 恢复已锁定的价格（201 + 304 + 316L）
     loadPrices400();    // 恢复400系基价
     loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
     PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
@@ -102,6 +111,7 @@ const App = (() => {
     els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
     els.originRows201 = dom('originRows201'); els.originRows304 = dom('originRows304');
+    els.originRows316L = dom('originRows316L');
     els.newOriginInput = dom('newOriginInput');
     els.addOriginBtn = dom('addOriginBtn'); els.expandAllBtn = dom('expandAllBtn');
   }
@@ -170,6 +180,7 @@ const App = (() => {
   function renderOriginGrid() {
     renderOriginGrid201();
     renderOriginGrid304();
+    renderOriginGrid316L();
     renderPrices400();
   }
 
@@ -232,6 +243,34 @@ const App = (() => {
     });
   }
 
+  function renderOriginGrid316L() {
+    if (!els.originRows316L) return;
+    els.originRows316L.innerHTML = '';
+    ORIGINS_316L.forEach(origin => {
+      const price316L = originPrices316L[origin] || 0;
+      const locked316L = !!lockedOrigins316L[origin];
+      const div = document.createElement('div');
+      div.className = 'origin-row';
+      div.innerHTML = `
+        <span class="oname" style="min-width:56px">${origin}</span>
+        <div class="oj2" style="width:90px"><label>316L</label><input type="number" class="origin-316L-input" data-origin="${origin}" value="${price316L || ''}" step="10" placeholder="0" style="width:70px;font-size:13px;" ${locked316L ? 'readonly' : ''}></div>
+        <button class="o-lock ${locked316L ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="316L" title="${locked316L ? '点击解锁' : '点击锁定'}">${locked316L ? '🔒' : '🔓'}</button>
+        <span class="oderived" style="margin-left:4px;font-size:12px;color:var(--text-secondary);">
+          ${price316L > 0 ? `基价: <b>${price316L.toLocaleString()}</b>` : '<span class="oderived-hint">请填写基价</span>'}
+        </span>
+      `;
+      els.originRows316L.appendChild(div);
+    });
+    bindOriginInputs('.origin-316L-input', originPrices316L);
+    document.querySelectorAll('.o-lock[data-mat="316L"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        lockedOrigins316L[btn.dataset.origin] = !lockedOrigins316L[btn.dataset.origin];
+        saveLockedPrices();
+        renderOriginGrid316L();
+      });
+    });
+  }
+
   function updateAllDerived() {
     const j5Show = dom('j5PriceShow');
     if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
@@ -283,6 +322,7 @@ const App = (() => {
     originOrder.push(name);
     originPrices[name] = 0;
     originPrices304[name] = 0;
+    originPrices316L[name] = 0;
     // 添加到 304 列表
     if (!ORIGINS_304.includes(name)) ORIGINS_304.push(name);
     els.newOriginInput.value = '';
@@ -304,6 +344,12 @@ const App = (() => {
         if (lockedOrigins304[o]) data304[o] = p;
       }
       localStorage.setItem('kk_locked_prices_304', JSON.stringify(data304));
+      // 316L locked prices
+      const data316L = {};
+      for (const [o, p] of Object.entries(originPrices316L)) {
+        if (lockedOrigins316L[o]) data316L[o] = p;
+      }
+      localStorage.setItem('kk_locked_prices_316L', JSON.stringify(data316L));
     } catch (e) { /* ignore */ }
   }
 
@@ -327,6 +373,18 @@ const App = (() => {
         if (originPrices304.hasOwnProperty(o) || originOrder.includes(o)) {
           originPrices304[o] = p;
           lockedOrigins304[o] = true;
+        }
+      }
+    } catch (e) { /* ignore */ }
+    try {
+      const raw316L = localStorage.getItem('kk_locked_prices_316L');
+      if (raw316L) {
+        const data316L = JSON.parse(raw316L);
+        for (const [o, p] of Object.entries(data316L)) {
+          if (originPrices316L.hasOwnProperty(o) || originOrder.includes(o)) {
+            originPrices316L[o] = p;
+            lockedOrigins316L[o] = true;
+          }
         }
       }
     } catch (e) { /* ignore */ }
