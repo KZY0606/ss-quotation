@@ -1080,11 +1080,23 @@ const App = (() => {
     PricingEngine.setUserOverrides(priceOverrides);
     // Update base prices
     let missing = [];
+    let widthErrors = [];
     dataItems.forEach(item => {
-      const bp = getMaterialPrice(item.origin || '宏旺', item.material, null, parseFloat(item.width));
-      if (!bp || bp <= 0) missing.push(`[${item.origin||'?'}] ${item.material}`);
+      const w = parseFloat(item.width);
+      const bp = getMaterialPrice(item.origin || '宏旺', item.material, null, w);
+      if (!bp || bp <= 0) {
+        if (/^201/.test(item.material) && item.material !== '201J5' && PricingEngine.getWidthBand201(w) === null) {
+          widthErrors.push(`[${item.origin||'?'}] ${item.material} 宽度 ${isNaN(w) ? (item.width || '?') : w}mm`);
+        } else {
+          missing.push(`[${item.origin||'?'}] ${item.material}`);
+        }
+      }
       item.basePrice = bp || 0;
     });
+    if (widthErrors.length > 0) {
+      showToast(`以下行宽度不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530）：\n${widthErrors.slice(0,3).join(', ')}${widthErrors.length > 3 ? '...' : ''}`, 'error');
+      return;
+    }
     if (missing.length > 0) {
       showToast(`以下产地/材质基价未设置：\n${missing.slice(0,3).join(', ')}${missing.length > 3 ? '...' : ''}`, 'error');
       return;
