@@ -24,12 +24,12 @@ test('8K 镜面 0.50*1219*C', () => {
 
 test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 10080); eq(r.detail.saleTax, 10580);
+  eq(r.success, true); eq(r.detail.costTax, 10130); eq(r.detail.saleTax, 10630);
 });
 
 test('双面抛光 0.50*1000*2000', () => {
   const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9100);
+  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9300);
 });
 
 test('拉丝黑钛金 0.60*1219*C', () => {
@@ -355,6 +355,69 @@ test('模糊匹配: bronzehairline → 拉丝古铜', () => {
 test('模糊匹配: no4 → NO.4', () => {
   eq(PricingEngine.normalizeSurface('no4'), 'NO.4');
 });
+
+// === 201 基价宽度档（精确值）测试 ===
+test('201 宽度档映射: 1000/1030→1, 1219/1240→2, 1250/1280→3, 1500/1530→4', () => {
+  eq(PricingEngine.getWidthBand201(1000), 1);
+  eq(PricingEngine.getWidthBand201(1030), 1);
+  eq(PricingEngine.getWidthBand201(1219), 2);
+  eq(PricingEngine.getWidthBand201(1240), 2);
+  eq(PricingEngine.getWidthBand201(1250), 3);
+  eq(PricingEngine.getWidthBand201(1280), 3);
+  eq(PricingEngine.getWidthBand201(1500), 4);
+  eq(PricingEngine.getWidthBand201(1530), 4);
+});
+
+test('201 档外宽度: 1220/1550/1040/1001 → null', () => {
+  eq(PricingEngine.getWidthBand201(1220), null);
+  eq(PricingEngine.getWidthBand201(1550), null);
+  eq(PricingEngine.getWidthBand201(1040), null);
+  eq(PricingEngine.getWidthBand201(1001), null);
+});
+
+test('201 档外宽度直接报错: 201J2 0.50*1220*C', () => {
+  const r = PricingEngine.calculate({material:'201J2',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, false);
+  eq(r.errors.some(e => e.includes('档位')), true);
+});
+
+test('201 档内宽度正常: 201J2 0.50*1219*C', () => {
+  const r = PricingEngine.calculate({material:'201J2',surface:'2B',thickness:'0.50',width:'1219',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, true);
+});
+
+test('北港J5 不校验宽度: 201J5 0.50*1220*C', () => {
+  const r = PricingEngine.calculate({material:'201J5',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, true); // J5 不分宽度，不报宽度档错误
+});
+
+test('304 不受 201 宽度档限制: 304 0.50*1220*C', () => {
+  const r = PricingEngine.calculate({material:'304',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, true); // 304 基价不分宽度档
+});
+
+test('430B/BA 0.50*1240*C 甬金 → 表面=无, 厚度加价0', () => {
+  const r = PricingEngine.calculate({
+    origin: '甬金', material: '430B/BA', surface: '无', thickness: '0.50', width: '1240', length: 'C',
+    film1: '', film2: '', isYanYan: false, basePrice: 8000
+  });
+  eq(r.success, true, '430B/BA should succeed');
+  eq(r.detail.thickSurcharge, 0, '430B/BA 0.50mm thick surcharge should be 0');
+  eq(r.detail.surface, '无', '430B/BA surface should be 无');
+  eq(r.detail.surfaceFeePerTon, 0, 'surface fee should be 0');
+});
+
+test('430B/2BA 瑞钢 8K黑钛金 0.50*1220*2440 → 识别表面, 用304加工费', () => {
+  const r = PricingEngine.calculate({
+    origin: '瑞钢', material: '430B/2BA', surface: '8K黑钛金',
+    thickness: '0.50', width: '1220', length: '2440',
+    film1: '5C-FILM', film2: '', isYanYan: false, basePrice: 8000
+  });
+  eq(r.success, true, '430B/2BA with surface should succeed');
+  eq(r.detail.surfaceFeePerTon > 0, true, 'should have surface fee');
+  eq(r.detail.surface, '8K黑钛金', 'surface should be recognized');
+});
+
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

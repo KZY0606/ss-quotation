@@ -24,6 +24,17 @@ const PricingEngine = (() => {
     return null;
   }
 
+  // 201 系判断：材质以 201 开头（含压延变体）
+  function isMaterial201(material) {
+    return !!material && /^201/.test(material);
+  }
+
+  // 201 基价宽度档：返回档位(1-4)或 null（不在档内）
+  function getWidthBand201(width) {
+    if (isNaN(width) || width <= 0) return null;
+    return WIDTH_TO_BAND_201[width] || null;
+  }
+
   function getEdgeType(width) {
     const w = parseFloat(width);
     // 精确匹配齐边
@@ -316,6 +327,14 @@ const PricingEngine = (() => {
     const film2 = normalizeFilm(splitFilm2);
     const basePrice = parseFloat(item.basePrice);
     const isYanYan = !!item.isYanYan || (item.material && /压延/.test(item.material));
+
+    // 201 系基价宽度档校验（精确值档位；J5 不分宽度，跳过）
+    if (isMaterial201(material) && !/^201J5/.test(material)) {
+      const wb = getWidthBand201(width);
+      if (wb === null) {
+        errors.push(`宽度 ${isNaN(width) ? (item.width || '?') : width}mm 不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530）`);
+      }
+    }
 
     if (isNaN(basePrice) || basePrice <= 0) errors.push('基价无效');
     if (isNaN(thickness) || thickness <= 0) errors.push('厚度无效');
@@ -644,6 +663,7 @@ const PricingEngine = (() => {
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, THICKNESS_SURCHARGE_316L, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_316L,
-    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400
+    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
+    WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201
   };
 })();

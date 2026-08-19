@@ -356,6 +356,46 @@ test('模糊匹配: no4 → NO.4', () => {
   eq(PricingEngine.normalizeSurface('no4'), 'NO.4');
 });
 
+// === 201 基价宽度档（精确值）测试 ===
+test('201 宽度档映射: 1000/1030→1, 1219/1240→2, 1250/1280→3, 1500/1530→4', () => {
+  eq(PricingEngine.getWidthBand201(1000), 1);
+  eq(PricingEngine.getWidthBand201(1030), 1);
+  eq(PricingEngine.getWidthBand201(1219), 2);
+  eq(PricingEngine.getWidthBand201(1240), 2);
+  eq(PricingEngine.getWidthBand201(1250), 3);
+  eq(PricingEngine.getWidthBand201(1280), 3);
+  eq(PricingEngine.getWidthBand201(1500), 4);
+  eq(PricingEngine.getWidthBand201(1530), 4);
+});
+
+test('201 档外宽度: 1220/1550/1040/1001 → null', () => {
+  eq(PricingEngine.getWidthBand201(1220), null);
+  eq(PricingEngine.getWidthBand201(1550), null);
+  eq(PricingEngine.getWidthBand201(1040), null);
+  eq(PricingEngine.getWidthBand201(1001), null);
+});
+
+test('201 档外宽度直接报错: 201J2 0.50*1220*C', () => {
+  const r = PricingEngine.calculate({material:'201J2',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, false);
+  eq(r.errors.some(e => e.includes('档位')), true);
+});
+
+test('201 档内宽度正常: 201J2 0.50*1219*C', () => {
+  const r = PricingEngine.calculate({material:'201J2',surface:'2B',thickness:'0.50',width:'1219',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, true);
+});
+
+test('北港J5 不校验宽度: 201J5 0.50*1220*C', () => {
+  const r = PricingEngine.calculate({material:'201J5',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, true); // J5 不分宽度，不报宽度档错误
+});
+
+test('304 不受 201 宽度档限制: 304 0.50*1220*C', () => {
+  const r = PricingEngine.calculate({material:'304',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, true); // 304 基价不分宽度档
+});
+
 test('430B/BA 0.50*1240*C 甬金 → 表面=无, 厚度加价0', () => {
   const r = PricingEngine.calculate({
     origin: '甬金', material: '430B/BA', surface: '无', thickness: '0.50', width: '1240', length: 'C',

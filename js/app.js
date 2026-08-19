@@ -6,11 +6,12 @@ const App = (() => {
   let results = [];
   let allExpanded = false;
 
-  // 各产地 J2 基价 (201)
+  // 各产地 201 基价（新结构：产地 → 4 个宽度档 × J1/J2/J3/J4）
+  // { 产地: { b1: {201J1,201J2,201J3,201J4}, b2: {...}, b3: {...}, b4: {...} } }
   let originPrices = {};
   let originOrder = [...ORIGIN_PRESETS];
   let lockedOrigins = {};
-  const ORIGINS_201 = ['宏旺', '青山'];
+  const ORIGINS_201 = ['宏旺'];
   const ORIGINS_304 = ORIGIN_PRESETS.filter(o => o !== '瑞钢' && o !== '联众');
   // 各产地 J2 基价 (304)
   let originPrices304 = {};
@@ -19,7 +20,13 @@ const App = (() => {
   const ORIGINS_316L = ['张浦', '甬金'];
   let originPrices316L = {};
   let lockedOrigins316L = {};
-  let j5Price = 0;
+  // 北港 J5 基价（北港只卖 J5，单独一行填写，不分宽度）
+  let beigangJ5Price = 0;
+  let beigangJ5Locked = false;
+
+  // 201 基价空结构
+  function emptyBandPrices() { return { '201J1': 0, '201J2': 0, '201J3': 0, '201J4': 0 }; }
+  function emptyOrigin201() { return { b1: emptyBandPrices(), b2: emptyBandPrices(), b3: emptyBandPrices(), b4: emptyBandPrices() }; }
   // 400系基价（按材质+表面）
   let prices400 = {};
   let lockedPrices400 = {};
@@ -42,7 +49,7 @@ const App = (() => {
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
 
   // ========== 基价计算 ==========
-  function getMaterialPrice(origin, material, surface) {
+  function getMaterialPrice(origin, material, surface, width) {
     // 400系：查独立基价表（按产地+材质），410S/BA 是一个整体材质名
     if (origin && material) {
       const normMat = normalize400Material(material);
@@ -59,12 +66,22 @@ const App = (() => {
       const p = originPrices316L[origin];
       return (p && p > 0) ? p : null;
     }
-    const j2 = originPrices[origin];
-    if (!j2 || j2 <= 0) return null;
-    if (material === '201J5') return j5Price;
-    const offset = MATERIAL_OFFSETS[material];
-    if (offset === undefined) return j2;
-    return j2 + (offset || 0);
+    // 201 系：按 产地 → 宽度档 → 材质(J1/J2/J3/J4) 取基价；J5 仅北港，不分宽度
+    const is201 = material === '201' || (material && /^201J[1-5]$/.test(material));
+    if (is201) {
+      if (material === '201J5') {
+        return (beigangJ5Price > 0) ? beigangJ5Price : null;
+      }
+      const w = parseFloat(width);
+      const band = WIDTH_TO_BAND_201[w];
+      if (band === undefined || band === null) return null; // 宽度不在档
+      const matKey = material === '201' ? '201J2' : material;
+      const prices = originPrices[origin] || {};
+      const b = prices['b' + band] || {};
+      const v = b[matKey];
+      return (v && v > 0) ? v : null;
+    }
+    return null;
   }
 
   // ========== DOM Cache ==========
@@ -73,8 +90,8 @@ const App = (() => {
 
   function init() {
     // Initialize origin prices
-    originOrder.forEach(o => { originPrices[o] = 0; });
-    originPrices['宏旺'] = 7800; // default
+    originOrder.forEach(o => { originPrices[o] = emptyOrigin201(); });
+    originPrices['宏旺'].b2['201J2'] = 7800; // default（1219/1240 档）
     originOrder.forEach(o => { originPrices304[o] = 0; });
     originOrder.forEach(o => { originPrices316L[o] = 0; });
     loadLockedPrices(); // 恢复已锁定的价格（201 + 304 + 316L）
@@ -144,19 +161,9 @@ const App = (() => {
     });
 
     dom('manualOrigin')?.addEventListener('change', () => {
-      syncManualPrices();
+      updateManualDropdown();
       dom('manualMaterial')?.focus();
     });
-
-    // J5 基价输入
-    const j5Inp = dom('j5BasePrice');
-    if (j5Inp) {
-      j5Inp.addEventListener('input', () => {
-        j5Price = parseFloat(j5Inp.value) || 0;
-        const j5Show = dom('j5PriceShow');
-        if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
-      });
-    }
 
     // 手动添加表单：Enter 跳转下一个字段，最后一个字段 Enter 直接添加
     const manualFields = ['manualOrigin', 'manualMaterial', 'manualSurface', 'manualThickness', 'manualWidth', 'manualLength', 'manualFilm1', 'manualFilm2'];
@@ -188,33 +195,89 @@ const App = (() => {
   function renderOriginGrid201() {
     els.originRows201.innerHTML = '';
     ORIGINS_201.forEach(origin => {
-      const price = originPrices[origin] || 0;
+      const prices = originPrices[origin] || emptyOrigin201();
+      originPrices[origin] = prices;
       const locked = !!lockedOrigins[origin];
-      const j1 = price ? price + 900 : 0;
-      const j3 = price ? price + 400 : 0;
-      const j4 = price ? price + 1600 : 0;
       const div = document.createElement('div');
-      div.className = 'origin-row';
-      div.innerHTML = `
-        <span class="oname" style="min-width:56px">${origin}</span>
-        <div class="oj2"><label>J2</label><input type="number" class="origin-j2-input" data-origin="${origin}" value="${price || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
-        <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" data-mat="201" title="${locked ? '点击解锁' : '点击锁定'}">${locked ? '🔒' : '🔓'}</button>
-        <span class="oarrow">→</span>
-        <span class="oderived">
-          ${price > 0 
-            ? `J1: <b>${j1.toLocaleString()}</b>  J3: <b>${j3.toLocaleString()}</b>  J4: <b>${j4.toLocaleString()}</b>`
-            : '<span class="oderived-hint">请填写 J2 基价</span>'}
-        </span>
-      `;
+      div.className = 'origin-block-201';
+      // 表头行：产地 + 锁定 + 4 个宽度档标签
+      let html = `
+        <div class="origin-row origin-head201">
+          <span class="oname201">${origin}</span>
+          <span class="oband201">1000/1030</span>
+          <span class="oband201">1219/1240</span>
+          <span class="oband201">1250/1280</span>
+          <span class="oband201">1500/1530</span>
+          <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" data-mat="201" title="${locked ? '点击解锁' : '点击锁定'}">${locked ? '🔒' : '🔓'}</button>
+        </div>`;
+      ['201J1','201J2','201J3','201J4'].forEach(mat => {
+        html += `
+        <div class="origin-row origin-row-201">
+          <span class="omat201">${mat.replace('201','')}</span>
+          ${[1,2,3,4].map(b => `<input type="number" class="origin201-input" data-origin="${origin}" data-band="${b}" data-mat="${mat}" value="${prices['b'+b][mat] > 0 ? prices['b'+b][mat] : ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}>`).join('')}
+        </div>`;
+      });
+      div.innerHTML = html;
       els.originRows201.appendChild(div);
     });
-    bindOriginInputs('.origin-j2-input', originPrices);
-    document.querySelectorAll('.o-lock').forEach(btn => {
+    bindOrigin201Inputs();
+    document.querySelectorAll('.o-lock[data-mat="201"]').forEach(btn => {
       btn.addEventListener('click', () => {
-        toggleLock(btn.dataset.origin);
+        lockedOrigins[btn.dataset.origin] = !lockedOrigins[btn.dataset.origin];
+        saveLockedPrices();
+        renderOriginGrid201();
       });
     });
+
+    // 北港 J5 行：与宏旺 201 矩阵同一面板，外观与其他产地行一致
+    const bg = document.createElement('div');
+    bg.className = 'origin-row';
+    bg.innerHTML = `
+      <span class="oname">北港</span>
+      <div class="oj2"><label>J5</label><input type="number" id="beigangJ5Price" class="origin-j2-input" value="${beigangJ5Price > 0 ? beigangJ5Price : ''}" step="10" placeholder="0" ${beigangJ5Locked ? 'readonly' : ''}></div>
+      <button id="beigangJ5Lock" class="o-lock ${beigangJ5Locked ? 'locked' : ''}" title="${beigangJ5Locked ? '点击解锁' : '点击锁定'}">${beigangJ5Locked ? '🔒' : '🔓'}</button>
+      <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">北港只售 J5，不分宽度</span>
+    `;
+    els.originRows201.appendChild(bg);
+    const bgInp = bg.querySelector('#beigangJ5Price');
+    const bgLock = bg.querySelector('#beigangJ5Lock');
+    if (bgInp) {
+      bgInp.addEventListener('input', () => {
+        beigangJ5Price = parseFloat(bgInp.value) || 0;
+      });
+      bgInp.addEventListener('blur', () => {
+        beigangJ5Price = parseFloat(bgInp.value) || 0;
+        saveBeigangJ5();
+      });
+    }
+    if (bgLock) {
+      bgLock.addEventListener('click', () => {
+        beigangJ5Locked = !beigangJ5Locked;
+        saveBeigangJ5();
+        renderOriginGrid201();
+      });
+    }
+
     updateManualDropdown();
+  }
+
+  function bindOrigin201Inputs() {
+    document.querySelectorAll('.origin201-input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const o = inp.dataset.origin, b = inp.dataset.band, m = inp.dataset.mat;
+        if (!originPrices[o]) originPrices[o] = emptyOrigin201();
+        if (!originPrices[o]['b'+b]) originPrices[o]['b'+b] = emptyBandPrices();
+        originPrices[o]['b'+b][m] = parseFloat(inp.value) || 0;
+        updateAllDerived();
+      });
+      inp.addEventListener('blur', () => {
+        const o = inp.dataset.origin, b = inp.dataset.band, m = inp.dataset.mat;
+        if (!originPrices[o]) originPrices[o] = emptyOrigin201();
+        if (!originPrices[o]['b'+b]) originPrices[o]['b'+b] = emptyBandPrices();
+        originPrices[o]['b'+b][m] = parseFloat(inp.value) || 0;
+        saveLockedPrices();
+      });
+    });
   }
 
   function renderOriginGrid304() {
@@ -273,10 +336,7 @@ const App = (() => {
   }
 
   function updateAllDerived() {
-    const j5Show = dom('j5PriceShow');
-    if (j5Show) j5Show.textContent = j5Price ? j5Price.toLocaleString() : '未设置';
-    // 刷新 201 区域以更新 J1/J3/J4
-    renderOriginGrid201();
+    // 201 区域 J1/J3/J4 已改为完全手动填写；北港 J5 直接显示在输入框内，无需额外刷新（避免重建 DOM 丢失焦点）
   }
 
   function bindOriginInputs(selector, priceMap) {
@@ -304,13 +364,15 @@ const App = (() => {
     sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
     if (display) {
       const o = sel.value;
-      const j2 = originPrices[o] || 0;
-      if (j2 > 0) {
-        const j1 = j2 + 900, j3 = j2 + 400, j4 = j2 + 1600;
-        display.innerHTML = `J2 <b>${j2.toLocaleString()}</b> → J1 <b>${j1.toLocaleString()}</b>  J3 <b>${j3.toLocaleString()}</b>  J4 <b>${j4.toLocaleString()}</b>`;
+      const prices = originPrices[o];
+      let hasAny = false;
+      if (prices) for (const bk of Object.keys(prices)) for (const mk of Object.keys(prices[bk])) if (prices[bk][mk] > 0) { hasAny = true; break; }
+      if (hasAny) {
+        const j2b2 = (prices.b2 && prices.b2['201J2'] > 0) ? prices.b2['201J2'].toLocaleString() : '未填';
+        display.innerHTML = `201 基价按宽度档填写 · 1219/1240档 J2 = <b>${j2b2}</b>`;
         display.style.color = 'var(--text-secondary)';
       } else {
-        display.textContent = '⚠️ 该产地未设置基价';
+        display.textContent = '⚠️ 该产地未设置 201 基价';
         display.style.color = 'var(--danger)';
       }
     }
@@ -321,7 +383,7 @@ const App = (() => {
     if (!name) { showToast('请输入产地名称', 'error'); return; }
     if (originOrder.includes(name)) { showToast('该产地已存在', 'error'); return; }
     originOrder.push(name);
-    originPrices[name] = 0;
+    originPrices[name] = emptyOrigin201();
     originPrices304[name] = 0;
     originPrices316L[name] = 0;
     // 添加到 304 列表
@@ -351,18 +413,40 @@ const App = (() => {
         if (lockedOrigins316L[o]) data316L[o] = p;
       }
       localStorage.setItem('kk_locked_prices_316L', JSON.stringify(data316L));
+      saveBeigangJ5();
     } catch (e) { /* ignore */ }
+  }
+
+  function saveBeigangJ5() {
+    try { localStorage.setItem('kk_beigang_j5', JSON.stringify({ price: beigangJ5Price, locked: beigangJ5Locked })); } catch (e) { /* ignore */ }
   }
 
   function loadLockedPrices() {
     try {
       const raw = localStorage.getItem('kk_locked_prices');
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      for (const [o, p] of Object.entries(data)) {
-        if (originPrices.hasOwnProperty(o) || originOrder.includes(o)) {
-          originPrices[o] = p;
-          lockedOrigins[o] = true;
+      if (raw) {
+        const data = JSON.parse(raw);
+        for (const [o, v] of Object.entries(data)) {
+          if (originPrices.hasOwnProperty(o) || originOrder.includes(o)) {
+            if (typeof v === 'number') {
+              // 旧格式迁移：单值基价 → 1219/1240 档的 J2
+              if (!originPrices[o]) originPrices[o] = emptyOrigin201();
+              if (v > 0) originPrices[o].b2['201J2'] = v;
+            } else if (v && typeof v === 'object') {
+              originPrices[o] = v;
+            }
+            lockedOrigins[o] = true;
+          }
+        }
+      }
+    } catch (e) { /* ignore */ }
+    try {
+      const j5raw = localStorage.getItem('kk_beigang_j5');
+      if (j5raw) {
+        const j5 = JSON.parse(j5raw);
+        if (j5 && typeof j5.price === 'number') {
+          beigangJ5Price = j5.price;
+          beigangJ5Locked = !!j5.locked;
         }
       }
     } catch (e) { /* ignore */ }
@@ -453,16 +537,6 @@ const App = (() => {
         renderPrices400();
       });
     });
-  }
-
-  function toggleLock(origin) {
-    lockedOrigins[origin] = !lockedOrigins[origin];
-    if (!lockedOrigins[origin] && originPrices[origin] === 0) {
-      // 解锁且价格为 0 → 恢复默认提示
-    }
-    saveLockedPrices();
-    renderOriginGrid();
-    updateAllDerived();
   }
 
   // ========== 价格覆盖管理 ==========
@@ -852,7 +926,7 @@ const App = (() => {
         if (item.material && item.material.includes('/') && !item.surface) {
           item.surface = '无';
         }
-        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material) || 0;
+        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material, null, parseFloat(item.width)) || 0;
       });
       dataItems = dataItems.concat(items);
       results = [];
@@ -884,8 +958,15 @@ const App = (() => {
     }
     f1 = PricingEngine.normalizeFilm(f1) || f1;
     f2 = PricingEngine.normalizeFilm(f2) || f2;
-    const bp = getMaterialPrice(origin, mat, surf);
-    if (!bp || bp <= 0) { showToast(`${origin} ${mat} 基价未设置`, 'error'); return; }
+    const bp = getMaterialPrice(origin, mat, surf, parseFloat(wid));
+    if (!bp || bp <= 0) {
+      if (/^201/.test(mat) && mat !== '201J5' && PricingEngine.getWidthBand201(parseFloat(wid)) === null) {
+        showToast(`宽度 ${wid}mm 不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530）`, 'error');
+      } else {
+        showToast(`${origin} ${mat} 基价未设置`, 'error');
+      }
+      return;
+    }
     if (!thk || !wid) { showToast('请填写厚度和宽度', 'error'); return; }
     dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp });
     results = []; showToast('已添加', 'success');
@@ -973,9 +1054,9 @@ const App = (() => {
     for (const p of items) {
       if (p.origin && !originOrder.includes(p.origin)) {
         originOrder.push(p.origin);
-        originPrices[p.origin] = 0;
+        originPrices[p.origin] = emptyOrigin201();
       }
-      const bp = getMaterialPrice(p.origin || '宏旺', p.material);
+      const bp = getMaterialPrice(p.origin || '宏旺', p.material, null, parseFloat(p.width));
       if (bp && bp > 0) {
         p.basePrice = bp;
         dataItems.push(p);
@@ -992,15 +1073,15 @@ const App = (() => {
 
   function runCalc() {
     if (!dataItems.length) { showToast('请先添加数据', 'error'); return; }
-    // Sync J5
-    const j5Inp = dom('j5BasePrice');
-    if (j5Inp) j5Price = parseFloat(j5Inp.value) || 0;
+    // Sync 北港 J5
+    const j5Inp = dom('beigangJ5Price');
+    if (j5Inp) beigangJ5Price = parseFloat(j5Inp.value) || 0;
     // Inject user price overrides
     PricingEngine.setUserOverrides(priceOverrides);
     // Update base prices
     let missing = [];
     dataItems.forEach(item => {
-      const bp = getMaterialPrice(item.origin || '宏旺', item.material);
+      const bp = getMaterialPrice(item.origin || '宏旺', item.material, null, parseFloat(item.width));
       if (!bp || bp <= 0) missing.push(`[${item.origin||'?'}] ${item.material}`);
       item.basePrice = bp || 0;
     });
