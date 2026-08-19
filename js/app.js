@@ -1078,33 +1078,35 @@ const App = (() => {
     if (j5Inp) beigangJ5Price = parseFloat(j5Inp.value) || 0;
     // Inject user price overrides
     PricingEngine.setUserOverrides(priceOverrides);
-    // Update base prices
-    let missing = [];
-    let widthErrors = [];
+    // Update base prices（模式B：能算的算，算不出的逐行标详细原因，不再整体中止）
     dataItems.forEach(item => {
       const w = parseFloat(item.width);
       const bp = getMaterialPrice(item.origin || '宏旺', item.material, null, w);
+      item.basePrice = bp || 0;
+      item._bpError = null;
       if (!bp || bp <= 0) {
         if (/^201/.test(item.material) && item.material !== '201J5' && PricingEngine.getWidthBand201(w) === null) {
-          widthErrors.push(`[${item.origin||'?'}] ${item.material} 宽度 ${isNaN(w) ? (item.width || '?') : w}mm`);
+          item._bpError = `宽度 ${isNaN(w) ? (item.width || '?') : w}mm 不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530），请检查宽度或补充对应档位基价`;
         } else {
-          missing.push(`[${item.origin||'?'}] ${item.material}`);
+          item._bpError = `${item.origin || '?'} ${item.material} 基价未设置${isNaN(w) ? '' : `（宽度 ${w}mm 对应档位）`}，请在基价面板填写`;
         }
       }
-      item.basePrice = bp || 0;
     });
-    if (widthErrors.length > 0) {
-      showToast(`以下行宽度不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530）：\n${widthErrors.slice(0,3).join(', ')}${widthErrors.length > 3 ? '...' : ''}`, 'error');
-      return;
-    }
-    if (missing.length > 0) {
-      showToast(`以下产地/材质基价未设置：\n${missing.slice(0,3).join(', ')}${missing.length > 3 ? '...' : ''}`, 'error');
-      return;
-    }
     results = PricingEngine.calculateBatch(dataItems);
+    // 把基价预检的详细原因合并进行级错误（替换笼统的"基价无效"）
+    results.forEach((r, i) => {
+      const item = dataItems[i];
+      if (r.success || !item || !item._bpError) return;
+      r.errors = r.errors.filter(e => e !== '基价无效');
+      if (!r.errors.includes(item._bpError)) r.errors.unshift(item._bpError);
+    });
     const ok = results.filter(r => r.success).length;
     const fail = results.filter(r => !r.success).length;
-    showToast(`完成：${ok} 成功，${fail} 失败`, ok > 0 ? 'success' : 'error');
+    if (fail > 0) {
+      showToast(`完成：${ok} 成功，${fail} 行未计算（已标红，点击行查看原因）`, ok > 0 ? 'warning' : 'error');
+    } else {
+      showToast(`完成：${ok} 成功`, 'success');
+    }
     renderResults();
   }
 
