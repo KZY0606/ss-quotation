@@ -469,7 +469,11 @@ const App = (() => {
     try {
       const data = {};
       for (const [o, p] of Object.entries(originPrices)) {
-        if (lockedOrigins[o]) data[o] = p;
+        if (lockedOrigins[o]) {
+          // 保存兗底：确保 b4（宽板厚度档）结构存在，避免旧结构覆盖导致宽板价格丢失
+          if (p && (!p.b4 || typeof p.b4 !== 'object')) p.b4 = emptyOrigin201().b4;
+          data[o] = p;
+        }
       }
       localStorage.setItem('kk_locked_prices', JSON.stringify(data));
       // 304 locked prices
@@ -504,6 +508,16 @@ const App = (() => {
               if (!originPrices[o]) originPrices[o] = emptyOrigin201();
               if (v > 0) originPrices[o].b2['201J2'] = v;
             } else if (v && typeof v === 'object') {
+              // 补全 b4（1500/1530 宽板厚度档）结构：旧版本（v1.0.10 前）锁定的数据没有 b4，
+              // 若不补全会导致宽板价格显示空白且 locked 时无法填写
+              const base = emptyOrigin201();
+              if (!v.b4 || typeof v.b4 !== 'object') v.b4 = base.b4;
+              for (const mk of Object.keys(base.b4)) {
+                if (!v.b4[mk] || typeof v.b4[mk] !== 'object') v.b4[mk] = base.b4[mk];
+                else for (const tk of Object.keys(base.b4[mk])) {
+                  if (v.b4[mk][tk] === undefined) v.b4[mk][tk] = 0;
+                }
+              }
               originPrices[o] = v;
             }
             lockedOrigins[o] = true;
