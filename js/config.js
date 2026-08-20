@@ -279,6 +279,8 @@ THICKNESS_SURCHARGE_400['430W-2BA'] = [
   { min: 0.49, max: 0.51, price: 100  },
   { min: 0.51, max: 2.00, price: 0    }
 ];
+// 430W/2BB（宏旺）：与 430W/2BA 同厚度加价（2026-08-20 用户确认）
+THICKNESS_SURCHARGE_400['430W-2BB'] = THICKNESS_SURCHARGE_400['430W-2BA'];
 
 // 表面加工费 — 304 特例（与201不同价格的表面）
 const SURFACE_FEES_304 = {

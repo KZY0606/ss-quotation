@@ -59,6 +59,7 @@ const App = (() => {
     { origin: '甬金', material: '430/BA' },
     { origin: '上克', material: '430B/BA' },
     { origin: '宏旺', material: '430W/2BA' },
+    { origin: '宏旺', material: '430W/2BB' },
     { origin: '瑞钢', material: '430B/2BA' },
   ];
   // 400系面板分组渲染（2026-08-20 用户指定：410/430 分板块；产地顺序 甬金→上克→宏旺→瑞钢）
@@ -80,6 +81,7 @@ const App = (() => {
         { origin: '甬金', material: '430/BA' },
         { origin: '上克', material: '430B/BA' },
         { origin: '宏旺', material: '430W/2BA' },
+        { origin: '宏旺', material: '430W/2BB' },
         { origin: '瑞钢', material: '430B/2BA' },
       ]
     }
@@ -874,7 +876,7 @@ const App = (() => {
       ['410S-2BA(非标)', '410S/2BA(非标)（瑞钢）'],
       ['430B-BA', '430B/BA（甬金/上克）'],
       ['430-BA', '430/BA（甬金）'],
-      ['430W-2BA', '430W/2BA（宏旺）'],
+      ['430W-2BA', '430W/2BA、430W/2BB（宏旺，同价）'],
       ['430B-2BA-瑞钢', '430B/2BA（瑞钢）']
     ];
     h.push('<h4 class="ref-subtitle">400系厚度加价</h4>');
@@ -1110,7 +1112,7 @@ const App = (() => {
       let s = raw.replace(/[，,、；;：:]/g, ' ').trim();
       let origin = '', material = '';
       for (const op of ORIGIN_KEYWORDS) { if (s.includes(op)) { origin = op; s = s.replace(op, ' ').trim(); break; } }
-      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S','430B','430/BA','430W/2BA','410','430'];
+      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S','430B','430/BA','430W/2BA','430W/2BB','410','430'];
       for (const mp of mps) { if (s.toUpperCase().includes(mp)) { material = mp; s = s.replace(new RegExp(mp,'gi'), ' ').trim(); break; } }
       let width = 1240, length = 'C';
       const sp = s.match(/(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)(?:\s*MM)?/i);

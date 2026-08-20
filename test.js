@@ -588,6 +588,15 @@ test('430W/2BA（宏旺）厚度加价：10 档半开区间边界（2026-08-20 �
   eq(g(0.30), 750, '0.30 宏旺 750（瑞钢 0.30 → 600）');
   eq(g(0.50), 100, '0.50 宏旺 100（瑞钢 0.50 → 0）');
 });
+test('430W/2BB（宏旺）与 430W/2BA 同厚度加价', () => {
+  const g2bb = t => PricingEngine.getThicknessSurcharge(t, false, '430W/2BB', '宏旺', '2BB');
+  eq(g2bb(0.24), 1600, '0.24 → 1600');
+  eq(g2bb(0.30), 750, '0.30 → 750');
+  eq(g2bb(0.50), 100, '0.50 → 100');
+  eq(g2bb(0.52), 0, '0.52 → 0');
+  eq(g2bb(2.00), 0, '2.00 → 0');
+  eq(g2bb(2.01), null, '2.01 超上限 null');
+});
 test('430W 未配置组合返回 null（不误用 201 加价）', () => {
   eq(PricingEngine.getThicknessSurcharge(0.50, false, '430W/BA', '宏旺', 'BA'), null, '430W/BA 不存在（宏旺只有 430W/2BA）→ null');
   eq(PricingEngine.getThicknessSurcharge(0.50, false, '430W/NO.4', '宏旺', 'NO.4'), null, '430W/NO.4 未配置 → null');
