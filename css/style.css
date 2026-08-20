@@ -770,3 +770,13 @@ tr.main-row:hover .delete-btn { opacity:1; }
   border-color: var(--success);
   color: var(--success);
 }
+
+/* 400系基价面板分组标题（410/430 系列分板块，2026-08-20）*/
+.p400-group-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 10px 0 4px;
+  padding-left: 2px;
+}
+

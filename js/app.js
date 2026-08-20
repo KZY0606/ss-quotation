@@ -49,15 +49,40 @@ const App = (() => {
   let prices400 = {};
   let lockedPrices400 = {};
   const PRODUCTS_400 = [
+    // 410 系列
     { origin: '甬金', material: '410S/BA' },
     { origin: '上克', material: '410S/BA' },
     { origin: '瑞钢', material: '410S/2BA' },
     { origin: '瑞钢', material: '410S/2BA(非标)' },
+    // 430 系列
     { origin: '甬金', material: '430B/BA' },
-    { origin: '上克', material: '430B/BA' },
     { origin: '甬金', material: '430/BA' },
-    { origin: '瑞钢', material: '430B/2BA' },
+    { origin: '上克', material: '430B/BA' },
     { origin: '宏旺', material: '430W/2BA' },
+    { origin: '瑞钢', material: '430B/2BA' },
+  ];
+  // 400系面板分组渲染（2026-08-20 用户指定：410/430 分板块；产地顺序 甬金→上克→宏旺→瑞钢）
+  const PRODUCTS_400_GROUPS = [
+    {
+      title: '410 系列',
+      items: [
+        { origin: '甬金', material: '410S/BA' },
+        { origin: '上克', material: '410S/BA' },
+        // 宏旺未做 410，不显示
+        { origin: '瑞钢', material: '410S/2BA' },
+        { origin: '瑞钢', material: '410S/2BA(非标)' },
+      ]
+    },
+    {
+      title: '430 系列',
+      items: [
+        { origin: '甬金', material: '430B/BA' },
+        { origin: '甬金', material: '430/BA' },
+        { origin: '上克', material: '430B/BA' },
+        { origin: '宏旺', material: '430W/2BA' },
+        { origin: '瑞钢', material: '430B/2BA' },
+      ]
+    }
   ];
   // 400系材质名标准化：Excel中的"非标"可能没有括号
   function normalize400Material(m) {
@@ -583,23 +608,29 @@ const App = (() => {
   function renderPrices400() {
     const section = document.getElementById('prices400Section');
     if (!section) return;
-    // 清除旧行（保留标题span）
-    const rows = section.querySelectorAll('.p400-row');
+    // 清除旧行与板块标题（保留标题span）
+    const rows = section.querySelectorAll('.p400-row, .p400-group-title');
     rows.forEach(el => el.remove());
 
-    PRODUCTS_400.forEach(item => {
-      const key = get400Key(item.origin, item.material);
-      const val = prices400[key] || 0;
-      const locked = !!lockedPrices400[key];
-      const div = document.createElement('div');
-      div.className = 'origin-row p400-row'; // reuse origin-row styles
-      div.innerHTML = `
-        <span class="oname" style="min-width:42px">${item.origin}</span>
-        <span style="font-size:12px;font-weight:500;color:var(--text-secondary);min-width:90px;">${item.material}</span>
-        <div class="oj2" style="width:90px"><label>基价</label><input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" style="width:70px;font-size:13px;" ${locked ? 'readonly' : ''}></div>
-        <button class="o-lock ${locked ? 'locked' : ''}" data-key="${key}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
-      `;
-      section.appendChild(div);
+    PRODUCTS_400_GROUPS.forEach(group => {
+      const title = document.createElement('div');
+      title.className = 'p400-group-title';
+      title.textContent = group.title;
+      section.appendChild(title);
+      group.items.forEach(item => {
+        const key = get400Key(item.origin, item.material);
+        const val = prices400[key] || 0;
+        const locked = !!lockedPrices400[key];
+        const div = document.createElement('div');
+        div.className = 'origin-row p400-row'; // reuse origin-row styles
+        div.innerHTML = `
+          <span class="oname" style="min-width:42px">${item.origin}</span>
+          <span style="font-size:12px;font-weight:500;color:var(--text-secondary);min-width:90px;">${item.material}</span>
+          <div class="oj2" style="width:90px"><label>基价</label><input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" style="width:70px;font-size:13px;" ${locked ? 'readonly' : ''}></div>
+          <button class="o-lock ${locked ? 'locked' : ''}" data-key="${key}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
+        `;
+        section.appendChild(div);
+      });
     });
     document.querySelectorAll('.p400-input').forEach(inp => {
       inp.addEventListener('change', () => {
