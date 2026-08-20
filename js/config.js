@@ -185,24 +185,7 @@ const ORIGIN_THICKNESS_SURCHARGE = {
   ]
 };
 
-// 316L 厚度加价表 (元/吨) — 当 origin 未匹配 ORIGIN_THICKNESS_SURCHARGE_316L 时使用
-const THICKNESS_SURCHARGE_316L = [
-  { min: 0.26, max: 0.27, price: 2100 },
-  { min: 0.28, max: 0.29, price: 1400 },
-  { min: 0.30, max: 0.32, price: 1400 },
-  { min: 0.33, max: 0.37, price: 1200 },
-  { min: 0.38, max: 0.49, price: 900 },
-  { min: 0.50, max: 0.60, price: 900 },
-  { min: 0.61, max: 0.70, price: 700 },
-  { min: 0.71, max: 0.80, price: 600 },
-  { min: 0.81, max: 1.00, price: 500 },
-  { min: 1.01, max: 1.20, price: 450 },
-  { min: 1.21, max: 2.00, price: 400 },
-  { min: 2.01, max: 3.00, price: 300 },
-  { min: 3.01, max: 999, price: 500 }
-];
-
-// 316L 产地特异性厚度加价表（优先使用）
+// 316L 产地特异性厚度加价表（2026-08-20：仅张浦有数据；甬金/太钢未提供，不落通用表）
 const ORIGIN_THICKNESS_SURCHARGE_316L = {
   '张浦': [
     { min: 0.26, max: 0.27, price: 2100 },
@@ -222,20 +205,8 @@ const ORIGIN_THICKNESS_SURCHARGE_316L = {
     // 2026-08-20：3.00 归 700 档（连续区间，上档不含 3.00）
     { min: 2.01, max: 2.99, price: 300 },
     { min: 3.00, max: 6.00, price: 700 }
-  ],
-  '甬金': [
-    { min: 0.25, max: 0.27, price: 2100 },
-    { min: 0.28, max: 0.29, price: 1400 },
-    { min: 0.30, max: 0.32, price: 1400 },
-    { min: 0.33, max: 0.37, price: 1200 },
-    { min: 0.38, max: 0.42, price: 1000 },
-    { min: 0.43, max: 0.49, price: 800 },
-    { min: 0.50, max: 0.59, price: 700 },
-    { min: 0.60, max: 0.69, price: 600 },
-    { min: 0.70, max: 0.79, price: 500 },
-    { min: 0.80, max: 1.20, price: 400 },
-    { min: 1.21, max: 3.00, price: 300 }
   ]
+  // 2026-08-20：甬金/太钢 316L 未提供厚度加价数据（用户确认），不再配置，报价时直接报错
 };
 
 // 400系厚度加价表 — 按材质+表面对应独立加价（甬金/上克同价）

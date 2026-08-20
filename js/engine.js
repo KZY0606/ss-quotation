@@ -102,12 +102,12 @@ const PricingEngine = (() => {
     if (isYanYan) {
       return findInTable(YANYAN_THICKNESS_SURCHARGE, t);
     }
-    // 316L：有产地特异性加价则用，否则用通用 316L 表
+    // 316L：仅产地特异性加价表；未提供数据的产地（甬金/太钢）直接返回 null 报错（2026-08-20 用户确认）
     if (material === '316L') {
       if (origin && ORIGIN_THICKNESS_SURCHARGE_316L && ORIGIN_THICKNESS_SURCHARGE_316L[origin]) {
         return findInTable(ORIGIN_THICKNESS_SURCHARGE_316L[origin], t);
       }
-      return findInTable(THICKNESS_SURCHARGE_316L, t);
+      return null;
     }
     // 304：有产地特异性加价则用，否则用统一宏旺/德龙标准
     if (material && (material === '304' || material.startsWith('304'))) {
@@ -376,12 +376,8 @@ const PricingEngine = (() => {
 
     let thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, surface);
     if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
-    // 甬金316L 宽度1500~1550mm 额外宽度加价（加入厚度加价），仅0.25~0.50mm适用
+    // 甬金316L 宽度加价已随甬金 316L 数据删除（2026-08-20），字段保留为 0
     let widthSurcharge = 0;
-    if (thickSurcharge !== null && item.origin === '甬金' && material === '316L' && thickness >= 0.25 && thickness <= 0.50 && width >= 1500 && width <= 1550) {
-      widthSurcharge = 300;
-      thickSurcharge += widthSurcharge;
-    }
 
     const edgeType = getEdgeType(width);
     if (edgeType === null) errors.push(`宽度 ${width}mm 无法判定毛边/齐边`);
@@ -512,7 +508,7 @@ const PricingEngine = (() => {
     }
     if (material === '316L') {
       if (origin && ORIGIN_THICKNESS_SURCHARGE_316L && ORIGIN_THICKNESS_SURCHARGE_316L[origin]) return origin + ' 316L加价';
-      return '316L 加价';
+      return '316L 加价（未提供数据）';
     }
     if (material && (material === '304' || material.startsWith('304'))) {
       if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
@@ -711,7 +707,7 @@ const PricingEngine = (() => {
     parseThicknessRange,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,
-    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, THICKNESS_SURCHARGE_316L, YANYAN_THICKNESS_SURCHARGE,
+    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
