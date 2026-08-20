@@ -254,7 +254,7 @@ const THICKNESS_SURCHARGE_400 = {
     { min: 0.31, max: 0.35, price: 400  },
     { min: 0.36, max: 0.42, price: 300  },
     { min: 0.43, max: 0.47, price: 100  },
-    { min: 0.48, max: 2.97, price: 0    }
+    { min: 0.48, max: 3.00, price: 0    } // 2026-08-20 用户确认：最高厚度 3.00mm
   ],
   '410S-2BA(非标)': [
     { min: 0.18, max: 0.20, price: 400  },
@@ -267,6 +267,19 @@ const THICKNESS_SURCHARGE_400 = {
 THICKNESS_SURCHARGE_400['430-BA'] = THICKNESS_SURCHARGE_400['430B-BA'];
 // 430W/2BA（宏旺）：暂按 430B/2BA（瑞钢）厚度加价执行（2026-08-20 用户新增产地/材质）
 THICKNESS_SURCHARGE_400['430W-2BA'] = THICKNESS_SURCHARGE_400['430B-2BA-瑞钢'];
+// 430W/BA（宏旺）厚度加价（2026-08-20 用户提供：半开区间，下界不含、上界含，顺序查找先命中即取）
+THICKNESS_SURCHARGE_400['430W-BA'] = [
+  { min: 0.21, max: 0.24, price: 1600 },
+  { min: 0.24, max: 0.26, price: 1300 },
+  { min: 0.26, max: 0.29, price: 900  },
+  { min: 0.29, max: 0.30, price: 750  },
+  { min: 0.30, max: 0.36, price: 650  },
+  { min: 0.36, max: 0.39, price: 400  },
+  { min: 0.39, max: 0.42, price: 300  },
+  { min: 0.42, max: 0.49, price: 200  },
+  { min: 0.49, max: 0.51, price: 100  },
+  { min: 0.51, max: 2.00, price: 0    }
+];
 
 // 表面加工费 — 304 特例（与201不同价格的表面）
 const SURFACE_FEES_304 = {
