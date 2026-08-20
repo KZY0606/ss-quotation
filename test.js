@@ -418,6 +418,70 @@ test('430B/2BA 瑞钢 8K黑钛金 0.50*1220*2440 → 识别表面, 用304加工�
   eq(r.detail.surface, '8K黑钛金', 'surface should be recognized');
 });
 
+// === 1500/1530 宽板厚度分档 ===
+test('getThickBand1500: 201J1 边界值 t1-t6', () => {
+  eq(PricingEngine.getThickBand1500('201J1', 0.55), 't1');
+  eq(PricingEngine.getThickBand1500('201J1', 0.67), 't1');
+  eq(PricingEngine.getThickBand1500('201J1', 0.68), 't2');
+  eq(PricingEngine.getThickBand1500('201J1', 0.88), 't3');
+  eq(PricingEngine.getThickBand1500('201J1', 1.18), 't4');
+  eq(PricingEngine.getThickBand1500('201J1', 1.28), 't5');
+  eq(PricingEngine.getThickBand1500('201J1', 1.37), 't5');
+  eq(PricingEngine.getThickBand1500('201J1', 1.38), 't6');
+  eq(PricingEngine.getThickBand1500('201J1', 2.0), 't6');
+  eq(PricingEngine.getThickBand1500('201J1', 0.54), null, '低于 0.55 应报错');
+});
+test('getThickBand1500: 201J2 四档', () => {
+  eq(PricingEngine.getThickBand1500('201J2', 0.68), 't1');
+  eq(PricingEngine.getThickBand1500('201J2', 0.88), 't1');
+  eq(PricingEngine.getThickBand1500('201J2', 0.89), 't2');
+  eq(PricingEngine.getThickBand1500('201J2', 1.18), 't3');
+  eq(PricingEngine.getThickBand1500('201J2', 1.57), 't3');
+  eq(PricingEngine.getThickBand1500('201J2', 1.58), 't4');
+  eq(PricingEngine.getThickBand1500('201J2', 0.67), null, '低于 0.68 应报错');
+});
+test('getThickBand1500: 201J3 六档（第二档修正为 0.88-1.17）', () => {
+  eq(PricingEngine.getThickBand1500('201J3', 0.85), 't1');
+  eq(PricingEngine.getThickBand1500('201J3', 0.87), 't1');
+  eq(PricingEngine.getThickBand1500('201J3', 0.88), 't2');
+  eq(PricingEngine.getThickBand1500('201J3', 1.09), 't2', '1.09-1.17 应在第二档');
+  eq(PricingEngine.getThickBand1500('201J3', 1.17), 't2');
+  eq(PricingEngine.getThickBand1500('201J3', 1.18), 't3');
+  eq(PricingEngine.getThickBand1500('201J3', 1.28), 't4');
+  eq(PricingEngine.getThickBand1500('201J3', 1.38), 't5');
+  eq(PricingEngine.getThickBand1500('201J3', 1.57), 't5');
+  eq(PricingEngine.getThickBand1500('201J3', 1.58), 't6');
+  eq(PricingEngine.getThickBand1500('201J3', 0.84), null, '低于 0.85 应报错');
+});
+test('getThickBand1500: J4/J5/其他材质无厚度分档', () => {
+  eq(PricingEngine.getThickBand1500('201J4', 1.0), null);
+  eq(PricingEngine.getThickBand1500('201J5', 1.0), null);
+  eq(PricingEngine.getThickBand1500('304', 1.0), null);
+  eq(PricingEngine.getThickBand1500('201J1', 'abc'), null);
+});
+test('calculate: 1500宽 201J1 厚度0.60（t1 内）校验通过', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J1', surface:'', thickness:'0.60', width:'1500', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r.success, true);
+});
+test('calculate: 1500宽 201J1 厚度0.50（低于0.55）报错', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J1', surface:'', thickness:'0.50', width:'1500', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r.success, false, '应失败');
+  eq(r.errors.join(';').includes('厚度档位'), true, '应提示厚度不在档位');
+});
+test('calculate: 1530宽 201J3 厚度1.10（t2 内）校验通过', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J3', surface:'', thickness:'1.10', width:'1530', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r.success, true);
+});
+test('calculate: 1500宽 201J4 暂不支持', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J4', surface:'', thickness:'1.00', width:'1500', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r.success, false, '应失败');
+  eq(r.errors.join(';').includes('暂不支持 201J4'), true);
+});
+test('calculate: 1219宽 201J2（普通档）不受厚度分档影响', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'', thickness:'0.60', width:'1219', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r.success, true, '普通档应正常');
+});
+
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

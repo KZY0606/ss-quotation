@@ -26,7 +26,24 @@ const App = (() => {
 
   // 201 基价空结构
   function emptyBandPrices() { return { '201J1': 0, '201J2': 0, '201J3': 0, '201J4': 0 }; }
-  function emptyOrigin201() { return { b1: emptyBandPrices(), b2: emptyBandPrices(), b3: emptyBandPrices(), b4: emptyBandPrices() }; }
+  // 1500/1530 宽板：按厚度分档的空结构（J4 暂不支持）
+  function emptyThickPrices(mat) {
+    const m = mat || '201J1';
+    const keys = (PricingEngine.THICK_BANDS_1500_LABELS && PricingEngine.THICK_BANDS_1500_LABELS[m]) ? PricingEngine.THICK_BANDS_1500_LABELS[m].map((_, i) => 't' + (i + 1)) : ['t1','t2','t3','t4','t5','t6'];
+    const o = {};
+    keys.forEach(k => { o[k] = 0; });
+    return o;
+  }
+  function emptyOrigin201() {
+    return {
+      b1: emptyBandPrices(), b2: emptyBandPrices(), b3: emptyBandPrices(),
+      b4: {
+        '201J1': emptyThickPrices('201J1'),
+        '201J2': emptyThickPrices('201J2'),
+        '201J3': emptyThickPrices('201J3')
+      }
+    };
+  }
   // 400系基价（按材质+表面）
   let prices400 = {};
   let lockedPrices400 = {};
@@ -49,7 +66,7 @@ const App = (() => {
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
 
   // ========== 基价计算 ==========
-  function getMaterialPrice(origin, material, surface, width) {
+  function getMaterialPrice(origin, material, surface, width, thickness) {
     // 400系：查独立基价表（按产地+材质），410S/BA 是一个整体材质名
     if (origin && material) {
       const normMat = normalize400Material(material);
@@ -77,6 +94,16 @@ const App = (() => {
       if (band === undefined || band === null) return null; // 宽度不在档
       const matKey = material === '201' ? '201J2' : material;
       const prices = originPrices[origin] || {};
+      if (band === 4) {
+        // 1500/1530 宽板：按 材质 → 厚度档位 取基价（J4 暂不支持）
+        if (matKey === '201J4') return null;
+        const tk = PricingEngine.getThickBand1500(matKey, thickness);
+        if (tk === null) return null; // 厚度不在档位
+        const b4 = prices.b4 || {};
+        const m = b4[matKey] || {};
+        const v = m[tk];
+        return (v && v > 0) ? v : null;
+      }
       const b = prices['b' + band] || {};
       const v = b[matKey];
       return (v && v > 0) ? v : null;
@@ -200,25 +227,50 @@ const App = (() => {
       const locked = !!lockedOrigins[origin];
       const div = document.createElement('div');
       div.className = 'origin-block-201';
-      // 表头行：产地 + 锁定 + 4 个宽度档标签
+      // 表头行：产地 + 锁定 + 3 个宽度档标签（1500/1530 已拆为独立版块）
       let html = `
         <div class="origin-row origin-head201">
           <span class="oname201">${origin}</span>
           <span class="oband201">1000/1030</span>
           <span class="oband201">1219/1240</span>
           <span class="oband201">1250/1280</span>
-          <span class="oband201">1500/1530</span>
           <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" data-mat="201" title="${locked ? '点击解锁' : '点击锁定'}">${locked ? '🔒' : '🔓'}</button>
         </div>`;
       ['201J1','201J2','201J3','201J4'].forEach(mat => {
         html += `
         <div class="origin-row origin-row-201">
           <span class="omat201">${mat.replace('201','')}</span>
-          ${[1,2,3,4].map(b => `<input type="number" class="origin201-input" data-origin="${origin}" data-band="${b}" data-mat="${mat}" value="${prices['b'+b][mat] > 0 ? prices['b'+b][mat] : ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}>`).join('')}
+          ${[1,2,3].map(b => `<input type="number" class="origin201-input" data-origin="${origin}" data-band="${b}" data-mat="${mat}" value="${prices['b'+b][mat] > 0 ? prices['b'+b][mat] : ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}>`).join('')}
         </div>`;
       });
       div.innerHTML = html;
       els.originRows201.appendChild(div);
+
+      // 1500/1530 宽板独立版块（按厚度分基价；J4 暂不支持；仅宏旺）
+      const thickLabels = (PricingEngine.THICK_BANDS_1500_LABELS) || {};
+      if (origin === '宏旺' && Object.keys(thickLabels).length) {
+        const tb = document.createElement('div');
+        tb.className = 'origin-block-201 thick-block-1500';
+        const b4 = (originPrices['宏旺'].b4) || {};
+        let th = `
+          <div class="origin-row origin-head201 thick-head1500">
+            <span class="oname201">宏旺 201 · 1500/1530 宽板</span>
+            <span class="oband201 thick-note">按厚度分基价（元/吨）</span>
+          </div>`;
+        Object.entries(thickLabels).forEach(([mat, arr]) => {
+          const mp = (b4[mat]) || {};
+          th += `
+          <div class="origin-row origin-row-201 thick-row-1500">
+            <span class="omat201">${mat.replace('201','')}</span>
+            ${arr.map((lab, i) => {
+              const tk = 't' + (i + 1);
+              return `<div class="thick-cell"><span class="thick-label">${lab}</span><input type="number" class="origin201-thick-input" data-origin="${origin}" data-mat="${mat}" data-thick="${tk}" value="${mp[tk] > 0 ? mp[tk] : ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>`;
+            }).join('')}
+          </div>`;
+        });
+        tb.innerHTML = th;
+        els.originRows201.appendChild(tb);
+      }
     });
     bindOrigin201Inputs();
     document.querySelectorAll('.o-lock[data-mat="201"]').forEach(btn => {
@@ -275,6 +327,25 @@ const App = (() => {
         if (!originPrices[o]) originPrices[o] = emptyOrigin201();
         if (!originPrices[o]['b'+b]) originPrices[o]['b'+b] = emptyBandPrices();
         originPrices[o]['b'+b][m] = parseFloat(inp.value) || 0;
+        saveLockedPrices();
+      });
+    });
+    // 1500/1530 宽板厚度档输入（b4 按 材质 → 厚度档 存储）
+    document.querySelectorAll('.origin201-thick-input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const o = inp.dataset.origin, m = inp.dataset.mat, tk = inp.dataset.thick;
+        if (!originPrices[o]) originPrices[o] = emptyOrigin201();
+        if (!originPrices[o].b4) originPrices[o].b4 = emptyOrigin201().b4;
+        if (!originPrices[o].b4[m]) originPrices[o].b4[m] = {};
+        originPrices[o].b4[m][tk] = parseFloat(inp.value) || 0;
+        updateAllDerived();
+      });
+      inp.addEventListener('blur', () => {
+        const o = inp.dataset.origin, m = inp.dataset.mat, tk = inp.dataset.thick;
+        if (!originPrices[o]) originPrices[o] = emptyOrigin201();
+        if (!originPrices[o].b4) originPrices[o].b4 = emptyOrigin201().b4;
+        if (!originPrices[o].b4[m]) originPrices[o].b4[m] = {};
+        originPrices[o].b4[m][tk] = parseFloat(inp.value) || 0;
         saveLockedPrices();
       });
     });
@@ -926,7 +997,7 @@ const App = (() => {
         if (item.material && item.material.includes('/') && !item.surface) {
           item.surface = '无';
         }
-        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material, null, parseFloat(item.width)) || 0;
+        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material, null, parseFloat(item.width), parseFloat(item.thickness)) || 0;
       });
       dataItems = dataItems.concat(items);
       results = [];
@@ -958,7 +1029,7 @@ const App = (() => {
     }
     f1 = PricingEngine.normalizeFilm(f1) || f1;
     f2 = PricingEngine.normalizeFilm(f2) || f2;
-    const bp = getMaterialPrice(origin, mat, surf, parseFloat(wid));
+    const bp = getMaterialPrice(origin, mat, surf, parseFloat(wid), parseFloat(thk));
     if (!bp || bp <= 0) {
       if (/^201/.test(mat) && mat !== '201J5' && PricingEngine.getWidthBand201(parseFloat(wid)) === null) {
         showToast(`宽度 ${wid}mm 不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530）`, 'error');
@@ -1056,7 +1127,7 @@ const App = (() => {
         originOrder.push(p.origin);
         originPrices[p.origin] = emptyOrigin201();
       }
-      const bp = getMaterialPrice(p.origin || '宏旺', p.material, null, parseFloat(p.width));
+      const bp = getMaterialPrice(p.origin || '宏旺', p.material, null, parseFloat(p.width), parseFloat(p.thickness));
       if (bp && bp > 0) {
         p.basePrice = bp;
         dataItems.push(p);
@@ -1081,7 +1152,7 @@ const App = (() => {
     // Update base prices（模式B：能算的算，算不出的逐行标详细原因，不再整体中止）
     dataItems.forEach(item => {
       const w = parseFloat(item.width);
-      const bp = getMaterialPrice(item.origin || '宏旺', item.material, null, w);
+      const bp = getMaterialPrice(item.origin || '宏旺', item.material, null, w, parseFloat(item.thickness));
       item.basePrice = bp || 0;
       item._bpError = null;
       if (!bp || bp <= 0) {

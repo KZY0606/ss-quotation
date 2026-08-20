@@ -718,3 +718,51 @@ tr.main-row:hover .delete-btn { opacity:1; }
 }
 .origin-row-201 .origin201-input::-webkit-outer-spin-button,
 .origin-row-201 .origin201-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* ===== 201 宽板 1500/1530 独立版块（按厚度分基价） ===== */
+.thick-block-1500 {
+  margin-top: 8px;
+  border-color: var(--accent);
+}
+.thick-head1500 {
+  background: linear-gradient(90deg, rgba(14,165,233,0.12), rgba(14,165,233,0.04));
+}
+.thick-note {
+  flex: none;
+  color: var(--accent);
+  font-weight: 700;
+}
+.thick-row-1500 {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 10px;
+}
+.thick-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 90px;
+  min-width: 84px;
+}
+.thick-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-weight: 600;
+}
+.thick-cell input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1.5px solid var(--border); border-radius: 5px;
+  font-size: 13px; font-weight: 600;
+  font-family: var(--font);
+  background: #fff; color: var(--primary-dark);
+  text-align: center;
+}
+.thick-cell input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+.thick-cell input[readonly] {
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
+}

@@ -35,6 +35,19 @@ const PricingEngine = (() => {
     return WIDTH_TO_BAND_201[width] || null;
   }
 
+  // 1500/1530 宽度档：按材质查厚度档位（返回 t1..t6 或 null=范围外/材质不支持）
+  function getThickBand1500(material, thickness) {
+    const m = (material || '').trim();
+    const bands = THICK_BANDS_1500[m];
+    if (!bands) return null; // J4/J5/其他材质暂无厚度分档
+    const t = parseFloat(thickness);
+    if (isNaN(t)) return null;
+    for (const b of bands) {
+      if (t >= b.min && t <= b.max) return b.key;
+    }
+    return null;
+  }
+
   function getEdgeType(width) {
     const w = parseFloat(width);
     // 精确匹配齐边
@@ -333,6 +346,18 @@ const PricingEngine = (() => {
       const wb = getWidthBand201(width);
       if (wb === null) {
         errors.push(`宽度 ${isNaN(width) ? (item.width || '?') : width}mm 不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530）`);
+      } else if (wb === 4) {
+        // 1500/1530 宽板：按厚度分基价（J4 暂不支持）
+        if (material === '201J4') {
+          errors.push(`宽度 ${width}mm 档暂不支持 201J4（未配置厚度分档）`);
+        } else {
+          // material 无 J 后缀（如 '201'）按 201J2 查厚度档
+          const thickMat = material === '201' ? '201J2' : material;
+          const tk = getThickBand1500(thickMat, thickness);
+          if (tk === null) {
+            errors.push(`厚度 ${isNaN(thickness) ? (item.thickness || '?') : thickness}mm 不在 1500/1530 宽度档 ${material} 的厚度档位内（见基价面板“1500/1530 宽板”版块）`);
+          }
+        }
       }
     }
 
@@ -365,8 +390,8 @@ const PricingEngine = (() => {
     const isExactAlias = SURFACE_FEES[rawTrimmed] || SURFACE_ALIASES[rawLower];
 
     // LINEN: 在别名归一化后的名称上检测（别名已把小珠光等转为-LINEN后缀）
-    const linenSuffix = aliasedName.match(/^(.+)-LINEN$/i);
-    const hasLinen = linenSuffix || /^LINEN$/.test(aliasedName);
+    const linenSuffix = aliasedName ? aliasedName.match(/^(.+)-LINEN$/i) : null;
+    const hasLinen = linenSuffix || aliasedName === 'LINEN';
 
     // AFP: 仅在原始输入不是直接表面命中时检测
     let afpSqmFee = 0;
@@ -664,6 +689,7 @@ const PricingEngine = (() => {
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, THICKNESS_SURCHARGE_316L, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
-    WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201
+    WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
+    THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500
   };
 })();
