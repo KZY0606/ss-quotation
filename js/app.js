@@ -231,7 +231,6 @@ const App = (() => {
       let html = `
         <div class="origin-row origin-head201">
           <span class="oname201">${origin}</span>
-          <span class="oband201">1000/1030</span>
           <span class="oband201">1219/1240</span>
           <span class="oband201">1250/1280</span>
           <button class="o-lock ${locked ? 'locked' : ''}" data-origin="${origin}" data-mat="201" title="${locked ? '点击解锁' : '点击锁定'}">${locked ? '🔒' : '🔓'}</button>
@@ -240,7 +239,7 @@ const App = (() => {
         html += `
         <div class="origin-row origin-row-201">
           <span class="omat201">${mat.replace('201','')}</span>
-          ${[1,2,3].map(b => `<input type="number" class="origin201-input" data-origin="${origin}" data-band="${b}" data-mat="${mat}" value="${prices['b'+b][mat] > 0 ? prices['b'+b][mat] : ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}>`).join('')}
+          ${[2,3].map(b => `<input type="number" class="origin201-input" data-origin="${origin}" data-band="${b}" data-mat="${mat}" value="${prices['b'+b][mat] > 0 ? prices['b'+b][mat] : ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}>`).join('')}
         </div>`;
       });
       div.innerHTML = html;
@@ -1032,7 +1031,7 @@ const App = (() => {
     const bp = getMaterialPrice(origin, mat, surf, parseFloat(wid), parseFloat(thk));
     if (!bp || bp <= 0) {
       if (/^201/.test(mat) && mat !== '201J5' && PricingEngine.getWidthBand201(parseFloat(wid)) === null) {
-        showToast(`宽度 ${wid}mm 不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530）`, 'error');
+        showToast(`宽度 ${wid}mm 不在 201 基价档位（1219/1240、1250/1280、1500/1530）`, 'error');
       } else {
         showToast(`${origin} ${mat} 基价未设置`, 'error');
       }
@@ -1158,7 +1157,7 @@ const App = (() => {
       item._bpError = null;
       if (!bp || bp <= 0) {
         if (/^201/.test(item.material) && item.material !== '201J5' && PricingEngine.getWidthBand201(w) === null) {
-          item._bpError = `宽度 ${isNaN(w) ? (item.width || '?') : w}mm 不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530），请检查宽度或补充对应档位基价`;
+          item._bpError = `宽度 ${isNaN(w) ? (item.width || '?') : w}mm 不在 201 基价档位（1219/1240、1250/1280、1500/1530），请检查宽度或补充对应档位基价`;
         } else {
           item._bpError = `${item.origin || '?'} ${item.material} 基价未设置${isNaN(w) ? '' : `（宽度 ${w}mm 对应档位）`}，请在基价面板填写`;
         }

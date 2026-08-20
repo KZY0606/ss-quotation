@@ -60,12 +60,12 @@ const target = process.argv[2] || 'https://kzy0606.github.io/ss-quotation/';
   let fail = 0;
   const check = (ok, name) => { console.log((ok ? '✅' : '❌') + ' ' + name); if (!ok) fail = 1; };
 
-  check(res.j4 === 3, `常规区 J4 行 3 格 (实际 ${res.j4})`);
+  check(res.j4 === 2, `常规区 J4 行 2 格 (实际 ${res.j4})`);
   check(res.thickJ1 === 6, `宽板 J1 六档 (实际 ${res.thickJ1})`);
   check(res.thickJ2 === 4, `宽板 J2 四档 (实际 ${res.thickJ2})`);
   check(res.thickJ3 === 6, `宽板 J3 六档 (实际 ${res.thickJ3})`);
   check(res.thickTotal === 16, `宽板合计 16 格 (实际 ${res.thickTotal})`);
-  check(res.rows.includes('J4:3'), `行结构含 J4:3 (实际: ${res.rows})`);
+  check(res.rows.includes('J4:2'), `行结构含 J4:2 (实际: ${res.rows})`);
   check(res.rows.includes('J3:6'), `行结构含宽板 J3:6 (实际: ${res.rows})`);
   check(res.overlaps.length === 0, `无行重叠 (实际: ${res.overlaps.length ? res.overlaps.join(',') : '无'})`);
   const hs = res.blockHeights.split(' / ').map(s => parseInt(s, 10));

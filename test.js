@@ -357,15 +357,20 @@ test('模糊匹配: no4 → NO.4', () => {
 });
 
 // === 201 基价宽度档（精确值）测试 ===
-test('201 宽度档映射: 1000/1030→1, 1219/1240→2, 1250/1280→3, 1500/1530→4', () => {
-  eq(PricingEngine.getWidthBand201(1000), 1);
-  eq(PricingEngine.getWidthBand201(1030), 1);
+test('201 宽度档映射: 1000/1030→2(并入1219/1240), 1219/1240→2, 1250/1280→3, 1500/1530→4', () => {
+  eq(PricingEngine.getWidthBand201(1000), 2, '1000 并入 1219/1240 档（用户确认取消 1000/1030 独立档）');
+  eq(PricingEngine.getWidthBand201(1030), 2, '1030 并入 1219/1240 档');
   eq(PricingEngine.getWidthBand201(1219), 2);
   eq(PricingEngine.getWidthBand201(1240), 2);
   eq(PricingEngine.getWidthBand201(1250), 3);
   eq(PricingEngine.getWidthBand201(1280), 3);
   eq(PricingEngine.getWidthBand201(1500), 4);
   eq(PricingEngine.getWidthBand201(1530), 4);
+});
+test('calculate: 宽度1000 订单用 1219/1240 档基价正常计算', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'8K', thickness:'0.55', width:'1000', length:'2500', film1:'', film2:'', basePrice:7800});
+  eq(r.success, true, '1000mm 不报宽度档错误，基价用 b2');
+  eq(r.detail.basePrice, 7800);
 });
 
 test('201 档外宽度: 1220/1550/1040/1001 → null', () => {

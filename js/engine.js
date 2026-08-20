@@ -348,7 +348,7 @@ const PricingEngine = (() => {
     if (isMaterial201(material) && !/^201J5/.test(material)) {
       const wb = getWidthBand201(width);
       if (wb === null) {
-        errors.push(`宽度 ${isNaN(width) ? (item.width || '?') : width}mm 不在 201 基价档位（1000/1030、1219/1240、1250/1280、1500/1530）`);
+        errors.push(`宽度 ${isNaN(width) ? (item.width || '?') : width}mm 不在 201 基价档位（1219/1240、1250/1280、1500/1530）`);
       } else if (wb === 4) {
         // 1500/1530 宽板：按厚度分基价（J4 暂不支持）
         if (material === '201J4') {
