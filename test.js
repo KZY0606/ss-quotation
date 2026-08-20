@@ -580,6 +580,18 @@ test('freeText: 430W/2BA 材质识别', () => {
   eq(p.material, '430W/2BA');
   eq(p.thickness, '0.40');
 });
+test('1500/1530 宽板厚度上限 3.00mm：3.00 可算、3.05 报错', () => {
+  eq(PricingEngine.getThickBand1500('201J1', 3.00), 't6', '3.00 落 J1 t6');
+  eq(PricingEngine.getThickBand1500('201J2', 3.00), 't4', '3.00 落 J2 t4');
+  eq(PricingEngine.getThickBand1500('201J3', 3.00), 't6', '3.00 落 J3 t6');
+  eq(PricingEngine.getThickBand1500('201J1', 3.05), null, '3.05 超上限返回 null');
+  eq(PricingEngine.getThickBand1500('201J2', 3.05), null);
+  eq(PricingEngine.getThickBand1500('201J3', 3.05), null);
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J1', surface:'8K', thickness:'3.00', width:'1500', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r.success, true, '3.00mm 宽板正常计算');
+  const r2 = PricingEngine.calculate({origin:'宏旺', material:'201J1', surface:'8K', thickness:'3.05', width:'1500', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r2.success, false, '3.05mm 宽板报错');
+});
 
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
