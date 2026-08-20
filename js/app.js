@@ -12,7 +12,8 @@ const App = (() => {
   let originOrder = [...ORIGIN_PRESETS];
   let lockedOrigins = {};
   const ORIGINS_201 = ['宏旺'];
-  const ORIGINS_304 = ORIGIN_PRESETS.filter(o => o !== '瑞钢' && o !== '联众' && o !== '青山');
+  // 304 产地顺序（2026-08-20 用户指定）：德龙、宏旺、上克、甬金、张浦、太钢
+  const ORIGINS_304 = ['德龙', '宏旺', '上克', '甬金', '张浦', '太钢'];
   // 各产地 J2 基价 (304)
   let originPrices304 = {};
   let lockedOrigins304 = {};
