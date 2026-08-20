@@ -118,6 +118,21 @@ const THICKNESS_SURCHARGE_304 = [
   { min: 0.80, max: 3.00, price: 300 }
 ];
 
+// 304 产地特异性厚度加价表（优先使用）
+// 2026-08-20：张浦 304 厚度上限 6.00mm；3.00-6.00 段暂延续 300（未另行报价）
+const ORIGIN_THICKNESS_SURCHARGE_304 = {
+  '张浦': [
+    { min: 0.28, max: 0.30, price: 1300 },
+    { min: 0.31, max: 0.35, price: 1000 },
+    { min: 0.36, max: 0.40, price: 800 },
+    { min: 0.41, max: 0.49, price: 700 },
+    { min: 0.50, max: 0.59, price: 600 },
+    { min: 0.60, max: 0.69, price: 500 },
+    { min: 0.70, max: 0.79, price: 400 },
+    { min: 0.80, max: 6.00, price: 300 }
+  ]
+};
+
 // 产地特异性厚度加价表 (201系列)
 // 未列出的产地使用默认 THICKNESS_SURCHARGE（宏旺/德龙标准）
 const ORIGIN_THICKNESS_SURCHARGE = {
@@ -194,15 +209,19 @@ const ORIGIN_THICKNESS_SURCHARGE_316L = {
     { min: 0.28, max: 0.29, price: 1400 },
     { min: 0.30, max: 0.32, price: 1400 },
     { min: 0.33, max: 0.37, price: 1200 },
-    { min: 0.38, max: 0.49, price: 900 },
-    { min: 0.50, max: 0.60, price: 900 },
+    { min: 0.38, max: 0.42, price: 1000 },
+    { min: 0.43, max: 0.49, price: 900 },
+    { min: 0.50, max: 0.50, price: 900 },
+    { min: 0.51, max: 0.60, price: 900 },
     { min: 0.61, max: 0.70, price: 700 },
     { min: 0.71, max: 0.80, price: 600 },
     { min: 0.81, max: 1.00, price: 500 },
     { min: 1.01, max: 1.20, price: 450 },
-    { min: 1.21, max: 2.00, price: 400 },
-    { min: 2.01, max: 3.00, price: 300 },
-    { min: 3.01, max: 999, price: 500 }
+    { min: 1.21, max: 1.50, price: 400 },
+    { min: 1.51, max: 2.00, price: 300 },
+    // 2026-08-20：3.00 归 700 档（连续区间，上档不含 3.00）
+    { min: 2.01, max: 2.99, price: 300 },
+    { min: 3.00, max: 6.00, price: 700 }
   ],
   '甬金': [
     { min: 0.25, max: 0.27, price: 2100 },

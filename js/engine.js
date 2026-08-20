@@ -111,6 +111,9 @@ const PricingEngine = (() => {
     }
     // 304：有产地特异性加价则用，否则用统一宏旺/德龙标准
     if (material && (material === '304' || material.startsWith('304'))) {
+      if (origin && ORIGIN_THICKNESS_SURCHARGE_304 && ORIGIN_THICKNESS_SURCHARGE_304[origin]) {
+        return findInTable(ORIGIN_THICKNESS_SURCHARGE_304[origin], t);
+      }
       if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
         return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
       }
@@ -709,7 +712,7 @@ const PricingEngine = (() => {
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, THICKNESS_SURCHARGE_316L, YANYAN_THICKNESS_SURCHARGE,
-    ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_316L,
+    ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
     THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500

@@ -18,7 +18,7 @@ const App = (() => {
   let originPrices304 = {};
   let lockedOrigins304 = {};
   // 各产地 316L 基价（仅已配置数据的产地）
-  const ORIGINS_316L = ['张浦', '甬金', '太钢'];
+  const ORIGINS_316L = ['甬金', '张浦', '太钢'];
   let originPrices316L = {};
   let lockedOrigins316L = {};
   // 北港 J5 基价（北港只卖 J5，单独一行填写，不分宽度）
@@ -863,9 +863,19 @@ const App = (() => {
     });
     h.push('</table>');
 
-    // 产地特异性表
+    // 产地特异性表（2026-08-20：张浦 304 已用独立新表，跳过避免误导）
     Object.entries(ORIGIN_THICKNESS_SURCHARGE).forEach(([origin, table]) => {
+      if (origin === '张浦') return;
       h.push(`<h4 class="ref-subtitle">${origin} (304正材)</h4>`);
+      h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+      table.forEach(t => {
+        h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+      });
+      h.push('</table>');
+    });
+    // 304 产地特异性表（2026-08-20：张浦上限 6.00mm）
+    Object.entries(ORIGIN_THICKNESS_SURCHARGE_304).forEach(([origin, table]) => {
+      h.push(`<h4 class="ref-subtitle">${origin} 304（上限 6.00mm）</h4>`);
       h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
       table.forEach(t => {
         h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
