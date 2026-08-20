@@ -869,17 +869,19 @@ const App = (() => {
       });
       h.push('</table>');
     });
-    // 400系厚度加价表
-    const THICK_400_LABELS = {
-      '410S-BA': '410S/BA（甬金/上克）',
-      '430B-BA': '430B/BA（甬金/上克）',
-      '430-BA': '430/BA（甬金）',
-      '430B-2BA-瑞钢': '430B/2BA（瑞钢）',
-      '410S-2BA-瑞钢': '410S/2BA（瑞钢）',
-      '410S-2BA(非标)': '410S/2BA(非标)（瑞钢）'
-    };
+    // 400系厚度加价表（标签顺序对齐面板板块：410 系列 → 430 系列）
+    const THICK_400_LABELS = [
+      ['410S-BA', '410S/BA（甬金/上克）'],
+      ['410S-2BA-瑞钢', '410S/2BA（瑞钢）'],
+      ['410S-2BA(非标)', '410S/2BA(非标)（瑞钢）'],
+      ['430B-BA', '430B/BA（甬金/上克）'],
+      ['430-BA', '430/BA（甬金）'],
+      ['430W-BA', '430W/BA（宏旺）'],
+      ['430W-2BA', '430W/2BA（宏旺）'],
+      ['430B-2BA-瑞钢', '430B/2BA（瑞钢）']
+    ];
     h.push('<h4 class="ref-subtitle">400系厚度加价</h4>');
-    for (const [key, label] of Object.entries(THICK_400_LABELS)) {
+    for (const [key, label] of THICK_400_LABELS) {
       const table = THICKNESS_SURCHARGE_400[key];
       if (!table) continue;
       h.push(`<div style="font-size:11px;font-weight:500;color:var(--text-secondary);margin:6px 0 2px;">${label}</div>`);
