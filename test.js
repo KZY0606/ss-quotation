@@ -580,6 +580,24 @@ test('freeText: 430W/2BA 材质识别', () => {
   eq(p.material, '430W/2BA');
   eq(p.thickness, '0.40');
 });
+test('进口膜 7C/8C/10C：单价与别名', () => {
+  eq(PricingEngine.getFilmFee('7C-IMPORT-FILM'), 3.3, '7C进口膜 3.3');
+  eq(PricingEngine.getFilmFee('8C-IMPORT-FILM'), 4.0, '8C进口膜 4.0');
+  eq(PricingEngine.getFilmFee('10C-IMPORT-FILM'), 4.5, '10C进口膜 4.5');
+  eq(PricingEngine.normalizeFilm('7C进口膜'), '7C-IMPORT-FILM', '7C进口膜→标准名');
+  eq(PricingEngine.normalizeFilm('进口膜7C'), '7C-IMPORT-FILM', '进口膜7C→标准名');
+  eq(PricingEngine.normalizeFilm('8c进口膜'), '8C-IMPORT-FILM');
+  eq(PricingEngine.normalizeFilm('进口膜10c'), '10C-IMPORT-FILM');
+  eq(PricingEngine.normalizeFilm('7c-import-film'), '7C-IMPORT-FILM');
+  eq(PricingEngine.normalizeFilm('7c'), '7C-FILM', '普通 7C 仍指向 7C-FILM（不被进口膜影响）');
+});
+test('freeText: 含“7C进口膜”不误匹配为普通 7C-FILM', () => {
+  const p = PricingEngine.parseFreeText('宏旺 201J2 NO.4 7C进口膜 0.55*1240*2500', {'201J2':7800});
+  eq(p !== null, true);
+  eq(p.film1, '7C-IMPORT-FILM', '应识别为进口膜而非 7C-FILM');
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'NO.4', thickness:'0.55', width:'1240', length:'2500', film1:'7C-IMPORT-FILM', film2:'', basePrice:7800});
+  eq(r.success, true, '进口膜正常计算');
+});
 test('1500/1530 宽板厚度上限 3.00mm：3.00 可算、3.05 报错', () => {
   eq(PricingEngine.getThickBand1500('201J1', 3.00), 't6', '3.00 落 J1 t6');
   eq(PricingEngine.getThickBand1500('201J2', 3.00), 't4', '3.00 落 J2 t4');

@@ -519,6 +519,10 @@ const FILM_FEES = {
   '7C-NOVACEL-LASER-FILM':6.6,
   '8C-NOVACEL-LASER-FILM':7.7,
   '10C-NOVACEL-LASER-FILM':8.8,
+  // 进口膜（2026-08-20 新增：7C=3.3 / 8C=4.0 / 10C=4.5）
+  '7C-IMPORT-FILM':  3.3,
+  '8C-IMPORT-FILM':  4.0,
+  '10C-IMPORT-FILM': 4.5,
   // 胶膜组合
   '5C-FILM+5C-FILM':  2.0,
   '7C-FILM+5C-FILM':  2.2,
@@ -695,6 +699,10 @@ const SURFACE_ALIASES = {
 
 // 保护膜名称标准化映射
 const FILM_ALIASES = {
+  // 进口膜（7C/8C/10C）— 必须排在最前：防止 remaining 里的 "7c进口膜" 先被短别名 "7c" 子串误匹配
+  '7c进口膜': '7C-IMPORT-FILM', '进口膜7c': '7C-IMPORT-FILM', '7c-import': '7C-IMPORT-FILM', '7c-import-film': '7C-IMPORT-FILM', 'import-7c': '7C-IMPORT-FILM', '7c import film': '7C-IMPORT-FILM', 'import 7c': '7C-IMPORT-FILM',
+  '8c进口膜': '8C-IMPORT-FILM', '进口膜8c': '8C-IMPORT-FILM', '8c-import': '8C-IMPORT-FILM', '8c-import-film': '8C-IMPORT-FILM', 'import-8c': '8C-IMPORT-FILM', '8c import film': '8C-IMPORT-FILM', 'import 8c': '8C-IMPORT-FILM',
+  '10c进口膜': '10C-IMPORT-FILM', '进口膜10c': '10C-IMPORT-FILM', '10c-import': '10C-IMPORT-FILM', '10c-import-film': '10C-IMPORT-FILM', 'import-10c': '10C-IMPORT-FILM', '10c import film': '10C-IMPORT-FILM', 'import 10c': '10C-IMPORT-FILM',
   // 基础膜
   '5c': '5C-FILM', '5c-film': '5C-FILM', '5c膜': '5C-FILM', '5c黑白膜': '5C-FILM',
   '7c': '7C-FILM', '7c-film': '7C-FILM', '7c膜': '7C-FILM', '7c黑白膜': '7C-FILM',
