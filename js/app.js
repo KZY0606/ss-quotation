@@ -1086,8 +1086,9 @@ const App = (() => {
     }
 
     function extractThickness(line) {
-      const m = line.match(/(\d+\.?\d+)\s*MM/i);
-      return m ? parseFloat(m[1]) : null;
+      // 优先匹配厚度范围（如 0.55-0.60MM），其次单值
+      const m = line.match(/(\d+\.?\d*(?:\s*[-~—–]\s*\d+\.?\d*)?)\s*MM/i);
+      return m ? m[1] : null;
     }
 
     const rawLines = text.split('\n');
@@ -1270,7 +1271,7 @@ const App = (() => {
 
   const fmt = (v) => v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
   const fmtI = (v) => v.toLocaleString();
-  const fmtThk = (v) => { const n = parseFloat(v); return isNaN(n) ? v : n.toFixed(2); };
+  const fmtThk = (v) => { const s = String(v == null ? '' : v).trim(); if (!s) return ''; if (/\d\s*[-~—–]\s*\d/.test(s)) return s; const n = parseFloat(s); return isNaN(n) ? s : n.toFixed(2); };
 
   function renderBreakdown(d, item) {
     const spec = `${fmtThk(d.thickness)} × ${d.width} × ${d.length}`;

@@ -319,7 +319,10 @@ const PricingEngine = (() => {
     const errors = [];
     const material = (item.material || '').trim();
     const surface = normalizeSurface(item.surface);
-    const thickness = parseFloat(item.thickness);
+    // 厚度支持范围（如 "0.55-0.60"）：保留原始字符串用于显示/导出，计算取下限
+    const thicknessRaw = String(item.thickness === null || item.thickness === undefined ? '' : item.thickness).trim();
+    const thkRange = parseThicknessRange(thicknessRaw);
+    const thickness = thkRange ? thkRange.min : NaN;
     const width = parseFloat(item.width);
     const length = (item.length || '').trim();
     // "/" 自动拆分膜：5C-FILM/5C-FILM → film1=5C-FILM, film2=5C-FILM
@@ -461,7 +464,7 @@ const PricingEngine = (() => {
       success: true,
       detail: {
         origin: item.origin || '',
-        material, surface: item.surface || '', normSurface: baseSurface, thickness, width, length, weight, film1, film2, basePrice,
+        material, surface: item.surface || '', normSurface: baseSurface, thickness: thicknessRaw || String(thickness), width, length, weight, film1, film2, basePrice,
         isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),
         thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
@@ -525,10 +528,27 @@ const PricingEngine = (() => {
     const parts = s.split('*').map(p => p.trim());
     if (parts.length < 3) return null;
     return {
-      thickness: parseFloat(parts[0]),
+      thickness: parts[0], // 保留原始字符串（可能是范围如 0.55-0.60）
       width: parseFloat(parts[1]),
       length: parts[2].toUpperCase() === 'C' || parts[2].toUpperCase() === 'COIL' ? 'C' : parts[2]
     };
+  }
+
+  // 厚度范围解析: "0.55-0.60" / "0.55~0.60" / "0.55 - 0.60" / "0.55" → {min, max}
+  // 无法识别返回 null；范围参与计算时取 min（与历史 parseFloat 截断行为一致）
+  function parseThicknessRange(raw) {
+    if (raw === null || raw === undefined) return null;
+    const s = String(raw).trim().replace(/\s*MM\s*/i, '').trim();
+    if (!s) return null;
+    const m = s.match(/^(\d+\.?\d*)\s*[-~—–]\s*(\d+\.?\d*)$/);
+    if (m) {
+      const a = parseFloat(m[1]), b = parseFloat(m[2]);
+      if (isNaN(a) || isNaN(b) || a <= 0 || b <= 0) return null;
+      return { min: Math.min(a, b), max: Math.max(a, b), raw: s };
+    }
+    const v = parseFloat(s);
+    if (isNaN(v) || v <= 0) return null;
+    return { min: v, max: v, raw: s };
   }
 
   function parseFreeText(text, basePriceMap) {
@@ -537,21 +557,22 @@ const PricingEngine = (() => {
     // 处理中文逗号和全角符号
     remaining = remaining.replace(/[，,、；;：:]/g, ' ').trim();
 
-    const specRegex = /(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)\s*[*×xX]\s*(\S+)/;
+    // 规格支持厚度范围（如 0.55-0.60*1240*2500）
+    const specRegex = /(\d+\.?\d*(?:\s*[-~—–]\s*\d+\.?\d*)?)\s*[*×xX]\s*(\d+\.?\d*)\s*[*×xX]\s*(\S+)/;
     const specMatch = remaining.match(specRegex);
 
     let thickness = null, width = null, length = null;
     if (specMatch) {
-      thickness = parseFloat(specMatch[1]);
+      thickness = specMatch[1]; // 保留原始字符串（可能为范围）
       width = parseFloat(specMatch[2]);
       const lenStr = specMatch[3].toUpperCase();
       length = (lenStr === 'C' || lenStr === 'COIL') ? 'C' : specMatch[3];
       remaining = remaining.replace(specRegex, ' ').trim();
     } else {
-      // 无完整规格，尝试单独提取厚度如 "0.3MM"
-      const thkMatch = remaining.match(/(\d+\.?\d+)\s*MM/i);
+      // 无完整规格，尝试单独提取厚度如 "0.3MM" 或 "0.55-0.60MM"
+      const thkMatch = remaining.match(/(\d+\.?\d*(?:\s*[-~—–]\s*\d+\.?\d*)?)\s*MM/i);
       if (thkMatch) {
-        thickness = parseFloat(thkMatch[0]);
+        thickness = thkMatch[1]; // 保留原始字符串（可能为范围）
         width = 1240;
         length = 'C';
         remaining = remaining.replace(thkMatch[0], ' ').trim();
@@ -684,6 +705,7 @@ const PricingEngine = (() => {
   return {
     calculate, calculateBatch, parseSpec, parseFreeText,
     normalizeSurface, normalizeFilm, getDensity, getEdgeType,
+    parseThicknessRange,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, THICKNESS_SURCHARGE_316L, YANYAN_THICKNESS_SURCHARGE,

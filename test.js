@@ -104,7 +104,7 @@ test('201J1压延 0.50*1240*C', () => {
 test('自由文本: 宏旺201J1 NO.4 5C-FILM 0.50*1240*C', () => {
   const p = PricingEngine.parseFreeText('宏旺201J1 NO.4 5C-FILM 0.50*1240*C', {'201J1':8700});
   eq(p !== null, true); eq(p.material, '201J1'); eq(p.surface, 'NO.4');
-  eq(p.thickness, 0.50); eq(p.width, 1240); eq(p.length, 'C'); eq(p.film1, '5C-FILM');
+  eq(p.thickness, '0.50'); eq(p.width, 1240); eq(p.length, 'C'); eq(p.film1, '5C-FILM');
   eq(p.isYanYan, false);
 });
 
@@ -522,6 +522,38 @@ test('getSurfaceFee: NO.4 1280 与 1250 同价（ton 档 1.30mm）', () => {
 });
 test('getSurfaceFee: 宽度范围外（900）仍返回 null', () => {
   eq(PricingEngine.getSurfaceFee('8K', 0.55, 900, '201J2'), null);
+});
+
+// === 厚度范围（导入识别/计算/导出保留）===
+test('parseThicknessRange: 范围与单值', () => {
+  eq(PricingEngine.parseThicknessRange('0.55-0.60').min, 0.55);
+  eq(PricingEngine.parseThicknessRange('0.55-0.60').max, 0.60);
+  eq(PricingEngine.parseThicknessRange('0.55~0.60').min, 0.55);
+  eq(PricingEngine.parseThicknessRange('0.55 - 0.60').max, 0.60);
+  eq(PricingEngine.parseThicknessRange('0.55').min, 0.55);
+  eq(PricingEngine.parseThicknessRange('0.55').max, 0.55);
+  eq(PricingEngine.parseThicknessRange('abc'), null);
+});
+test('calculate: 厚度范围 0.55-0.60 正常计算且 detail 保留范围', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'8K', thickness:'0.55-0.60', width:'1250', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r.success, true, '范围应正常计算（取下限 0.55）');
+  eq(r.detail.thickness, '0.55-0.60', 'detail 保留范围字符串');
+  eq(r.detail.surfaceFeePerTon > 0, true, '8K 表面费已算');
+});
+test('parseSpec: 范围规格 0.55-0.60*1240*2500', () => {
+  const p = PricingEngine.parseSpec('0.55-0.60*1240*2500');
+  eq(p.thickness, '0.55-0.60');
+  eq(p.width, 1240);
+  eq(p.length, '2500');
+});
+test('parseFreeText: 范围规格文本', () => {
+  const p = PricingEngine.parseFreeText('宏旺 201J2 8K 0.55-0.60*1240*2500 C', {});
+  eq(p.thickness, '0.55-0.60', '范围保留');
+  eq(p.width, 1240);
+});
+test('calculate: 1500 宽板 + 厚度范围 0.55-0.60 落 J1 档', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J1', surface:'', thickness:'0.55-0.60', width:'1500', length:'C', film1:'', film2:'', basePrice:8000});
+  eq(r.success, true, '范围下限 0.55 在 1500 档 J1 厚度范围');
 });
 
 

@@ -275,6 +275,15 @@ const ExcelParser = (() => {
     return null;
   }
 
+  // 厚度显示：范围原样保留，单值保留2位小数
+  function fmtExportThk(v) {
+    const s = String(v == null ? '' : v).trim();
+    if (!s) return '';
+    if (/\d\s*[-~—–]\s*\d/.test(s)) return s;
+    const n = parseFloat(s);
+    return isNaN(n) ? s : n.toFixed(2);
+  }
+
   function exportToExcel(results, filename) {
     const rows = [];
     // 给客户看的简洁表头
@@ -286,8 +295,8 @@ const ExcelParser = (() => {
         continue;
       }
       const d = r.detail;
-      // 规格: 厚度*宽度*长度（厚度保留2位小数）
-      const spec = `${Number(d.thickness).toFixed(2)}*${d.width}*${d.length}`;
+      // 规格: 厚度*宽度*长度（厚度支持范围如 0.55-0.60，原样保留；单值保留2位小数）
+      const spec = `${fmtExportThk(d.thickness)}*${d.width}*${d.length}`;
       // 保护膜: 合并膜1+膜2
       const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
       // 重量（吨）：取导入数据，无则不填
