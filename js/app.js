@@ -58,6 +58,7 @@ const App = (() => {
     { origin: '甬金', material: '430B/BA' },
     { origin: '甬金', material: '430/BA' },
     { origin: '上克', material: '430B/BA' },
+    { origin: '上克', material: '430/BA' },
     { origin: '宏旺', material: '430W/2BA' },
     { origin: '宏旺', material: '430W/2BB' },
     { origin: '瑞钢', material: '430B/2BA' },
@@ -80,6 +81,7 @@ const App = (() => {
         { origin: '甬金', material: '430B/BA' },
         { origin: '甬金', material: '430/BA' },
         { origin: '上克', material: '430B/BA' },
+        { origin: '上克', material: '430/BA' },
         { origin: '宏旺', material: '430W/2BA' },
         { origin: '宏旺', material: '430W/2BB' },
         { origin: '瑞钢', material: '430B/2BA' },
@@ -875,7 +877,7 @@ const App = (() => {
       ['410S-2BA-瑞钢', '410S/2BA（瑞钢）'],
       ['410S-2BA(非标)', '410S/2BA(非标)（瑞钢）'],
       ['430B-BA', '430B/BA（甬金/上克）'],
-      ['430-BA', '430/BA（甬金）'],
+      ['430-BA', '430/BA（甬金/上克）'],
       ['430W-2BA', '430W/2BA、430W/2BB（宏旺，同价）'],
       ['430B-2BA-瑞钢', '430B/2BA（瑞钢）']
     ];
