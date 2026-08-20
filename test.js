@@ -482,6 +482,28 @@ test('calculate: 1219宽 201J2（普通档）不受厚度分档影响', () => {
   eq(r.success, true, '普通档应正常');
 });
 
+// === 边类型（毛边/齐边）===
+test('getEdgeType: 1250 为齐边 (trim)', () => {
+  eq(PricingEngine.getEdgeType(1250), 'trim', '1250 应为齐边（用户确认）');
+});
+test('getEdgeType: 1280 为毛边 (rough)', () => {
+  eq(PricingEngine.getEdgeType(1280), 'rough');
+});
+test('getEdgeType: 1240/1260/1270 毛边，1000/1219/1220/1500 齐边', () => {
+  eq(PricingEngine.getEdgeType(1240), 'rough');
+  eq(PricingEngine.getEdgeType(1260), 'rough');
+  eq(PricingEngine.getEdgeType(1270), 'rough');
+  eq(PricingEngine.getEdgeType(1000), 'trim');
+  eq(PricingEngine.getEdgeType(1219), 'trim');
+  eq(PricingEngine.getEdgeType(1220), 'trim');
+  eq(PricingEngine.getEdgeType(1500), 'trim');
+  eq(PricingEngine.getEdgeType(1530), 'rough');
+});
+test('getEdgeType: 列表外宽度返回 null', () => {
+  eq(PricingEngine.getEdgeType(1245), null);
+  eq(PricingEngine.getEdgeType(999), null);
+});
+
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
