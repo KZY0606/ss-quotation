@@ -504,6 +504,26 @@ test('getEdgeType: 列表外宽度返回 null', () => {
   eq(PricingEngine.getEdgeType(999), null);
 });
 
+// === 表面加工费宽度范围（1280 纳入常规档，1500-1530 独立）===
+test('getSurfaceFee: 8K 1280mm 与 1250mm 同价（常规档）', () => {
+  eq(PricingEngine.getSurfaceFee('8K', 0.55, 1280, '201J2').sqmPrice, 2.5, '1280 应匹配常规档');
+  eq(PricingEngine.getSurfaceFee('8K', 0.55, 1250, '201J2').sqmPrice, 2.5, '1250 不变');
+});
+test('getSurfaceFee: 8K 1500/1530 走宽板档独立价', () => {
+  eq(PricingEngine.getSurfaceFee('8K', 0.60, 1500, '201J2').sqmPrice, 8.0, '1500 宽板价');
+  eq(PricingEngine.getSurfaceFee('8K', 0.60, 1530, '201J2').sqmPrice, 8.0, '1530 宽板价');
+});
+test('getSurfaceFee: 8K 厚档 1.30mm × 1280 与 1250 同价', () => {
+  eq(PricingEngine.getSurfaceFee('8K', 1.30, 1280, '201J2').sqmPrice, 4.5);
+});
+test('getSurfaceFee: NO.4 1280 与 1250 同价（ton 档 1.30mm）', () => {
+  eq(PricingEngine.getSurfaceFee('NO.4', 1.30, 1280, '201J2'), 100, '1280 ton 档');
+  eq(PricingEngine.getSurfaceFee('NO.4', 1.30, 1250, '201J2'), 100, '1250 ton 档');
+});
+test('getSurfaceFee: 宽度范围外（900）仍返回 null', () => {
+  eq(PricingEngine.getSurfaceFee('8K', 0.55, 900, '201J2'), null);
+});
+
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
