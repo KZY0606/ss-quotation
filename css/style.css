@@ -491,6 +491,10 @@ tr.main-row:hover .delete-btn { opacity:1; }
   max-height:320px; overflow-y:auto;
   padding-right:4px;
 }
+/* 201 面板含宽板厚度分档版块，内容较高：取消高度限制并禁止 flex 收缩，
+   避免子块被压缩导致最后一行溢出裁切（J4 / 宽板 J3 丢失） */
+#originRows201 { max-height:none; }
+#originRows201 .origin-block-201, #originRows201 > .origin-row { flex-shrink:0; }
 .origin-rows::-webkit-scrollbar { width:5px; }
 .origin-rows::-webkit-scrollbar-thumb { background:var(--steel-3); border-radius:4px; }
 
