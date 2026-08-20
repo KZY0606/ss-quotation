@@ -771,12 +771,43 @@ tr.main-row:hover .delete-btn { opacity:1; }
   color: var(--success);
 }
 
+/* 400系基价面板：改为单列堆叠（原 flex-wrap 导致行流式排列、输入框错位）2026-08-20 */
+#prices400Section {
+  flex-direction: column;
+  align-items: stretch;
+}
 /* 400系基价面板分组标题（410/430 系列分板块，2026-08-20）*/
 .p400-group-title {
   font-weight: 600;
   font-size: 13px;
   color: var(--text-secondary);
-  margin: 10px 0 4px;
-  padding-left: 2px;
+  margin: 14px 0 6px;
+  padding: 0 2px 5px;
+  border-bottom: 1px solid var(--steel-2, rgba(128,128,128,0.25));
+}
+/* 400系基价行：固定列宽 grid，保证所有行严格对齐（2026-08-20）*/
+.p400-row {
+  display: grid;
+  grid-template-columns: 46px 122px 108px 34px;
+  align-items: center;
+  gap: 8px;
+}
+.p400-row .p400-mat {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.p400-row .oj2 { width: auto; }
+.p400-row .oj2 label { min-width: 24px; }
+.p400-row .oj2 input { width: 96px; }
+.p400-row .o-lock {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px;
 }
 

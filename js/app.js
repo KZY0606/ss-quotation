@@ -624,10 +624,10 @@ const App = (() => {
         const div = document.createElement('div');
         div.className = 'origin-row p400-row'; // reuse origin-row styles
         div.innerHTML = `
-          <span class="oname" style="min-width:42px">${item.origin}</span>
-          <span style="font-size:12px;font-weight:500;color:var(--text-secondary);min-width:90px;">${item.material}</span>
-          <div class="oj2" style="width:90px"><label>基价</label><input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" style="width:70px;font-size:13px;" ${locked ? 'readonly' : ''}></div>
-          <button class="o-lock ${locked ? 'locked' : ''}" data-key="${key}" style="padding:0 4px;font-size:11px;background:none;border:none;cursor:pointer;" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
+          <span class="oname">${item.origin}</span>
+          <span class="p400-mat">${item.material}</span>
+          <div class="oj2"><label>基价</label><input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
+          <button class="o-lock ${locked ? 'locked' : ''}" data-key="${key}" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
         `;
         section.appendChild(div);
       });
