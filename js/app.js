@@ -12,12 +12,12 @@ const App = (() => {
   let originOrder = [...ORIGIN_PRESETS];
   let lockedOrigins = {};
   const ORIGINS_201 = ['宏旺'];
-  const ORIGINS_304 = ORIGIN_PRESETS.filter(o => o !== '瑞钢' && o !== '联众');
+  const ORIGINS_304 = ORIGIN_PRESETS.filter(o => o !== '瑞钢' && o !== '联众' && o !== '青山');
   // 各产地 J2 基价 (304)
   let originPrices304 = {};
   let lockedOrigins304 = {};
   // 各产地 316L 基价（仅已配置数据的产地）
-  const ORIGINS_316L = ['张浦', '甬金'];
+  const ORIGINS_316L = ['张浦', '甬金', '太钢'];
   let originPrices316L = {};
   let lockedOrigins316L = {};
   // 北港 J5 基价（北港只卖 J5，单独一行填写，不分宽度）
@@ -56,6 +56,7 @@ const App = (() => {
     { origin: '上克', material: '430B/BA' },
     { origin: '甬金', material: '430/BA' },
     { origin: '瑞钢', material: '430B/2BA' },
+    { origin: '宏旺', material: '430W/2BA' },
   ];
   // 400系材质名标准化：Excel中的"非标"可能没有括号
   function normalize400Material(m) {
@@ -1062,7 +1063,7 @@ const App = (() => {
       let s = raw.replace(/[，,、；;：:]/g, ' ').trim();
       let origin = '', material = '';
       for (const op of ORIGIN_KEYWORDS) { if (s.includes(op)) { origin = op; s = s.replace(op, ' ').trim(); break; } }
-      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S','430B','430/BA','410','430'];
+      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S','430B','430/BA','430W/2BA','410','430'];
       for (const mp of mps) { if (s.toUpperCase().includes(mp)) { material = mp; s = s.replace(new RegExp(mp,'gi'), ' ').trim(); break; } }
       let width = 1240, length = 'C';
       const sp = s.match(/(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)(?:\s*MM)?/i);

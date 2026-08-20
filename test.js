@@ -561,6 +561,26 @@ test('calculate: 1500 宽板 + 厚度范围 0.55-0.60 落 J1 档', () => {
   eq(r.success, true, '范围下限 0.55 在 1500 档 J1 厚度范围');
 });
 
+// === 产地/材质调整（2026-08-20）===
+test('430W/2BA（宏旺）厚度加价复用 430B/2BA（瑞钢）', () => {
+  eq(PricingEngine.getThicknessSurcharge(0.30, false, '430W/2BA', '宏旺', '2BA'), 600, '0.30mm → 600（同 430B-2BA-瑞钢 0.26-0.30）');
+  eq(PricingEngine.getThicknessSurcharge(0.40, false, '430W/2BA', '宏旺', '2BA'), 300, '0.40mm → 300（0.36-0.42）');
+  eq(PricingEngine.getThicknessSurcharge(0.50, false, '430W/2BA', '宏旺', '2BA'), 0, '0.50mm → 0（0.48-2.97）');
+});
+test('430W 未配置组合返回 null（不误用 201 加价）', () => {
+  eq(PricingEngine.getThicknessSurcharge(0.50, false, '430W/BA', '宏旺', 'BA'), null);
+});
+test('316L 太钢：无专用加价表时走通用 316L 表', () => {
+  const v = PricingEngine.getThicknessSurcharge(0.50, false, '316L', '太钢');
+  eq(v !== null, true, '太钢 316L 应取到通用加价');
+});
+test('freeText: 430W/2BA 材质识别', () => {
+  const p = PricingEngine.parseFreeText('宏旺 430W/2BA 0.40*1240*2500', {});
+  eq(p !== null, true);
+  eq(p.material, '430W/2BA');
+  eq(p.thickness, '0.40');
+});
+
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

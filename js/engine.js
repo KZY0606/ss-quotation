@@ -96,7 +96,7 @@ const PricingEngine = (() => {
         }
       }
       // 如果基材是400系已知材料但该组合未配置 → 返回 null
-      if (baseMaterial === '410S' || baseMaterial === '430' || baseMaterial === '430B') return null;
+      if (baseMaterial === '410S' || baseMaterial === '430' || baseMaterial === '430B' || baseMaterial === '430W') return null;
     }
     // 压延料使用独立加价表（不分产地）
     if (isYanYan) {
@@ -604,7 +604,7 @@ const PricingEngine = (() => {
     }
 
     // 提取材质 (201J5 > 201J4 > ... > 201)
-    const materialPatterns = ['201J5', '201J4', '201J1', '201J3', '201J2', '201', '304', '316L', '410S/BA', '410S/2BA', '410S/2BA(非标)', '410S/2BA非标', '430B/BA', '430B/2BA', '430/BA', '430/2BA', '410S', '430B', '410', '430'];
+    const materialPatterns = ['201J5', '201J4', '201J1', '201J3', '201J2', '201', '304', '316L', '410S/BA', '410S/2BA', '410S/2BA(非标)', '410S/2BA非标', '430B/BA', '430B/2BA', '430/BA', '430/2BA', '430W/2BA', '410S', '430B', '410', '430'];
     let material = '';
     for (const mp of materialPatterns) {
       if (remaining.toUpperCase().includes(mp.toUpperCase())) {
