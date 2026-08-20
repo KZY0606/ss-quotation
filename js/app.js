@@ -271,7 +271,7 @@ const App = (() => {
         html += `
         <div class="origin-row origin-row-201">
           <span class="omat201">${mat.replace('201','')}</span>
-          ${[2,3].map(b => `<input type="number" class="origin201-input" data-origin="${origin}" data-band="${b}" data-mat="${mat}" value="${prices['b'+b][mat] > 0 ? prices['b'+b][mat] : ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}>`).join('')}
+          ${[2,3].map(b => `<input type="number" class="origin201-input" data-origin="${origin}" data-band="${b}" data-mat="${mat}" value="${prices['b'+b][mat] > 0 ? prices['b'+b][mat] : ''}" step="10" placeholder="未填" ${locked ? 'readonly' : ''}>`).join('')}
         </div>`;
       });
       div.innerHTML = html;
@@ -295,7 +295,7 @@ const App = (() => {
             <span class="omat201">${mat.replace('201','')}</span>
             ${arr.map((lab, i) => {
               const tk = 't' + (i + 1);
-              return `<div class="thick-cell"><span class="thick-label">${lab}</span><input type="number" class="origin201-thick-input" data-origin="${origin}" data-mat="${mat}" data-thick="${tk}" value="${mp[tk] > 0 ? mp[tk] : ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>`;
+              return `<div class="thick-cell"><span class="thick-label">${lab}</span><input type="number" class="origin201-thick-input" data-origin="${origin}" data-mat="${mat}" data-thick="${tk}" value="${mp[tk] > 0 ? mp[tk] : ''}" step="10" placeholder="未填" ${locked ? 'readonly' : ''}></div>`;
             }).join('')}
           </div>`;
         });
@@ -317,7 +317,7 @@ const App = (() => {
     bg.className = 'origin-row';
     bg.innerHTML = `
       <span class="oname">北港</span>
-      <div class="oj2"><label>J5</label><input type="number" id="beigangJ5Price" class="origin-j2-input" value="${beigangJ5Price > 0 ? beigangJ5Price : ''}" step="10" placeholder="0" ${beigangJ5Locked ? 'readonly' : ''}></div>
+      <div class="oj2"><label>J5</label><input type="number" id="beigangJ5Price" class="origin-j2-input" value="${beigangJ5Price > 0 ? beigangJ5Price : ''}" step="10" placeholder="未填" ${beigangJ5Locked ? 'readonly' : ''}></div>
       <button id="beigangJ5Lock" class="o-lock ${beigangJ5Locked ? 'locked' : ''}" title="${beigangJ5Locked ? '点击解锁' : '点击锁定'}">${beigangJ5Locked ? '🔒' : '🔓'}</button>
       <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">北港只售 J5，不分宽度</span>
     `;
@@ -391,7 +391,7 @@ const App = (() => {
       div.className = 'origin-row';
       div.innerHTML = `
         <span class="oname" style="min-width:56px">${origin}</span>
-        <div class="oj2" style="width:90px"><label>304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="0" style="width:70px;font-size:13px;" ${locked304 ? 'readonly' : ''}></div>
+        <div class="oj2" style="width:90px"><label>304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="未填" style="width:70px;font-size:13px;" ${locked304 ? 'readonly' : ''}></div>
         <button class="o-lock ${locked304 ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
         <span class="oderived" style="margin-left:4px;font-size:12px;color:var(--text-secondary);">
           ${price304 > 0 ? `基价: <b>${price304.toLocaleString()}</b>` : '<span class="oderived-hint">请填写基价</span>'}
@@ -419,7 +419,7 @@ const App = (() => {
       div.className = 'origin-row';
       div.innerHTML = `
         <span class="oname" style="min-width:56px">${origin}</span>
-        <div class="oj2" style="width:90px"><label>316L</label><input type="number" class="origin-316L-input" data-origin="${origin}" value="${price316L || ''}" step="10" placeholder="0" style="width:70px;font-size:13px;" ${locked316L ? 'readonly' : ''}></div>
+        <div class="oj2" style="width:90px"><label>316L</label><input type="number" class="origin-316L-input" data-origin="${origin}" value="${price316L || ''}" step="10" placeholder="未填" style="width:70px;font-size:13px;" ${locked316L ? 'readonly' : ''}></div>
         <button class="o-lock ${locked316L ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="316L" title="${locked316L ? '点击解锁' : '点击锁定'}">${locked316L ? '🔒' : '🔓'}</button>
         <span class="oderived" style="margin-left:4px;font-size:12px;color:var(--text-secondary);">
           ${price316L > 0 ? `基价: <b>${price316L.toLocaleString()}</b>` : '<span class="oderived-hint">请填写基价</span>'}
@@ -631,7 +631,7 @@ const App = (() => {
         div.innerHTML = `
           <span class="oname">${item.origin}</span>
           <span class="p400-mat">${item.material}</span>
-          <div class="oj2"><label>基价</label><input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="0" ${locked ? 'readonly' : ''}></div>
+          <div class="oj2"><label>基价</label><input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="未填" ${locked ? 'readonly' : ''}></div>
           <button class="o-lock ${locked ? 'locked' : ''}" data-key="${key}" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
         `;
         section.appendChild(div);

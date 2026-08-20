@@ -525,6 +525,7 @@ tr.main-row:hover .delete-btn { opacity:1; }
   outline:none;
   transition:border-color 0.15s, box-shadow 0.15s;
 }
+.oj2 input:hover { border-color:var(--steel-3); }
 .oj2 input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(14,165,233,0.1); }
 .oj2 input::-webkit-outer-spin-button, .oj2 input::-webkit-inner-spin-button { -webkit-appearance:none; }
 
@@ -623,6 +624,25 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .cfg-lock-btn:hover { opacity:1; background:var(--border-light); }
 .cfg-lock-btn.locked { opacity:1; }
 
+/* ===== 板块标题：左侧色条锚点 + 渐变底（2026-08-20 美化） ===== */
+.config-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  padding: 12px 14px;
+  margin: 10px 0 6px;
+  border-left: 4px solid var(--accent);
+  background: linear-gradient(90deg, rgba(14,165,233,0.10), rgba(14,165,233,0.02) 70%, transparent);
+  border-radius: 0 6px 6px 0;
+}
+/* 板块内子项（产地行）左侧细辅助线，强化父子级（2026-08-20） */
+.origin-grid .origin-row {
+  border-left: 3px solid var(--steel-2);
+}
+.origin-grid .origin-block-201 {
+  border-left: 3px solid var(--steel-2);
+}
+
 /* ===== Responsive ===== */
 @media (max-width:1024px) { .calc-breakdown { grid-template-columns:1fr; } }
 @media (max-width:768px) {
@@ -714,6 +734,21 @@ tr.main-row:hover .delete-btn { opacity:1; }
   background: #fff; color: var(--primary-dark);
   text-align: center;
 }
+.origin-row-201 .origin201-input:hover { border-color: var(--steel-3); }
+/* 201 未填基价：橙边框+淡橙底提示（2026-08-20，与 304 橙色提示统一语义） */
+.origin-row-201 .origin201-input:not([readonly]):placeholder-shown,
+.thick-cell input:not([readonly]):placeholder-shown {
+  border-color: var(--warning);
+  background: var(--warning-bg);
+}
+/* 全站未填基价统一橙色提示（2026-08-20：304/316L/400系与 201 一致） */
+.oj2 input:not([readonly]):placeholder-shown {
+  border-color: var(--warning);
+  background: var(--warning-bg);
+}
+/* 201 行斑马纹：偶数列浅灰底，防看错行（2026-08-20） */
+.origin-row-201:nth-child(even) { background: #f8fafc; }
+.thick-row-1500:nth-child(even) { background: #f8fafc; }
 .origin-row-201 .origin201-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
 .origin-row-201 .origin201-input[readonly] {
   background: var(--success-bg);
@@ -764,6 +799,7 @@ tr.main-row:hover .delete-btn { opacity:1; }
   background: #fff; color: var(--primary-dark);
   text-align: center;
 }
+.thick-cell input:hover { border-color: var(--steel-3); }
 .thick-cell input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
 .thick-cell input[readonly] {
   background: var(--success-bg);
@@ -803,6 +839,14 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .p400-row .oj2 { width: auto; }
 .p400-row .oj2 label { min-width: 24px; }
 .p400-row .oj2 input { width: 96px; }
+.p400-row .oj2 input:hover { border-color: var(--steel-3); }
+/* 400系锁定态：与 201 行一致，浅绿底（2026-08-20） */
+.p400-row .oj2 input[readonly] {
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
+}
+.p400-row .oj2 input[readonly]:hover { border-color: var(--success); }
 .p400-row .o-lock {
   background: none;
   border: none;
