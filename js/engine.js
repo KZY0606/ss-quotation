@@ -740,9 +740,21 @@ const PricingEngine = (() => {
     return v * 100 / r;
   }
 
+  // 美元加价加到人民币价格上（FOB/CIF 术语）：加价单位 USD/吨，按汇率折人民币
+  // 返回 { cny, usd }；cny = 原人民币价 + 加价×汇率；usd = 原美元价 + 加价
+  function addUsdSurcharge(cny, usdSurcharge, rate100) {
+    const r = parseFloat(rate100);
+    const s = parseFloat(usdSurcharge);
+    const c = parseFloat(cny);
+    if (!(r > 0) || isNaN(c)) return null;
+    const s2 = isNaN(s) ? 0 : s;
+    const cny2 = c + s2 * r / 100;
+    return { cny: cny2, usd: cny2 * 100 / r };
+  }
+
   return {
     calculate, calculateBatch, parseSpec, parseFreeText,
-    normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd,
+    normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge,
     parseThicknessRange,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,

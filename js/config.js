@@ -72,6 +72,12 @@ const USD_RATE_DEFAULT = 670.97;
 const USD_RATE_URL = 'rate.json';
 const USD_RATE_KEY_MANUAL = 'kk_usd_rate_manual';
 
+// 贸易术语：EXW 默认；FOB/CIF = EXW 人民币价 + 手动美元加价（$/吨）
+const TRADE_TERMS = ['EXW', 'FOB', 'CIF'];
+const TERM_KEY = 'kk_trade_term';
+const TERM_KEY_FOB = 'kk_fob_surcharge_usd';
+const TERM_KEY_CIF = 'kk_cif_surcharge_usd';
+
 // 201 系材质名列表（用于档位校验）
 const MATERIALS_201 = ['201', '201J1', '201J2', '201J3', '201J4', '201J5'];
 

@@ -408,6 +408,41 @@ body {
 }
 .rate-input-group input::-webkit-outer-spin-button, .rate-input-group input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .btn-sm { padding:4px 10px; font-size:12px; }
+
+/* ===== 贸易术语条（EXW/FOB/CIF + 美元加价栏） ===== */
+.term-bar {
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:10px 14px; margin-bottom:12px;
+  background:var(--card); border:1px solid var(--border-light); border-left:3px solid var(--steel-4);
+  border-radius:8px; font-size:13px;
+}
+.term-label { font-weight:700; color:var(--text-primary); white-space:nowrap; }
+.term-radio { display:flex; align-items:center; gap:4px; cursor:pointer; white-space:nowrap; }
+.term-radio input { accent-color:var(--accent); width:15px; height:15px; cursor:pointer; }
+.term-radio span { font-weight:600; color:var(--text-primary); }
+.term-radio input:checked + span { color:var(--accent); }
+.term-input-group {
+  display:flex; align-items:center; gap:6px; margin-left:auto;
+  background:var(--card); border:1px solid var(--border-light); border-radius:8px;
+  padding:6px 10px; transition:border-color .15s, box-shadow .15s;
+}
+.term-input-group:focus-within { border-color:var(--steel-4); box-shadow:0 0 0 2px rgba(52,69,94,.12); }
+.term-input-group label { font-size:12px; color:var(--text-secondary); white-space:nowrap; }
+.term-input-group input {
+  width:76px; border:none; outline:none; font-size:14px; font-weight:600;
+  color:var(--text-primary); background:transparent; font-variant-numeric:tabular-nums;
+}
+.term-input-group input::-webkit-outer-spin-button, .term-input-group input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.term-unit { font-size:11px; color:var(--text-secondary); white-space:nowrap; }
+/* 表格术语标签 + EXW 参考小字 */
+.term-tag {
+  display:inline-block; font-size:10px; font-weight:700; color:#fff;
+  background:var(--steel-4); border-radius:3px; padding:1px 4px; margin-right:4px;
+  vertical-align:middle;
+}
+.exw-sub { font-size:11px; color:var(--text-secondary); font-weight:400; margin-top:1px; }
+/* 明细贸易术语行：当前术语高亮 */
+.term-row.term-cur { background:rgba(52,69,94,.07); border-radius:6px; padding:2px 6px; }
 .usd-sup { color:var(--accent); font-size:11px; margin-left:2px; }
 /* 美金价格：与人民币同字号同字重，仅用颜色区分（accent 蓝） */
 .usd-sub { font-size:inherit; font-weight:inherit; color:var(--accent); font-variant-numeric:tabular-nums; margin-top:1px; }

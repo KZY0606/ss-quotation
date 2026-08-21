@@ -800,6 +800,19 @@ test('美金换算 cnToUsd（2026-08-21）', () => {
   eq(PricingEngine.cnToUsd('abc', 670.97), null, '非法金额 → null');
 });
 
+test('贸易术语 addUsdSurcharge（2026-08-21）', () => {
+  // EXW 10000元，FOB 加价 $50/吨，汇率 670.96 → +50×6.7096=335.48 → 10335.48
+  const r = PricingEngine.addUsdSurcharge(10000, 50, 670.96);
+  eq(Math.round(r.cny * 100) / 100, 10335.48, '人民币价 = EXW + 加价×汇率');
+  eq(Math.round(r.usd * 100) / 100, 1540.4, '美元价 = EXW美元 + 加价');
+  // 无加价
+  const r0 = PricingEngine.addUsdSurcharge(10000, 0, 670.96);
+  eq(Math.round(r0.cny), 10000, '加价 0 → 原价');
+  // 非法
+  eq(PricingEngine.addUsdSurcharge(10000, 50, 0), null, '汇率 0 → null');
+  eq(PricingEngine.addUsdSurcharge('abc', 50, 670.96), null, '非法金额 → null');
+});
+
 test('宏旺 410S/BA 改名 410S/2BA（2026-08-21）', () => {
   // 厚度表：宏旺 410S/2BA 走 430W-2BA 同价表
   const v = PricingEngine.getThicknessSurcharge(0.5, false, '410S/2BA', '宏旺');
