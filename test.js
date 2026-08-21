@@ -393,7 +393,9 @@ test('201 档内宽度正常: 201J2 0.50*1219*C', () => {
 
 test('北港J5 不校验宽度: 201J5 0.50*1220*C', () => {
   const r = PricingEngine.calculate({material:'201J5',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); // J5 不分宽度，不报宽度档错误
+  // 2026-08-21：J5 无厚度加价数据，报错而非宽度档错误（原断言 success=true 已随规则变更）
+  eq(r.success, false);
+  eq(r.errors.some(e => e.includes('北港 J5 未提供厚度加价')), true, '报错为无厚度加价提示');
 });
 
 test('304 不受 201 宽度档限制: 304 0.50*1220*C', () => {
@@ -621,9 +623,78 @@ test('430W 未配置组合返回 null（不误用 201 加价）', () => {
   eq(PricingEngine.getThicknessSurcharge(0.50, false, '430W/BA', '宏旺', 'BA'), null, '430W/BA 不存在（宏旺只有 430W/2BA）→ null');
   eq(PricingEngine.getThicknessSurcharge(0.50, false, '430W/NO.4', '宏旺', 'NO.4'), null, '430W/NO.4 未配置 → null');
 });
-test('316L 太钢：无专用加价表时走通用 316L 表', () => {
-  const v = PricingEngine.getThicknessSurcharge(0.50, false, '316L', '太钢');
-  eq(v !== null, true, '太钢 316L 应取到通用加价');
+test('316L 甬金/太钢：未提供厚度加价数据 → null 报错（2026-08-20）', () => {
+  eq(PricingEngine.getThicknessSurcharge(0.50, false, '316L', '太钢'), null, '太钢 316L 无数据 → null');
+  eq(PricingEngine.getThicknessSurcharge(2.00, false, '316L', '太钢'), null, '太钢 316L 2.00 → null（不落通用表）');
+  eq(PricingEngine.getThicknessSurcharge(0.30, false, '316L', '张浦'), 1400, '张浦 316L 仍有表不受影响');
+});
+test('316L 甬金 17 档新表 + 薄料 1500/1530 宽度加价（2026-08-21）', () => {
+  const g = t => PricingEngine.getThicknessSurcharge(t, false, '316L', '甬金');
+  eq(g(0.27), 2100, '0.27 → 2100');
+  eq(g(0.29), 1400, '0.29 → 1400');
+  eq(g(0.32), 1400, '0.32 → 1400');
+  eq(g(0.34), 1200, '0.34 → 1200');
+  eq(g(0.37), 1200, '0.37 → 1200');
+  eq(g(0.39), 1000, '0.39 → 1000');
+  eq(g(0.40), 1000, '0.40 → 1000');
+  eq(g(0.42), 1000, '0.42 → 1000');
+  eq(g(0.49), 800, '0.49 → 800');
+  eq(g(0.50), 700, '0.50 → 700');
+  eq(g(0.59), 700, '0.59 → 700');
+  eq(g(0.69), 600, '0.69 → 600');
+  eq(g(0.79), 500, '0.79 → 500');
+  eq(g(0.89), 400, '0.89 → 400');
+  eq(g(0.99), 400, '0.99 → 400');
+  eq(g(1.19), 400, '1.19 → 400（1.2 归下档）');
+  eq(g(1.20), 300, '1.20 → 300');
+  eq(g(3.00), 300, '3.00 → 300（上限）');
+  eq(g(3.10), null, '3.10 超上限 → null');
+  // 宽度加价：calculate 级验证
+  const r1500 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1500', length:'2500', basePrice:10000});
+  eq(r1500.success, true, '甬金316L 0.35*1500 可算');
+  eq(r1500.detail.widthSurcharge, 300, '薄料 1500 宽厚度加价 +300');
+  eq(r1500.detail.thickSurcharge, 1500, '0.35 加价 1200+300=1500');
+  const r1240 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1240', length:'2500', basePrice:10000});
+  eq(r1240.success, true, '1240 宽可算');
+  eq(r1240.detail.widthSurcharge, 0, '1240 宽不加价');
+  eq(r1240.detail.thickSurcharge, 1200, '1240 宽 0.35 加价 1200');
+  const r060 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.60', width:'1500', length:'2500', basePrice:10000});
+  eq(r060.detail.widthSurcharge, 0, '0.60 厚超 0.50 不加宽价');
+  const r1530 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.50', width:'1530', length:'2500', basePrice:10000});
+  eq(r1530.detail.widthSurcharge, 300, '0.50*1530 薄料 +300');
+});
+test('316L 张浦新 16 档表（2026-08-20）', () => {
+  const g = t => PricingEngine.getThicknessSurcharge(t, false, '316L', '张浦');
+  eq(g(0.27), 2100, '张浦 316L 0.27 → 2100');
+  eq(g(0.29), 1400, '0.29 → 1400');
+  eq(g(0.32), 1400, '0.32 → 1400');
+  eq(g(0.37), 1200, '0.37 → 1200');
+  eq(g(0.42), 1000, '0.42 → 1000（新档 0.38-0.42）');
+  eq(g(0.49), 900, '0.49 → 900');
+  eq(g(0.50), 900, '0.50 → 900');
+  eq(g(0.60), 900, '0.60 → 900');
+  eq(g(0.70), 700, '0.70 → 700');
+  eq(g(0.80), 600, '0.80 → 600');
+  eq(g(1.00), 500, '1.00 → 500');
+  eq(g(1.20), 450, '1.20 → 450');
+  eq(g(1.50), 400, '1.50 → 400');
+  eq(g(2.00), 300, '2.00 → 300');
+  eq(g(2.99), 300, '2.99 → 300（2.01-2.99 档）');
+  eq(g(3.00), 700, '3.00 → 700（归 3.00-6.00 档，连续区间）');
+  eq(g(5.00), 700, '5.00 → 700');
+  eq(g(6.00), 700, '6.00 → 700（上限内）');
+  eq(g(6.10), null, '6.10 超上限 → null');
+});
+test('张浦 304 厚度上限 6.00mm（2026-08-20）', () => {
+  const g = t => PricingEngine.getThicknessSurcharge(t, false, '304', '张浦');
+  eq(g(0.30), 1300, '张浦 304 0.30 → 1300');
+  eq(g(0.50), 600, '张浦 304 0.50 → 600');
+  eq(g(0.80), 300, '张浦 304 0.80 → 300');
+  eq(g(3.00), 300, '张浦 304 3.00 → 300');
+  eq(g(5.00), 300, '张浦 304 5.00 → 300（6.00 内）');
+  eq(g(6.00), 300, '张浦 304 6.00 → 300（上限）');
+  eq(g(6.10), null, '张浦 304 6.10 超上限 → null');
+  eq(PricingEngine.getThicknessSurcharge(5.00, false, '304', '德龙'), null, '德龙 304 5.00 仍超 3.00 上限 → null（不受张浦影响）');
 });
 test('freeText: 430W/2BA 材质识别', () => {
   const p = PricingEngine.parseFreeText('宏旺 430W/2BA 0.40*1240*2500', {});
@@ -660,6 +731,59 @@ test('1500/1530 宽板厚度上限 3.00mm：3.00 可算、3.05 报错', () => {
   eq(r.success, true, '3.00mm 宽板正常计算');
   const r2 = PricingEngine.calculate({origin:'宏旺', material:'201J1', surface:'8K', thickness:'3.05', width:'1500', length:'C', film1:'', film2:'', basePrice:8000});
   eq(r2.success, false, '3.05mm 宽板报错');
+});
+
+test('彩色表面小炉/大炉 /S /L（2026-08-21）', () => {
+  eq(PricingEngine.normalizeSurface('8K黄钛金(板)/S'), '8K黄钛金/S', '后缀 /S 归一化');
+  eq(PricingEngine.normalizeSurface('8K黄钛金(板)S'), '8K黄钛金/S', '无斜杠 S 同样识别');
+  eq(PricingEngine.normalizeSurface('8K黄钛金(板)L'), '8K黄钛金/L', '无斜杠 L 同样识别');
+  eq(PricingEngine.normalizeSurface('8k黄钛金(板) s'), '8K黄钛金/S', '空格分隔小写后缀');
+  eq(PricingEngine.normalizeSurface('8K黄钛金(板)/L'), '8K黄钛金/L', '后缀 /L 归一化');
+  eq(PricingEngine.normalizeSurface('8k黄钛金(板)/s'), '8K黄钛金/S', '小写后缀');
+  eq(PricingEngine.normalizeSurface('8K黄钛金(板)'), '8K黄钛金', '无后缀默认大炉键');
+  eq(PricingEngine.normalizeSurface('HL'), 'HL', 'HL 不被误判为 L 后缀');
+  eq(PricingEngine.normalizeSurface('NO.4'), 'NO.4', 'NO.4 不受影响');
+  eq(PricingEngine.normalizeSurface('砂面/拉丝(NO.4/HL)黄钛金(板)/S'), '拉丝黄钛金/S', '砂面/拉丝基础别名+/S');
+  eq(PricingEngine.normalizeSurface('砂面/拉丝(NO.4/HL)黄钛金(板)S'), '拉丝黄钛金/S', '砂面/拉丝无斜杠 S');
+  const fee = (s, t, w, mat) => PricingEngine.getSurfaceFee(PricingEngine.normalizeSurface(s), t, w, mat || '304');
+  eq(fee('8K黄钛金(板)/S', 0.5, 1240).sqmPrice, 10, '8K黄钛金小炉 10 元/方');
+  eq(fee('8K黄钛金(板)/L', 0.5, 1240).sqmPrice, 5.5, '8K黄钛金大炉 5.5');
+  eq(fee('8K黄钛金(板)', 0.5, 1240).sqmPrice, 5.5, '无后缀默认大炉价');
+  eq(fee('8K黄钛金(板)S', 0.5, 1240).sqmPrice, 10, '无斜杠 S 小炉价');
+  eq(fee('8K玫瑰金(板)/S', 0.5, 1240).sqmPrice, 10, '8K玫瑰金小炉 10');
+  eq(fee('8K香槟金(板)/S', 0.5, 1240).sqmPrice, 10, '8K香槟金小炉 10');
+  eq(fee('砂面/拉丝(NO.4/HL)黄钛金(板)/S', 0.5, 1240).sqmPrice, 7.5, '砂面/拉丝黄钛金小炉 7.5');
+  eq(fee('砂面/拉丝(NO.4/HL)玫瑰金(板)/S', 0.5, 1240).sqmPrice, 7.5, '砂面/拉丝玫瑰金小炉 7.5');
+  eq(fee('砂面/拉丝(NO.4/HL)香槟金(板)/S', 0.5, 1240).sqmPrice, 7.5, '砂面/拉丝香槟金小炉 7.5');
+  eq(fee('拉丝黄钛金(板)/L', 0.5, 1240).sqmPrice, 5, '拉丝黄钛金大炉 5');
+  eq(fee('磨砂黄钛金(板)/S', 0.5, 1240).sqmPrice, 7.5, '磨砂黄钛金小炉同价 7.5');
+  const r = PricingEngine.calculate({origin:'德龙', material:'304', surface:'8K黄钛金(板)/S', thickness:'0.50', width:'1240', length:'2500', basePrice:10000});
+  eq(r.success, true, '带 /S 表面正常计算');
+  eq(r.detail.normSurface, '8K黄钛金/S', 'normSurface 保留 /S');
+});
+
+test('400系彩色表面对标304价（2026-08-21）', () => {
+  const calc = (m, s, t) => PricingEngine.calculate({origin:'宏旺', material:m, surface:s, thickness:t, width:'1240', length:'2500', basePrice:8000});
+  // 8K黑钛金：304特例价 10（通用表 5）——400系必须同样用 10
+  eq(calc('430BA','8K黑钛金(板)','0.50').detail.surfaceFeeSqm, 10, '430BA 8K黑钛金 = 304 特例价 10');
+  eq(calc('410S-BA-宏旺','8K黑钛金(板)','0.50').detail.surfaceFeeSqm, 10, '410S-BA-宏旺 8K黑钛金 = 10');
+  eq(calc('430W-2BA','8K黑钛金(板)','0.50').detail.surfaceFeeSqm, 10, '430W-2BA 8K黑钛金 = 10');
+  eq(calc('430','8K黑钛金(板)','0.50').success, false, '430 纯材质无厚度表仍报厚度错（不影响表面）');
+  // 6 品种彩色：400系与304同价（通用表）
+  eq(calc('430BA','8K黄钛金(板)','0.50').detail.surfaceFeeSqm, 5.5, '430BA 8K黄钛金 = 5.5');
+  eq(calc('430BA','8K黄钛金(板)/S','0.50').detail.surfaceFeeSqm, 10, '430BA 8K黄钛金小炉 = 10');
+  eq(calc('430BA','砂面/拉丝(NO.4/HL)黄钛金(板)/S','0.50').detail.surfaceFeeSqm, 7.5, '430BA 砂面拉丝黄钛金小炉 = 7.5');
+  eq(calc('430BA','8K玫瑰金(板)/L','0.50').detail.surfaceFeeSqm, 6.5, '430BA 8K玫瑰金大炉 = 6.5');
+});
+
+test('北港 J5 无厚度加价暂不计算（2026-08-21）', () => {
+  const r = PricingEngine.calculate({origin:'北港', material:'201J5', surface:'NO.4', thickness:'0.5', width:'1240', length:'2500', basePrice:8000});
+  eq(r.success, false, '北港 J5 报错不计算');
+  eq(r.errors.some(e => e.includes('北港 J5 未提供厚度加价')), true, '报错文案含北港 J5 提示');
+  // 其他 201 材质不受影响
+  const r2 = PricingEngine.calculate({origin:'青山', material:'201J2', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000});
+  eq(r2.success, true, '青山 201J2 正常计算');
+  eq(r2.detail.thickSurcharge, 500, '201J2 厚度加价 500');
 });
 
 
