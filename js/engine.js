@@ -393,6 +393,10 @@ const PricingEngine = (() => {
     if (isNaN(basePrice) || basePrice <= 0) errors.push('基价无效');
     if (isNaN(thickness) || thickness <= 0) errors.push('厚度无效');
     if (isNaN(width) || width <= 0) errors.push('宽度无效');
+    // 2026-08-22：全局宽度白名单（只算这 8 个宽度，其他一律报错）
+    if (!isNaN(width) && width > 0 && !WIDTH_ALLOWED.includes(width)) {
+      errors.push(`宽度 ${width}mm 不在可计算宽度（1000/1030/1219/1240/1250/1500/1524/1530）`);
+    }
 
     const density = getDensity(material);
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);

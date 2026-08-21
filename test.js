@@ -398,9 +398,16 @@ test('北港J5 不校验宽度: 201J5 0.50*1220*C', () => {
   eq(r.errors.some(e => e.includes('北港 J5 未提供厚度加价')), true, '报错为无厚度加价提示');
 });
 
-test('304 不受 201 宽度档限制: 304 0.50*1220*C', () => {
+test('宽度白名单: 304 0.50*1220*C → 报错（1220 不在可计算宽度）', () => {
   const r = PricingEngine.calculate({material:'304',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); // 304 基价不分宽度档
+  eq(r.success, false, '1220 应被白名单拦截');
+  eq(r.errors.some(e => e.includes('不在可计算宽度')), true, '应提示宽度白名单错误: ' + JSON.stringify(r.errors));
+});
+
+test('宽度白名单: 1280 也不可计算（2026-08-22 用户只算 8 个宽度）', () => {
+  const r = PricingEngine.calculate({material:'201J2',surface:'2B',thickness:'0.50',width:'1280',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, false, '1280 应被白名单拦截');
+  eq(r.errors.some(e => e.includes('不在可计算宽度')), true, '应提示宽度白名单错误');
 });
 
 test('430B/BA 0.50*1240*C 甬金 → 表面=无, 厚度加价0', () => {
@@ -414,10 +421,10 @@ test('430B/BA 0.50*1240*C 甬金 → 表面=无, 厚度加价0', () => {
   eq(r.detail.surfaceFeePerTon, 0, 'surface fee should be 0');
 });
 
-test('430B/2BA 瑞钢 8K黑钛金 0.50*1220*2440 → 识别表面, 用304加工费', () => {
+test('430B/2BA 瑞钢 8K黑钛金 0.50*1250*2440 → 识别表面, 用304加工费', () => {
   const r = PricingEngine.calculate({
     origin: '瑞钢', material: '430B/2BA', surface: '8K黑钛金',
-    thickness: '0.50', width: '1220', length: '2440',
+    thickness: '0.50', width: '1250', length: '2440',
     film1: '5C-FILM', film2: '', isYanYan: false, basePrice: 8000
   });
   eq(r.success, true, '430B/2BA with surface should succeed');
