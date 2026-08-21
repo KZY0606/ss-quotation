@@ -385,21 +385,33 @@ body {
 .stat-label { color:var(--text-secondary); font-size:12px; }
 .stat-value { font-weight:700; font-variant-numeric:tabular-nums; }
 
-/* ===== 美金汇率条 ===== */
+/* ===== 美金汇率条（计价前常驻） ===== */
 .rate-bar {
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  padding:10px 16px; background:var(--card); border-bottom:1px solid var(--border-light);
-  font-size:13px;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:10px 14px; margin-bottom:12px;
+  background:linear-gradient(90deg, rgba(52,69,94,.06), rgba(52,69,94,.02));
+  border:1px solid var(--border-light); border-left:3px solid var(--accent);
+  border-radius:8px; font-size:13px;
 }
 .rate-label { font-weight:700; color:var(--text-primary); white-space:nowrap; }
-.rate-live { font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; white-space:nowrap; }
-.rate-muted { color:var(--text-secondary); font-size:12px; white-space:nowrap; }
-.rate-input { width:110px; padding:4px 8px; border:1px solid var(--border-light); border-radius:6px; font-size:13px; }
-.rate-input:focus { outline:none; border-color:var(--accent); }
+.rate-live { font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; white-space:nowrap; font-size:14px; }
+.rate-input-group {
+  display:flex; align-items:center; gap:6px; margin-left:auto;
+  background:var(--card); border:1px solid var(--border-light); border-radius:8px;
+  padding:6px 10px; transition:border-color .15s, box-shadow .15s;
+}
+.rate-input-group:focus-within { border-color:var(--accent); box-shadow:0 0 0 2px rgba(52,69,94,.12); }
+.rate-input-group label { font-size:12px; color:var(--text-secondary); white-space:nowrap; }
+.rate-input-group input {
+  width:110px; border:none; outline:none; font-size:14px; font-weight:600;
+  color:var(--text-primary); background:transparent; font-variant-numeric:tabular-nums;
+}
+.rate-input-group input::-webkit-outer-spin-button, .rate-input-group input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .btn-sm { padding:4px 10px; font-size:12px; }
-.usd-sup { color:var(--accent); font-size:10px; margin-left:2px; }
-.usd-sub { font-size:11px; color:var(--accent); font-weight:600; font-variant-numeric:tabular-nums; margin-top:1px; }
-.calc-total-usd { font-size:11px; color:var(--accent); font-weight:600; margin-left:6px; }
+.usd-sup { color:var(--accent); font-size:11px; margin-left:2px; }
+/* 美金价格：与人民币同字号同字重，仅用颜色区分（accent 蓝） */
+.usd-sub { font-size:inherit; font-weight:inherit; color:var(--accent); font-variant-numeric:tabular-nums; margin-top:1px; }
+.calc-total-usd { font-size:inherit; color:var(--accent); font-weight:600; margin-left:6px; }
 
 /* ===== Table ===== */
 .table-wrapper { overflow-x:auto; }

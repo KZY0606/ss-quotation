@@ -1405,8 +1405,8 @@ const App = (() => {
     } else { els.minP.textContent = '-'; els.maxP.textContent = '-'; }
     els.expBtn.disabled = els.expBtn2.disabled = sr.length === 0;
     els.calcBtn.disabled = dataItems.length === 0;
-    if (dataItems.length > 0) { els.emptyState.style.display = 'none'; els.resultCard.style.display = 'block'; els.rateBar.style.display = 'flex'; }
-    else { els.emptyState.style.display = 'block'; els.resultCard.style.display = 'none'; els.rateBar.style.display = 'none'; }
+    if (dataItems.length > 0) { els.emptyState.style.display = 'none'; els.resultCard.style.display = 'block'; }
+    else { els.emptyState.style.display = 'block'; els.resultCard.style.display = 'none'; }
   }
 
   function renderTable() {
@@ -1431,9 +1431,9 @@ const App = (() => {
       h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
-        const uCostTax = usd(d.costTax), uCostNoTax = usd(d.costNoTax), uSaleTax = usd(d.saleTax), uSaleNoTax = usd(d.saleNoTax);
-        h.push(`<td class="price-cell price-cost">${d.costTax.toLocaleString()}<div class="usd-sub">${fmtUsd(uCostTax)}</div></td>`);
-        h.push(`<td class="price-cell price-subtle">${d.costNoTax.toLocaleString()}<div class="usd-sub">${fmtUsd(uCostNoTax)}</div></td>`);
+        const uSaleTax = usd(d.saleTax), uSaleNoTax = usd(d.saleNoTax);
+        h.push(`<td class="price-cell price-cost">${d.costTax.toLocaleString()}</td>`);
+        h.push(`<td class="price-cell price-subtle">${d.costNoTax.toLocaleString()}</td>`);
         h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-${d.boardType}">${d.boardType === 'coil' ? '卷' : '板'}</span></td>`);
         h.push(`<td class="price-cell price-sale">${d.saleTax.toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleTax)}</div></td>`);
         h.push(`<td class="price-cell price-subtle">${d.saleNoTax.toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleNoTax)}</div></td>`);

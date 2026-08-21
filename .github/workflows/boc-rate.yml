@@ -1,0 +1,33 @@
+name: BOC USD Rate
+
+# 工作日每 2 小时抓取中国银行美元现汇买入价（UTC 1-14 时 = 上海 9-22 时）
+# 写入 rate.json 后推回仓库，GitHub Pages 自动发布；前端读取展示
+on:
+  schedule:
+    - cron: '0 1-14/2 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-rate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 抓取中行牌价
+        run: node scripts/fetch-boc-rate.js
+      - name: 提交并推送（值有变化才提交）
+        run: |
+          git config user.name "kzy0606"
+          git config user.email "kzy0606@users.noreply.github.com"
+          git add rate.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: 更新中行美元汇率（$(node -e "console.log(require('./rate.json').rate)")）"
+            git push
+          else
+            echo "汇率未变化，跳过提交"
+          fi
