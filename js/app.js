@@ -52,7 +52,7 @@ const App = (() => {
     // 410 系列
     { origin: '甬金', material: '410S/BA' },
     { origin: '上克', material: '410S/BA' },
-    { origin: '宏旺', material: '410S/BA' },
+    { origin: '宏旺', material: '410S/2BA' },
     { origin: '瑞钢', material: '410S/2BA' },
     { origin: '瑞钢', material: '410S/2BA(非标)' },
     // 430 系列
@@ -71,7 +71,7 @@ const App = (() => {
       items: [
         { origin: '甬金', material: '410S/BA' },
         { origin: '上克', material: '410S/BA' },
-        { origin: '宏旺', material: '410S/BA' },
+        { origin: '宏旺', material: '410S/2BA' },
         { origin: '瑞钢', material: '410S/2BA' },
         { origin: '瑞钢', material: '410S/2BA(非标)' },
       ]
@@ -606,7 +606,11 @@ const App = (() => {
       // 旧格式数据（纯键值对）直接废弃，以新格式覆盖
       prices400 = {};
       for (const [k, v] of Object.entries(data)) {
-        if (v > 0) prices400[k] = v;
+        if (v > 0) {
+          // 2026-08-21：宏旺 410S/BA 改名 410S/2BA，旧键数据迁移
+          const nk = k === '宏旺-410S/BA' ? '宏旺-410S/2BA' : k;
+          prices400[nk] = v;
+        }
       }
     } catch (e) { prices400 = {}; }
   }
@@ -904,7 +908,7 @@ const App = (() => {
       ['410S-2BA(非标)', '410S/2BA(非标)（瑞钢）'],
       ['430B-BA', '430B/BA（甬金/上克）'],
       ['430-BA', '430/BA（甬金/上克）'],
-      ['430W-2BA', '宏旺 400系（410S/BA、430W/2BA、430W/2BB，同价）'],
+      ['430W-2BA', '宏旺 400系（410S/2BA、430W/2BA、430W/2BB，同价）'],
       ['430B-2BA-瑞钢', '430B/2BA（瑞钢）']
     ];
     h.push('<h4 class="ref-subtitle">400系厚度加价</h4>');
