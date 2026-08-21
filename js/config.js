@@ -299,19 +299,19 @@ const THICKNESS_SURCHARGE_400 = {
 };
 // 430/BA 使用与 430B/BA 相同的厚度加价
 THICKNESS_SURCHARGE_400['430-BA'] = THICKNESS_SURCHARGE_400['430B-BA'];
-// 430W/2BA（宏旺）厚度加价（2026-08-20 用户提供：半开区间，下界不含、上界含，顺序查找先命中即取）
+// 430W/2BA（宏旺）厚度加价（2026-08-21 用户更新：闭区间 10 档，0.30 单点档）
 // 注意：宏旺只有 430W/2BA，无 430W/BA；本表独立于 430B/2BA（瑞钢）
 THICKNESS_SURCHARGE_400['430W-2BA'] = [
   { min: 0.21, max: 0.24, price: 1600 },
-  { min: 0.24, max: 0.26, price: 1300 },
-  { min: 0.26, max: 0.29, price: 900  },
-  { min: 0.29, max: 0.30, price: 750  },
-  { min: 0.30, max: 0.36, price: 650  },
-  { min: 0.36, max: 0.39, price: 400  },
-  { min: 0.39, max: 0.42, price: 300  },
-  { min: 0.42, max: 0.49, price: 200  },
-  { min: 0.49, max: 0.51, price: 100  },
-  { min: 0.51, max: 2.00, price: 0    }
+  { min: 0.25, max: 0.26, price: 1300 },
+  { min: 0.27, max: 0.29, price: 900  },
+  { min: 0.30, max: 0.30, price: 750  },
+  { min: 0.31, max: 0.36, price: 650  },
+  { min: 0.37, max: 0.39, price: 400  },
+  { min: 0.40, max: 0.42, price: 300  },
+  { min: 0.43, max: 0.49, price: 200  },
+  { min: 0.50, max: 0.51, price: 100  },
+  { min: 0.52, max: 2.00, price: 0    }
 ];
 // 430W/2BB（宏旺）：与 430W/2BA 同厚度加价（2026-08-20 用户确认）
 THICKNESS_SURCHARGE_400['430W-2BB'] = THICKNESS_SURCHARGE_400['430W-2BA'];
