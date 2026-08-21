@@ -615,9 +615,17 @@ test('宏旺 410S/2BA 厚度加价与宏旺其他 400 系相同（2026-08-21 改
   eq(g(0.52), 0, '0.52 → 0');
   eq(g(2.00), 0, '2.00 → 0');
   eq(g(2.01), null, '2.01 超上限 null');
-  // 甬金/上克 410S/BA 不受影响（旧表 0.30-0.35 → 650）
-  eq(PricingEngine.getThicknessSurcharge(0.30, false, '410S/BA', '甬金', 'BA'), 650, '甬金 410S/BA 0.30 → 650');
-  eq(PricingEngine.getThicknessSurcharge(0.30, false, '410S/BA', '上克', 'BA'), 650, '上克 410S/BA 0.30 → 650');
+  // 甬金/上克 410S/BA 新表（2026-08-21 调整：0.22-0.23→1200, 0.24-0.26→1000, 0.27-0.29→800, 0.30-0.35→600）
+  eq(PricingEngine.getThicknessSurcharge(0.23, false, '410S/BA', '甬金', 'BA'), 1200, '甬金 410S/BA 0.23 → 1200');
+  eq(PricingEngine.getThicknessSurcharge(0.25, false, '410S/BA', '上克', 'BA'), 1000, '上克 410S/BA 0.25 → 1000');
+  eq(PricingEngine.getThicknessSurcharge(0.30, false, '410S/BA', '甬金', 'BA'), 600, '甬金 410S/BA 0.30 → 600');
+  eq(PricingEngine.getThicknessSurcharge(0.30, false, '410S/BA', '上克', 'BA'), 600, '上克 410S/BA 0.30 → 600');
+  eq(PricingEngine.getThicknessSurcharge(0.38, false, '410S/BA', '甬金', 'BA'), 400, '甬金 410S/BA 0.38 → 400');
+  eq(PricingEngine.getThicknessSurcharge(0.45, false, '410S/BA', '甬金', 'BA'), 200, '甬金 410S/BA 0.45 → 200');
+  eq(PricingEngine.getThicknessSurcharge(0.60, false, '410S/BA', '甬金', 'BA'), 0, '甬金 410S/BA 0.60 → 0');
+  eq(PricingEngine.getThicknessSurcharge(1.30, false, '410S/BA', '甬金', 'BA'), 100, '甬金 410S/BA 1.30 → 100');
+  eq(PricingEngine.getThicknessSurcharge(1.51, false, '410S/BA', '甬金', 'BA'), null, '甬金 410S/BA 1.51 超上限 → null');
+  eq(PricingEngine.getThicknessSurcharge(0.21, false, '410S/BA', '甬金', 'BA'), null, '甬金 410S/BA 0.21 低于下限 → null');
 });
 test('430W 未配置组合返回 null（不误用 201 加价）', () => {
   eq(PricingEngine.getThicknessSurcharge(0.50, false, '430W/BA', '宏旺', 'BA'), null, '430W/BA 不存在（宏旺只有 430W/2BA）→ null');
