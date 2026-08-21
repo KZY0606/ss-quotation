@@ -134,8 +134,8 @@ const PricingEngine = (() => {
     const w = parseFloat(width);
     // 304 特例表面：优先查 304 专用表
     const is304 = material && (material === '304' || material.startsWith('304') || material === '316L');
-    // 400系表面加工费与304同价
-    const is400 = material && (material.includes('/') || material === '410S' || material === '430' || material === '430B');
+    // 400系表面加工费与304同价（2026-08-21：覆盖全部400系材质名，含带嵌入表面的 '430BA'/'410S-BA-宏旺' 等）
+    const is400 = material && (material.includes('/') || material.startsWith('410S') || material.startsWith('430'));
     if ((is304 || is400) && SURFACE_FEES_304[surface]) {
       const fee304 = SURFACE_FEES_304[surface];
       if (Array.isArray(fee304)) {
