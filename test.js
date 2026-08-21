@@ -599,13 +599,17 @@ test('430W/2BB（宏旺）与 430W/2BA 同厚度加价', () => {
   eq(g2bb(2.00), 0, '2.00 → 0');
   eq(g2bb(2.01), null, '2.01 超上限 null');
 });
-test('上克 430/BA 厚度加价与 430B/BA 相同', () => {
+test('上克 430/BA 厚度加价与 430B/BA 相同（2026-08-21 新表：对齐 410S/BA）', () => {
   const g = t => PricingEngine.getThicknessSurcharge(t, false, '430/BA', '上克', 'BA');
-  eq(g(0.30), 650, '0.30 → 650（430B-BA 表 0.30-0.35）');
+  eq(g(0.23), 1200, '0.23 → 1200（0.22-0.23）');
+  eq(g(0.25), 1000, '0.25 → 1000（0.24-0.26）');
+  eq(g(0.30), 600, '0.30 → 600（430B-BA 表 0.30-0.35）');
   eq(g(0.50), 0, '0.50 → 0（0.50-1.20）');
   eq(g(1.30), 100, '1.30 → 100（1.21-1.50）');
   // 与甬金 430/BA 同表
-  eq(PricingEngine.getThicknessSurcharge(0.30, false, '430/BA', '甬金', 'BA'), 650, '甬金 430/BA 同价');
+  eq(PricingEngine.getThicknessSurcharge(0.30, false, '430/BA', '甬金', 'BA'), 600, '甬金 430/BA 同价');
+  eq(PricingEngine.getThicknessSurcharge(0.21, false, '430/BA', '上克', 'BA'), null, '0.21 低于下限 → null');
+  eq(PricingEngine.getThicknessSurcharge(1.51, false, '430/BA', '上克', 'BA'), null, '1.51 超上限 → null');
 });
 test('宏旺 410S/2BA 厚度加价与宏旺其他 400 系相同（2026-08-21 改名后）', () => {
   const g = t => PricingEngine.getThicknessSurcharge(t, false, '410S/2BA', '宏旺', '2BA');
