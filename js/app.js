@@ -1374,17 +1374,22 @@ const App = (() => {
   function clearAll() { dataItems = []; results = []; allExpanded = false; render(); showToast('已清空', 'info'); }
   function removeRow(idx) { dataItems.splice(idx - 1, 1); results = []; render(); }
 
-  function exportResults() {
+  async function exportResults() {
     if (!results.length) { showToast('请先计算', 'error'); return; }
     const d = new Date(); const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
-    ExcelParser.exportToExcel(results, `KK报价_${ds}.xlsx`, {
-      term: termState.term,
-      fobUsd: termState.fobUsd || 0,
-      cifUsd: termState.cifUsd || 0,
-      rate: effectiveRate(),
-      extras: { opFee: extrasState.opFee, interest: extrasState.interest, profit: extrasState.profit }
-    });
-    showToast('导出成功', 'success');
+    try {
+      await ExcelParser.exportToExcel(results, `KK报价_${ds}.xlsx`, {
+        term: termState.term,
+        fobUsd: termState.fobUsd || 0,
+        cifUsd: termState.cifUsd || 0,
+        rate: effectiveRate(),
+        extras: { opFee: extrasState.opFee, interest: extrasState.interest, profit: extrasState.profit }
+      });
+      showToast('导出成功', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('导出失败: ' + (err && err.message ? err.message : '未知错误'), 'error');
+    }
   }
 
   function toggleExpand(idx) {

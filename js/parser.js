@@ -284,18 +284,21 @@ const ExcelParser = (() => {
     return isNaN(n) ? s : n.toFixed(2);
   }
 
-  function exportToExcel(results, filename, termInfo) {
+  async function exportToExcel(results, filename, termInfo) {
     const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null };
-    const rows = [];
-    const fmtCny = v => '¥' + Math.round(v).toLocaleString();
-    const fmtUsd = v => '$' + (Math.round(v * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    // 给客户看的简洁表头：单价纯数字(符号在表头)，总价带对应符号；术语只保留在合计行(总价前一格)
-    rows.push(['产地', '材质', '表面', '保护膜', '规格', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
+    // 给客户看的简洁表头；符号体现在表头与数字格式；术语只保留在合计行(总价前一格)
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('报价单');
+    ws.addRow(['产地', '材质', '表面', '保护膜', '规格', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
+    ws.columns = [
+      { width: 10 }, { width: 10 }, { width: 16 }, { width: 24 }, { width: 22 },
+      { width: 12 }, { width: 14 }, { width: 16 }, { width: 14 }, { width: 16 }
+    ];
     let totalCny = 0, totalUsd = 0, totalW = 0, hasWeight = false;
 
     for (const r of results) {
       if (!r.success) {
-        rows.push([r.index, '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '']);
+        ws.addRow([r.index, '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '']);
         continue;
       }
       const d = r.detail;
@@ -315,64 +318,64 @@ const ExcelParser = (() => {
       const amtCny = (w != null && usdV != null) ? cny * w : null;
       const amtUsd = (w != null && usdV != null) ? usdV * w : null;
       if (amtCny != null) { totalCny += cny * w; totalUsd += usdV * w; totalW += w; hasWeight = true; }
-      rows.push([
+      ws.addRow([
         d.origin || '',
         (d.material || '') + (d.isYanYan ? '压延' : ''),
         d.surface || '',
         film,
         spec,
         w != null ? w : '',
-        // 单价：纯数字（符号在表头）；FOB/CIF 同样给人民币
+        // 单价/总价：存数字值，数字格式显示 ¥/$ 符号（FOB/CIF 同样给人民币）
         Math.round(cny),
         usdV == null ? '' : Math.round(usdV * 100) / 100,
-        // 总价：带对应单位符号
-        amtCny != null ? fmtCny(amtCny) : '',
-        amtUsd != null ? fmtUsd(amtUsd) : ''
+        amtCny != null ? Math.round(amtCny) : '',
+        amtUsd != null ? Math.round(amtUsd * 100) / 100 : ''
       ]);
     }
     // 合计总价：术语 EXW/FOB/CIF 只保留在这一行（总价前一格）
     if (hasWeight) {
-      rows.push(['', '', '', '', '合计', Math.round(totalW * 1000) / 1000, '', ti.term, fmtCny(totalCny), fmtUsd(totalUsd)]);
+      ws.addRow(['', '', '', '', '合计', Math.round(totalW * 1000) / 1000, '', ti.term, Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
     }
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [
-      { wch: 10 }, // 产地
-      { wch: 10 }, // 材质
-      { wch: 16 }, // 表面
-      { wch: 24 }, // 保护膜
-      { wch: 22 }, // 规格
-      { wch: 12 }, // 重量
-      { wch: 14 }, // 单价(¥)
-      { wch: 16 }, // 单价($)
-      { wch: 14 }, // 总价(¥)
-      { wch: 16 }  // 总价($)
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '报价单');
+    // 样式：外边框+内框（加粗 medium）、数据居中、表头加粗
+    const borderAll = { top: { style: 'medium' }, left: { style: 'medium' }, bottom: { style: 'medium' }, right: { style: 'medium' } };
+    ws.eachRow((row) => {
+      row.eachCell((cell) => {
+        cell.border = borderAll;
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      });
+    });
+    ws.getRow(1).eachCell((c) => { c.font = { bold: true }; });
+    // 数字格式：人民币 ¥ 整数、美元 $ 两位小数（数据行+合计行）
+    for (let R = 2; R <= ws.rowCount; R++) {
+      const row = ws.getRow(R);
+      [7, 9].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
+      [8, 10].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
+    }
 
     // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
     const detailRows = _buildDetailRows(results, ti);
     if (detailRows.length > 0) {
-      const ds = XLSX.utils.aoa_to_sheet(detailRows);
-      XLSX.utils.book_append_sheet(wb, ds, '内部明细');
-      wb.Sheets['内部明细'].hidden = true; // Excel 隐藏工作表
-      // 列宽
-      ds['!cols'] = [
-        { wch: 5 },  { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 10 },
-        { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 12 },
-        { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-        { wch: 16 }, { wch: 16 },
-        { wch: 10 }, { wch: 10 }, { wch: 12 },
-        { wch: 16 }, { wch: 16 }, { wch: 16 },
-        { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 14 },
-        { wch: 16 },
-        { wch: 10 }, { wch: 14 }, { wch: 16 }
-      ];
+      const ds = wb.addWorksheet('内部明细', { state: 'hidden' });
+      detailRows.forEach(arr => ds.addRow(arr));
+      const widths = [5, 10, 10, 20, 10, 10, 10, 16, 16, 12, 14, 14, 12, 12, 12, 16, 16, 10, 10, 12, 16, 16, 16, 14, 14, 12, 14, 16, 10, 14, 16];
+      widths.forEach((w2, i) => { ds.getColumn(i + 1).width = w2; });
+      ds.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = borderAll;
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+      });
+      ds.getRow(1).eachCell((c) => { c.font = { bold: true }; });
     }
 
-    XLSX.writeFile(wb, filename || 'KK报价.xlsx');
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename || 'KK报价.xlsx';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
   }
 
   function _buildDetailRows(results, termInfo) {
