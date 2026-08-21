@@ -395,15 +395,23 @@ body {
 }
 .rate-label { font-weight:700; color:var(--text-primary); white-space:nowrap; }
 .rate-live { font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; white-space:nowrap; font-size:14px; }
-.rate-input-group {
+/* 高亮输入框（手动汇率 / FOB加价 / CIF加价）：淡黄底 + 金黄边框，醒目可填 */
+.rate-input-group, .term-input-group {
   display:flex; align-items:center; gap:6px; margin-left:auto;
-  background:var(--card); border:1px solid var(--border-light); border-radius:8px;
-  padding:6px 10px; transition:border-color .15s, box-shadow .15s;
+  background:#fff8e1; border:2px solid #e8c25a; border-radius:8px;
+  padding:6px 10px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+  transition:border-color .15s, box-shadow .15s, background .15s;
 }
-.rate-input-group:focus-within { border-color:var(--accent); box-shadow:0 0 0 2px rgba(52,69,94,.12); }
-.rate-input-group label { font-size:12px; color:var(--text-secondary); white-space:nowrap; }
+.rate-input-group:hover, .term-input-group:hover,
+.rate-input-group:focus-within, .term-input-group:focus-within {
+  border-color:var(--accent); background:#fffdf0;
+  box-shadow:0 0 0 3px rgba(46,116,181,.18);
+}
+.rate-input-group label, .term-input-group label {
+  font-size:12px; font-weight:700; color:#9a7b1e; white-space:nowrap;
+}
 .rate-input-group input {
-  width:110px; border:none; outline:none; font-size:14px; font-weight:600;
+  width:110px; border:none; outline:none; font-size:15px; font-weight:700;
   color:var(--text-primary); background:transparent; font-variant-numeric:tabular-nums;
 }
 .rate-input-group input::-webkit-outer-spin-button, .rate-input-group input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
@@ -421,15 +429,8 @@ body {
 .term-radio input { accent-color:var(--accent); width:15px; height:15px; cursor:pointer; }
 .term-radio span { font-weight:600; color:var(--text-primary); }
 .term-radio input:checked + span { color:var(--accent); }
-.term-input-group {
-  display:flex; align-items:center; gap:6px; margin-left:auto;
-  background:var(--card); border:1px solid var(--border-light); border-radius:8px;
-  padding:6px 10px; transition:border-color .15s, box-shadow .15s;
-}
-.term-input-group:focus-within { border-color:var(--steel-4); box-shadow:0 0 0 2px rgba(52,69,94,.12); }
-.term-input-group label { font-size:12px; color:var(--text-secondary); white-space:nowrap; }
 .term-input-group input {
-  width:76px; border:none; outline:none; font-size:14px; font-weight:600;
+  width:76px; border:none; outline:none; font-size:15px; font-weight:700;
   color:var(--text-primary); background:transparent; font-variant-numeric:tabular-nums;
 }
 .term-input-group input::-webkit-outer-spin-button, .term-input-group input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
