@@ -287,13 +287,15 @@ const ExcelParser = (() => {
   function exportToExcel(results, filename, termInfo) {
     const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null };
     const rows = [];
-    // 给客户看的简洁表头：符号体现在表头，表格内价格纯数字；术语列在总价前一格
-    rows.push(['产地', '材质', '表面', '保护膜', '规格', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '术语', '总价(¥元)', '总价($美元)']);
+    const fmtCny = v => '¥' + Math.round(v).toLocaleString();
+    const fmtUsd = v => '$' + (Math.round(v * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // 给客户看的简洁表头：单价纯数字(符号在表头)，总价带对应符号；术语只保留在合计行(总价前一格)
+    rows.push(['产地', '材质', '表面', '保护膜', '规格', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
     let totalCny = 0, totalUsd = 0, totalW = 0, hasWeight = false;
 
     for (const r of results) {
       if (!r.success) {
-        rows.push([r.index, '', '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '']);
+        rows.push([r.index, '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '']);
         continue;
       }
       const d = r.detail;
@@ -320,17 +322,17 @@ const ExcelParser = (() => {
         film,
         spec,
         w != null ? w : '',
-        // 纯数字，不带符号（符号在表头）；FOB/CIF 同样给人民币
+        // 单价：纯数字（符号在表头）；FOB/CIF 同样给人民币
         Math.round(cny),
         usdV == null ? '' : Math.round(usdV * 100) / 100,
-        ti.term, // 术语写在总价前一格
-        amtCny != null ? Math.round(amtCny) : '',
-        amtUsd != null ? Math.round(amtUsd * 100) / 100 : ''
+        // 总价：带对应单位符号
+        amtCny != null ? fmtCny(amtCny) : '',
+        amtUsd != null ? fmtUsd(amtUsd) : ''
       ]);
     }
-    // 所有数据总价下方给出合计总价
+    // 合计总价：术语 EXW/FOB/CIF 只保留在这一行（总价前一格）
     if (hasWeight) {
-      rows.push(['', '', '', '', '合计', Math.round(totalW * 1000) / 1000, '', '', ti.term, Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
+      rows.push(['', '', '', '', '合计', Math.round(totalW * 1000) / 1000, '', ti.term, fmtCny(totalCny), fmtUsd(totalUsd)]);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -343,7 +345,6 @@ const ExcelParser = (() => {
       { wch: 12 }, // 重量
       { wch: 14 }, // 单价(¥)
       { wch: 16 }, // 单价($)
-      { wch: 8 },  // 术语
       { wch: 14 }, // 总价(¥)
       { wch: 16 }  // 总价($)
     ];
