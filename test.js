@@ -812,6 +812,24 @@ test('美金换算 cnToUsd（2026-08-21）', () => {
   eq(PricingEngine.cnToUsd('abc', 670.97), null, '非法金额 → null');
 });
 
+test('附加费用 addExtras（2026-08-21）', () => {
+  // 全勾选：运营费200 + 利息100 + 利润500 = 800
+  const e1 = PricingEngine.addExtras(10000, {
+    opFee: { on: true, val: 200 },
+    interest: { on: true, val: 100 },
+    profit: { on: true, val: 500 }
+  });
+  eq(e1.cny, 10800, '10000 + 800 = 10800');
+  eq(e1.extra, 800, '附加合计 800');
+  // 部分勾选：只勾利润
+  const e2 = PricingEngine.addExtras(10000, { opFee: { on: false, val: 200 }, interest: { on: true, val: 0 }, profit: { on: true, val: 500 } });
+  eq(e2.cny, 10500, '只算利润 500');
+  // 未勾选 / 空
+  eq(PricingEngine.addExtras(10000, null).cny, 10000, '无附加 → 原价');
+  eq(PricingEngine.addExtras(10000, {}).cny, 10000, '空对象 → 原价');
+  eq(PricingEngine.addExtras('abc', null), null, '非法金额 → null');
+});
+
 test('贸易术语 addUsdSurcharge（2026-08-21）', () => {
   // EXW 10000元，FOB 加价 $50/吨，汇率 670.96 → +50×6.7096=335.48 → 10335.48
   const r = PricingEngine.addUsdSurcharge(10000, 50, 670.96);
