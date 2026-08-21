@@ -119,6 +119,10 @@ const PricingEngine = (() => {
       }
       return findInTable(THICKNESS_SURCHARGE_304, t);
     }
+    // 201J5（北港）：用户未提供厚度加价数据，暂不计算（2026-08-21 用户确认，不落通用表）
+    if (material && /^201J5/.test(material)) {
+      return null;
+    }
     // 201（正材）：暂时不分产地，统一标准
     return findInTable(THICKNESS_SURCHARGE, t);
   }
@@ -394,7 +398,10 @@ const PricingEngine = (() => {
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
 
     let thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, surface);
-    if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
+    if (thickSurcharge === null) {
+      if (material && /^201J5/.test(material)) errors.push(`北港 J5 未提供厚度加价数据，暂不计算（补数据后恢复报价）`);
+      else errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
+    }
     // 甬金316L 薄料(0.25-0.50mm) 宽度 1500/1530：厚度加价额外 +300（2026-08-21 用户确认）
     let widthSurcharge = 0;
     if (thickSurcharge !== null && item.origin === '甬金' && material === '316L' && thickness >= 0.25 && thickness <= 0.50 && width >= 1500 && width <= 1530) {
