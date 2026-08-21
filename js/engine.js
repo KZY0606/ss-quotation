@@ -207,13 +207,18 @@ const PricingEngine = (() => {
   function normalizeSurface(raw) {
     if (!raw) return null;
     const s = raw.trim();
-    // 2026-08-21：小炉/大炉后缀 /S /L（如 '8K黄钛金(板)/S'）——先剥离，归一化基础名后拼回
+    // 2026-08-21：小炉/大炉后缀 S/L（带不带 / 都识别，如 '8K黄钛金(板)/S'、'8K黄钛金(板)S'）
+    // 剥掉后缀后基础名必须能精确匹配（SURFACE_FEES 键或别名），避免误伤 'HL' 等字母结尾表面
     let suffix = null;
     let base = s;
-    const sm = s.match(/^(.*)\/([sSlL])$/);
+    const sm = s.match(/^(.*?)[\/\s]*([sSlL])$/);
     if (sm) {
       const up = sm[2].toUpperCase();
-      if (up === 'S' || up === 'L') { suffix = up; base = sm[1].trim(); }
+      const b = sm[1].trim();
+      if ((up === 'S' || up === 'L') && b && (SURFACE_FEES[b] || SURFACE_ALIASES[b.toLowerCase()])) {
+        suffix = up;
+        base = b;
+      }
     }
     let norm;
     if (SURFACE_FEES[base]) norm = base;
