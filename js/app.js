@@ -11,6 +11,13 @@ const App = (() => {
   let rateState = { live: null, liveTime: null, liveSource: null, manual: null };
   // 贸易术语状态：EXW 默认；FOB/CIF 加价（USD/吨）手动填写，持久化
   let termState = { term: 'EXW', fobUsd: 0, cifUsd: 0 };
+  // 附加费用（人民币/吨，勾选生效）：公司运营费 / 资金占用利息 / 利润
+  let extrasState = {
+    opFee: { on: false, val: 0 },
+    interest: { on: false, val: 0 },
+    profit: { on: false, val: 0 }
+  };
+  const EXTRA_KEYS = { opFee: 'kk_extra_opfee', interest: 'kk_extra_interest', profit: 'kk_extra_profit' };
 
   // 各产地 201 基价（新结构：产地 → 4 个宽度档 × J1/J2/J3/J4）
   // { 产地: { b1: {201J1,201J2,201J3,201J4}, b2: {...}, b3: {...}, b4: {...} } }
@@ -167,6 +174,7 @@ const App = (() => {
     cacheDom();
     initUsdRate();
     initTradeTerm();
+    initExtras();
     bindEvents();
     renderOriginGrid();
     renderFilmConfig();
@@ -198,6 +206,13 @@ const App = (() => {
     els.rateBar = dom('rateBar'); els.rateLive = dom('rateLive'); els.rateManual = dom('rateManual'); els.rateReset = dom('rateReset');
     els.termBar = dom('termBar'); els.termRadios = document.querySelectorAll('input[name="tradeTerm"]');
     els.fobSurcharge = dom('fobSurcharge'); els.cifSurcharge = dom('cifSurcharge');
+    els.extrasBar = dom('extrasBar');
+    els.extraItems = { opFee: { on: dom('opFeeOn'), val: dom('opFeeVal'), item: null },
+                      interest: { on: dom('interestOn'), val: dom('interestVal'), item: null },
+                      profit: { on: dom('profitOn'), val: dom('profitVal'), item: null } };
+    els.extraItems.opFee.item = els.extraItems.opFee.on.closest('.extra-item');
+    els.extraItems.interest.item = els.extraItems.interest.on.closest('.extra-item');
+    els.extraItems.profit.item = els.extraItems.profit.on.closest('.extra-item');
     els.originRows201 = dom('originRows201'); els.originRows304 = dom('originRows304');
     els.originRows316L = dom('originRows316L');
     els.newOriginInput = dom('newOriginInput');
@@ -253,6 +268,24 @@ const App = (() => {
       termState.cifUsd = (!isNaN(v) && v >= 0) ? v : 0;
       try { localStorage.setItem(TERM_KEY_CIF, String(termState.cifUsd)); } catch (e) {}
       render();
+    });
+
+    // 附加费用：勾选生效 + 金额输入（人民币/吨）
+    ['opFee', 'interest', 'profit'].forEach(k => {
+      const it = els.extraItems[k];
+      it.on.addEventListener('change', () => {
+        extrasState[k].on = it.on.checked;
+        it.val.disabled = !it.on.checked;
+        it.item.classList.toggle('disabled', !it.on.checked);
+        try { localStorage.setItem(EXTRA_KEYS[k], JSON.stringify(extrasState[k])); } catch (e) {}
+        render();
+      });
+      it.val.addEventListener('input', () => {
+        const v = parseFloat(it.val.value);
+        extrasState[k].val = (!isNaN(v) && v > 0) ? v : 0;
+        try { localStorage.setItem(EXTRA_KEYS[k], JSON.stringify(extrasState[k])); } catch (e) {}
+        render();
+      });
     });
 
     // 价格参数配置选项卡切换
@@ -1347,7 +1380,8 @@ const App = (() => {
       term: termState.term,
       fobUsd: termState.fobUsd || 0,
       cifUsd: termState.cifUsd || 0,
-      rate: effectiveRate()
+      rate: effectiveRate(),
+      extras: { opFee: extrasState.opFee, interest: extrasState.interest, profit: extrasState.profit }
     });
     showToast('导出成功', 'success');
   }
@@ -1448,13 +1482,42 @@ const App = (() => {
   function termPrice(cny) { return termPriceWith(cny, termSurchargeUsd()); }
   function termPriceUsd(cny) { return usd(termPrice(cny)); }
 
+  // ---------- 附加费用（运营费/资金占用利息/利润，人民币/吨） ----------
+  function initExtras() {
+    ['opFee', 'interest', 'profit'].forEach(k => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(EXTRA_KEYS[k]) || 'null');
+        if (saved && typeof saved.on === 'boolean') {
+          extrasState[k].on = saved.on;
+          extrasState[k].val = (typeof saved.val === 'number' && saved.val > 0) ? saved.val : 0;
+        }
+      } catch (e) {}
+      const it = els.extraItems[k];
+      it.on.checked = extrasState[k].on;
+      it.val.disabled = !extrasState[k].on;
+      it.val.value = extrasState[k].val > 0 ? String(extrasState[k].val) : '';
+      it.item.classList.toggle('disabled', !extrasState[k].on);
+    });
+  }
+  // 已勾选的附加费用合计（人民币/吨）
+  function extraTotal() {
+    let t = 0;
+    for (const k of ['opFee', 'interest', 'profit']) {
+      if (extrasState[k].on && extrasState[k].val > 0) t += extrasState[k].val;
+    }
+    return t;
+  }
+  // 最终人民币价 = 术语价 + 附加费用合计；FOB/CIF 时美元 = 最终人民币/汇率
+  function finalPrice(cny) { return termPrice(cny) + extraTotal(); }
+  function finalPriceUsd(cny) { return usd(finalPrice(cny)); }
+
   function renderStats() {
     const sr = results.filter(r => r.success);
     els.totalC.textContent = dataItems.length;
     els.okC.textContent = sr.length;
     els.errC.textContent = results.filter(r => !r.success).length;
     if (sr.length > 0) {
-      const sp = sr.map(r => termPrice(r.detail.saleTax));
+      const sp = sr.map(r => finalPrice(r.detail.saleTax));
       const mn = Math.min(...sp), mx = Math.max(...sp);
       if (termState.term === 'EXW') {
         els.minP.textContent = mn.toLocaleString() + '  /  ' + fmtUsd(usd(mn));
@@ -1493,10 +1556,10 @@ const App = (() => {
       h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
-        const tSaleTax = termPrice(d.saleTax), tSaleNoTax = termPrice(d.saleNoTax);
+        const tSaleTax = finalPrice(d.saleTax), tSaleNoTax = finalPrice(d.saleNoTax);
         const uSaleTax = usd(tSaleTax), uSaleNoTax = usd(tSaleNoTax);
         const isExw = termState.term === 'EXW';
-        // FOB/CIF 只显示美金；EXW 显示人民币 + 美金
+        // FOB/CIF 只显示美金；EXW 显示人民币 + 美金（均含附加费用）
         const taxCell = isExw
           ? `${Math.round(tSaleTax).toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleTax)}</div>`
           : `<div class="usd-sub">${fmtUsd(uSaleTax)}</div>`;
@@ -1505,11 +1568,13 @@ const App = (() => {
           : `<div class="usd-sub">${fmtUsd(uSaleNoTax)}</div>`;
         const exwRef = !isExw
           ? `<div class="exw-sub">EXW ¥${d.saleTax.toLocaleString()} / ${fmtUsd(usd(d.saleTax))}</div>` : '';
+        const extraRef = extraTotal() > 0
+          ? `<div class="exw-sub">含附加费 ${extraTotal().toLocaleString()} 元/吨</div>` : '';
         h.push(`<td class="price-cell price-cost">${d.costTax.toLocaleString()}</td>`);
         h.push(`<td class="price-cell price-subtle">${d.costNoTax.toLocaleString()}</td>`);
         h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-${d.boardType}">${d.boardType === 'coil' ? '卷' : '板'}</span></td>`);
-        h.push(`<td class="price-cell price-sale"><span class="term-tag">${termState.term}</span>${taxCell}${exwRef}</td>`);
-        h.push(`<td class="price-cell price-subtle"><span class="term-tag">${termState.term}</span>${noTaxCell}${exwRef}</td>`);
+        h.push(`<td class="price-cell price-sale"><span class="term-tag">${termState.term}</span>${taxCell}${extraRef}${exwRef}</td>`);
+        h.push(`<td class="price-cell price-subtle"><span class="term-tag">${termState.term}</span>${noTaxCell}${extraRef}${exwRef}</td>`);
       } else if (isErr) { h.push(`<td colspan="6" class="error-text">⚠️ ${r.errors.join('；')}</td>`); }
       else { h.push(`<td colspan="6" style="color:var(--text-muted);font-size:12px">待计算</td>`); }
       h.push(`<td><button class="btn-icon btn-ghost delete-btn" onclick="App.removeRow(${idx})">✕</button></td></tr>`);
@@ -1562,11 +1627,26 @@ const App = (() => {
     html += termRow('EXW', d.saleTax, 0);
     html += termRow('FOB', d.saleTax, termState.fobUsd || 0);
     html += termRow('CIF', d.saleTax, termState.cifUsd || 0);
+    // 附加费用（勾选生效）
+    html += '<div class="calc-section-title">附加费用（元/吨，勾选生效）</div>';
+    html += extraRow('公司运营费', extrasState.opFee);
+    html += extraRow('资金占用利息', extrasState.interest);
+    html += extraRow('利润', extrasState.profit);
+    const ex = extraTotal();
+    html += `<div class="calc-step"><span class="calc-step-label">附加费用合计</span><span class="calc-step-value ${ex > 0 ? 'positive' : 'zero'}">${ex > 0 ? '+' + ex.toLocaleString() : '0'} 元/吨</span></div>`;
+    // 最终售价（含附加费）
+    const fTax = finalPrice(d.saleTax);
+    html += `<div class="calc-step final-step"><span class="calc-step-label">最终含税售价（${termState.term}，含附加费）</span><span class="calc-step-value positive">¥${Math.round(fTax).toLocaleString()} / ${fmtUsd(usd(fTax))}</span></div>`;
     html += '</div></div>';
     return html;
   }
 
   const step = (l, v, u, p) => `<div class="calc-step"><span class="calc-step-label">${l}</span><span class="calc-step-value ${p?'positive':'zero'}">${p?'+'+fmt(v):'0'} ${u}</span></div>`;
+  // 附加费用行：勾选显示 +金额，未勾选显示未启用
+  const extraRow = (label, st) => {
+    const on = st.on && st.val > 0;
+    return `<div class="calc-step"><span class="calc-step-label">${st.on ? '☑' : '☐'} ${label}</span><span class="calc-step-value ${on ? 'positive' : 'zero'}">${on ? '+' + st.val.toLocaleString() : '未启用'} 元/吨</span></div>`;
+  };
   // 贸易术语行：EXW 人民币+美元（核验基准）；FOB/CIF 只显示美元；当前术语高亮
   const termRow = (t, saleTax, s) => {
     const isCur = termState.term === t;

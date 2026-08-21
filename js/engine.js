@@ -752,9 +752,26 @@ const PricingEngine = (() => {
     return { cny: cny2, usd: cny2 * 100 / r };
   }
 
+  // 附加费用（公司运营费/资金占用利息/利润）：均人民币/吨，勾选(on)才计入，直接加到人民币价上
+  // extras = { opFee:{on,val}, interest:{on,val}, profit:{on,val} }
+  function addExtras(cny, extras) {
+    const c = parseFloat(cny);
+    if (isNaN(c)) return null;
+    const e = extras || {};
+    let total = 0;
+    for (const k of ['opFee', 'interest', 'profit']) {
+      const it = e[k];
+      if (it && it.on) {
+        const v = parseFloat(it.val);
+        if (!isNaN(v) && v > 0) total += v;
+      }
+    }
+    return { cny: c + total, extra: total };
+  }
+
   return {
     calculate, calculateBatch, parseSpec, parseFreeText,
-    normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge,
+    normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge, addExtras,
     parseThicknessRange,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,

@@ -285,7 +285,7 @@ const ExcelParser = (() => {
   }
 
   function exportToExcel(results, filename, termInfo) {
-    const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97 };
+    const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null };
     const rows = [];
     // 给客户看的简洁表头
     rows.push(['产地', '材质', '表面', '保护膜', '规格', '重量(吨)', '术语', '价格(元/吨)', '价格(美元/吨)']);
@@ -302,11 +302,13 @@ const ExcelParser = (() => {
       const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
       // 重量（吨）：取导入数据，无则不填
       const weight = d.weight || '';
-      // 按贸易术语算价：FOB/CIF = EXW + 美元加价
+      // 术语加价（FOB/CIF = EXW + 美元加价）+ 附加费用（人民币/吨）
       const s = ti.term === 'FOB' ? (ti.fobUsd || 0) : (ti.term === 'CIF' ? (ti.cifUsd || 0) : 0);
       const tp = PricingEngine.addUsdSurcharge(d.saleNoTax, s, ti.rate);
-      const cny = tp ? tp.cny : d.saleNoTax;
-      const usdV = tp ? tp.usd : PricingEngine.cnToUsd(d.saleNoTax, ti.rate);
+      const base = tp ? tp.cny : d.saleNoTax;
+      const ex = PricingEngine.addExtras(base, ti.extras || null);
+      const cny = ex ? ex.cny : base;
+      const usdV = PricingEngine.cnToUsd(cny, ti.rate);
       rows.push([
         d.origin || '',
         (d.material || '') + (d.isYanYan ? '压延' : ''),
@@ -351,6 +353,7 @@ const ExcelParser = (() => {
         { wch: 16 }, { wch: 16 },
         { wch: 10 }, { wch: 10 }, { wch: 12 },
         { wch: 16 }, { wch: 16 }, { wch: 16 },
+        { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 14 },
         { wch: 16 }, { wch: 16 }
       ];
     }
@@ -359,11 +362,17 @@ const ExcelParser = (() => {
   }
 
   function _buildDetailRows(results, termInfo) {
-    const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97 };
+    const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null };
     const termCny = (saleTax, s) => {
       const tp = PricingEngine.addUsdSurcharge(saleTax, s, ti.rate);
       return tp ? Math.round(tp.cny) : saleTax;
     };
+    // 附加费用单行值（未勾选 → 0）
+    const exVal = k => {
+      const it = (ti.extras || {})[k];
+      return (it && it.on && it.val > 0) ? it.val : 0;
+    };
+    const exTotal = () => exVal('opFee') + exVal('interest') + exVal('profit');
     const rows = [];
     rows.push([
       '序号', '产地', '材质', '表面', '厚度(mm)', '宽度(mm)', '长度',
@@ -372,6 +381,7 @@ const ExcelParser = (() => {
       '含税成本(元/吨)', '不含税成本(元/吨)',
       '毛边/齐边', '卷板/平板', '销售加价(元/吨)',
       'EXW含税售价(元/吨)', 'FOB含税售价(元/吨)', 'CIF含税售价(元/吨)',
+      '运营费(元/吨)', '资金占用利息(元/吨)', '利润(元/吨)', '附加费合计(元/吨)',
       '含税售价(元/吨)', '不含税售价(元/吨)'
     ]);
     for (const r of results) {
@@ -380,6 +390,8 @@ const ExcelParser = (() => {
         continue;
       }
       const d = r.detail;
+      // 术语价（FOB/CIF 加价后）+ 附加费 → 最终含税售价
+      const termBase = termCny(d.saleTax, ti.term === 'FOB' ? (ti.fobUsd || 0) : (ti.term === 'CIF' ? (ti.cifUsd || 0) : 0));
       rows.push([
         r.index, d.origin || '', d.material || '', d.surface || '',
         d.thickness, d.width, d.length,
@@ -393,7 +405,8 @@ const ExcelParser = (() => {
         Math.round(d.saleTax),
         termCny(d.saleTax, ti.fobUsd || 0),
         termCny(d.saleTax, ti.cifUsd || 0),
-        Math.round(d.saleTax), Math.round(d.saleNoTax)
+        exVal('opFee'), exVal('interest'), exVal('profit'), exTotal(),
+        Math.round(termBase) + exTotal(), Math.round(d.saleNoTax)
       ]);
     }
     return rows;

@@ -435,6 +435,33 @@ body {
 }
 .term-input-group input::-webkit-outer-spin-button, .term-input-group input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .term-unit { font-size:11px; color:var(--text-secondary); white-space:nowrap; }
+
+/* ===== 附加费用条（运营费/资金占用利息/利润，勾选生效） ===== */
+.extras-bar {
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:10px 14px; margin-bottom:12px;
+  background:var(--card); border:1px dashed var(--steel-4); border-left:3px solid var(--steel-4);
+  border-radius:8px; font-size:13px;
+}
+.extras-label { font-weight:700; color:var(--text-primary); white-space:nowrap; }
+.extra-item { display:flex; align-items:center; gap:8px; }
+.extra-check { display:flex; align-items:center; gap:4px; cursor:pointer; white-space:nowrap; }
+.extra-check input { accent-color:var(--accent); width:16px; height:16px; cursor:pointer; }
+.extra-check span { font-weight:600; color:var(--text-primary); }
+.extra-check input:checked + span { color:var(--accent); }
+.extra-input-wrap {
+  display:flex; align-items:center; gap:5px;
+  background:#fff8e1; border:2px solid #e8c25a; border-radius:8px;
+  padding:5px 8px; transition:border-color .15s, box-shadow .15s, opacity .15s;
+}
+.extra-input-wrap:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px rgba(46,116,181,.18); }
+.extra-item.disabled .extra-input-wrap { opacity:.45; }
+.extra-input-wrap input {
+  width:72px; border:none; outline:none; font-size:14px; font-weight:700;
+  color:var(--text-primary); background:transparent; font-variant-numeric:tabular-nums;
+}
+.extra-input-wrap input::-webkit-outer-spin-button, .extra-input-wrap input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.extra-item.disabled .extra-check span { color:var(--text-secondary); }
 /* 表格术语标签 + EXW 参考小字 */
 .term-tag {
   display:inline-block; font-size:10px; font-weight:700; color:#fff;
@@ -444,6 +471,14 @@ body {
 .exw-sub { font-size:11px; color:var(--text-secondary); font-weight:400; margin-top:1px; }
 /* 明细贸易术语行：当前术语高亮 */
 .term-row.term-cur { background:rgba(52,69,94,.07); border-radius:6px; padding:2px 6px; }
+/* 明细最终售价行：醒目 */
+.final-step {
+  margin-top:6px; border-top:2px solid var(--border-light); padding-top:8px;
+  background:linear-gradient(90deg, rgba(52,69,94,.06), rgba(52,69,94,.02));
+  border-radius:6px; padding:6px 8px;
+}
+.final-step .calc-step-label { font-weight:700; }
+.final-step .calc-step-value { font-weight:700; font-size:15px; }
 .usd-sup { color:var(--accent); font-size:11px; margin-left:2px; }
 /* 美金价格：与人民币同字号同字重，仅用颜色区分（accent 蓝） */
 .usd-sub { font-size:inherit; font-weight:inherit; color:var(--accent); font-variant-numeric:tabular-nums; margin-top:1px; }
