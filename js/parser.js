@@ -315,7 +315,8 @@ const ExcelParser = (() => {
         spec,
         weight,
         ti.term,
-        Math.round(cny),
+        // FOB/CIF 只给美金，人民币列置 '-'（EXW 正常给人民币）
+        ti.term === 'EXW' ? Math.round(cny) : '-',
         usdV == null ? '' : Math.round(usdV * 100) / 100
       ]);
     }

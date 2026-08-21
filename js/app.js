@@ -1455,11 +1455,15 @@ const App = (() => {
     els.errC.textContent = results.filter(r => !r.success).length;
     if (sr.length > 0) {
       const sp = sr.map(r => termPrice(r.detail.saleTax));
-      els.minP.textContent = Math.min(...sp).toLocaleString();
-      els.maxP.textContent = Math.max(...sp).toLocaleString();
-      const usdMin = usd(Math.min(...sp)), usdMax = usd(Math.max(...sp));
-      els.minP.textContent += '  /  ' + fmtUsd(usdMin);
-      els.maxP.textContent += '  /  ' + fmtUsd(usdMax);
+      const mn = Math.min(...sp), mx = Math.max(...sp);
+      if (termState.term === 'EXW') {
+        els.minP.textContent = mn.toLocaleString() + '  /  ' + fmtUsd(usd(mn));
+        els.maxP.textContent = mx.toLocaleString() + '  /  ' + fmtUsd(usd(mx));
+      } else {
+        // FOB/CIF 只显示美金
+        els.minP.textContent = fmtUsd(usd(mn));
+        els.maxP.textContent = fmtUsd(usd(mx));
+      }
     } else { els.minP.textContent = '-'; els.maxP.textContent = '-'; }
     els.expBtn.disabled = els.expBtn2.disabled = sr.length === 0;
     els.calcBtn.disabled = dataItems.length === 0;
@@ -1491,13 +1495,21 @@ const App = (() => {
       if (isOk) {
         const tSaleTax = termPrice(d.saleTax), tSaleNoTax = termPrice(d.saleNoTax);
         const uSaleTax = usd(tSaleTax), uSaleNoTax = usd(tSaleNoTax);
-        const exwRef = termState.term !== 'EXW'
+        const isExw = termState.term === 'EXW';
+        // FOB/CIF 只显示美金；EXW 显示人民币 + 美金
+        const taxCell = isExw
+          ? `${Math.round(tSaleTax).toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleTax)}</div>`
+          : `<div class="usd-sub">${fmtUsd(uSaleTax)}</div>`;
+        const noTaxCell = isExw
+          ? `${Math.round(tSaleNoTax).toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleNoTax)}</div>`
+          : `<div class="usd-sub">${fmtUsd(uSaleNoTax)}</div>`;
+        const exwRef = !isExw
           ? `<div class="exw-sub">EXW ¥${d.saleTax.toLocaleString()} / ${fmtUsd(usd(d.saleTax))}</div>` : '';
         h.push(`<td class="price-cell price-cost">${d.costTax.toLocaleString()}</td>`);
         h.push(`<td class="price-cell price-subtle">${d.costNoTax.toLocaleString()}</td>`);
         h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-${d.boardType}">${d.boardType === 'coil' ? '卷' : '板'}</span></td>`);
-        h.push(`<td class="price-cell price-sale"><span class="term-tag">${termState.term}</span>${Math.round(tSaleTax).toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleTax)}</div>${exwRef}</td>`);
-        h.push(`<td class="price-cell price-subtle"><span class="term-tag">${termState.term}</span>${Math.round(tSaleNoTax).toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleNoTax)}</div>${exwRef}</td>`);
+        h.push(`<td class="price-cell price-sale"><span class="term-tag">${termState.term}</span>${taxCell}${exwRef}</td>`);
+        h.push(`<td class="price-cell price-subtle"><span class="term-tag">${termState.term}</span>${noTaxCell}${exwRef}</td>`);
       } else if (isErr) { h.push(`<td colspan="6" class="error-text">⚠️ ${r.errors.join('；')}</td>`); }
       else { h.push(`<td colspan="6" style="color:var(--text-muted);font-size:12px">待计算</td>`); }
       h.push(`<td><button class="btn-icon btn-ghost delete-btn" onclick="App.removeRow(${idx})">✕</button></td></tr>`);
@@ -1546,7 +1558,7 @@ const App = (() => {
     html += step(`销售加价 (${bt})`, d.markup, '元/吨', d.markup > 0);
     html += total('含税售价', d.saleTax, 'sale');
     html += total('不含税售价', d.saleNoTax, 'sale');
-    html += '</div><div class="calc-section"><div class="calc-section-title">贸易术语（含税售价，加价 $/吨）</div>';
+    html += '</div><div class="calc-section"><div class="calc-section-title">贸易术语（含税售价；EXW 人民币+美元，FOB/CIF 仅美元）</div>';
     html += termRow('EXW', d.saleTax, 0);
     html += termRow('FOB', d.saleTax, termState.fobUsd || 0);
     html += termRow('CIF', d.saleTax, termState.cifUsd || 0);
@@ -1555,11 +1567,14 @@ const App = (() => {
   }
 
   const step = (l, v, u, p) => `<div class="calc-step"><span class="calc-step-label">${l}</span><span class="calc-step-value ${p?'positive':'zero'}">${p?'+'+fmt(v):'0'} ${u}</span></div>`;
-  // 贸易术语行：EXW/FOB/CIF 含税售价对照（美元加价按汇率折算）；当前术语高亮
+  // 贸易术语行：EXW 人民币+美元（核验基准）；FOB/CIF 只显示美元；当前术语高亮
   const termRow = (t, saleTax, s) => {
     const isCur = termState.term === t;
     const p = termPriceWith(saleTax, s);
-    return `<div class="calc-step term-row${isCur ? ' term-cur' : ''}"><span class="calc-step-label">${t}${s > 0 ? `（+$${s}/吨）` : ''}${isCur ? ' ◀ 当前' : ''}</span><span class="calc-step-value positive">¥${Math.round(p).toLocaleString()} / ${fmtUsd(usd(p))}</span></div>`;
+    const val = t === 'EXW'
+      ? `¥${Math.round(p).toLocaleString()} / ${fmtUsd(usd(p))}`
+      : fmtUsd(usd(p));
+    return `<div class="calc-step term-row${isCur ? ' term-cur' : ''}"><span class="calc-step-label">${t}${s > 0 ? `（+$${s}/吨）` : ''}${isCur ? ' ◀ 当前' : ''}</span><span class="calc-step-value positive">${val}</span></div>`;
   };
   const total = (l, v, t) => {
     const u = usd(v);
