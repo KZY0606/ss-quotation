@@ -6,6 +6,10 @@ const App = (() => {
   let results = [];
   let allExpanded = false;
 
+  // 美金汇率状态（中国银行美元现汇买入价，每 100 美元的人民币）
+  // live 来自 rate.json（GitHub Actions 定时抓中行官网）；manual 为用户手动覆盖（localStorage）
+  let rateState = { live: null, liveTime: null, liveSource: null, manual: null };
+
   // 各产地 201 基价（新结构：产地 → 4 个宽度档 × J1/J2/J3/J4）
   // { 产地: { b1: {201J1,201J2,201J3,201J4}, b2: {...}, b3: {...}, b4: {...} } }
   let originPrices = {};
@@ -157,6 +161,7 @@ const App = (() => {
     loadPrices400();    // 恢复400系基价
     loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
     PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
+    initUsdRate();
 
     cacheDom();
     bindEvents();
@@ -187,6 +192,7 @@ const App = (() => {
     els.totalC = dom('totalCount'); els.okC = dom('successCount'); els.errC = dom('errorCount');
     els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
+    els.rateBar = dom('rateBar'); els.rateLive = dom('rateLive'); els.rateManual = dom('rateManual'); els.rateReset = dom('rateReset');
     els.originRows201 = dom('originRows201'); els.originRows304 = dom('originRows304');
     els.originRows316L = dom('originRows316L');
     els.newOriginInput = dom('newOriginInput');
@@ -203,6 +209,26 @@ const App = (() => {
     els.parseTextBtn.addEventListener('click', parseText);
     els.addOriginBtn.addEventListener('click', addOrigin);
     els.expandAllBtn.addEventListener('click', toggleAllExpand);
+
+    // 美金汇率：手动覆盖 + 恢复实时
+    els.rateManual.addEventListener('input', () => {
+      const v = parseFloat(els.rateManual.value);
+      if (!isNaN(v) && v > 0) {
+        rateState.manual = v;
+        try { localStorage.setItem(USD_RATE_KEY_MANUAL, String(v)); } catch (e) {}
+      } else {
+        rateState.manual = null;
+        try { localStorage.removeItem(USD_RATE_KEY_MANUAL); } catch (e) {}
+      }
+      renderRateBar(); render();
+    });
+    els.rateReset.addEventListener('click', () => {
+      rateState.manual = null;
+      els.rateManual.value = '';
+      try { localStorage.removeItem(USD_RATE_KEY_MANUAL); } catch (e) {}
+      renderRateBar(); render();
+      showToast('已恢复实时汇率', 'info');
+    });
 
     // 价格参数配置选项卡切换
     document.querySelectorAll('.config-tab').forEach(btn => {
@@ -1317,6 +1343,53 @@ const App = (() => {
   function render() { renderStats(); renderTable(); }
   function renderResults() { renderStats(); renderTable(); }
 
+  // ---------- 美金汇率（中国银行美元买入价） ----------
+  // 生效汇率：手动覆盖 > 实时（rate.json）> 内置默认
+  function effectiveRate() {
+    if (rateState.manual && rateState.manual > 0) return rateState.manual;
+    if (rateState.live && rateState.live > 0) return rateState.live;
+    return USD_RATE_DEFAULT;
+  }
+  function usd(cny) {
+    const v = PricingEngine.cnToUsd(cny, effectiveRate());
+    return v == null ? null : v;
+  }
+  const fmtUsd = (v) => '$' + (v == null ? '-' : v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+  function initUsdRate() {
+    // 恢复手动覆盖
+    try {
+      const m = parseFloat(localStorage.getItem(USD_RATE_KEY_MANUAL));
+      if (!isNaN(m) && m > 0) { rateState.manual = m; els.rateManual.value = m; }
+    } catch (e) {}
+    // 拉取实时汇率（GitHub Actions 定时抓取中行官网写入 rate.json）
+    fetch(USD_RATE_URL + '?t=' + Date.now())
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('rate.json 不可用')))
+      .then(j => {
+        const v = parseFloat(j.rate);
+        if (!isNaN(v) && v > 0) {
+          rateState.live = v;
+          rateState.liveTime = j.time || '';
+          rateState.liveSource = j.source || '中国银行';
+        }
+        renderRateBar(); render();
+      })
+      .catch(() => {
+        // 实时抓取失败：退回内置默认值，不影响报价
+        rateState.live = null;
+        renderRateBar();
+      });
+    renderRateBar();
+  }
+
+  function renderRateBar() {
+    if (!els.rateBar) return;
+    const r = effectiveRate();
+    const mode = rateState.manual ? '手动' : (rateState.live ? '实时' : '默认');
+    const tm = rateState.liveTime ? `（${rateState.liveTime}）` : '';
+    els.rateLive.textContent = `${r.toFixed(2)}（每100美元） · ${mode}${tm}${rateState.manual && rateState.live ? ` · 实时 ${rateState.live.toFixed(2)}` : ''}`;
+  }
+
   function renderStats() {
     const sr = results.filter(r => r.success);
     els.totalC.textContent = dataItems.length;
@@ -1326,11 +1399,14 @@ const App = (() => {
       const sp = sr.map(r => r.detail.saleTax);
       els.minP.textContent = Math.min(...sp).toLocaleString();
       els.maxP.textContent = Math.max(...sp).toLocaleString();
+      const usdMin = usd(Math.min(...sp)), usdMax = usd(Math.max(...sp));
+      els.minP.textContent += '  /  ' + fmtUsd(usdMin);
+      els.maxP.textContent += '  /  ' + fmtUsd(usdMax);
     } else { els.minP.textContent = '-'; els.maxP.textContent = '-'; }
     els.expBtn.disabled = els.expBtn2.disabled = sr.length === 0;
     els.calcBtn.disabled = dataItems.length === 0;
-    if (dataItems.length > 0) { els.emptyState.style.display = 'none'; els.resultCard.style.display = 'block'; }
-    else { els.emptyState.style.display = 'block'; els.resultCard.style.display = 'none'; }
+    if (dataItems.length > 0) { els.emptyState.style.display = 'none'; els.resultCard.style.display = 'block'; els.rateBar.style.display = 'flex'; }
+    else { els.emptyState.style.display = 'block'; els.resultCard.style.display = 'none'; els.rateBar.style.display = 'none'; }
   }
 
   function renderTable() {
@@ -1355,11 +1431,12 @@ const App = (() => {
       h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
-        h.push(`<td class="price-cell price-cost">${d.costTax.toLocaleString()}</td>`);
-        h.push(`<td class="price-cell price-subtle">${d.costNoTax.toLocaleString()}</td>`);
+        const uCostTax = usd(d.costTax), uCostNoTax = usd(d.costNoTax), uSaleTax = usd(d.saleTax), uSaleNoTax = usd(d.saleNoTax);
+        h.push(`<td class="price-cell price-cost">${d.costTax.toLocaleString()}<div class="usd-sub">${fmtUsd(uCostTax)}</div></td>`);
+        h.push(`<td class="price-cell price-subtle">${d.costNoTax.toLocaleString()}<div class="usd-sub">${fmtUsd(uCostNoTax)}</div></td>`);
         h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-${d.boardType}">${d.boardType === 'coil' ? '卷' : '板'}</span></td>`);
-        h.push(`<td class="price-cell price-sale">${d.saleTax.toLocaleString()}</td>`);
-        h.push(`<td class="price-cell price-subtle">${d.saleNoTax.toLocaleString()}</td>`);
+        h.push(`<td class="price-cell price-sale">${d.saleTax.toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleTax)}</div></td>`);
+        h.push(`<td class="price-cell price-subtle">${d.saleNoTax.toLocaleString()}<div class="usd-sub">${fmtUsd(uSaleNoTax)}</div></td>`);
       } else if (isErr) { h.push(`<td colspan="6" class="error-text">⚠️ ${r.errors.join('；')}</td>`); }
       else { h.push(`<td colspan="6" style="color:var(--text-muted);font-size:12px">待计算</td>`); }
       h.push(`<td><button class="btn-icon btn-ghost delete-btn" onclick="App.removeRow(${idx})">✕</button></td></tr>`);
@@ -1413,7 +1490,11 @@ const App = (() => {
   }
 
   const step = (l, v, u, p) => `<div class="calc-step"><span class="calc-step-label">${l}</span><span class="calc-step-value ${p?'positive':'zero'}">${p?'+'+fmt(v):'0'} ${u}</span></div>`;
-  const total = (l, v, t) => `<div class="calc-total"><span class="calc-total-label">${l}</span><span class="calc-total-value ${t}">${fmtI(v)} 元/吨</span></div>`;
+  const total = (l, v, t) => {
+    const u = usd(v);
+    const usdPart = t === 'sale' && u != null ? ` <span class="calc-total-usd">${fmtUsd(u)}</span>` : '';
+    return `<div class="calc-total"><span class="calc-total-label">${l}</span><span class="calc-total-value ${t}">${fmtI(v)} 元/吨${usdPart}</span></div>`;
+  };
 
   function showToast(msg, type = 'info') {
     const c = dom('toastContainer');

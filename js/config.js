@@ -3,7 +3,7 @@
  * 适用：201 系列（J1/J2/J3/J4/J5）+ 304 + 压延料
  */
 
-const APP_VERSION = '2.3';
+const APP_VERSION = '2.4';
 
 // 密度表 (吨/m³)
 const DENSITY = {
@@ -65,6 +65,12 @@ const THICK_BANDS_1500_LABELS = {
   '201J2': ['0.68-0.88', '0.89-1.17', '1.18-1.57', '1.58-3.00'],
   '201J3': ['0.85-0.87', '0.88-1.17', '1.18-1.27', '1.28-1.37', '1.38-1.57', '1.58-3.00']
 };
+
+// 美金汇率：中国银行美元现汇买入价（每 100 美元的人民币，如 670.97 → 1 美元=6.7097）
+// 实时值由 GitHub Actions 定时抓取中行官网写入 rate.json，前端优先用实时值；手动输入覆盖
+const USD_RATE_DEFAULT = 670.97;
+const USD_RATE_URL = 'rate.json';
+const USD_RATE_KEY_MANUAL = 'kk_usd_rate_manual';
 
 // 201 系材质名列表（用于档位校验）
 const MATERIALS_201 = ['201', '201J1', '201J2', '201J3', '201J4', '201J5'];

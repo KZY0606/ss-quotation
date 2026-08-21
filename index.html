@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.39">
+  <link rel="stylesheet" href="css/style.css?v=1.0.40">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -229,11 +229,18 @@
         <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最低含税售价</span><span class="stat-value" style="color:var(--accent)" id="minSaleTax">-</span></div>
         <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最高含税售价</span><span class="stat-value" style="color:var(--accent)" id="maxSaleTax">-</span></div>
       </div>
+      <div class="rate-bar" id="rateBar" style="display:none">
+        <span class="rate-label">💱 美金汇率（中国银行买入价）</span>
+        <span class="rate-live" id="rateLive">加载中…</span>
+        <span class="rate-muted">手动覆盖：</span>
+        <input type="number" step="0.01" min="0" id="rateManual" class="rate-input" placeholder="留空=实时汇率">
+        <button class="btn btn-ghost btn-sm" id="rateReset">↺ 恢复实时</button>
+      </div>
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th style="width:36px;"></th><th style="width:32px;">#</th><th>产地</th><th>材质</th><th>表面</th><th>厚度</th><th>宽度</th><th>长度</th><th>重量(吨)</th><th>膜1</th><th>膜2</th><th>含税成本</th><th>不含税成本</th><th>边/板</th><th>含税售价</th><th>不含税售价</th><th style="width:36px;"></th>
+              <th style="width:36px;"></th><th style="width:32px;">#</th><th>产地</th><th>材质</th><th>表面</th><th>厚度</th><th>宽度</th><th>长度</th><th>重量(吨)</th><th>膜1</th><th>膜2</th><th>含税成本</th><th>不含税成本</th><th>边/板</th><th>含税售价<sup class="usd-sup">＄</sup></th><th>不含税售价<sup class="usd-sup">＄</sup></th><th style="width:36px;"></th>
             </tr>
           </thead>
           <tbody id="resultBody"></tbody>
@@ -251,10 +258,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="js/config.js?v=1.0.39"></script>
-  <script src="js/engine.js?v=1.0.39"></script>
-  <script src="js/parser.js?v=1.0.39"></script>
-  <script src="js/app.js?v=1.0.39"></script>
+  <script src="js/config.js?v=1.0.40"></script>
+  <script src="js/engine.js?v=1.0.40"></script>
+  <script src="js/parser.js?v=1.0.40"></script>
+  <script src="js/app.js?v=1.0.40"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

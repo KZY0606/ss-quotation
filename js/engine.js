@@ -731,9 +731,18 @@ const PricingEngine = (() => {
     };
   }
 
+  // 人民币 → 美元换算（rate100 = 每100美元的人民币买入价，如 670.97 → 1美元=6.7097）
+  function cnToUsd(cny, rate100) {
+    const r = parseFloat(rate100);
+    if (!(r > 0)) return null;
+    const v = parseFloat(cny);
+    if (isNaN(v)) return null;
+    return v * 100 / r;
+  }
+
   return {
     calculate, calculateBatch, parseSpec, parseFreeText,
-    normalizeSurface, normalizeFilm, getDensity, getEdgeType,
+    normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd,
     parseThicknessRange,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,

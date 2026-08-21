@@ -385,6 +385,22 @@ body {
 .stat-label { color:var(--text-secondary); font-size:12px; }
 .stat-value { font-weight:700; font-variant-numeric:tabular-nums; }
 
+/* ===== 美金汇率条 ===== */
+.rate-bar {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:10px 16px; background:var(--card); border-bottom:1px solid var(--border-light);
+  font-size:13px;
+}
+.rate-label { font-weight:700; color:var(--text-primary); white-space:nowrap; }
+.rate-live { font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.rate-muted { color:var(--text-secondary); font-size:12px; white-space:nowrap; }
+.rate-input { width:110px; padding:4px 8px; border:1px solid var(--border-light); border-radius:6px; font-size:13px; }
+.rate-input:focus { outline:none; border-color:var(--accent); }
+.btn-sm { padding:4px 10px; font-size:12px; }
+.usd-sup { color:var(--accent); font-size:10px; margin-left:2px; }
+.usd-sub { font-size:11px; color:var(--accent); font-weight:600; font-variant-numeric:tabular-nums; margin-top:1px; }
+.calc-total-usd { font-size:11px; color:var(--accent); font-weight:600; margin-left:6px; }
+
 /* ===== Table ===== */
 .table-wrapper { overflow-x:auto; }
 table { width:100%; border-collapse:collapse; font-size:13px; }

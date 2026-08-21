@@ -793,6 +793,13 @@ test('宽度 1524：归类档4/齐边（2026-08-21）', () => {
   eq(r316.detail.widthSurcharge, 300, '甬金316L 薄料 1524 → +300');
 });
 
+test('美金换算 cnToUsd（2026-08-21）', () => {
+  eq(PricingEngine.cnToUsd(6709.7, 670.97), 1000, '6709.7元 / 6.7097 = 1000美元');
+  eq(Math.round(PricingEngine.cnToUsd(10000, 670.97) * 100) / 100, 1490.38, '10000元 → 1490.38美元');
+  eq(PricingEngine.cnToUsd(10000, 0), null, '汇率 0 → null');
+  eq(PricingEngine.cnToUsd('abc', 670.97), null, '非法金额 → null');
+});
+
 test('宏旺 410S/BA 改名 410S/2BA（2026-08-21）', () => {
   // 厚度表：宏旺 410S/2BA 走 430W-2BA 同价表
   const v = PricingEngine.getThicknessSurcharge(0.5, false, '410S/2BA', '宏旺');
