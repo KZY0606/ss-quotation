@@ -376,8 +376,12 @@ const PricingEngine = (() => {
 
     let thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, surface);
     if (thickSurcharge === null) errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
-    // 甬金316L 宽度加价已随甬金 316L 数据删除（2026-08-20），字段保留为 0
+    // 甬金316L 薄料(0.25-0.50mm) 宽度 1500/1530：厚度加价额外 +300（2026-08-21 用户确认）
     let widthSurcharge = 0;
+    if (thickSurcharge !== null && item.origin === '甬金' && material === '316L' && thickness >= 0.25 && thickness <= 0.50 && width >= 1500 && width <= 1530) {
+      widthSurcharge = 300;
+      thickSurcharge += widthSurcharge;
+    }
 
     const edgeType = getEdgeType(width);
     if (edgeType === null) errors.push(`宽度 ${width}mm 无法判定毛边/齐边`);

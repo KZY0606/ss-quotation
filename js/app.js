@@ -903,17 +903,17 @@ const App = (() => {
       });
       h.push('</table>');
     }
-    // 316L 厚度加价（2026-08-20：仅张浦有数据；甬金/太钢未提供）
+    // 316L 厚度加价（2026-08-21：张浦 16 档 + 甬金 17 档；太钢未提供）
     h.push('<h4 class="ref-subtitle">316L厚度加价</h4>');
     Object.entries(ORIGIN_THICKNESS_SURCHARGE_316L).forEach(([origin, table]) => {
-      h.push(`<div style="font-size:11px;font-weight:500;color:var(--text-secondary);margin:6px 0 2px;">${origin} 316L</div>`);
+      h.push(`<div style="font-size:11px;font-weight:500;color:var(--text-secondary);margin:6px 0 2px;">${origin} 316L${origin === '甬金' ? '（薄料 0.25-0.50mm 且宽度 1500/1530 时厚度加价额外 +300）' : ''}</div>`);
       h.push('<table class="ref-table" style="margin-bottom:8px;"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
       table.forEach(t => {
         h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
       });
       h.push('</table>');
     });
-    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">甬金/太钢 316L：未提供厚度加价数据，暂不报价（2026-08-20）</div>');
+    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">太钢 316L：未提供厚度加价数据，暂不报价（2026-08-20）</div>');
     h.push('</div>');
 
     // ===== 2. 表面加工费总表 =====
