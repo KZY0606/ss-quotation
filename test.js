@@ -607,8 +607,8 @@ test('上克 430/BA 厚度加价与 430B/BA 相同', () => {
   // 与甬金 430/BA 同表
   eq(PricingEngine.getThicknessSurcharge(0.30, false, '430/BA', '甬金', 'BA'), 650, '甬金 430/BA 同价');
 });
-test('宏旺 410S/BA 厚度加价与宏旺其他 400 系相同（独立于甬金/上克 410S/BA）', () => {
-  const g = t => PricingEngine.getThicknessSurcharge(t, false, '410S/BA', '宏旺', 'BA');
+test('宏旺 410S/2BA 厚度加价与宏旺其他 400 系相同（2026-08-21 改名后）', () => {
+  const g = t => PricingEngine.getThicknessSurcharge(t, false, '410S/2BA', '宏旺', '2BA');
   eq(g(0.24), 1600, '0.24 → 1600（宏旺 10 档表首档）');
   eq(g(0.30), 750, '0.30 → 750（第四档）');
   eq(g(0.50), 100, '0.50 → 100（第九档）');
@@ -760,6 +760,50 @@ test('彩色表面小炉/大炉 /S /L（2026-08-21）', () => {
   const r = PricingEngine.calculate({origin:'德龙', material:'304', surface:'8K黄钛金(板)/S', thickness:'0.50', width:'1240', length:'2500', basePrice:10000});
   eq(r.success, true, '带 /S 表面正常计算');
   eq(r.detail.normSurface, '8K黄钛金/S', 'normSurface 保留 /S');
+});
+
+test('宏旺304 新增 0.26-0.27 +1500（2026-08-21）', () => {
+  const g = (o, t) => PricingEngine.getThicknessSurcharge(t, false, '304', o);
+  eq(g('宏旺', 0.26), 1500, '宏旺 0.26 → 1500');
+  eq(g('宏旺', 0.27), 1500, '宏旺 0.27 → 1500');
+  eq(g('宏旺', 0.28), 1300, '宏旺 0.28 → 1300（原首档）');
+  eq(g('宏旺', 0.80), 300, '宏旺 0.80 → 300');
+  eq(g('宏旺', 3.00), 300, '宏旺 3.00 → 300（上限）');
+  eq(g('宏旺', 0.25), null, '宏旺 0.25 超薄 → null');
+  eq(g('德龙', 0.26), null, '德龙 0.26 不受影响 → null');
+  eq(g('德龙', 0.28), 1300, '德龙 0.28 仍 1300');
+  eq(g('张浦', 0.26), null, '张浦 0.26 → null（0.28 起）');
+  const r = PricingEngine.calculate({origin:'宏旺', material:'304', surface:'2B', thickness:'0.26', width:'1240', length:'2500', basePrice:10000});
+  eq(r.success, true, '宏旺 304 0.26 可算');
+  eq(r.detail.thickSurcharge, 1500, '宏旺 304 0.26 厚度加价 1500');
+});
+
+test('宽度 1524：归类档4/齐边（2026-08-21）', () => {
+  eq(PricingEngine.getWidthBand201(1524), 4, '1524 → 档4 (1500/1530)');
+  eq(PricingEngine.getEdgeType(1524), 'trim', '1524 判定为齐边');
+  // 201 宽板按厚度分档
+  const r201 = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'2B', thickness:'0.9', width:'1524', length:'2500', basePrice:8000});
+  eq(r201.success, true, '201J2 0.9*1524 可算（厚度档 t2）');
+  // 304
+  const r304 = PricingEngine.calculate({origin:'宏旺', material:'304', surface:'2B', thickness:'0.5', width:'1524', length:'2500', basePrice:10000});
+  eq(r304.success, true, '304 0.5*1524 可算');
+  // 甬金316L 薄料 1524 命中 1500/1530 加价区间
+  const r316 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1524', length:'2500', basePrice:10000});
+  eq(r316.success, true, '甬金316L 0.35*1524 可算');
+  eq(r316.detail.widthSurcharge, 300, '甬金316L 薄料 1524 → +300');
+});
+
+test('宏旺 410S/BA 改名 410S/2BA（2026-08-21）', () => {
+  // 厚度表：宏旺 410S/2BA 走 430W-2BA 同价表
+  const v = PricingEngine.getThicknessSurcharge(0.5, false, '410S/2BA', '宏旺');
+  eq(v !== null, true, '宏旺 410S/2BA 有厚度加价');
+  eq(v, PricingEngine.getThicknessSurcharge(0.5, false, '430W/2BA', '宏旺'), '与 430W/2BA 同价');
+  // 页面基价层已拦截宏旺 410S/BA（PRODUCTS_400 已移除该产品）
+  // calculate 全链路（basePrice 直接传，绕过基价面板）
+  const r = PricingEngine.calculate({origin:'宏旺', material:'410S/2BA', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000});
+  eq(r.success, true, '宏旺 410S/2BA 0.5 可算');
+  // 甬金/上克 410S/BA 不受影响
+  eq(PricingEngine.getThicknessSurcharge(0.5, false, '410S/BA', '甬金') !== null, true, '甬金 410S/BA 仍正常');
 });
 
 test('400系彩色表面对标304价（2026-08-21）', () => {
