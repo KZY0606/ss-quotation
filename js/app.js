@@ -869,8 +869,8 @@ const App = (() => {
     });
     h.push('</table>');
 
-    // 304 表
-    h.push('<h4 class="ref-subtitle">宏旺304/德龙304</h4>');
+    // 304 表（2026-08-21：宏旺已建独立表，通用表仅德龙）
+    h.push('<h4 class="ref-subtitle">德龙304</h4>');
     h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
     THICKNESS_SURCHARGE_304.forEach(t => {
       h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
@@ -887,9 +887,10 @@ const App = (() => {
       });
       h.push('</table>');
     });
-    // 304 产地特异性表（2026-08-20：张浦上限 6.00mm）
+    // 304 产地特异性表（2026-08-20：张浦上限 6.00mm；2026-08-21：宏旺 0.26-0.27 +1500 上限 3.00）
     Object.entries(ORIGIN_THICKNESS_SURCHARGE_304).forEach(([origin, table]) => {
-      h.push(`<h4 class="ref-subtitle">${origin} 304（上限 6.00mm）</h4>`);
+      const maxThk = origin === '张浦' ? '上限 6.00mm' : '上限 3.00mm';
+      h.push(`<h4 class="ref-subtitle">${origin} 304（${maxThk}${origin === '宏旺' ? '，含 0.26-0.27 +1500' : ''}）</h4>`);
       h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
       table.forEach(t => {
         h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
