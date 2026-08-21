@@ -207,11 +207,25 @@ const PricingEngine = (() => {
   function normalizeSurface(raw) {
     if (!raw) return null;
     const s = raw.trim();
-    if (SURFACE_FEES[s]) return s;
-    const lower = s.toLowerCase();
-    if (SURFACE_ALIASES[lower]) return SURFACE_ALIASES[lower];
-    // 模糊匹配：别名匹配失败时，用Levenshtein找最接近的表面
-    return fuzzyMatchSurface(lower) || s;
+    // 2026-08-21：小炉/大炉后缀 /S /L（如 '8K黄钛金(板)/S'）——先剥离，归一化基础名后拼回
+    let suffix = null;
+    let base = s;
+    const sm = s.match(/^(.*)\/([sSlL])$/);
+    if (sm) {
+      const up = sm[2].toUpperCase();
+      if (up === 'S' || up === 'L') { suffix = up; base = sm[1].trim(); }
+    }
+    let norm;
+    if (SURFACE_FEES[base]) norm = base;
+    else {
+      const lower = base.toLowerCase();
+      norm = SURFACE_ALIASES[lower] || fuzzyMatchSurface(lower) || base;
+    }
+    if (suffix) {
+      const key = norm + '/' + suffix;
+      return SURFACE_FEES[key] !== undefined ? key : norm;
+    }
+    return norm;
   }
 
   let _fuzzyCache = null;

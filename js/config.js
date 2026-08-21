@@ -345,9 +345,24 @@ const SURFACE_FEES = {
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5.5, unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10.5,unit: 'sqm' }
   ],
+  // 2026-08-21：彩色表面区分大炉 /L 与小炉 /S（原价均为大炉 L）
+  '8K黄钛金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10.5,unit: 'sqm' }
+  ],
+  '8K黄钛金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10, unit: 'sqm' }
+  ],
   '8K玫瑰金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6.5, unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 11.5,unit: 'sqm' }
+  ],
+  '8K玫瑰金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 11.5,unit: 'sqm' }
+  ],
+  '8K玫瑰金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10, unit: 'sqm' }
   ],
   '8K黑钛金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5,   unit: 'sqm' },
@@ -382,17 +397,45 @@ const SURFACE_FEES = {
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 9,   unit: 'sqm' }
   ],
+  '拉丝黄钛金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 9,   unit: 'sqm' }
+  ],
+  '拉丝黄钛金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 7.5, unit: 'sqm' }
+  ],
   '磨砂黄钛金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 9,   unit: 'sqm' }
+  ],
+  '磨砂黄钛金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 9,   unit: 'sqm' }
+  ],
+  '磨砂黄钛金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 7.5, unit: 'sqm' }
   ],
   '拉丝玫瑰金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' }
   ],
+  '拉丝玫瑰金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' }
+  ],
+  '拉丝玫瑰金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 7.5, unit: 'sqm' }
+  ],
   '磨砂玫瑰金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' }
+  ],
+  '磨砂玫瑰金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' }
+  ],
+  '磨砂玫瑰金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 7.5, unit: 'sqm' }
   ],
   '拉丝黑钛金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 4,   unit: 'sqm' },
@@ -415,13 +458,34 @@ const SURFACE_FEES = {
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6.5, unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 11.5,unit: 'sqm' }
   ],
+  '8K香槟金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6.5, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 11.5,unit: 'sqm' }
+  ],
+  '8K香槟金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10, unit: 'sqm' }
+  ],
   '拉丝香槟金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' }
   ],
+  '拉丝香槟金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' }
+  ],
+  '拉丝香槟金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 7.5, unit: 'sqm' }
+  ],
   '磨砂香槟金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6,   unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' }
+  ],
+  '磨砂香槟金/L': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 6,   unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' }
+  ],
+  '磨砂香槟金/S': [
+    { tMin: 0.24, tMax: 1.50, wMin: 1000, wMax: 1280, price: 7.5, unit: 'sqm' }
   ],
   '拉丝古铜': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 10,  unit: 'sqm' },
@@ -695,6 +759,9 @@ const SURFACE_ALIASES = {
   '拉丝香槟金(板)': '拉丝香槟金', '拉丝黑钛金(板)': '拉丝黑钛金',
   '磨砂黄钛金(板)': '磨砂黄钛金', '磨砂玫瑰金(板)': '磨砂玫瑰金',
   '磨砂香槟金(板)': '磨砂香槟金', '磨砂黑钛金(板)': '磨砂黑钛金',
+  // 2026-08-21：砂面/拉丝(NO.4/HL) 板类基础别名（/S /L 后缀由 normalizeSurface 拼接）
+  '砂面/拉丝(no.4/hl)黄钛金(板)': '拉丝黄钛金', '砂面/拉丝(no.4/hl)玫瑰金(板)': '拉丝玫瑰金',
+  '砂面/拉丝(no.4/hl)香槟金(板)': '拉丝香槟金',
   '拉丝古铜(板)': '拉丝古铜', '磨砂古铜(板)': '磨砂古铜',
   '拉丝古铜哑光抗指纹(板)': '拉丝古铜哑光抗指纹', '拉丝古铜亮光抗指纹(板)': '拉丝古铜亮光抗指纹',
   // AFP (板) 别名
