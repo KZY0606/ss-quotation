@@ -838,6 +838,25 @@ test('附加费用 addExtras（2026-08-21）', () => {
   eq(PricingEngine.addExtras('abc', null), null, '非法金额 → null');
 });
 
+test('总价 calcTotal（2026-08-21 按吨数算总价）', () => {
+  // 10000×2 + 8000×1.5 = 32000；汇率 670.96 → 32000×100/670.96 ≈ 4769.29
+  const t = PricingEngine.calcTotal([10000, 8000], [2, 1.5], 670.96);
+  eq(t.cny, 32000, '人民币总价 = Σ(单价×重量)');
+  eq(Math.round(t.usd * 100) / 100, 4769.29, '美元总价 = 人民币总价/汇率');
+  eq(t.count, 2, '有重量行数 2');
+  // 未填重量（0）不算
+  const t2 = PricingEngine.calcTotal([10000, 8000], [2, 0], 670.96);
+  eq(t2.cny, 20000, '重量0行不计入');
+  eq(t2.count, 1, '有效行数 1');
+  // 全空
+  const t3 = PricingEngine.calcTotal([10000, 8000], [0, null], 670.96);
+  eq(t3.cny, 0, '全空 → 0');
+  eq(t3.count, 0, '有效行数 0');
+  // 非法
+  eq(PricingEngine.calcTotal([10000], [2], 0), null, '汇率 0 → null');
+  eq(PricingEngine.calcTotal(null, null, 670.96).cny, 0, '空数组 → 0');
+});
+
 test('贸易术语 addUsdSurcharge（2026-08-21）', () => {
   // EXW 10000元，FOB 加价 $50/吨，汇率 670.96 → +50×6.7096=335.48 → 10335.48
   const r = PricingEngine.addUsdSurcharge(10000, 50, 670.96);

@@ -769,9 +769,23 @@ const PricingEngine = (() => {
     return { cny: c + total, extra: total };
   }
 
+  // 总价（按吨数）：人民币单价×吨数 求和；美元 = 人民币总价/汇率；count = 有重量且>0 的行数
+  function calcTotal(cnyPrices, weights, rate100) {
+    const r = parseFloat(rate100);
+    if (!(r > 0)) return null;
+    let cny = 0, count = 0;
+    for (let i = 0; i < (cnyPrices || []).length; i++) {
+      const c = parseFloat(cnyPrices[i]);
+      if (isNaN(c)) continue;
+      const w = parseFloat(weights && weights[i]);
+      if (!isNaN(w) && w > 0) { cny += c * w; count++; }
+    }
+    return { cny: cny, usd: cny * 100 / r, count: count };
+  }
+
   return {
     calculate, calculateBatch, parseSpec, parseFreeText,
-    normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge, addExtras,
+    normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge, addExtras, calcTotal,
     parseThicknessRange,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
     setUserOverrides,

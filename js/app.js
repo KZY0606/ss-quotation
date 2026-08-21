@@ -18,6 +18,8 @@ const App = (() => {
     profit: { on: false, val: 0 }
   };
   const EXTRA_KEYS = { opFee: 'kk_extra_opfee', interest: 'kk_extra_interest', profit: 'kk_extra_profit' };
+  // 重量（吨）：用户手填，按 index 记忆（不持久化）；导入的重量在 detail.weight
+  let weightState = {};
 
   // 各产地 201 基价（新结构：产地 → 4 个宽度档 × J1/J2/J3/J4）
   // { 产地: { b1: {201J1,201J2,201J3,201J4}, b2: {...}, b3: {...}, b4: {...} } }
@@ -207,6 +209,7 @@ const App = (() => {
     els.termBar = dom('termBar'); els.termRadios = document.querySelectorAll('input[name="tradeTerm"]');
     els.fobSurcharge = dom('fobSurcharge'); els.cifSurcharge = dom('cifSurcharge');
     els.extrasBar = dom('extrasBar');
+    els.totalBar = dom('totalBar'); els.totalValue = dom('totalValue');
     els.extraItems = { opFee: { on: dom('opFeeOn'), val: dom('opFeeVal'), item: null },
                       interest: { on: dom('interestOn'), val: dom('interestVal'), item: null },
                       profit: { on: dom('profitOn'), val: dom('profitVal'), item: null } };
@@ -286,6 +289,16 @@ const App = (() => {
         try { localStorage.setItem(EXTRA_KEYS[k], JSON.stringify(extrasState[k])); } catch (e) {}
         render();
       });
+    });
+
+    // 重量(吨)输入：事件委托（表格行重建后仍生效）
+    els.tBody.addEventListener('input', e => {
+      const t = e.target;
+      if (t && t.classList && t.classList.contains('weight-input')) {
+        const v = parseFloat(t.value);
+        weightState[t.dataset.idx] = (!isNaN(v) && v > 0) ? v : null;
+        renderTotal();
+      }
     });
 
     // 价格参数配置选项卡切换
@@ -1381,7 +1394,8 @@ const App = (() => {
       fobUsd: termState.fobUsd || 0,
       cifUsd: termState.cifUsd || 0,
       rate: effectiveRate(),
-      extras: { opFee: extrasState.opFee, interest: extrasState.interest, profit: extrasState.profit }
+      extras: { opFee: extrasState.opFee, interest: extrasState.interest, profit: extrasState.profit },
+      weights: weightState
     });
     showToast('导出成功', 'success');
   }
@@ -1404,8 +1418,8 @@ const App = (() => {
   }
 
   // ========== 渲染 ==========
-  function render() { renderStats(); renderTable(); }
-  function renderResults() { renderStats(); renderTable(); }
+  function render() { renderStats(); renderTable(); renderTotal(); }
+  function renderResults() { renderStats(); renderTable(); renderTotal(); }
 
   // ---------- 美金汇率（中国银行美元买入价） ----------
   // 生效汇率：手动覆盖 > 实时（rate.json）> 内置默认
@@ -1534,6 +1548,30 @@ const App = (() => {
     else { els.emptyState.style.display = 'block'; els.resultCard.style.display = 'none'; }
   }
 
+  // 总价（按吨数）：人民币单价×重量 求和；FOB/CIF 只显示美金
+  function renderTotal() {
+    if (!els.totalBar) return;
+    const sr = results.filter(r => r.success);
+    if (sr.length === 0) { els.totalValue.textContent = '-'; els.totalValue.classList.add('total-muted'); return; }
+    const cnyArr = [], wArr = [];
+    sr.forEach(r => {
+      cnyArr.push(finalPrice(r.detail.saleTax));
+      const w = weightState[String(r.index)];
+      wArr.push(w != null && w > 0 ? w : 0);
+    });
+    const t = PricingEngine.calcTotal(cnyArr, wArr, effectiveRate());
+    if (!t || t.count === 0) {
+      els.totalValue.textContent = '在表格重量列填写吨数后自动计算';
+      els.totalValue.classList.add('total-muted');
+      return;
+    }
+    const extraHint = t.count < sr.length ? '（' + (sr.length - t.count) + ' 行未填重量）' : '';
+    els.totalValue.classList.remove('total-muted');
+    els.totalValue.textContent = (termState.term === 'EXW'
+      ? `¥${Math.round(t.cny).toLocaleString()}  /  ${fmtUsd(t.usd)}`
+      : `${fmtUsd(t.usd)}`) + extraHint;
+  }
+
   function renderTable() {
     const h = [];
     dataItems.forEach((item, i) => {
@@ -1552,7 +1590,10 @@ const App = (() => {
       h.push(`<td>${fmtThk(item.thickness)}</td><td>${item.width}</td>`);
       h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
       const wgt = d && d.weight != null ? d.weight : (item.weight || null);
-      h.push(`<td>${wgt != null ? wgt : '<span style="color:var(--text-muted)">-</span>'}</td>`);
+      const wKey = r ? String(r.index) : '';
+      const wVal = weightState[wKey];
+      const wDisp = (wVal != null && wVal > 0) ? String(wVal) : (wgt != null ? String(wgt) : '');
+      h.push(`<td><input type="number" class="weight-input" step="0.001" min="0" data-idx="${wKey}" value="${wDisp}" placeholder="吨数" title="填写重量(吨)后按单价计算总价"></td>`);
       h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {

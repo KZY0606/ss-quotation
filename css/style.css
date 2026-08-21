@@ -479,6 +479,27 @@ body {
 }
 .final-step .calc-step-label { font-weight:700; }
 .final-step .calc-step-value { font-weight:700; font-size:15px; }
+
+/* ===== 总价条（报价最上方，按吨数算总价） ===== */
+.total-bar {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:10px 14px; margin-bottom:10px;
+  background:linear-gradient(90deg, rgba(52,69,94,.10), rgba(52,69,94,.03));
+  border:1px solid var(--border-light); border-left:4px solid var(--accent);
+  border-radius:8px;
+}
+.total-label { font-weight:700; color:var(--text-primary); white-space:nowrap; }
+.total-value { font-size:18px; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; }
+.total-value.total-muted { font-size:13px; font-weight:600; color:var(--text-secondary); }
+/* 表格重量输入框 */
+.weight-input {
+  width:72px; border:1px solid var(--border-light); border-radius:6px;
+  padding:3px 6px; font-size:13px; font-weight:600; text-align:right;
+  color:var(--text-primary); background:var(--card);
+}
+.weight-input:hover { border-color:var(--steel-4); }
+.weight-input:focus { border-color:var(--accent); outline:none; box-shadow:0 0 0 2px rgba(52,69,94,.12); }
+.weight-input::-webkit-outer-spin-button, .weight-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .usd-sup { color:var(--accent); font-size:11px; margin-left:2px; }
 /* 美金价格：与人民币同字号同字重，仅用颜色区分（accent 蓝） */
 .usd-sub { font-size:inherit; font-weight:inherit; color:var(--accent); font-variant-numeric:tabular-nums; margin-top:1px; }

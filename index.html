@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.48">
+  <link rel="stylesheet" href="css/style.css?v=1.0.49">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -271,6 +271,10 @@
         <div class="stat-item"><span class="stat-dot stat-dot-error"></span><span class="stat-label">错误</span><span class="stat-value" style="color:var(--danger)" id="errorCount">0</span></div>
         <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最低含税售价</span><span class="stat-value" style="color:var(--accent)" id="minSaleTax">-</span></div>
         <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最高含税售价</span><span class="stat-value" style="color:var(--accent)" id="maxSaleTax">-</span></div>
+      </div>
+      <div class="total-bar" id="totalBar">
+        <span class="total-label">💰 总价（含税售价，按吨数）</span>
+        <span class="total-value" id="totalValue">在表格重量列填写吨数后自动计算</span>
       </div>
       <div class="table-wrapper">
         <table>
