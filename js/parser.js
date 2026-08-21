@@ -289,16 +289,16 @@ const ExcelParser = (() => {
     // 给客户看的简洁表头；符号体现在表头与数字格式；术语只保留在合计行(总价前一格)
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('报价单');
-    ws.addRow(['产地', '材质', '表面', '保护膜', '规格', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
+    ws.addRow(['产地', '材质', '表面', '保护膜', '规格', 'Edge', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
     ws.columns = [
       { width: 10 }, { width: 10 }, { width: 16 }, { width: 24 }, { width: 22 },
-      { width: 12 }, { width: 14 }, { width: 16 }, { width: 14 }, { width: 16 }
+      { width: 12 }, { width: 12 }, { width: 14 }, { width: 16 }, { width: 14 }, { width: 16 }
     ];
     let totalCny = 0, totalUsd = 0, totalW = 0, hasWeight = false;
 
     for (const r of results) {
       if (!r.success) {
-        ws.addRow([r.index, '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '']);
+        ws.addRow([r.index, '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '']);
         continue;
       }
       const d = r.detail;
@@ -308,6 +308,8 @@ const ExcelParser = (() => {
       const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
       // 重量（吨）：来自导入的表格，无则不填
       const w = (d.weight != null && d.weight > 0) ? d.weight : null;
+      // 边：毛边 Mill Edge / 齐边 Slit Edge（只用英文）
+      const edge = d.edgeType === 'rough' ? 'Mill Edge' : 'Slit Edge';
       // 术语加价（FOB/CIF = EXW + 美元加价）+ 附加费用（人民币/吨）→ 不含税最终单价
       const s = ti.term === 'FOB' ? (ti.fobUsd || 0) : (ti.term === 'CIF' ? (ti.cifUsd || 0) : 0);
       const tp = PricingEngine.addUsdSurcharge(d.saleNoTax, s, ti.rate);
@@ -324,6 +326,7 @@ const ExcelParser = (() => {
         d.surface || '',
         film,
         spec,
+        edge,
         w != null ? w : '',
         // 单价/总价：存数字值，数字格式显示 ¥/$ 符号（FOB/CIF 同样给人民币）
         Math.round(cny),
@@ -334,7 +337,7 @@ const ExcelParser = (() => {
     }
     // 合计总价：术语 EXW/FOB/CIF 只保留在这一行（总价前一格）
     if (hasWeight) {
-      ws.addRow(['', '', '', '', '合计', Math.round(totalW * 1000) / 1000, '', ti.term, Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
+      ws.addRow(['', '', '', '', '合计', '', Math.round(totalW * 1000) / 1000, '', ti.term, Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
     }
 
     // 样式：外边框+内框（加粗 medium）、数据居中、表头加粗
@@ -349,8 +352,8 @@ const ExcelParser = (() => {
     // 数字格式：人民币 ¥ 整数、美元 $ 两位小数（数据行+合计行）
     for (let R = 2; R <= ws.rowCount; R++) {
       const row = ws.getRow(R);
-      [7, 9].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
-      [8, 10].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
+      [8, 10].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
+      [9, 11].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
     }
 
     // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
