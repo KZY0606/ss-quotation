@@ -1224,7 +1224,7 @@ const App = (() => {
     }
     h.push('<tr><td>其他宽度平板 毛边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.rough_sheet + '</td></tr>');
     h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
-    h.push('<tr><td colspan="2" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + ' 元/吨；平板长度须在 2100-2500/3000-4000（1219/1240/1250/1280）、2100-3055/3056-4000（1500/1530）或 1001-2000/2001-4000（1030/1000）</td></tr>');
+    h.push('<tr><td colspan="2" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + ' 元/吨；平板长度须在 2100-2500/3000-4000（1219/1240/1250/1280）、2100-3055/3056-4000（1500/1524/1530，1524 与 1500 同价）或 1001-2000/2001-4000（1030/1000）；201 材质不提供 1280mm 宽度</td></tr>');
     h.push('</table></div>');
 
     el.innerHTML = h.join('');
@@ -1714,7 +1714,7 @@ const App = (() => {
       const L = parseFloat(d.length);
       let bands;
       if (w === 1030 || w === 1000) bands = SHEET_LENGTH_BANDS_NARROW;
-      else if (w === 1500 || w === 1530) bands = SHEET_LENGTH_BANDS_WIDE;
+      else if (w === 1500 || w === 1530 || w === 1524) bands = SHEET_LENGTH_BANDS_WIDE;
       else bands = SHEET_LENGTH_BANDS;
       const band = bands.find(b => L >= b.min && L <= b.max);
       const bandTxt = band ? (band.min + '-' + band.max) : String(d.length);

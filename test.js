@@ -404,8 +404,8 @@ test('宽度白名单: 304 0.50*1220*C → 报错（1220 不在可计算宽度�
   eq(r.errors.some(e => e.includes('不在可计算宽度')), true, '应提示宽度白名单错误: ' + JSON.stringify(r.errors));
 });
 
-test('宽度白名单: 1280 可计算且为毛边（2026-08-22 用户确认）', () => {
-  const r = PricingEngine.calculate({material:'201J2',surface:'2B',thickness:'0.50',width:'1280',length:'C',film1:'',film2:'',basePrice:7800});
+test('宽度白名单: 1280 可计算且为毛边（304；201 已按用户规则禁用 1280）', () => {
+  const r = PricingEngine.calculate({material:'304',surface:'2B',thickness:'0.50',width:'1280',length:'C',film1:'',film2:'',basePrice:7800});
   eq(r.success, true, '1280 应可计算: ' + JSON.stringify(r.errors));
   eq(r.detail.edgeType, 'rough', '1280 应为毛边');
 });
@@ -1028,7 +1028,28 @@ test('平板加价: 316L 1530 木箱 = 650（600+50）', () => {
   const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15000, packing: '木箱'});
   eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 650);
 });
-test('平板加价: 1524 无细分走旧价（齐边 500）', () => sheetMarkupCase('w1524_old', '201J2', 1524, 2440, 500, true, '', '1.00'));
+test('平板加价: 1524 归类 1500 同价（2026-08-22 用户规则，齐边，2100-3055=500）', () => sheetMarkupCase('w1524_1500s', '201J2', 1524, 2440, 500, true, '', '1.00'));
+test('平板加价: 316L 1524 归类 1500（2100-3055=800 / 3056-4000=850）', () => {
+  const r1 = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'1.00', width:'1524', length:'2440', film1:'', film2:'', basePrice: 15000, packing: '木架'});
+  eq(r1.success, true, JSON.stringify(r1.errors)); eq(r1.detail.markup, 800);
+  const r2 = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'1.00', width:'1524', length:'3500', film1:'', film2:'', basePrice: 15000, packing: '木架'});
+  eq(r2.success, true, JSON.stringify(r2.errors)); eq(r2.detail.markup, 850);
+});
+test('平板加价: 1524 长度区间外报错 1524*2000（区间 2100-3055/3056-4000）', () => sheetMarkupCase('w1524_bad', '304', 1524, 2000, null, false, '德龙', '1.00'));
+test('平板加价: 1524 边界 3055=s 3056=l（std）', () => {
+  const r1 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'1.00', width:'1524', length:'3055', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r1.success, true, JSON.stringify(r1.errors)); eq(r1.detail.markup, 500);
+  const r2 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'1.00', width:'1524', length:'3056', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r2.success, true, JSON.stringify(r2.errors)); eq(r2.detail.markup, 550);
+});
+test('平板加价: 201 1280 不计算（2026-08-22 用户规则，卷板/平板都报错）', () => {
+  const r1 = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'1.00', width:'1280', length:'2440', film1:'', film2:'', basePrice: 7800, packing: '木架'});
+  eq(r1.success, false, '201 1280 平板应报错'); eq(r1.errors.join(',').includes('1280'), true, '错误含 1280 提示: ' + JSON.stringify(r1.errors));
+  const r2 = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'1.00', width:'1280', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r2.success, false, '201 1280 卷板应报错');
+  const r3 = PricingEngine.calculate({material:'304', surface:'2B', thickness:'1.00', width:'1280', length:'2440', film1:'', film2:'', basePrice: 7800, packing: '木架'});
+  eq(r3.success, true, '304 1280 仍可算: ' + JSON.stringify(r3.errors));
+});
 
 
 // ===== 包装方式（2026-08-22 用户规则：平板必填 木架/木箱，卷板不校验，木箱=木架+50） =====

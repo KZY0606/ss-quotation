@@ -81,14 +81,16 @@ const PricingEngine = (() => {
     } else if (w === 1030 || w === 1000) {
       group = /^(201|304|410|430)/.test(m) ? 'std' : (/^316L/.test(m) ? '316l' : null);
       bands = SHEET_LENGTH_BANDS_NARROW;
-    } else if (w === 1500 || w === 1530) {
+    } else if (w === 1500 || w === 1530 || w === 1524) {
       group = /^(201|304|410|430)/.test(m) ? 'std' : (/^316L/.test(m) ? '316l' : null);
       bands = SHEET_LENGTH_BANDS_WIDE;
     }
     if (!group || !bands) return null;
     const band = bands.find(b => L >= b.min && L <= b.max);
     if (!band) return null;
-    return group + '_' + w + '_' + band.key;
+    // 1524 与 1500 同价（2026-08-22 用户规则：1524 归类到 1500mm 一块，都是齐边）
+    const keyW = (w === 1524) ? 1500 : w;
+    return group + '_' + keyW + '_' + band.key;
   }
 
   function getThicknessSurcharge(thickness, isYanYan, material, origin, surface) {
@@ -424,7 +426,11 @@ const PricingEngine = (() => {
     if (isNaN(width) || width <= 0) errors.push('宽度无效');
     // 2026-08-22：全局宽度白名单（只算这 8 个宽度，其他一律报错）
     if (!isNaN(width) && width > 0 && !WIDTH_ALLOWED.includes(width)) {
-      errors.push(`宽度 ${width}mm 不在可计算宽度（1000/1030/1219/1240/1250/1500/1524/1530）`);
+      errors.push(`宽度 ${width}mm 不在可计算宽度（1000/1030/1219/1240/1250/1280/1500/1524/1530）`);
+    }
+    // 2026-08-22 用户规则：201 材质不提供 1280mm 宽度，一律不计算（卷板/平板都拦）
+    if (width === 1280 && /^201/.test(String(material || '').toUpperCase())) {
+      errors.push('201 材质不提供 1280mm 宽度，无法计算（2026-08-22 用户规则）');
     }
 
     const density = getDensity(material);
@@ -448,7 +454,7 @@ const PricingEngine = (() => {
     const boardType = getBoardType(length);
 
     // 平板长度区间校验（2026-08-22 用户规则：1219/1240 长度须在 2100-2500 或 3000-4000；1030/1000 须在 1001-2000 或 2001-4000，否则报错）
-    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000 || width === 1250 || width === 1280 || width === 1500 || width === 1530)) {
+    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000 || width === 1250 || width === 1280 || width === 1500 || width === 1530 || width === 1524)) {
       const mNorm = String(material || '').toUpperCase();
       let inGroup;
       if (width === 1250 || width === 1280) {
@@ -461,12 +467,12 @@ const PricingEngine = (() => {
         const L = parseFloat(length);
         let bands;
         if (width === 1030 || width === 1000) bands = SHEET_LENGTH_BANDS_NARROW;
-        else if (width === 1500 || width === 1530) bands = SHEET_LENGTH_BANDS_WIDE;
+        else if (width === 1500 || width === 1530 || width === 1524) bands = SHEET_LENGTH_BANDS_WIDE;
         else bands = SHEET_LENGTH_BANDS;
         if (!(L >= 0) || !bands.some(b => L >= b.min && L <= b.max)) {
           let rangeTxt;
           if (width === 1030 || width === 1000) rangeTxt = '1001-2000 或 2001-4000';
-          else if (width === 1500 || width === 1530) rangeTxt = '2100-3055 或 3056-4000';
+          else if (width === 1500 || width === 1530 || width === 1524) rangeTxt = '2100-3055 或 3056-4000';
           else rangeTxt = '2100-2500 或 3000-4000';
           errors.push(`平板长度 ${length}mm 不在可计算长度区间（${rangeTxt}，2026-08-22 用户规则）`);
         }
