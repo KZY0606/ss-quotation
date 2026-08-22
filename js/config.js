@@ -369,44 +369,69 @@ const SURFACE_FEES = {
   ],
 
   // 2026-08-23 用户规则：单张普磨8K（按张加工，区别于卷磨8K；费用只按厚度分档，不区分宽度）
+  // 2026-08-23 用户规则：单张8K 系列 5 品质（按张加工，仅限平板）
+  // 窄板组（普磨 1000-1280；其余四品质 1219-1250）与 宽板组（1500/1524/1530 独立价格）
   '单张普磨8K': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1530, price: 3.0,  unit: 'sqm' },
-    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1530, price: 5.0,  unit: 'sqm' },
-    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1530, price: 7.0,  unit: 'sqm' },
-    { tMin: 2.05, tMax: 2.50, wMin: 1000, wMax: 1530, price: 9.0,  unit: 'sqm' },
-    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1530, price: 11.0, unit: 'sqm' }
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 3.0,  unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1280, price: 5.0,  unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1280, price: 7.0,  unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1000, wMax: 1280, price: 9.0,  unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1280, price: 11.0, unit: 'sqm' },
+    { tMin: 0.60, tMax: 1.50, wMin: 1500, wMax: 1530, price: 8.0,  unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1500, wMax: 1530, price: 10.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1500, wMax: 1530, price: 12.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 14.0, unit: 'sqm' }
   ],
-
-  // 2026-08-23 用户规则：单张8K 系列其余 4 个品质（按张加工，仅限平板；宽度 1219/1240/1250mm）
   '单张高普8K': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4.0,  unit: 'sqm' },
     { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 6.0,  unit: 'sqm' },
     { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 8.0,  unit: 'sqm' },
     { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 10.0, unit: 'sqm' },
-    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 12.0, unit: 'sqm' }
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 12.0, unit: 'sqm' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 9.0,  unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1500, wMax: 1530, price: 11.0, unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1500, wMax: 1530, price: 13.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1500, wMax: 1530, price: 15.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 17.0, unit: 'sqm' }
   ],
   '单张普精8K': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7.0,  unit: 'sqm' },
     { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9.0,  unit: 'sqm' },
     { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 11.0, unit: 'sqm' },
     { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 13.0, unit: 'sqm' },
-    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 15.0, unit: 'sqm' }
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 15.0, unit: 'sqm' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 12.0, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1500, wMax: 1530, price: 14.0, unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1500, wMax: 1530, price: 16.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1500, wMax: 1530, price: 18.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 20.0, unit: 'sqm' }
   ],
   '单张精磨8K': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10.0, unit: 'sqm' },
     { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12.0, unit: 'sqm' },
     { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 14.0, unit: 'sqm' },
     { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 16.0, unit: 'sqm' },
-    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 18.0, unit: 'sqm' }
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 18.0, unit: 'sqm' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 15.0, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1500, wMax: 1530, price: 17.0, unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1500, wMax: 1530, price: 19.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1500, wMax: 1530, price: 21.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 23.0, unit: 'sqm' }
   ],
   '单张超精8K': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 20.0, unit: 'sqm' },
     { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 22.0, unit: 'sqm' },
     { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 24.0, unit: 'sqm' },
     { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 26.0, unit: 'sqm' },
-    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 28.0, unit: 'sqm' }
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 28.0, unit: 'sqm' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 25.0, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1500, wMax: 1530, price: 27.0, unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1500, wMax: 1530, price: 29.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1500, wMax: 1530, price: 31.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 33.0, unit: 'sqm' }
   ],
 
+  // --- end 单张8K 系列 ---
   '8K黄钛金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5.5, unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10.5,unit: 'sqm' }

@@ -1162,10 +1162,10 @@ test('卷磨8K 区分: 0.55mm 仍 2.5元/㎡（别名 卷磨8K 同样）', () =>
   eq(r1.detail.surfaceFeeSqm, 2.5, '8K 卷磨 sqm 应 2.5 实际=' + r1.detail.surfaceFeeSqm);
   eq(r2.detail.surfaceFeeSqm, 2.5, '卷磨8K sqm 应 2.5 实际=' + r2.detail.surfaceFeeSqm);
 });
-test('单张普磨8K 宽板 1530: 316L 0.55mm 3元/㎡', () => {
-  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'0.55', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+test('单张普磨8K 宽板 1530: 316L 1.00mm 8元/㎡（宽板档 0.60-1.50）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'1.00', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
   eq(r.success, true, JSON.stringify(r.errors));
-  eq(r.detail.surfaceFeeSqm, 3, '宽板 sqm 应 3 实际=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.surfaceFeeSqm, 8, '宽板 1.00 应 8 实际=' + r.detail.surfaceFeeSqm);
 });
 
 test('单张普磨8K 卷板: 自动按卷磨8K 计价 2.5元/㎡', () => {
@@ -1209,10 +1209,39 @@ Object.entries(SINGLE8K_TABLES).forEach(([surf, prices]) => {
     const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface: surf, thickness:'0.55', width:'1240', length:'C', film1:'', film2:'', basePrice: 8000});
     eq(r.success && r.detail.surfaceFeeSqm === 2.5, true, '卷板 sqm=' + (r.success ? r.detail.surfaceFeeSqm : 'ERR'));
   });
-  test(surf + ': 1500mm 超宽度报错', () => {
+  test(surf + ': 1500mm 宽板按宽板价', () => {
+    const wideFirst = { '单张高普8K': 9, '单张普精8K': 12, '单张精磨8K': 15, '单张超精8K': 25 }[surf];
     const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface: surf, thickness:'1.00', width:'1500', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
-    eq(r.success, false, surf + ' 1500mm 应报错 实际 success=' + r.success);
+    eq(r.success && r.detail.surfaceFeeSqm === wideFirst, true, surf + ' 1500mm 宽板应 ' + wideFirst + ' 实际=' + (r.success ? r.detail.surfaceFeeSqm : JSON.stringify(r.errors)));
   });
+});
+
+// ===== 单张8K 宽板（1500/1524/1530）v1.0.72：2026-08-23 用户规则 =====
+test('单张普磨8K 宽板 1500: 0.60-1.50档 8元', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'1.00', width:'1500', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+  eq(r.success && r.detail.surfaceFeeSqm === 8, true, 'sqm=' + (r.success ? r.detail.surfaceFeeSqm : JSON.stringify(r.errors)));
+});
+test('单张普磨8K 宽板 1524: 与 1500 同价 8元', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'1.00', width:'1524', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+  eq(r.success && r.detail.surfaceFeeSqm === 8, true, 'sqm=' + (r.success ? r.detail.surfaceFeeSqm : JSON.stringify(r.errors)));
+});
+test('单张普磨8K 宽板 2.80mm: 14元', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'2.80', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+  eq(r.success && r.detail.surfaceFeeSqm === 14, true, 'sqm=' + (r.success ? r.detail.surfaceFeeSqm : JSON.stringify(r.errors)));
+});
+test('单张超精8K 宽板 1500: 25元 / 2.80mm 33元', () => {
+  const r1 = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张超精8K', thickness:'1.00', width:'1500', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+  const r2 = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张超精8K', thickness:'2.80', width:'1500', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+  eq(r1.success && r1.detail.surfaceFeeSqm === 25, true, '1.00 sqm=' + (r1.success ? r1.detail.surfaceFeeSqm : JSON.stringify(r1.errors)));
+  eq(r2.success && r2.detail.surfaceFeeSqm === 33, true, '2.80 sqm=' + (r2.success ? r2.detail.surfaceFeeSqm : JSON.stringify(r2.errors)));
+});
+test('单张普磨8K 宽板 1500 0.55mm: 低于 0.60 报错', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'0.55', width:'1500', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+  eq(r.success, false, '0.55 宽板应报错 实际 success=' + r.success);
+});
+test('单张普磨8K 窄板 1280 仍 11元(末档)', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'2.80', width:'1280', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+  eq(r.success && r.detail.surfaceFeeSqm === 11, true, '1280 sqm=' + (r.success ? r.detail.surfaceFeeSqm : JSON.stringify(r.errors)));
 });
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
