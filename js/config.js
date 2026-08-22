@@ -374,7 +374,7 @@ const SURFACE_FEES = {
     { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1530, price: 5.0,  unit: 'sqm' },
     { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1530, price: 7.0,  unit: 'sqm' },
     { tMin: 2.05, tMax: 2.50, wMin: 1000, wMax: 1530, price: 9.0,  unit: 'sqm' },
-    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1530, price: 12.0, unit: 'sqm' }
+    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1530, price: 11.0, unit: 'sqm' }
   ],
 
   '8K黄钛金': [

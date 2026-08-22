@@ -1145,10 +1145,10 @@ test('单张普磨8K: 2.30mm 9元/㎡', () => {
   eq(r.success, true, JSON.stringify(r.errors));
   eq(r.detail.surfaceFeeSqm, 9, 'sqm 应 9 实际=' + r.detail.surfaceFeeSqm);
 });
-test('单张普磨8K: 2.80mm 12元/㎡', () => {
+test('单张普磨8K: 2.80mm 11元/㎡（2026-08-23 调整）', () => {
   const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'单张普磨8K', thickness:'2.80', width:'1240', length:'2440', film1:'', film2:'', basePrice: 8000, packing:'木架'});
   eq(r.success, true, JSON.stringify(r.errors));
-  eq(r.detail.surfaceFeeSqm, 12, 'sqm 应 12 实际=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.surfaceFeeSqm, 11, 'sqm 应 11 实际=' + r.detail.surfaceFeeSqm);
 });
 test('单张普磨8K 别名: 单磨8K/普磨8K → 3元', () => {
   const r1 = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'单磨8K', thickness:'0.55', width:'1240', length:'2440', film1:'', film2:'', basePrice: 8000, packing:'木架'});
@@ -1166,6 +1166,22 @@ test('单张普磨8K 宽板 1530: 316L 0.55mm 3元/㎡', () => {
   const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'0.55', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
   eq(r.success, true, JSON.stringify(r.errors));
   eq(r.detail.surfaceFeeSqm, 3, '宽板 sqm 应 3 实际=' + r.detail.surfaceFeeSqm);
+});
+
+test('单张普磨8K 卷板: 自动按卷磨8K 计价 2.5元/㎡', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'单张普磨8K', thickness:'0.55', width:'1240', length:'C', film1:'', film2:'', basePrice: 8000});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 2.5, '卷板应按卷磨8K 2.5 实际=' + r.detail.surfaceFeeSqm);
+});
+test('单张普磨8K 卷板 1.30mm: 按卷磨8K 4.5元/㎡', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'单张普磨8K', thickness:'1.30', width:'1240', length:'C', film1:'', film2:'', basePrice: 8000});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 4.5, '卷板1.30应按卷磨8K 4.5 实际=' + r.detail.surfaceFeeSqm);
+});
+test('单张普磨8K 平板 2.80mm 仍 11元/㎡', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'单张普磨8K', thickness:'2.80', width:'1240', length:'2440', film1:'', film2:'', basePrice: 8000, packing:'木架'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 11, '平板 2.80 应 11 实际=' + r.detail.surfaceFeeSqm);
 });
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
