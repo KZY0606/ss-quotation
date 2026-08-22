@@ -404,10 +404,10 @@ test('宽度白名单: 304 0.50*1220*C → 报错（1220 不在可计算宽度�
   eq(r.errors.some(e => e.includes('不在可计算宽度')), true, '应提示宽度白名单错误: ' + JSON.stringify(r.errors));
 });
 
-test('宽度白名单: 1280 也不可计算（2026-08-22 用户只算 8 个宽度）', () => {
+test('宽度白名单: 1280 可计算且为毛边（2026-08-22 用户确认）', () => {
   const r = PricingEngine.calculate({material:'201J2',surface:'2B',thickness:'0.50',width:'1280',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, false, '1280 应被白名单拦截');
-  eq(r.errors.some(e => e.includes('不在可计算宽度')), true, '应提示宽度白名单错误');
+  eq(r.success, true, '1280 应可计算: ' + JSON.stringify(r.errors));
+  eq(r.detail.edgeType, 'rough', '1280 应为毛边');
 });
 
 test('430B/BA 0.50*1240*C 甬金 → 表面=无, 厚度加价0', () => {
