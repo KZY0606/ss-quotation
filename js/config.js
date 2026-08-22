@@ -370,13 +370,13 @@ const SURFACE_FEES = {
 
   // 2026-08-23 用户规则：单张普磨8K（按张加工，区别于卷磨8K；费用只按厚度分档，不区分宽度）
   // 2026-08-23 用户规则：单张8K 系列 5 品质（按张加工，仅限平板）
-  // 窄板组（普磨 1000-1280；其余四品质 1219-1250）与 宽板组（1500/1524/1530 独立价格）
+  // 窄板组（5 品质均 1219/1240/1250）与 宽板组（1500/1524/1530 独立价格）；单张普磨8K 原 1000-1280 收窄为 1219-1250（2026-08-23 用户澄清）
   '单张普磨8K': [
-    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 3.0,  unit: 'sqm' },
-    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1280, price: 5.0,  unit: 'sqm' },
-    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1280, price: 7.0,  unit: 'sqm' },
-    { tMin: 2.05, tMax: 2.50, wMin: 1000, wMax: 1280, price: 9.0,  unit: 'sqm' },
-    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1280, price: 11.0, unit: 'sqm' },
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 3.0,  unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 5.0,  unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 7.0,  unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 9.0,  unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 11.0, unit: 'sqm' },
     { tMin: 0.60, tMax: 1.50, wMin: 1500, wMax: 1530, price: 8.0,  unit: 'sqm' },
     { tMin: 1.55, tMax: 2.00, wMin: 1500, wMax: 1530, price: 10.0, unit: 'sqm' },
     { tMin: 2.05, tMax: 2.50, wMin: 1500, wMax: 1530, price: 12.0, unit: 'sqm' },

@@ -1239,9 +1239,25 @@ test('单张普磨8K 宽板 1500 0.55mm: 低于 0.60 报错', () => {
   const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'0.55', width:'1500', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
   eq(r.success, false, '0.55 宽板应报错 实际 success=' + r.success);
 });
-test('单张普磨8K 窄板 1280 仍 11元(末档)', () => {
+test('单张普磨8K 1280mm: 无匹配加工费报错（窄板仅 1219/1240/1250，2026-08-23 澄清）', () => {
   const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'2.80', width:'1280', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
-  eq(r.success && r.detail.surfaceFeeSqm === 11, true, '1280 sqm=' + (r.success ? r.detail.surfaceFeeSqm : JSON.stringify(r.errors)));
+  eq(r.success, false, '1280 应报错 实际 success=' + r.success);
+});
+
+// ===== 单张普磨8K 窄板宽度限定（v1.0.73：2026-08-23 用户澄清 3/5/7/9/11 为 1219/1240/1250 价）=====
+test('单张普磨8K 1000mm: 报错（无 1000/1030 档）', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'单张普磨8K', thickness:'0.55', width:'1000', length:'2440', film1:'', film2:'', basePrice: 8000, packing:'木架'});
+  eq(r.success, false, '1000 应报错 实际 success=' + r.success);
+});
+test('单张普磨8K 1030mm: 报错', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'单张普磨8K', thickness:'0.55', width:'1030', length:'2440', film1:'', film2:'', basePrice: 8000, packing:'木架'});
+  eq(r.success, false, '1030 应报错 实际 success=' + r.success);
+});
+test('单张普磨8K 1219/1240/1250 边界: 0.55mm 均 3元', () => {
+  ['1219','1240','1250'].forEach(w => {
+    const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'单张普磨8K', thickness:'0.55', width:w, length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+    eq(r.success && r.detail.surfaceFeeSqm === 3, true, w + ' 应 3 实际=' + (r.success ? r.detail.surfaceFeeSqm : JSON.stringify(r.errors)));
+  });
 });
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);

@@ -804,6 +804,19 @@ const App = (() => {
     });
   }
 
+  // 2026-08-23 用户规则：单张8K 系列按窄板/宽板分组显示（key 唯一，输入按宽度自动匹配）
+  function single8kGroups(display) {
+    if (!display || display.indexOf('单张') !== 0) return null;
+    const cfg = SURFACE_FEES[display];
+    if (!Array.isArray(cfg)) return null;
+    const narrow = cfg.filter(t => (t.wMax || 9999) <= 1280);
+    const wide = cfg.filter(t => (t.wMin || 0) >= 1500);
+    const groups = [];
+    if (narrow.length) groups.push({ label: display + '（1219/1240/1250）', tiers: narrow });
+    if (wide.length) groups.push({ label: display + '（1500/1524/1530）', tiers: wide });
+    return groups.length ? groups : null;
+  }
+
   function renderSurfaceConfig() {
     const wrap = dom('surfaceConfigTable');
     if (!wrap) return;
@@ -901,17 +914,20 @@ const App = (() => {
           <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${names}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
         </tr>`;
       } else if (Array.isArray(cfg)) {
-        const tiers = cfg.filter(t => t.unit === 'sqm' || !t.unit);
-        if (tiers.length === 0) return;
-        const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
-        const val = priceOverrides.surfaceFees[cfgKey] ?? tiers[0].price;
-        const locked = !!priceOverrides.surfaceLocked[cfgKey];
-        html += `<tr>
-          <td><span class="cfg-name">${display}</span></td>
+        const groups = single8kGroups(display) || [{ label: display, tiers: cfg }];
+        for (const g of groups) {
+          const tiers = g.tiers.filter(t => t.unit === 'sqm' || !t.unit);
+          if (tiers.length === 0) continue;
+          const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
+          const val = priceOverrides.surfaceFees[cfgKey] ?? tiers[0].price;
+          const locked = !!priceOverrides.surfaceLocked[cfgKey];
+          html += `<tr>
+          <td><span class="cfg-name">${g.label}</span></td>
           <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${names}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
           <td><span class="cfg-default">${tierDesc}</span></td>
           <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${names}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
         </tr>`;
+        }
       }
     });
     html += '</tbody></table>';
@@ -1115,7 +1131,10 @@ const App = (() => {
         if (cfg) renderSurfaceRows(name, cfg);
       } else {
         const cfg = SURFACE_FEES[name];
-        if (cfg) renderSurfaceRows(name, cfg);
+        if (!cfg) return;
+        const gs = single8kGroups(name);
+        if (gs) gs.forEach(g => renderSurfaceRows(g.label, g.tiers));
+        else renderSurfaceRows(name, cfg);
       }
     });
     coloredDisplay.forEach(item => {
