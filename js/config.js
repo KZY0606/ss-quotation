@@ -377,6 +377,36 @@ const SURFACE_FEES = {
     { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1530, price: 11.0, unit: 'sqm' }
   ],
 
+  // 2026-08-23 用户规则：单张8K 系列其余 4 个品质（按张加工，仅限平板；宽度 1219/1240/1250mm）
+  '单张高普8K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4.0,  unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 6.0,  unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 8.0,  unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 10.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 12.0, unit: 'sqm' }
+  ],
+  '单张普精8K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 7.0,  unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 9.0,  unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 11.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 13.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 15.0, unit: 'sqm' }
+  ],
+  '单张精磨8K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 10.0, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 12.0, unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 14.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 16.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 18.0, unit: 'sqm' }
+  ],
+  '单张超精8K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 20.0, unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1219, wMax: 1250, price: 22.0, unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1219, wMax: 1250, price: 24.0, unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1219, wMax: 1250, price: 26.0, unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1219, wMax: 1250, price: 28.0, unit: 'sqm' }
+  ],
+
   '8K黄钛金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5.5, unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10.5,unit: 'sqm' }
@@ -728,7 +758,7 @@ const ORIGIN_KEYWORDS = ['宏旺', '青山', '联众', '甬金', '太钢', '德�
 
 const SURFACE_ALIASES = {
   'no.4': 'NO.4', 'no4': 'NO.4', 'no 4': 'NO.4', 'hl': 'HL',
-  '2b': '2B', '2ba': '2BA', '2ba(非标)': '2BA(非标)', '2BA': '2BA', '8k': '8K', '单张普磨8k': '单张普磨8K', '单磨8k': '单张普磨8K', '普磨8k': '单张普磨8K', '8k单磨': '单张普磨8K', '8k普磨': '单张普磨8K', '单张普磨': '单张普磨8K', '单磨': '单张普磨8K', '普磨': '单张普磨8K', '卷磨8k': '8K', '卷磨': '8K',
+  '2b': '2B', '2ba': '2BA', '2ba(非标)': '2BA(非标)', '2BA': '2BA', '8k': '8K', '单张普磨8k': '单张普磨8K', '单磨8k': '单张普磨8K', '普磨8k': '单张普磨8K', '8k单磨': '单张普磨8K', '8k普磨': '单张普磨8K', '单张普磨': '单张普磨8K', '单磨': '单张普磨8K', '普磨': '单张普磨8K', '卷磨8k': '8K', '卷磨': '8K', '单张高普8k': '单张高普8K', '高普8k': '单张高普8K', '单张高普': '单张高普8K', '单张普精8k': '单张普精8K', '普精8k': '单张普精8K', '单张普精': '单张普精8K', '单张精磨8k': '单张精磨8K', '精磨8k': '单张精磨8K', '单张精磨': '单张精磨8K', '单张超精8k': '单张超精8K', '超精8k': '单张超精8K', '单张超精': '单张超精8K',
   '磨砂': 'NO.4', '雪花砂': 'NO.4', '砂面': 'NO.4',
   '拉丝': 'HL',
   '镜面8k': '8K', '镜面8K': '8K',

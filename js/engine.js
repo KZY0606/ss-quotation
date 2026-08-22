@@ -219,8 +219,8 @@ const PricingEngine = (() => {
     if (!surface) return surface;
     // 用户明确输入了 (板)，尊重选择不自动映射
     if (rawInput && rawInput.endsWith('(板)')) return surface;
-    // 2026-08-23 用户规则：单张普磨8K 仅限平板；卷板自动按卷磨8K 计价
-    if (boardType === 'coil' && surface === '单张普磨8K') return '8K';
+    // 2026-08-23 用户规则：单张8K 系列（普磨/高普/普精/精磨/超精）仅限平板；卷板自动按卷磨8K 计价
+    if (boardType === 'coil' && surface.startsWith('单张')) return '8K';
     if (boardType === 'coil' && !surface.endsWith('(卷)')) {
       const coilKey = surface + '(卷)';
       if (SURFACE_FEES[coilKey] !== undefined) return coilKey;

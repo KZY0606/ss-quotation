@@ -1184,5 +1184,36 @@ test('单张普磨8K 平板 2.80mm 仍 11元/㎡', () => {
   eq(r.detail.surfaceFeeSqm, 11, '平板 2.80 应 11 实际=' + r.detail.surfaceFeeSqm);
 });
 
+// ===== 单张8K 系列其余 4 个品质（v1.0.71：2026-08-23 用户规则；按张加工，仅限平板，宽度 1219/1240/1250mm）=====
+const SINGLE8K_TABLES = {
+  '单张高普8K': [4, 6, 8, 10, 12],
+  '单张普精8K': [7, 9, 11, 13, 15],
+  '单张精磨8K': [10, 12, 14, 16, 18],
+  '单张超精8K': [20, 22, 24, 26, 28]
+};
+Object.entries(SINGLE8K_TABLES).forEach(([surf, prices]) => {
+  test(surf + ': 5档费用 ' + prices.join('/'), () => {
+    const thks = ['0.55', '1.30', '1.70', '2.30', '2.80'];
+    thks.forEach((th, i) => {
+      const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface: surf, thickness: th, width:'1240', length:'2440', film1:'', film2:'', basePrice: 8000, packing:'木架'});
+      eq(r.success, true, JSON.stringify(r.errors));
+      eq(r.detail.surfaceFeeSqm, prices[i], surf + ' ' + th + 'mm sqm 应 ' + prices[i] + ' 实际=' + r.detail.surfaceFeeSqm);
+    });
+  });
+  test(surf + ': 别名识别', () => {
+    const alias = { '单张高普8K': '高普8K', '单张普精8K': '普精8K', '单张精磨8K': '精磨8K', '单张超精8K': '超精8K' }[surf];
+    const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface: alias, thickness:'0.55', width:'1240', length:'2440', film1:'', film2:'', basePrice: 8000, packing:'木架'});
+    eq(r.success && r.detail.surfaceFeeSqm === prices[0], true, alias + ' sqm=' + (r.success ? r.detail.surfaceFeeSqm : 'ERR'));
+  });
+  test(surf + ': 卷板自动按卷磨8K(2.5)', () => {
+    const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface: surf, thickness:'0.55', width:'1240', length:'C', film1:'', film2:'', basePrice: 8000});
+    eq(r.success && r.detail.surfaceFeeSqm === 2.5, true, '卷板 sqm=' + (r.success ? r.detail.surfaceFeeSqm : 'ERR'));
+  });
+  test(surf + ': 1500mm 超宽度报错', () => {
+    const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface: surf, thickness:'1.00', width:'1500', length:'2440', film1:'', film2:'', basePrice: 15100, packing:'木架'});
+    eq(r.success, false, surf + ' 1500mm 应报错 实际 success=' + r.success);
+  });
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
