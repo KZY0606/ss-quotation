@@ -1749,10 +1749,10 @@ const App = (() => {
     html += step(`+ 销售加价 (${markupLabel})`, d.markup, '元/吨', d.markup > 0);
     html += total('不含税售价（十位取整）', d.saleNoTax, 'sale');
     html += total('含税售价', d.saleTax, 'sale');
-    html += '</div><div class="calc-section"><div class="calc-section-title">贸易术语（含税售价；EXW 人民币+美元，FOB/CIF 仅美元）</div>';
-    html += termRow('EXW', d.saleTax, 0);
-    html += termRow('FOB', d.saleTax, termState.fobUsd || 0);
-    html += termRow('CIF', d.saleTax, termState.cifUsd || 0);
+    html += '</div><div class="calc-section"><div class="calc-section-title">贸易术语（不含税售价；EXW 人民币+美元，FOB/CIF 仅美元）</div>';
+    html += termRow('EXW', d.saleNoTax, 0);
+    html += termRow('FOB', d.saleNoTax, termState.fobUsd || 0);
+    html += termRow('CIF', d.saleNoTax, termState.cifUsd || 0);
     // 附加费用（勾选生效）
     html += '<div class="calc-section-title">附加费用（元/吨，勾选生效）</div>';
     html += extraRow('公司运营费', extrasState.opFee);
@@ -1761,8 +1761,8 @@ const App = (() => {
     const ex = extraTotal();
     html += `<div class="calc-step"><span class="calc-step-label">附加费用合计</span><span class="calc-step-value ${ex > 0 ? 'positive' : 'zero'}">${ex > 0 ? '+' + ex.toLocaleString() : '0'} 元/吨</span></div>`;
     // 最终售价（含附加费）
-    const fTax = finalPrice(d.saleTax);
-    html += `<div class="calc-step final-step"><span class="calc-step-label">最终含税售价（${termState.term}，含附加费）</span><span class="calc-step-value positive">¥${Math.round(fTax).toLocaleString()} / ${fmtUsd(usd(fTax))}</span></div>`;
+    const fTax = finalPrice(d.saleNoTax);
+    html += `<div class="calc-step final-step"><span class="calc-step-label">最终不含税售价（${termState.term}，含附加费）</span><span class="calc-step-value positive">¥${Math.round(fTax).toLocaleString()} / ${fmtUsd(usd(fTax))}</span></div>`;
     html += '</div></div>';
     return html;
   }
