@@ -417,6 +417,19 @@ const PricingEngine = (() => {
     if (edgeType === null) errors.push(`宽度 ${width}mm 无法判定毛边/齐边`);
 
     const boardType = getBoardType(length);
+
+    // 平板长度区间校验（2026-08-22 用户规则：1219/1240 平板长度必须在 2100-2500 或 3000-4000，否则报错）
+    if (boardType === 'sheet' && (width === 1219 || width === 1240)) {
+      const mNorm = String(material || '').toUpperCase();
+      const inGroup = /^(201|304|410|430)/.test(mNorm) || /^316L/.test(mNorm);
+      if (inGroup) {
+        const L = parseFloat(length);
+        if (!(L >= 0) || !SHEET_LENGTH_BANDS.some(b => L >= b.min && L <= b.max)) {
+          errors.push(`平板长度 ${length}mm 不在可计算长度区间（2100-2500 或 3000-4000，2026-08-22 用户规则）`);
+        }
+      }
+    }
+
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
 
     // ---- 附加工艺检测 ----
@@ -483,6 +496,17 @@ const PricingEngine = (() => {
     const costNoTax = round10(taxExcluded);
     const markupKey = `${edgeType}_${boardType}`;
     let markup = SALES_MARKUP[markupKey];
+    // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）：仅 1219/1240 宽度平板按材质×宽度×长度区间取价（长度已在前面校验）
+    if (boardType === 'sheet' && (width === 1219 || width === 1240)) {
+      const mNorm = String(material || '').toUpperCase();
+      const group = /^(201|304|410|430)/.test(mNorm) ? 'std' : (/^316L/.test(mNorm) ? '316l' : null);
+      const L = parseFloat(length);
+      const band = SHEET_LENGTH_BANDS.find(b => L >= b.min && L <= b.max);
+      if (group && band) {
+        markup = SHEET_MARKUP_DETAIL[`${group}_${width}_${band.key}`];
+      }
+      // 非 std/316l 材质组或非 1219/1240 宽度：沿用旧加价（rough_sheet=300 / trim_sheet=500）
+    }
     // 1000mm宽度特殊加价：所有材质宽度为1000mm时的切边卷/板额外+200元/吨
     if (width === 1000) {
       markup += 200;

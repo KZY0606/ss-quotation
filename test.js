@@ -24,7 +24,7 @@ test('8K 镜面 0.50*1219*C', () => {
 
 test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 10080); eq(r.detail.saleTax, 10580);
+  eq(r.success, true); eq(r.detail.costTax, 10080); eq(r.detail.saleTax, 10480); // 平板销售加价细分后 1219*2500 std 组 = 400（原 trim_sheet 500）
 });
 
 test('双面抛光 0.50*1000*2000', () => {
@@ -914,6 +914,34 @@ test('北港 J5 无厚度加价暂不计算（2026-08-21）', () => {
   eq(r2.detail.thickSurcharge, 500, '201J2 厚度加价 500');
 });
 
+
+
+// ===== 平板销售加价细分（2026-08-22 用户规则，出口木架基准；仅 1219/1240 平板） =====
+function sheetMarkupCase(label, material, width, length, expectMarkup, expectSuccess, origin) {
+  const r = PricingEngine.calculate({origin: origin || '', material, surface: '2B', thickness: '0.50', width, length: String(length), film1: '', film2: '', basePrice: 7800});
+  if (expectSuccess) {
+    eq(r.success, true, label + ' 应成功: ' + JSON.stringify(r.errors));
+    eq(r.detail.markup, expectMarkup, label + ' 加价应=' + expectMarkup + ' 实际=' + r.detail.markup);
+  } else {
+    eq(r.success, false, label + ' 应报错（长度区间外）: ' + JSON.stringify(r.errors));
+  }
+}
+test('平板加价: std 1240 2100-2500 = 300', () => sheetMarkupCase('std1240s', '201J2', 1240, 2440, 300, true));
+test('平板加价: std 1240 3000-4000 = 350', () => sheetMarkupCase('std1240l', '201J2', 1240, 3000, 350, true));
+test('平板加价: std 1219 2100-2500 = 400', () => sheetMarkupCase('std1219s', '201J2', 1219, 2500, 400, true));
+test('平板加价: std 1219 3000-4000 = 450', () => sheetMarkupCase('std1219l', '304', 1219, 4000, 450, true));
+test('平板加价: 430B/2BA 1240 2440 = 300（410/430 归 std 组）', () => sheetMarkupCase('std430', '430B/2BA', 1240, 2440, 300, true, '瑞钢'));
+test('平板加价: 316L 1240 2100-2500 = 500', () => sheetMarkupCase('316l1240s', '316L', 1240, 2440, 500, true, '张浦'));
+test('平板加价: 316L 1240 3000-4000 = 550', () => sheetMarkupCase('316l1240l', '316L', 1240, 3050, 550, true, '张浦'));
+test('平板加价: 316L 1219 2100-2500 = 700', () => sheetMarkupCase('316l1219s', '316L', 1219, 2440, 700, true, '张浦'));
+test('平板加价: 316L 1219 3000-4000 = 750', () => sheetMarkupCase('316l1219l', '316L', 1219, 3500, 750, true, '张浦'));
+test('平板加价: 长度区间外报错 1240*2800', () => sheetMarkupCase('l2800', '201J2', 1240, 2800, null, false));
+test('平板加价: 长度区间外报错 1240*1800', () => sheetMarkupCase('l1800', '201J2', 1240, 1800, null, false));
+test('平板加价: 长度区间外报错 1219*4500', () => sheetMarkupCase('l4500', '316L', 1219, 4500, null, false, '张浦'));
+test('平板加价: 非1219/1240宽度沿用旧价 1000*2440=300(毛边)', () => sheetMarkupCase('w1000', '201J2', 1000, 2440, 700, true));
+test('平板加价: 非1219/1240宽度沿用旧价 1250*2440=500(齐边)', () => sheetMarkupCase('w1250', '201J2', 1250, 2440, 500, true));
+test('平板加价: 316L 非1219/1240沿用旧价 1250*2440=500', () => sheetMarkupCase('w1250_316', '316L', 1250, 2440, 500, true, '张浦'));
+test('平板加价: 卷板不受影响 1240*C = 200', () => sheetMarkupCase('coil1240', '201J2', 1240, 'C', 200, true));
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
