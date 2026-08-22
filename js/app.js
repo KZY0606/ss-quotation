@@ -1190,9 +1190,27 @@ const App = (() => {
     for (const [m, w, l, key] of narrowRows) {
       h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
     }
+    // 1250 齐边 / 1280 毛边 细分（2026-08-22 用户规则，出口木架基准；304 与 410/430 分开定价）
+    const wideRows = [
+      ['410/430', '1280毛边', '2100-2500', '410430_1280_s'],
+      ['410/430', '1280毛边', '3000-4000', '410430_1280_l'],
+      ['410/430', '1250齐边', '2100-2500', '410430_1250_s'],
+      ['410/430', '1250齐边', '3000-4000', '410430_1250_l'],
+      ['304', '1280毛边', '2100-2500', '304_1280_s'],
+      ['304', '1280毛边', '3000-4000', '304_1280_l'],
+      ['304', '1250齐边', '2100-2500', '304_1250_s'],
+      ['304', '1250齐边', '3000-4000', '304_1250_l'],
+      ['316L', '1280毛边', '2100-2500', '316l_1280_s'],
+      ['316L', '1280毛边', '3000-4000', '316l_1280_l'],
+      ['316L', '1250齐边', '2100-2500', '316l_1250_s'],
+      ['316L', '1250齐边', '3000-4000', '316l_1250_l']
+    ];
+    for (const [m, w, l, key] of wideRows) {
+      h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+    }
     h.push('<tr><td>其他宽度平板 毛边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.rough_sheet + '</td></tr>');
     h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
-    h.push('<tr><td colspan="2" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + ' 元/吨；平板长度须在 2100-2500/3000-4000（1219/1240）或 1001-2000/2001-4000（1030/1000）</td></tr>');
+    h.push('<tr><td colspan="2" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + ' 元/吨；平板长度须在 2100-2500/3000-4000（1219/1240/1250/1280）或 1001-2000/2001-4000（1030/1000）</td></tr>');
     h.push('</table></div>');
 
     el.innerHTML = h.join('');

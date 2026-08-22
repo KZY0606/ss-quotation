@@ -940,7 +940,7 @@ test('平板加价: 长度区间外报错 1240*1800', () => sheetMarkupCase('l18
 test('平板加价: 长度区间外报错 1219*4500', () => sheetMarkupCase('l4500', '316L', 1219, 4500, null, false, '张浦'));
 test('平板加价: 1000齐边 2001-4000 = 650（新细分，原旧价700）', () => sheetMarkupCase('w1000', '201J2', 1000, 2440, 650, true));
 test('平板加价: 非1219/1240宽度沿用旧价 1250*2440=500(齐边)', () => sheetMarkupCase('w1250', '201J2', 1250, 2440, 500, true));
-test('平板加价: 316L 非1219/1240沿用旧价 1250*2440=500', () => sheetMarkupCase('w1250_316', '316L', 1250, 2440, 500, true, '张浦'));
+test('平板加价: 316L 1250 2100-2500 = 900（新细分，原旧价500）', () => sheetMarkupCase('w1250_316', '316L', 1250, 2440, 900, true, '张浦'));
 test('平板加价: 卷板不受影响 1240*C = 200', () => sheetMarkupCase('coil1240', '201J2', 1240, 'C', 200, true));
 
 // ===== 1030 毛边 / 1000 齐边 平板销售加价细分（2026-08-22 用户规则，出口木架基准）=====
@@ -969,6 +969,32 @@ test('平板加价: 1000 长度区间外报错 1000*4500', () => sheetMarkupCase
 test('平板加价: 1030 木箱 = 基准+50（1030*1500 std 木箱 = 550）', () => {
   const r = PricingEngine.calculate({origin:'', material:'201J2', surface:'2B', thickness:'0.50', width:'1030', length:'1500', film1:'', film2:'', basePrice: 7800, packing: '木箱'});
   eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 550);
+});
+
+// ===== 1250 齐边 / 1280 毛边 平板销售加价细分（2026-08-22 用户规则，出口木架基准；304 与 410/430 分开定价）=====
+test('平板加价: 410/430 1280 2100-2500 = 400（1280毛边）', () => sheetMarkupCase('4104301280s', '430B/2BA', 1280, 2440, 400, true, '瑞钢'));
+test('平板加价: 410/430 1280 3000-4000 = 450（1280毛边）', () => sheetMarkupCase('4104301280l', '430B/2BA', 1280, 3500, 450, true, '瑞钢'));
+test('平板加价: 410/430 1250 2100-2500 = 600（1250齐边）', () => sheetMarkupCase('4104301250s', '430B/2BA', 1250, 2440, 600, true, '瑞钢'));
+test('平板加价: 410/430 1250 3000-4000 = 650（1250齐边）', () => sheetMarkupCase('4104301250l', '410S/2BA', 1250, 3000, 650, true, '宏旺'));
+test('平板加价: 304 1280 2100-2500 = 600（1280毛边）', () => sheetMarkupCase('3041280s', '304', 1280, 2440, 600, true, '德龙'));
+test('平板加价: 304 1280 3000-4000 = 650（1280毛边）', () => sheetMarkupCase('3041280l', '304', 1280, 3500, 650, true, '德龙'));
+test('平板加价: 304 1250 2100-2500 = 800（1250齐边）', () => sheetMarkupCase('3041250s', '304', 1250, 2440, 800, true, '德龙'));
+test('平板加价: 304 1250 3000-4000 = 850（1250齐边）', () => sheetMarkupCase('3041250l', '304', 1250, 3500, 850, true, '德龙'));
+test('平板加价: 316L 1280 2100-2500 = 700（1280毛边）', () => sheetMarkupCase('316l1280s', '316L', 1280, 2440, 700, true, '张浦'));
+test('平板加价: 316L 1280 3000-4000 = 750（1280毛边）', () => sheetMarkupCase('316l1280l', '316L', 1280, 3500, 750, true, '张浦'));
+test('平板加价: 316L 1250 3000-4000 = 950（1250齐边）', () => sheetMarkupCase('316l1250l', '316L', 1250, 3500, 950, true, '张浦'));
+test('平板加价: 201 1250 仍走旧价 500（201 无 1250/1280 细分）', () => sheetMarkupCase('w1250_201', '201J2', 1250, 2440, 500, true));
+test('平板加价: 1280 长度边界 2500=s / 3000=l（304）', () => {
+  const r1 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2500', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r1.success, true, '2500 应成功: ' + JSON.stringify(r1.errors)); eq(r1.detail.markup, 600);
+  const r2 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'3000', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r2.success, true); eq(r2.detail.markup, 650);
+});
+test('平板加价: 1250 长度区间外报错 1250*2800（304）', () => sheetMarkupCase('3041250bad', '304', 1250, 2800, null, false, '德龙'));
+test('平板加价: 1280 长度区间外报错 1280*1800（430）', () => sheetMarkupCase('4301280bad', '430', 1280, 1800, null, false, '瑞钢'));
+test('平板加价: 304 1280 木箱 = 650（600+50）', () => {
+  const r = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2440', film1:'', film2:'', basePrice: 13000, packing: '木箱'});
+  eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 650);
 });
 
 

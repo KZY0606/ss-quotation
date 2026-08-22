@@ -62,6 +62,32 @@ const PricingEngine = (() => {
     return (l === 'C' || l === 'COIL') ? 'coil' : 'sheet';
   }
 
+  // 平板销售加价细分 key（2026-08-22 用户规则，出口木架基准）：命中返回 SHEET_MARKUP_DETAIL 的 key，否则 null
+  // 1219/1240: std(201/304/410/430)/316l × 2100-2500/3000-4000
+  // 1250/1280: 304/410430(410/430系)/316l × 2100-2500/3000-4000（304 与 410/430 分开定价）
+  // 1030/1000: std/316l × 1001-2000/2001-4000
+  function getSheetMarkupKey(material, width, length) {
+    const m = String(material || '').toUpperCase();
+    const w = parseFloat(width);
+    const L = parseFloat(length);
+    if (isNaN(w) || isNaN(L)) return null;
+    let group = null, bands = null;
+    if (w === 1219 || w === 1240) {
+      group = /^(201|304|410|430)/.test(m) ? 'std' : (/^316L/.test(m) ? '316l' : null);
+      bands = SHEET_LENGTH_BANDS;
+    } else if (w === 1250 || w === 1280) {
+      group = /^(410|420|430|441|444)/.test(m) ? '410430' : (/^316L/.test(m) ? '316l' : (/^304/.test(m) ? '304' : null));
+      bands = SHEET_LENGTH_BANDS;
+    } else if (w === 1030 || w === 1000) {
+      group = /^(201|304|410|430)/.test(m) ? 'std' : (/^316L/.test(m) ? '316l' : null);
+      bands = SHEET_LENGTH_BANDS_NARROW;
+    }
+    if (!group || !bands) return null;
+    const band = bands.find(b => L >= b.min && L <= b.max);
+    if (!band) return null;
+    return group + '_' + w + '_' + band.key;
+  }
+
   function getThicknessSurcharge(thickness, isYanYan, material, origin, surface) {
     const t = parseFloat(thickness);
     // 400系：按材质+表面(+产地)对应独立加价，无匹配则返回 null
@@ -419,9 +445,15 @@ const PricingEngine = (() => {
     const boardType = getBoardType(length);
 
     // 平板长度区间校验（2026-08-22 用户规则：1219/1240 长度须在 2100-2500 或 3000-4000；1030/1000 须在 1001-2000 或 2001-4000，否则报错）
-    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000)) {
+    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000 || width === 1250 || width === 1280)) {
       const mNorm = String(material || '').toUpperCase();
-      const inGroup = /^(201|304|410|430)/.test(mNorm) || /^316L/.test(mNorm);
+      let inGroup;
+      if (width === 1250 || width === 1280) {
+        // 1250/1280 细分只覆盖 304 / 410/430系 / 316L（201 走旧价不限长度）
+        inGroup = /^304/.test(mNorm) || /^(410|420|430|441|444)/.test(mNorm) || /^316L/.test(mNorm);
+      } else {
+        inGroup = /^(201|304|410|430)/.test(mNorm) || /^316L/.test(mNorm);
+      }
       if (inGroup) {
         const L = parseFloat(length);
         const bands = (width === 1030 || width === 1000) ? SHEET_LENGTH_BANDS_NARROW : SHEET_LENGTH_BANDS;
@@ -510,17 +542,13 @@ const PricingEngine = (() => {
     // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）：
     // 1219/1240 按 材质组×宽度×长度区间（2100-2500/3000-4000）；1030/1000 按 材质组×宽度×长度区间（1001-2000/2001-4000）
     let usedSheetDetail = false;
-    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000)) {
-      const mNorm = String(material || '').toUpperCase();
-      const group = /^(201|304|410|430)/.test(mNorm) ? 'std' : (/^316L/.test(mNorm) ? '316l' : null);
-      const L = parseFloat(length);
-      const bands = (width === 1030 || width === 1000) ? SHEET_LENGTH_BANDS_NARROW : SHEET_LENGTH_BANDS;
-      const band = bands.find(b => L >= b.min && L <= b.max);
-      if (group && band && SHEET_MARKUP_DETAIL[group + '_' + width + '_' + band.key] != null) {
-        markup = SHEET_MARKUP_DETAIL[group + '_' + width + '_' + band.key];
+    if (boardType === 'sheet') {
+      const detailKey = getSheetMarkupKey(material, width, length);
+      if (detailKey && SHEET_MARKUP_DETAIL[detailKey] != null) {
+        markup = SHEET_MARKUP_DETAIL[detailKey];
         usedSheetDetail = true;
       }
-      // 非 std/316l 材质组或区间外：沿用旧加价（rough_sheet=300 / trim_sheet=500）
+      // 未命中细分（非细分宽度/材质组或区间外）：沿用旧加价（rough_sheet=300 / trim_sheet=500）
     }
     // 出口木箱：在出口木架基准上加 50 元/吨（2026-08-22 用户规则，卷板不受影响）
     if (packing === '木箱') {
@@ -840,7 +868,7 @@ const PricingEngine = (() => {
     calculate, calculateBatch, parseSpec, parseFreeText,
     normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge, addExtras, calcTotal,
     parseThicknessRange,
-    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon,
+    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
