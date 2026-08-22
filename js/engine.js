@@ -574,7 +574,9 @@ const PricingEngine = (() => {
       markup += 200;
     }
     const saleTax = round10(costTax + markup);
-    const saleNoTax = round10(costNoTax + markup);
+    // 2026-08-22 用户规则：不含税售价 = (基价+厚度加价)×0.92 + 表面加工费(含纹路/AFP) + 膜费 + 销售加价；含税售价 = 各项直接相加（不打折）
+    const materialNoTaxRaw = round2((basePrice + thickSurcharge) * 0.92);
+    const saleNoTax = round10(materialNoTaxRaw + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon + markup);
 
     // 重量：只读取导入数据（客户填写的吨数），不自动计算
     const weight = item.weight ? parseFloat(item.weight) : null;
@@ -593,7 +595,7 @@ const PricingEngine = (() => {
         afpFeeSqm: afpSqmFee, afpPerTon,
         film1FeeSqm: film1Fee || 0, film1PerTon,
         film2FeeSqm: film2Fee || 0, film2PerTon,
-        costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded),
+        costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded), materialNoTaxRaw: round2(materialNoTaxRaw),
         costTax, costNoTax,
         edgeType, boardType, markup, widthSurcharge, packing,
         saleTax, saleNoTax

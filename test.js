@@ -1096,5 +1096,33 @@ test('包装: 自由文本识别"木架"', () => {
   eq(p.packing, '木架', '应识别木架');
 });
 
+// ===== 计价公式 v1.0.67：不含税售价 = (基价+厚度加价)×0.92 + 表面加工费(含纹路/AFP) + 膜费 + 销售加价；含税售价 = 各项直接相加（2026-08-22 用户规则）=====
+test('新公式: 8K卷板 表面费不打折 saleNoTax=8600', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'8K', thickness:'0.55', width:'1240', length:'C', film1:'', film2:'', basePrice: 8000});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.materialNoTaxRaw, 7820, '材料不含税 (8000+500)×0.92=7820 实际=' + r.detail.materialNoTaxRaw);
+  eq(r.detail.saleNoTax, 8600, 'saleNoTax 应 8600 实际=' + r.detail.saleNoTax);
+  eq(r.detail.saleTax, 9280, '含税售价不变 9080+200=9280 实际=' + r.detail.saleTax);
+});
+test('新公式: 8K+5C膜 平板 膜费不打折 saleNoTax=8930', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'8K', thickness:'0.55', width:'1240', length:'2440', film1:'5C-FILM', film2:'', basePrice: 8000, packing: '木架'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.saleNoTax, 8930, '7820+579.04+231.62+300=8930.66→8930 实际=' + r.detail.saleNoTax);
+  eq(r.detail.saleTax, 9610, '含税售价 9310.66→9310+300=9610 实际=' + r.detail.saleTax);
+});
+test('新公式: 无表面膜时 saleNoTax=(材料×0.92)+加价 8120', () => {
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'2B', thickness:'0.55', width:'1240', length:'2440', film1:'', film2:'', basePrice: 8000, packing: '木架'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.saleNoTax, 8120, '7820+300=8120 实际=' + r.detail.saleNoTax);
+  eq(r.detail.saleTax, 8800, '8500+300=8800 实际=' + r.detail.saleTax);
+});
+test('新公式: 316L 1530 木架 saleNoTax=14950 saleTax=16200（含税不变）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'1.00', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15100, packing: '木架'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.materialNoTaxRaw, 14352, '(15100+500)×0.92=14352 实际=' + r.detail.materialNoTaxRaw);
+  eq(r.detail.saleNoTax, 14950, '14352+600=14952→14950 实际=' + r.detail.saleNoTax);
+  eq(r.detail.saleTax, 16200, '15600+600=16200 实际=' + r.detail.saleTax);
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
