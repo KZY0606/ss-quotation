@@ -430,6 +430,15 @@ const PricingEngine = (() => {
       }
     }
 
+    // 包装方式（2026-08-22 用户规则）：平板必须填木架/木箱，卷板不校验
+    const packingRaw = item.packing != null ? String(item.packing).trim() : '';
+    let packing = null;
+    if (/木箱/.test(packingRaw)) packing = '木箱';
+    else if (/木架/.test(packingRaw)) packing = '木架';
+    if (boardType === 'sheet' && !packing) {
+      errors.push('平板必须填写包装方式（木架/木箱）');
+    }
+
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
 
     // ---- 附加工艺检测 ----
@@ -507,6 +516,10 @@ const PricingEngine = (() => {
       }
       // 非 std/316l 材质组或非 1219/1240 宽度：沿用旧加价（rough_sheet=300 / trim_sheet=500）
     }
+    // 出口木箱：在出口木架基准上加 50 元/吨（2026-08-22 用户规则，卷板不受影响）
+    if (packing === '木箱') {
+      markup += PACKING_WOODEN_BOX_SURCHARGE;
+    }
     // 1000mm宽度特殊加价：所有材质宽度为1000mm时的切边卷/板额外+200元/吨
     if (width === 1000) {
       markup += 200;
@@ -533,7 +546,7 @@ const PricingEngine = (() => {
         film2FeeSqm: film2Fee || 0, film2PerTon,
         costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded),
         costTax, costNoTax,
-        edgeType, boardType, markup, widthSurcharge,
+        edgeType, boardType, markup, widthSurcharge, packing,
         saleTax, saleNoTax
       }
     };
@@ -746,6 +759,12 @@ const PricingEngine = (() => {
       }
     }
 
+    // 包装方式（2026-08-22 用户规则）：自由文本识别 木箱/木架
+    let packing = null;
+    if (/木箱/.test(remaining)) packing = '木箱';
+    else if (/木架/.test(remaining)) packing = '木架';
+    if (packing) remaining = remaining.replace(/木箱|木架/g, ' ').trim();
+
     // 根据材质 + 压延 计算基价
     let basePrice = 0;
     if (basePriceMap && material) {
@@ -755,7 +774,7 @@ const PricingEngine = (() => {
 
     return {
       origin, material, surface: normalizeSurface(surface) || surface,
-      thickness, width, length, film1, film2, basePrice, isYanYan
+      thickness, width, length, film1, film2, basePrice, isYanYan, packing
     };
   }
 

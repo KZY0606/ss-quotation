@@ -257,6 +257,7 @@ const ExcelParser = (() => {
         else if (h.includes('膜1') || h === '保护膜' || h.includes('film1') || h.includes('膜一')) item.film1 = val;
         else if (h.includes('膜2') || h.includes('film2') || h.includes('膜二')) item.film2 = val;
         else if (h.includes('重量') || h.includes('数量') || h.includes('weight') || h.includes('qty')) item.weight = val;
+        else if (h.includes('包装') || h.includes('packing')) item.packing = val;
         else if (h.includes('压延') || h.includes('yan') || h.includes('yanyan')) item.isYanYan = val === '是' || val === 'Y' || val === 'yes';
       }
       return item;

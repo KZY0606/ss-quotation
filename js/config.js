@@ -677,6 +677,11 @@ const SHEET_LENGTH_BANDS = [
   { key: 'l', min: 3000, max: 4000 }
 ];
 
+// 包装方式（2026-08-22 用户规则）：平板必须二选一（木架/木箱），卷板不校验
+// 出口木箱 = 出口木架基准 + PACKING_WOODEN_BOX_SURCHARGE
+const PACKING_OPTIONS = ['木架', '木箱'];
+const PACKING_WOODEN_BOX_SURCHARGE = 50;
+
 // 表面名称标准化映射
 // 预设常用产地
 const ORIGIN_PRESETS = ['宏旺', '青山', '联众', '甬金', '太钢', '德龙', '上克', '瑞钢', '张浦']; 

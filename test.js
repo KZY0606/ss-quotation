@@ -23,12 +23,12 @@ test('8K 镜面 0.50*1219*C', () => {
 });
 
 test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
-  const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800});
+  const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800, packing: '木架' });
   eq(r.success, true); eq(r.detail.costTax, 10080); eq(r.detail.saleTax, 10480); // 平板销售加价细分后 1219*2500 std 组 = 400（原 trim_sheet 500）
 });
 
 test('双面抛光 0.50*1000*2000', () => {
-  const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800});
+  const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800, packing: '木架' });
   eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9300);
 });
 
@@ -204,7 +204,7 @@ test('BA linen 0.45mm → 450元/吨 (单面抛光150+小珠光300)', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'BA linen', thickness:'0.45', width:'1240', length:'2500',
     film1:'', film2:'', basePrice:7800, isYanYan:false
-  });
+  , packing: '木架' });
   eq(r.success, true);
   eq(r.detail.linenFeePerTon, 300);
   eq(r.detail.surfaceFeePerTon, 150);
@@ -215,7 +215,7 @@ test('8K linen 0.45mm → 707.71+300=1007.71元/吨', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'8K linen', thickness:'0.45', width:'1240', length:'2500',
     film1:'', film2:'', basePrice:7800, isYanYan:false
-  });
+  , packing: '木架' });
   eq(r.success, true);
   eq(r.detail.hasLinen, true);
   eq(r.detail.surfaceFeePerTon, 707.71);
@@ -227,7 +227,7 @@ test('小珠光 alias: 镜面8k黄钛金小珠光 0.50mm', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'镜面8k黄钛金小珠光', thickness:'0.50', width:'1240', length:'2500',
     film1:'', film2:'', basePrice:7800, isYanYan:false
-  });
+  , packing: '木架' });
   eq(r.success, true);
   eq(r.detail.hasLinen, true);
   eq(r.detail.linenFeePerTon, 300);
@@ -255,7 +255,7 @@ test('AFP: Gold No4 + AFP = 拉丝黄钛金+亮光抗指纹 0.45mm', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'Gold No4 + AFP', thickness:'0.45', width:'1240', length:'2500',
     film1:'', film2:'', basePrice:7800, isYanYan:false
-  });
+  , packing: '木架' });
   eq(r.success, true);
   eq(r.detail.afpFeeSqm, 2); // 亮光(默认)
   eq(r.detail.surfaceFeePerTon, 1415.43); // 5 * 283.09
@@ -267,7 +267,7 @@ test('AFP: 拉丝古铜哑光抗指纹 = 组合价 15元/sqm 0.45mm', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'拉丝古铜哑光抗指纹', thickness:'0.45', width:'1240', length:'2500',
     film1:'', film2:'', basePrice:7800, isYanYan:false
-  });
+  , packing: '木架' });
   eq(r.success, true);
   eq(r.detail.surfaceFeePerTon, Math.round(15 * (1000/7.85/0.45) * 100) / 100);
 });
@@ -282,7 +282,7 @@ test('AFP: 拉丝黄钛金哑光抗指纹 = 拉丝黄钛金+AFP(matte)', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'拉丝黄钛金哑光抗指纹', thickness:'0.45', width:'1240', length:'2500',
     film1:'', film2:'', basePrice:7800, isYanYan:false
-  });
+  , packing: '木架' });
   eq(r.success, true);
   eq(r.detail.afpFeeSqm, 5); // 哑光=5
 });
@@ -368,7 +368,7 @@ test('201 宽度档映射: 1000/1030→2(并入1219/1240), 1219/1240→2, 1250/1
   eq(PricingEngine.getWidthBand201(1530), 4);
 });
 test('calculate: 宽度1000 订单用 1219/1240 档基价正常计算', () => {
-  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'8K', thickness:'0.55', width:'1000', length:'2500', film1:'', film2:'', basePrice:7800});
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'8K', thickness:'0.55', width:'1000', length:'2500', film1:'', film2:'', basePrice:7800, packing: '木架' });
   eq(r.success, true, '1000mm 不报宽度档错误，基价用 b2');
   eq(r.detail.basePrice, 7800);
 });
@@ -426,7 +426,7 @@ test('430B/2BA 瑞钢 8K黑钛金 0.50*1250*2440 → 识别表面, 用304加工�
     origin: '瑞钢', material: '430B/2BA', surface: '8K黑钛金',
     thickness: '0.50', width: '1250', length: '2440',
     film1: '5C-FILM', film2: '', isYanYan: false, basePrice: 8000
-  });
+  , packing: '木架' });
   eq(r.success, true, '430B/2BA with surface should succeed');
   eq(r.detail.surfaceFeePerTon > 0, true, 'should have surface fee');
   eq(r.detail.surface, '8K黑钛金', 'surface should be recognized');
@@ -677,17 +677,17 @@ test('316L 甬金 17 档新表 + 薄料 1500/1530 宽度加价（2026-08-21）',
   eq(g(3.00), 300, '3.00 → 300（上限）');
   eq(g(3.10), null, '3.10 超上限 → null');
   // 宽度加价：calculate 级验证
-  const r1500 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1500', length:'2500', basePrice:10000});
+  const r1500 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1500', length:'2500', basePrice:10000, packing: '木架' });
   eq(r1500.success, true, '甬金316L 0.35*1500 可算');
   eq(r1500.detail.widthSurcharge, 300, '薄料 1500 宽厚度加价 +300');
   eq(r1500.detail.thickSurcharge, 1500, '0.35 加价 1200+300=1500');
-  const r1240 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1240', length:'2500', basePrice:10000});
+  const r1240 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1240', length:'2500', basePrice:10000, packing: '木架' });
   eq(r1240.success, true, '1240 宽可算');
   eq(r1240.detail.widthSurcharge, 0, '1240 宽不加价');
   eq(r1240.detail.thickSurcharge, 1200, '1240 宽 0.35 加价 1200');
-  const r060 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.60', width:'1500', length:'2500', basePrice:10000});
+  const r060 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.60', width:'1500', length:'2500', basePrice:10000, packing: '木架' });
   eq(r060.detail.widthSurcharge, 0, '0.60 厚超 0.50 不加宽价');
-  const r1530 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.50', width:'1530', length:'2500', basePrice:10000});
+  const r1530 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.50', width:'1530', length:'2500', basePrice:10000, packing: '木架' });
   eq(r1530.detail.widthSurcharge, 300, '0.50*1530 薄料 +300');
 });
 test('316L 张浦新 16 档表（2026-08-20）', () => {
@@ -744,7 +744,7 @@ test('freeText: 含“7C进口膜”不误匹配为普通 7C-FILM', () => {
   const p = PricingEngine.parseFreeText('宏旺 201J2 NO.4 7C进口膜 0.55*1240*2500', {'201J2':7800});
   eq(p !== null, true);
   eq(p.film1, '7C-IMPORT-FILM', '应识别为进口膜而非 7C-FILM');
-  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'NO.4', thickness:'0.55', width:'1240', length:'2500', film1:'7C-IMPORT-FILM', film2:'', basePrice:7800});
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'NO.4', thickness:'0.55', width:'1240', length:'2500', film1:'7C-IMPORT-FILM', film2:'', basePrice:7800, packing: '木架' });
   eq(r.success, true, '进口膜正常计算');
 });
 test('1500/1530 宽板厚度上限 3.00mm：3.00 可算、3.05 报错', () => {
@@ -784,7 +784,7 @@ test('彩色表面小炉/大炉 /S /L（2026-08-21）', () => {
   eq(fee('砂面/拉丝(NO.4/HL)香槟金(板)/S', 0.5, 1240).sqmPrice, 7.5, '砂面/拉丝香槟金小炉 7.5');
   eq(fee('拉丝黄钛金(板)/L', 0.5, 1240).sqmPrice, 5, '拉丝黄钛金大炉 5');
   eq(fee('磨砂黄钛金(板)/S', 0.5, 1240).sqmPrice, 7.5, '磨砂黄钛金小炉同价 7.5');
-  const r = PricingEngine.calculate({origin:'德龙', material:'304', surface:'8K黄钛金(板)/S', thickness:'0.50', width:'1240', length:'2500', basePrice:10000});
+  const r = PricingEngine.calculate({origin:'德龙', material:'304', surface:'8K黄钛金(板)/S', thickness:'0.50', width:'1240', length:'2500', basePrice:10000, packing: '木架' });
   eq(r.success, true, '带 /S 表面正常计算');
   eq(r.detail.normSurface, '8K黄钛金/S', 'normSurface 保留 /S');
 });
@@ -800,7 +800,7 @@ test('宏旺304 新增 0.26-0.27 +1500（2026-08-21）', () => {
   eq(g('德龙', 0.26), null, '德龙 0.26 不受影响 → null');
   eq(g('德龙', 0.28), 1300, '德龙 0.28 仍 1300');
   eq(g('张浦', 0.26), null, '张浦 0.26 → null（0.28 起）');
-  const r = PricingEngine.calculate({origin:'宏旺', material:'304', surface:'2B', thickness:'0.26', width:'1240', length:'2500', basePrice:10000});
+  const r = PricingEngine.calculate({origin:'宏旺', material:'304', surface:'2B', thickness:'0.26', width:'1240', length:'2500', basePrice:10000, packing: '木架' });
   eq(r.success, true, '宏旺 304 0.26 可算');
   eq(r.detail.thickSurcharge, 1500, '宏旺 304 0.26 厚度加价 1500');
 });
@@ -809,13 +809,13 @@ test('宽度 1524：归类档4/齐边（2026-08-21）', () => {
   eq(PricingEngine.getWidthBand201(1524), 4, '1524 → 档4 (1500/1530)');
   eq(PricingEngine.getEdgeType(1524), 'trim', '1524 判定为齐边');
   // 201 宽板按厚度分档
-  const r201 = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'2B', thickness:'0.9', width:'1524', length:'2500', basePrice:8000});
+  const r201 = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'2B', thickness:'0.9', width:'1524', length:'2500', basePrice:8000, packing: '木架' });
   eq(r201.success, true, '201J2 0.9*1524 可算（厚度档 t2）');
   // 304
-  const r304 = PricingEngine.calculate({origin:'宏旺', material:'304', surface:'2B', thickness:'0.5', width:'1524', length:'2500', basePrice:10000});
+  const r304 = PricingEngine.calculate({origin:'宏旺', material:'304', surface:'2B', thickness:'0.5', width:'1524', length:'2500', basePrice:10000, packing: '木架' });
   eq(r304.success, true, '304 0.5*1524 可算');
   // 甬金316L 薄料 1524 命中 1500/1530 加价区间
-  const r316 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1524', length:'2500', basePrice:10000});
+  const r316 = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.35', width:'1524', length:'2500', basePrice:10000, packing: '木架' });
   eq(r316.success, true, '甬金316L 0.35*1524 可算');
   eq(r316.detail.widthSurcharge, 300, '甬金316L 薄料 1524 → +300');
 });
@@ -884,14 +884,14 @@ test('宏旺 410S/BA 改名 410S/2BA（2026-08-21）', () => {
   eq(v, PricingEngine.getThicknessSurcharge(0.5, false, '430W/2BA', '宏旺'), '与 430W/2BA 同价');
   // 页面基价层已拦截宏旺 410S/BA（PRODUCTS_400 已移除该产品）
   // calculate 全链路（basePrice 直接传，绕过基价面板）
-  const r = PricingEngine.calculate({origin:'宏旺', material:'410S/2BA', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000});
+  const r = PricingEngine.calculate({origin:'宏旺', material:'410S/2BA', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000, packing: '木架' });
   eq(r.success, true, '宏旺 410S/2BA 0.5 可算');
   // 甬金/上克 410S/BA 不受影响
   eq(PricingEngine.getThicknessSurcharge(0.5, false, '410S/BA', '甬金') !== null, true, '甬金 410S/BA 仍正常');
 });
 
 test('400系彩色表面对标304价（2026-08-21）', () => {
-  const calc = (m, s, t) => PricingEngine.calculate({origin:'宏旺', material:m, surface:s, thickness:t, width:'1240', length:'2500', basePrice:8000});
+  const calc = (m, s, t) => PricingEngine.calculate({origin:'宏旺', material:m, surface:s, thickness:t, width:'1240', length:'2500', basePrice:8000, packing: '木架' });
   // 8K黑钛金：304特例价 10（通用表 5）——400系必须同样用 10
   eq(calc('430BA','8K黑钛金(板)','0.50').detail.surfaceFeeSqm, 10, '430BA 8K黑钛金 = 304 特例价 10');
   eq(calc('410S-BA-宏旺','8K黑钛金(板)','0.50').detail.surfaceFeeSqm, 10, '410S-BA-宏旺 8K黑钛金 = 10');
@@ -905,11 +905,11 @@ test('400系彩色表面对标304价（2026-08-21）', () => {
 });
 
 test('北港 J5 无厚度加价暂不计算（2026-08-21）', () => {
-  const r = PricingEngine.calculate({origin:'北港', material:'201J5', surface:'NO.4', thickness:'0.5', width:'1240', length:'2500', basePrice:8000});
+  const r = PricingEngine.calculate({origin:'北港', material:'201J5', surface:'NO.4', thickness:'0.5', width:'1240', length:'2500', basePrice:8000, packing: '木架' });
   eq(r.success, false, '北港 J5 报错不计算');
   eq(r.errors.some(e => e.includes('北港 J5 未提供厚度加价')), true, '报错文案含北港 J5 提示');
   // 其他 201 材质不受影响
-  const r2 = PricingEngine.calculate({origin:'青山', material:'201J2', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000});
+  const r2 = PricingEngine.calculate({origin:'青山', material:'201J2', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000, packing: '木架' });
   eq(r2.success, true, '青山 201J2 正常计算');
   eq(r2.detail.thickSurcharge, 500, '201J2 厚度加价 500');
 });
@@ -918,7 +918,7 @@ test('北港 J5 无厚度加价暂不计算（2026-08-21）', () => {
 
 // ===== 平板销售加价细分（2026-08-22 用户规则，出口木架基准；仅 1219/1240 平板） =====
 function sheetMarkupCase(label, material, width, length, expectMarkup, expectSuccess, origin) {
-  const r = PricingEngine.calculate({origin: origin || '', material, surface: '2B', thickness: '0.50', width, length: String(length), film1: '', film2: '', basePrice: 7800});
+  const r = PricingEngine.calculate({origin: origin || '', material, surface: '2B', thickness: '0.50', width, length: String(length), film1: '', film2: '', basePrice: 7800, packing: '木架' });
   if (expectSuccess) {
     eq(r.success, true, label + ' 应成功: ' + JSON.stringify(r.errors));
     eq(r.detail.markup, expectMarkup, label + ' 加价应=' + expectMarkup + ' 实际=' + r.detail.markup);
@@ -942,6 +942,42 @@ test('平板加价: 非1219/1240宽度沿用旧价 1000*2440=300(毛边)', () =>
 test('平板加价: 非1219/1240宽度沿用旧价 1250*2440=500(齐边)', () => sheetMarkupCase('w1250', '201J2', 1250, 2440, 500, true));
 test('平板加价: 316L 非1219/1240沿用旧价 1250*2440=500', () => sheetMarkupCase('w1250_316', '316L', 1250, 2440, 500, true, '张浦'));
 test('平板加价: 卷板不受影响 1240*C = 200', () => sheetMarkupCase('coil1240', '201J2', 1240, 'C', 200, true));
+
+
+// ===== 包装方式（2026-08-22 用户规则：平板必填 木架/木箱，卷板不校验，木箱=木架+50） =====
+test('包装: 平板未填包装方式 → 报错', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1240', length:'2440', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, false, '应报错: ' + JSON.stringify(r.errors));
+  eq(r.errors.some(e => e.includes('包装方式')), true, '应提示填写包装方式');
+});
+test('包装: 平板木架 = 基准价（1219*2500 std = 400）', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1219', length:'2500', film1:'', film2:'', basePrice: 7800, packing:'木架'});
+  eq(r.success, true); eq(r.detail.markup, 400); eq(r.detail.packing, '木架');
+});
+test('包装: 平板木箱 = 基准+50（1219*2500 std = 450）', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1219', length:'2500', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
+  eq(r.success, true); eq(r.detail.markup, 450);
+});
+test('包装: 316L 木箱 1240*2440 = 550（500+50）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1240', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
+  eq(r.success, true); eq(r.detail.markup, 550);
+});
+test('包装: 非1219/1240平板木箱 = 旧价+50（1250齐边 500+50=550）', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1250', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
+  eq(r.success, true); eq(r.detail.markup, 550);
+});
+test('包装: 卷板未填包装正常计算（1240*C）', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1240', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 200);
+});
+test('包装: 自由文本识别"木箱"', () => {
+  const p = PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 木箱', {});
+  eq(p.packing, '木箱', '应识别木箱');
+});
+test('包装: 自由文本识别"木架"', () => {
+  const p = PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 木架', {});
+  eq(p.packing, '木架', '应识别木架');
+});
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

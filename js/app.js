@@ -1204,6 +1204,7 @@ const App = (() => {
     const wid = dom('manualWidth').value.trim();
     const len = dom('manualLength').value.trim();
     const surf = dom('manualSurface').value.trim();
+    const packing = dom('manualPacking') ? dom('manualPacking').value : '';
     let f1 = dom('manualFilm1').value.trim();
     let f2 = dom('manualFilm2').value.trim();
     // "/" 自动拆分：5C膜/5C膜 → film1=5C-FILM, film2=5C-FILM
@@ -1228,7 +1229,7 @@ const App = (() => {
       return;
     }
     if (!thk || !wid) { showToast('请填写厚度和宽度', 'error'); return; }
-    dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp });
+    dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp, packing });
     results = []; showToast('已添加', 'success');
     render();
     ['manualThickness','manualWidth','manualLength','manualSurface','manualFilm1','manualFilm2'].forEach(id => dom(id).value = '');
@@ -1395,6 +1396,14 @@ const App = (() => {
   function toggleExpand(idx) {
     dom(`detail-${idx}`)?.classList.toggle('open');
     dom(`expand-btn-${idx}`)?.classList.toggle('open');
+  }
+
+  function setPacking(idx, val) {
+    const i = idx - 1;
+    if (!dataItems[i]) return;
+    dataItems[i].packing = val;
+    results = [];
+    render();
   }
 
   function toggleAllExpand() {
@@ -1583,6 +1592,15 @@ const App = (() => {
       h.push(`<td>${item.surface || '<span style="color:var(--text-muted)">2B</span>'}</td>`);
       h.push(`<td>${fmtThk(item.thickness)}</td><td>${item.width}</td>`);
       h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
+      const isCoil = String(item.length || 'C').trim().toUpperCase() === 'C';
+      const pk = item.packing || '';
+      h.push(`<td>${isCoil
+        ? '<span style="color:var(--text-muted)">-</span>'
+        : `<select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
+            <option value="" ${!pk ? 'selected' : ''}>请选择</option>
+            <option value="木架" ${pk === '木架' ? 'selected' : ''}>木架</option>
+            <option value="木箱" ${pk === '木箱' ? 'selected' : ''}>木箱</option>
+          </select>`}</td>`);
       const wgt = d && d.weight != null ? d.weight : (item.weight || null);
       h.push(`<td>${wgt != null ? wgt : '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
@@ -1703,7 +1721,7 @@ const App = (() => {
     setTimeout(() => { t.style.animation = 'toastIn 0.3s ease reverse'; setTimeout(() => t.remove(), 300); }, 3500);
   }
 
-  return { init, removeRow, toggleExpand };
+  return { init, removeRow, toggleExpand, setPacking };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);
