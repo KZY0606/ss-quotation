@@ -71,7 +71,7 @@ const THICK_BANDS_1500_LABELS = {
 
 // 美金汇率：中国银行美元现汇买入价（每 100 美元的人民币，如 670.97 → 1 美元=6.7097）
 // 实时值由 GitHub Actions 定时抓取中行官网写入 rate.json，前端优先用实时值；手动输入覆盖
-const USD_RATE_DEFAULT = 670.97;
+const USD_RATE_DEFAULT = 671.18; // 内置兜底汇率（2026-08-22 更新为中行今日牌价；实时值以 rate.json 为准）
 const USD_RATE_URL = 'rate.json';
 const USD_RATE_KEY_MANUAL = 'kk_usd_rate_manual';
 
