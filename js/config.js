@@ -368,6 +368,15 @@ const SURFACE_FEES = {
     { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 18.0, unit: 'sqm' }
   ],
 
+  // 2026-08-23 用户规则：单张普磨8K（按张加工，区别于卷磨8K；费用只按厚度分档，不区分宽度）
+  '单张普磨8K': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1530, price: 3.0,  unit: 'sqm' },
+    { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1530, price: 5.0,  unit: 'sqm' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1530, price: 7.0,  unit: 'sqm' },
+    { tMin: 2.05, tMax: 2.50, wMin: 1000, wMax: 1530, price: 9.0,  unit: 'sqm' },
+    { tMin: 2.55, tMax: 3.00, wMin: 1000, wMax: 1530, price: 12.0, unit: 'sqm' }
+  ],
+
   '8K黄钛金': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 5.5, unit: 'sqm' },
     { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 10.5,unit: 'sqm' }
@@ -719,7 +728,7 @@ const ORIGIN_KEYWORDS = ['宏旺', '青山', '联众', '甬金', '太钢', '德�
 
 const SURFACE_ALIASES = {
   'no.4': 'NO.4', 'no4': 'NO.4', 'no 4': 'NO.4', 'hl': 'HL',
-  '2b': '2B', '2ba': '2BA', '2ba(非标)': '2BA(非标)', '2BA': '2BA', '8k': '8K',
+  '2b': '2B', '2ba': '2BA', '2ba(非标)': '2BA(非标)', '2BA': '2BA', '8k': '8K', '单张普磨8k': '单张普磨8K', '单磨8k': '单张普磨8K', '普磨8k': '单张普磨8K', '8k单磨': '单张普磨8K', '8k普磨': '单张普磨8K', '单张普磨': '单张普磨8K', '单磨': '单张普磨8K', '普磨': '单张普磨8K', '卷磨8k': '8K', '卷磨': '8K',
   '磨砂': 'NO.4', '雪花砂': 'NO.4', '砂面': 'NO.4',
   '拉丝': 'HL',
   '镜面8k': '8K', '镜面8K': '8K',

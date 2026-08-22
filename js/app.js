@@ -815,7 +815,8 @@ const App = (() => {
       { display: '双面抛光', key: '双面抛光' },
       { display: '6K', key: '6K' },
       { display: '双面6K', key: '双面6K' },
-      { display: '8K', key: '8K' },
+      { display: '8K（卷磨）', key: '8K' },
+      { display: '单张普磨8K', key: '单张普磨8K' },
       { display: '双面8K', key: '双面8K' },
       // 8K 彩色
       { display: '8K黄钛金(板)', key: '8K黄钛金' },
@@ -1088,7 +1089,7 @@ const App = (() => {
       { display: '砂面/拉丝(NO.4/HL)古铜亮光无指纹(卷)', key: '拉丝古铜亮光无指纹(卷)' },
       { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
     ];
-    const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '双面8K'];
+    const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '单张普磨8K', '双面8K'];
 
     function renderSurfaceRows(displayName, cfg) {
       if (Array.isArray(cfg)) {
