@@ -917,8 +917,8 @@ test('北港 J5 无厚度加价暂不计算（2026-08-21）', () => {
 
 
 // ===== 平板销售加价细分（2026-08-22 用户规则，出口木架基准；仅 1219/1240 平板） =====
-function sheetMarkupCase(label, material, width, length, expectMarkup, expectSuccess, origin) {
-  const r = PricingEngine.calculate({origin: origin || '', material, surface: '2B', thickness: '0.50', width, length: String(length), film1: '', film2: '', basePrice: 7800, packing: '木架' });
+function sheetMarkupCase(label, material, width, length, expectMarkup, expectSuccess, origin, thickness) {
+  const r = PricingEngine.calculate({origin: origin || '', material, surface: '2B', thickness: thickness || '0.50', width, length: String(length), film1: '', film2: '', basePrice: 7800, packing: '木架' });
   if (expectSuccess) {
     eq(r.success, true, label + ' 应成功: ' + JSON.stringify(r.errors));
     eq(r.detail.markup, expectMarkup, label + ' 加价应=' + expectMarkup + ' 实际=' + r.detail.markup);
@@ -996,6 +996,39 @@ test('平板加价: 304 1280 木箱 = 650（600+50）', () => {
   const r = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2440', film1:'', film2:'', basePrice: 13000, packing: '木箱'});
   eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 650);
 });
+
+// ===== 1500 齐边 / 1530 毛边 平板销售加价细分（2026-08-22 用户规则，出口木架基准；201/304/410/430 合并 std 组，316L 独立）=====
+// 长度区间：2100-3055 = s，3056-4000 = l（与 1219/1240/1250/1280 的 2100-2500/3000-4000 不同）
+test('平板加价: std 1530 2100-3055 = 400（1530毛边）', () => sheetMarkupCase('std1530s', '201J2', 1530, 2440, 400, true, '', '1.00'));
+test('平板加价: std 1530 3056-4000 = 450（1530毛边）', () => sheetMarkupCase('std1530l', '304', 1530, 3500, 450, true, '德龙'));
+test('平板加价: std 1500 2100-3055 = 500（1500齐边）', () => sheetMarkupCase('std1500s', '201J2', 1500, 2440, 500, true, '', '1.00'));
+test('平板加价: std 1500 3056-4000 = 550（1500齐边）', () => sheetMarkupCase('std1500l', '304', 1500, 3500, 550, true, '德龙'));
+test('平板加价: 316L 1530 2100-3055 = 600（1530毛边）', () => sheetMarkupCase('316l1530s', '316L', 1530, 2440, 600, true, '张浦'));
+test('平板加价: 316L 1530 3056-4000 = 650（1530毛边）', () => sheetMarkupCase('316l1530l', '316L', 1530, 3500, 650, true, '张浦'));
+test('平板加价: 316L 1500 2100-3055 = 800（1500齐边）', () => sheetMarkupCase('316l1500s', '316L', 1500, 2440, 800, true, '张浦'));
+test('平板加价: 316L 1500 3056-4000 = 850（1500齐边）', () => sheetMarkupCase('316l1500l', '316L', 1500, 3500, 850, true, '张浦'));
+test('平板加价: 1500/1530 边界 3055=s 3056=l（std 1530）', () => {
+  const r1 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1530', length:'3055', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r1.success, true, '3055 应成功: ' + JSON.stringify(r1.errors)); eq(r1.detail.markup, 400);
+  const r2 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1530', length:'3056', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r2.success, true, '3056 应成功: ' + JSON.stringify(r2.errors)); eq(r2.detail.markup, 450);
+  const r3 = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1500', length:'3055', film1:'', film2:'', basePrice: 15000, packing: '木架'});
+  eq(r3.success, true, '1500 3055 应成功'); eq(r3.detail.markup, 800);
+  const r4 = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1500', length:'3056', film1:'', film2:'', basePrice: 15000, packing: '木架'});
+  eq(r4.success, true, '1500 3056 应成功'); eq(r4.detail.markup, 850);
+});
+test('平板加价: 1500/1530 长度区间外报错 1530*2000 / 1500*4100', () => {
+  const r1 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1530', length:'2000', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r1.success, false, '1530*2000 应报错'); eq(r1.errors.length > 0, true);
+  const r2 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1500', length:'4100', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r2.success, false, '1500*4100 应报错'); eq(r2.errors.length > 0, true);
+});
+test('平板加价: 201 1530 走新细分价 400（std 组含 201）', () => sheetMarkupCase('std1530s_201', '201J2', 1530, 2440, 400, true, '', '1.00'));
+test('平板加价: 316L 1530 木箱 = 650（600+50）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15000, packing: '木箱'});
+  eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 650);
+});
+test('平板加价: 1524 无细分走旧价（齐边 500）', () => sheetMarkupCase('w1524_old', '201J2', 1524, 2440, 500, true, '', '1.00'));
 
 
 // ===== 包装方式（2026-08-22 用户规则：平板必填 木架/木箱，卷板不校验，木箱=木架+50） =====

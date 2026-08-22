@@ -81,6 +81,9 @@ const PricingEngine = (() => {
     } else if (w === 1030 || w === 1000) {
       group = /^(201|304|410|430)/.test(m) ? 'std' : (/^316L/.test(m) ? '316l' : null);
       bands = SHEET_LENGTH_BANDS_NARROW;
+    } else if (w === 1500 || w === 1530) {
+      group = /^(201|304|410|430)/.test(m) ? 'std' : (/^316L/.test(m) ? '316l' : null);
+      bands = SHEET_LENGTH_BANDS_WIDE;
     }
     if (!group || !bands) return null;
     const band = bands.find(b => L >= b.min && L <= b.max);
@@ -445,7 +448,7 @@ const PricingEngine = (() => {
     const boardType = getBoardType(length);
 
     // 平板长度区间校验（2026-08-22 用户规则：1219/1240 长度须在 2100-2500 或 3000-4000；1030/1000 须在 1001-2000 或 2001-4000，否则报错）
-    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000 || width === 1250 || width === 1280)) {
+    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000 || width === 1250 || width === 1280 || width === 1500 || width === 1530)) {
       const mNorm = String(material || '').toUpperCase();
       let inGroup;
       if (width === 1250 || width === 1280) {
@@ -456,9 +459,15 @@ const PricingEngine = (() => {
       }
       if (inGroup) {
         const L = parseFloat(length);
-        const bands = (width === 1030 || width === 1000) ? SHEET_LENGTH_BANDS_NARROW : SHEET_LENGTH_BANDS;
+        let bands;
+        if (width === 1030 || width === 1000) bands = SHEET_LENGTH_BANDS_NARROW;
+        else if (width === 1500 || width === 1530) bands = SHEET_LENGTH_BANDS_WIDE;
+        else bands = SHEET_LENGTH_BANDS;
         if (!(L >= 0) || !bands.some(b => L >= b.min && L <= b.max)) {
-          const rangeTxt = (width === 1030 || width === 1000) ? '1001-2000 或 2001-4000' : '2100-2500 或 3000-4000';
+          let rangeTxt;
+          if (width === 1030 || width === 1000) rangeTxt = '1001-2000 或 2001-4000';
+          else if (width === 1500 || width === 1530) rangeTxt = '2100-3055 或 3056-4000';
+          else rangeTxt = '2100-2500 或 3000-4000';
           errors.push(`平板长度 ${length}mm 不在可计算长度区间（${rangeTxt}，2026-08-22 用户规则）`);
         }
       }
@@ -873,7 +882,7 @@ const PricingEngine = (() => {
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
-    SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
+    SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, SHEET_LENGTH_BANDS_WIDE, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
     THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500
   };

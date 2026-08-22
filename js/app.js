@@ -1208,9 +1208,23 @@ const App = (() => {
     for (const [m, w, l, key] of wideRows) {
       h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
     }
+    // 1500 齐边 / 1530 毛边 细分（2026-08-22 用户规则，出口木架基准；201/304/410/430 合并 std 组，316L 独立；2100-3055/3056-4000）
+    const wide2Rows = [
+      ['201/304/410/430', '1530毛边', '2100-3055', 'std_1530_s'],
+      ['201/304/410/430', '1530毛边', '3056-4000', 'std_1530_l'],
+      ['201/304/410/430', '1500齐边', '2100-3055', 'std_1500_s'],
+      ['201/304/410/430', '1500齐边', '3056-4000', 'std_1500_l'],
+      ['316L', '1530毛边', '2100-3055', '316l_1530_s'],
+      ['316L', '1530毛边', '3056-4000', '316l_1530_l'],
+      ['316L', '1500齐边', '2100-3055', '316l_1500_s'],
+      ['316L', '1500齐边', '3056-4000', '316l_1500_l']
+    ];
+    for (const [m, w, l, key] of wide2Rows) {
+      h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+    }
     h.push('<tr><td>其他宽度平板 毛边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.rough_sheet + '</td></tr>');
     h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
-    h.push('<tr><td colspan="2" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + ' 元/吨；平板长度须在 2100-2500/3000-4000（1219/1240/1250/1280）或 1001-2000/2001-4000（1030/1000）</td></tr>');
+    h.push('<tr><td colspan="2" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + ' 元/吨；平板长度须在 2100-2500/3000-4000（1219/1240/1250/1280）、2100-3055/3056-4000（1500/1530）或 1001-2000/2001-4000（1030/1000）</td></tr>');
     h.push('</table></div>');
 
     el.innerHTML = h.join('');
@@ -1698,7 +1712,10 @@ const App = (() => {
     if (d.boardType === 'sheet' && d.packing) {
       const w = d.width;
       const L = parseFloat(d.length);
-      const bands = (w === 1030 || w === 1000) ? SHEET_LENGTH_BANDS_NARROW : SHEET_LENGTH_BANDS;
+      let bands;
+      if (w === 1030 || w === 1000) bands = SHEET_LENGTH_BANDS_NARROW;
+      else if (w === 1500 || w === 1530) bands = SHEET_LENGTH_BANDS_WIDE;
+      else bands = SHEET_LENGTH_BANDS;
       const band = bands.find(b => L >= b.min && L <= b.max);
       const bandTxt = band ? (band.min + '-' + band.max) : String(d.length);
       markupLabel = `${d.material} ${w}${d.edgeType === 'rough' ? '毛边' : '齐边'} 长${bandTxt}（${d.packing}）`;
