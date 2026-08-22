@@ -428,9 +428,9 @@ const PricingEngine = (() => {
     if (!isNaN(width) && width > 0 && !WIDTH_ALLOWED.includes(width)) {
       errors.push(`宽度 ${width}mm 不在可计算宽度（1000/1030/1219/1240/1250/1280/1500/1524/1530）`);
     }
-    // 2026-08-22 用户规则：201 材质不提供 1280mm 宽度，一律不计算（卷板/平板都拦）
-    if (width === 1280 && /^201/.test(String(material || '').toUpperCase())) {
-      errors.push('201 材质不提供 1280mm 宽度，无法计算（2026-08-22 用户规则）');
+    // 2026-08-22 用户规则：201 材质不提供 1250/1280mm 宽度，一律不计算（卷板/平板都拦）
+    if ((width === 1250 || width === 1280) && /^201/.test(String(material || '').toUpperCase())) {
+      errors.push('201 材质不提供 ' + width + 'mm 宽度，无法计算（2026-08-22 用户规则）');
     }
 
     const density = getDensity(material);

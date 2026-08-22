@@ -549,7 +549,7 @@ test('parseThicknessRange: 范围与单值', () => {
   eq(PricingEngine.parseThicknessRange('abc'), null);
 });
 test('calculate: 厚度范围 0.55-0.60 正常计算且 detail 保留范围', () => {
-  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'8K', thickness:'0.55-0.60', width:'1250', length:'C', film1:'', film2:'', basePrice:8000});
+  const r = PricingEngine.calculate({origin:'宏旺', material:'201J2', surface:'8K', thickness:'0.55-0.60', width:'1240', length:'C', film1:'', film2:'', basePrice:8000});
   eq(r.success, true, '范围应正常计算（取下限 0.55）');
   eq(r.detail.thickness, '0.55-0.60', 'detail 保留范围字符串');
   eq(r.detail.surfaceFeePerTon > 0, true, '8K 表面费已算');
@@ -939,7 +939,11 @@ test('平板加价: 长度区间外报错 1240*2800', () => sheetMarkupCase('l28
 test('平板加价: 长度区间外报错 1240*1800', () => sheetMarkupCase('l1800', '201J2', 1240, 1800, null, false));
 test('平板加价: 长度区间外报错 1219*4500', () => sheetMarkupCase('l4500', '316L', 1219, 4500, null, false, '张浦'));
 test('平板加价: 1000齐边 2001-4000 = 650（新细分，原旧价700）', () => sheetMarkupCase('w1000', '201J2', 1000, 2440, 650, true));
-test('平板加价: 非1219/1240宽度沿用旧价 1250*2440=500(齐边)', () => sheetMarkupCase('w1250', '201J2', 1250, 2440, 500, true));
+test('平板加价: 201 1250 不计算（2026-08-22 用户规则，201 无 1250mm 宽度）', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'1.00', width:'1250', length:'2440', film1:'', film2:'', basePrice: 7800, packing: '木架'});
+  eq(r.success, false, '201 1250 平板应报错');
+  eq(r.errors.join(',').includes('1250'), true, '错误含 1250 提示');
+});
 test('平板加价: 316L 1250 2100-2500 = 900（新细分，原旧价500）', () => sheetMarkupCase('w1250_316', '316L', 1250, 2440, 900, true, '张浦'));
 test('平板加价: 卷板不受影响 1240*C = 200', () => sheetMarkupCase('coil1240', '201J2', 1240, 'C', 200, true));
 
@@ -983,7 +987,12 @@ test('平板加价: 304 1250 3000-4000 = 850（1250齐边）', () => sheetMarkup
 test('平板加价: 316L 1280 2100-2500 = 700（1280毛边）', () => sheetMarkupCase('316l1280s', '316L', 1280, 2440, 700, true, '张浦'));
 test('平板加价: 316L 1280 3000-4000 = 750（1280毛边）', () => sheetMarkupCase('316l1280l', '316L', 1280, 3500, 750, true, '张浦'));
 test('平板加价: 316L 1250 3000-4000 = 950（1250齐边）', () => sheetMarkupCase('316l1250l', '316L', 1250, 3500, 950, true, '张浦'));
-test('平板加价: 201 1250 仍走旧价 500（201 无 1250/1280 细分）', () => sheetMarkupCase('w1250_201', '201J2', 1250, 2440, 500, true));
+test('平板加价: 201 1250 卷板也报错 + 304 1250 照常（对照）', () => {
+  const r1 = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'1.00', width:'1250', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r1.success, false, '201 1250 卷板应报错');
+  const r2 = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1250', length:'2440', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r2.success, true, '304 1250 仍可算: ' + JSON.stringify(r2.errors)); eq(r2.detail.markup, 800);
+});
 test('平板加价: 1280 长度边界 2500=s / 3000=l（304）', () => {
   const r1 = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2500', film1:'', film2:'', basePrice: 13000, packing: '木架'});
   eq(r1.success, true, '2500 应成功: ' + JSON.stringify(r1.errors)); eq(r1.detail.markup, 600);
@@ -1070,9 +1079,9 @@ test('包装: 316L 木箱 1240*2440 = 550（500+50）', () => {
   const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1240', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
   eq(r.success, true); eq(r.detail.markup, 550);
 });
-test('包装: 非1219/1240平板木箱 = 旧价+50（1250齐边 500+50=550）', () => {
-  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1250', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
-  eq(r.success, true); eq(r.detail.markup, 550);
+test('包装: 非1219/1240平板木箱 = 旧价+50（1250 现为 201 禁用宽度，改 1500 验证 500+50=550）', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'1.00', width:'1500', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
+  eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 550);
 });
 test('包装: 卷板未填包装正常计算（1240*C）', () => {
   const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1240', length:'C', film1:'', film2:'', basePrice: 7800});
