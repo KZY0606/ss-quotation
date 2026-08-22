@@ -1160,10 +1160,25 @@ const App = (() => {
     h.push('<tr><td>哑光抗指纹 (AFP Matte)</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
     h.push('<tr><td colspan="2" style="padding:4px"></td></tr>');
     h.push('<tr><th>销售加价</th><th class="ref-num">元/吨</th></tr>');
-    Object.entries(SALES_MARKUP).forEach(([key, val]) => {
-      const label = key === 'rough_coil' ? '毛边卷板' : key === 'trim_coil' ? '齐边卷板' : key === 'rough_sheet' ? '毛边平板' : key === 'trim_sheet' ? '齐边平板' : key;
-      h.push(`<tr><td>${label}</td><td class="ref-num">+${val}</td></tr>`);
-    });
+    h.push('<tr><td>毛边卷板</td><td class="ref-num">+' + SALES_MARKUP.rough_coil + '</td></tr>');
+    h.push('<tr><td>齐边卷板</td><td class="ref-num">+' + SALES_MARKUP.trim_coil + '</td></tr>');
+    // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）
+    const sheetRows = [
+      ['201/304/410/430', '1240毛边', '2100-2500', 'std_1240_s'],
+      ['201/304/410/430', '1240毛边', '3000-4000', 'std_1240_l'],
+      ['201/304/410/430', '1219齐边', '2100-2500', 'std_1219_s'],
+      ['201/304/410/430', '1219齐边', '3000-4000', 'std_1219_l'],
+      ['316L', '1240毛边', '2100-2500', '316l_1240_s'],
+      ['316L', '1240毛边', '3000-4000', '316l_1240_l'],
+      ['316L', '1219齐边', '2100-2500', '316l_1219_s'],
+      ['316L', '1219齐边', '3000-4000', '316l_1219_l']
+    ];
+    for (const [m, w, l, key] of sheetRows) {
+      h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+    }
+    h.push('<tr><td>其他宽度平板 毛边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.rough_sheet + '</td></tr>');
+    h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
+    h.push('<tr><td colspan="2" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + ' 元/吨；平板长度须在 2100-2500 或 3000-4000</td></tr>');
     h.push('</table></div>');
 
     el.innerHTML = h.join('');
@@ -1646,6 +1661,17 @@ const App = (() => {
     const spec = `${fmtThk(d.thickness)} × ${d.width} × ${d.length}`;
     const mat = d.material + (d.isYanYan ? ' 压延料' : '');
     const bt = (d.edgeType === 'rough' ? '毛边' : '齐边') + (d.boardType === 'coil' ? '卷板' : '平板');
+    // 销售加价标签（2026-08-22 用户规则：平板标注 材质/宽度/长度区间/包装，方便区分检查）
+    let markupLabel = bt;
+    if (d.boardType === 'sheet' && d.packing) {
+      const w = d.width;
+      const L = parseFloat(d.length);
+      const band = SHEET_LENGTH_BANDS.find(b => L >= b.min && L <= b.max);
+      const bandTxt = band ? (band.min + '-' + band.max) : String(d.length);
+      markupLabel = `${d.material} ${w}${d.edgeType === 'rough' ? '毛边' : '齐边'} 长${bandTxt}（${d.packing}）`;
+    } else if (d.boardType === 'sheet') {
+      markupLabel = bt + '（未填包装）';
+    }
     const hd = `规格：${spec}　｜　产地：${item.origin||''}　｜　材质：${mat}　｜　表面：${d.surface}　｜　类型：${bt}`;
 
     let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">含税成本计算过程</div>`;
@@ -1670,7 +1696,7 @@ const App = (() => {
     html += step(`不含税成本 (${fmtI(d.costRaw)} × 0.92)`, d.costNoTaxRaw, '元/吨', true);
     html += total('四舍五入 (十位)', d.costNoTax, 'notax');
     html += '<div style="height:8px;"></div>';
-    html += step(`销售加价 (${bt})`, d.markup, '元/吨', d.markup > 0);
+    html += step(`销售加价 (${markupLabel})`, d.markup, '元/吨', d.markup > 0);
     html += total('含税售价', d.saleTax, 'sale');
     html += total('不含税售价', d.saleNoTax, 'sale');
     html += '</div><div class="calc-section"><div class="calc-section-title">贸易术语（含税售价；EXW 人民币+美元，FOB/CIF 仅美元）</div>';
