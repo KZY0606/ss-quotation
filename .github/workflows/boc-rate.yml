@@ -1,10 +1,10 @@
 name: BOC USD Rate
 
-# 工作日每 2 小时抓取中国银行美元现汇买入价（UTC 1-14 时 = 上海 9-22 时）
-# 写入 rate.json 后推回仓库，GitHub Pages 自动发布；前端读取展示
+# 每天每 2 小时抓取中国银行美元现汇买入价（2026-08-22 改为含周末，原周一至周五周末不更新）
+# UTC 0-22 偶数时 = 上海 8-次日6 时，覆盖中行牌价全天更新时段
 on:
   schedule:
-    - cron: '0 1-14/2 * * 1-5'
+    - cron: '0 */2 * * *'
   workflow_dispatch:
 
 permissions:
