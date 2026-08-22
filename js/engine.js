@@ -418,14 +418,16 @@ const PricingEngine = (() => {
 
     const boardType = getBoardType(length);
 
-    // 平板长度区间校验（2026-08-22 用户规则：1219/1240 平板长度必须在 2100-2500 或 3000-4000，否则报错）
-    if (boardType === 'sheet' && (width === 1219 || width === 1240)) {
+    // 平板长度区间校验（2026-08-22 用户规则：1219/1240 长度须在 2100-2500 或 3000-4000；1030/1000 须在 1001-2000 或 2001-4000，否则报错）
+    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000)) {
       const mNorm = String(material || '').toUpperCase();
       const inGroup = /^(201|304|410|430)/.test(mNorm) || /^316L/.test(mNorm);
       if (inGroup) {
         const L = parseFloat(length);
-        if (!(L >= 0) || !SHEET_LENGTH_BANDS.some(b => L >= b.min && L <= b.max)) {
-          errors.push(`平板长度 ${length}mm 不在可计算长度区间（2100-2500 或 3000-4000，2026-08-22 用户规则）`);
+        const bands = (width === 1030 || width === 1000) ? SHEET_LENGTH_BANDS_NARROW : SHEET_LENGTH_BANDS;
+        if (!(L >= 0) || !bands.some(b => L >= b.min && L <= b.max)) {
+          const rangeTxt = (width === 1030 || width === 1000) ? '1001-2000 或 2001-4000' : '2100-2500 或 3000-4000';
+          errors.push(`平板长度 ${length}mm 不在可计算长度区间（${rangeTxt}，2026-08-22 用户规则）`);
         }
       }
     }
@@ -505,23 +507,27 @@ const PricingEngine = (() => {
     const costNoTax = round10(taxExcluded);
     const markupKey = `${edgeType}_${boardType}`;
     let markup = SALES_MARKUP[markupKey];
-    // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）：仅 1219/1240 宽度平板按材质×宽度×长度区间取价（长度已在前面校验）
-    if (boardType === 'sheet' && (width === 1219 || width === 1240)) {
+    // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）：
+    // 1219/1240 按 材质组×宽度×长度区间（2100-2500/3000-4000）；1030/1000 按 材质组×宽度×长度区间（1001-2000/2001-4000）
+    let usedSheetDetail = false;
+    if (boardType === 'sheet' && (width === 1219 || width === 1240 || width === 1030 || width === 1000)) {
       const mNorm = String(material || '').toUpperCase();
       const group = /^(201|304|410|430)/.test(mNorm) ? 'std' : (/^316L/.test(mNorm) ? '316l' : null);
       const L = parseFloat(length);
-      const band = SHEET_LENGTH_BANDS.find(b => L >= b.min && L <= b.max);
-      if (group && band) {
-        markup = SHEET_MARKUP_DETAIL[`${group}_${width}_${band.key}`];
+      const bands = (width === 1030 || width === 1000) ? SHEET_LENGTH_BANDS_NARROW : SHEET_LENGTH_BANDS;
+      const band = bands.find(b => L >= b.min && L <= b.max);
+      if (group && band && SHEET_MARKUP_DETAIL[group + '_' + width + '_' + band.key] != null) {
+        markup = SHEET_MARKUP_DETAIL[group + '_' + width + '_' + band.key];
+        usedSheetDetail = true;
       }
-      // 非 std/316l 材质组或非 1219/1240 宽度：沿用旧加价（rough_sheet=300 / trim_sheet=500）
+      // 非 std/316l 材质组或区间外：沿用旧加价（rough_sheet=300 / trim_sheet=500）
     }
     // 出口木箱：在出口木架基准上加 50 元/吨（2026-08-22 用户规则，卷板不受影响）
     if (packing === '木箱') {
       markup += PACKING_WOODEN_BOX_SURCHARGE;
     }
-    // 1000mm宽度特殊加价：所有材质宽度为1000mm时的切边卷/板额外+200元/吨
-    if (width === 1000) {
+    // 1000mm 宽度特殊加价：仅对未命中 1000 细分表的材质生效（命中细分的已含明确价格，2026-08-22）
+    if (width === 1000 && !usedSheetDetail) {
       markup += 200;
     }
     const saleTax = round10(costTax + markup);
@@ -839,7 +845,7 @@ const PricingEngine = (() => {
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
-    SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
+    SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
     THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500
   };

@@ -29,7 +29,7 @@ test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
 
 test('双面抛光 0.50*1000*2000', () => {
   const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800, packing: '木架' });
-  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9300);
+  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9200); // 1000齐边 1001-2000 新细分 std_1000_s=600（2026-08-22）
 });
 
 test('拉丝黑钛金 0.60*1219*C', () => {
@@ -938,10 +938,38 @@ test('平板加价: 316L 1219 3000-4000 = 750', () => sheetMarkupCase('316l1219l
 test('平板加价: 长度区间外报错 1240*2800', () => sheetMarkupCase('l2800', '201J2', 1240, 2800, null, false));
 test('平板加价: 长度区间外报错 1240*1800', () => sheetMarkupCase('l1800', '201J2', 1240, 1800, null, false));
 test('平板加价: 长度区间外报错 1219*4500', () => sheetMarkupCase('l4500', '316L', 1219, 4500, null, false, '张浦'));
-test('平板加价: 非1219/1240宽度沿用旧价 1000*2440=300(毛边)', () => sheetMarkupCase('w1000', '201J2', 1000, 2440, 700, true));
+test('平板加价: 1000齐边 2001-4000 = 650（新细分，原旧价700）', () => sheetMarkupCase('w1000', '201J2', 1000, 2440, 650, true));
 test('平板加价: 非1219/1240宽度沿用旧价 1250*2440=500(齐边)', () => sheetMarkupCase('w1250', '201J2', 1250, 2440, 500, true));
 test('平板加价: 316L 非1219/1240沿用旧价 1250*2440=500', () => sheetMarkupCase('w1250_316', '316L', 1250, 2440, 500, true, '张浦'));
 test('平板加价: 卷板不受影响 1240*C = 200', () => sheetMarkupCase('coil1240', '201J2', 1240, 'C', 200, true));
+
+// ===== 1030 毛边 / 1000 齐边 平板销售加价细分（2026-08-22 用户规则，出口木架基准）=====
+test('平板加价: std 1030 1001-2000 = 500（1030毛边）', () => sheetMarkupCase('std1030s', '201J2', 1030, 2000, 500, true));
+test('平板加价: std 1030 2001-4000 = 550（1030毛边）', () => sheetMarkupCase('std1030l', '201J2', 1030, 2100, 550, true));
+test('平板加价: std 1000 1001-2000 = 600（1000齐边）', () => sheetMarkupCase('std1000s', '201J2', 1000, 1500, 600, true));
+test('平板加价: std 1000 2001-4000 = 650（1000齐边）', () => sheetMarkupCase('std1000l', '201J2', 1000, 3500, 650, true));
+test('平板加价: 316L 1030 1001-2000 = 700（1030毛边）', () => sheetMarkupCase('316l1030s', '316L', 1030, 1800, 700, true, '张浦'));
+test('平板加价: 316L 1030 2001-4000 = 750（1030毛边）', () => sheetMarkupCase('316l1030l', '316L', 1030, 3000, 750, true, '张浦'));
+test('平板加价: 316L 1000 1001-2000 = 900（1000齐边）', () => sheetMarkupCase('316l1000s', '316L', 1000, 1500, 900, true, '张浦'));
+test('平板加价: 316L 1000 2001-4000 = 950（1000齐边）', () => sheetMarkupCase('316l1000l', '316L', 1000, 2500, 950, true, '张浦'));
+test('平板加价: 1030 长度边界 2000=s / 2001=l', () => {
+  const r1 = PricingEngine.calculate({origin:'', material:'201J2', surface:'2B', thickness:'0.50', width:'1030', length:'2000', film1:'', film2:'', basePrice: 7800, packing: '木架'});
+  eq(r1.success, true, '2000 应成功: ' + JSON.stringify(r1.errors)); eq(r1.detail.markup, 500);
+  const r2 = PricingEngine.calculate({origin:'', material:'201J2', surface:'2B', thickness:'0.50', width:'1030', length:'2001', film1:'', film2:'', basePrice: 7800, packing: '木架'});
+  eq(r2.success, true); eq(r2.detail.markup, 550);
+});
+test('平板加价: 1000 长度边界 2000=s / 2001=l', () => {
+  const r1 = PricingEngine.calculate({origin:'', material:'201J2', surface:'2B', thickness:'0.50', width:'1000', length:'2000', film1:'', film2:'', basePrice: 7800, packing: '木架'});
+  eq(r1.success, true, '2000 应成功: ' + JSON.stringify(r1.errors)); eq(r1.detail.markup, 600);
+  const r2 = PricingEngine.calculate({origin:'', material:'201J2', surface:'2B', thickness:'0.50', width:'1000', length:'2001', film1:'', film2:'', basePrice: 7800, packing: '木架'});
+  eq(r2.success, true); eq(r2.detail.markup, 650);
+});
+test('平板加价: 1030 长度区间外报错 1030*1000', () => sheetMarkupCase('1030l1000', '201J2', 1030, 1000, null, false));
+test('平板加价: 1000 长度区间外报错 1000*4500', () => sheetMarkupCase('1000l4500', '201J2', 1000, 4500, null, false));
+test('平板加价: 1030 木箱 = 基准+50（1030*1500 std 木箱 = 550）', () => {
+  const r = PricingEngine.calculate({origin:'', material:'201J2', surface:'2B', thickness:'0.50', width:'1030', length:'1500', film1:'', film2:'', basePrice: 7800, packing: '木箱'});
+  eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 550);
+});
 
 
 // ===== 包装方式（2026-08-22 用户规则：平板必填 木架/木箱，卷板不校验，木箱=木架+50） =====
