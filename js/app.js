@@ -830,7 +830,7 @@ const App = (() => {
       { display: '双面抛光', key: '双面抛光' },
       { display: '6K', key: '6K' },
       { display: '双面6K', key: '双面6K' },
-      { display: '8K（卷磨）', key: '8K' },
+      { display: '普磨8K（卷磨）', key: '8K' },
       { display: '单张普磨8K', key: '单张普磨8K' },
       { display: '单张高普8K', key: '单张高普8K' },
       { display: '单张普精8K', key: '单张普精8K' },
@@ -1136,7 +1136,7 @@ const App = (() => {
         if (!cfg) return;
         const gs = single8kGroups(name);
         if (gs) gs.forEach(g => renderSurfaceRows(g.label, g.tiers));
-        else renderSurfaceRows(name, cfg);
+        else renderSurfaceRows(name === '8K' ? '普磨8K（卷磨）' : name, cfg);
       }
     });
     coloredDisplay.forEach(item => {
