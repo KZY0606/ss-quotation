@@ -809,9 +809,11 @@ const App = (() => {
     if (!display || display.indexOf('单张') !== 0) return null;
     const cfg = SURFACE_FEES[display];
     if (!Array.isArray(cfg)) return null;
-    const narrow = cfg.filter(t => (t.wMax || 9999) <= 1280);
+    const narrow = cfg.filter(t => (t.wMin || 0) >= 1219 && (t.wMax || 9999) <= 1250);
+    const w1000 = cfg.filter(t => (t.wMin || 0) === 1000 && (t.wMax || 0) === 1000);
     const wide = cfg.filter(t => (t.wMin || 0) >= 1500);
     const groups = [];
+    if (w1000.length) groups.push({ label: display + '（1000）', tiers: w1000 });
     if (narrow.length) groups.push({ label: display + '（1219/1240/1250）', tiers: narrow });
     if (wide.length) groups.push({ label: display + '（1500/1524/1530）', tiers: wide });
     return groups.length ? groups : null;
