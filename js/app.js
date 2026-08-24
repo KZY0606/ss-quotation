@@ -1545,8 +1545,7 @@ const App = (() => {
     const i = idx - 1;
     if (!dataItems[i]) return;
     dataItems[i].packingFee = parseFloat(val) > 0 ? parseFloat(val) : 0;
-    results = [];
-    render();
+    if (results && results.length > 0) { runCalc(); } else { render(); }
   }
 
   function toggleAllExpand() {
@@ -1745,8 +1744,8 @@ const App = (() => {
       h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
       const isCoil = String(item.length || 'C').trim().toUpperCase() === 'C';
       const pk = item.packing || '';
-      h.push(d && d.calcMode === 'sheet'
-        ? `<td><input type="number" class="packing-fee-inp" value="${item.packingFee != null && item.packingFee > 0 ? item.packingFee : ''}" placeholder="元" min="0" step="1" oninput="App.setPackingFee(${idx}, this.value)" style="width:72px;font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);"></td>`
+      h.push(isSheetMode()
+        ? `<td><input type="number" class="packing-fee-inp" value="${item.packingFee != null && item.packingFee > 0 ? item.packingFee : ''}" placeholder="元" min="0" step="1" onchange="App.setPackingFee(${idx}, this.value)" style="width:72px;font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);"></td>`
         : `<td>${isCoil
           ? '<span style="color:var(--text-muted)">-</span>'
           : `<select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
@@ -1931,7 +1930,7 @@ const App = (() => {
     setTimeout(() => { t.style.animation = 'toastIn 0.3s ease reverse'; setTimeout(() => t.remove(), 300); }, 3500);
   }
 
-  return { init, removeRow, toggleExpand, setPacking };
+  return { init, removeRow, toggleExpand, setPacking, setPackingFee };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);
