@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.81">
+  <link rel="stylesheet" href="css/style.css?v=1.0.82">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -51,6 +51,7 @@
           <button class="config-tab active" data-config="origins">🏢 基价</button>
           <button class="config-tab" data-config="films">🔖 保护膜</button>
           <button class="config-tab" data-config="surfaces">✨ 表面加工</button>
+          <button class="config-tab" data-config="sheetSurfaces">📐 单张加工</button>
           <button class="config-tab" data-config="reference">📋 价格参考</button>
         </div>
 
@@ -95,6 +96,12 @@
         <div class="config-panel" data-config="surfaces">
           <div class="config-hint">修改单价后点击 🔒 锁定，刷新不会丢失</div>
           <div id="surfaceConfigTable" class="config-table-wrap"></div>
+        </div>
+
+        <!-- 单张加工单价配置（2026-08-24：独立板块，按宽度档分组，颜色区分） -->
+        <div class="config-panel" data-config="sheetSurfaces">
+          <div class="config-hint">单张加工单价 · 按宽度档分组（蓝=1000 / 绿=1219-1250 / 橙=1500-1530），修改单价后点击 🔒 锁定</div>
+          <div id="sheetSurfaceConfigTable" class="config-table-wrap"></div>
         </div>
 
         <!-- 价格参考总表 -->
@@ -315,10 +322,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/config.js?v=1.0.81"></script>
-  <script src="js/engine.js?v=1.0.81"></script>
-  <script src="js/parser.js?v=1.0.81"></script>
-  <script src="js/app.js?v=1.0.81"></script>
+  <script src="js/config.js?v=1.0.82"></script>
+  <script src="js/engine.js?v=1.0.82"></script>
+  <script src="js/parser.js?v=1.0.82"></script>
+  <script src="js/app.js?v=1.0.82"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

@@ -179,6 +179,7 @@ const App = (() => {
     renderOriginGrid();
     renderFilmConfig();
     renderSurfaceConfig();
+    renderSheetSurfaceConfig();
     renderPriceReference();
     // 更新版本号
     const vb = document.getElementById('versionBadge');
@@ -303,6 +304,7 @@ const App = (() => {
         // 渲染对应面板
         if (btn.dataset.config === 'films') renderFilmConfig();
         if (btn.dataset.config === 'surfaces') renderSurfaceConfig();
+        if (btn.dataset.config === 'sheetSurfaces') renderSheetSurfaceConfig();
         if (btn.dataset.config === 'reference') renderPriceReference();
       });
     });
@@ -834,11 +836,6 @@ const App = (() => {
       { display: '6K', key: '6K' },
       { display: '双面6K', key: '双面6K' },
       { display: '普磨8K（卷磨）', key: '8K' },
-      { display: '单张普磨8K', key: '单张普磨8K' },
-      { display: '单张高普8K', key: '单张高普8K' },
-      { display: '单张普精8K', key: '单张普精8K' },
-      { display: '单张精磨8K', key: '单张精磨8K' },
-      { display: '单张超精8K', key: '单张超精8K' },
       { display: '双面8K', key: '双面8K' },
       // 8K 彩色
       { display: '8K黄钛金(板)', key: '8K黄钛金' },
@@ -938,7 +935,10 @@ const App = (() => {
     html += '</tbody></table>';
     wrap.innerHTML = html;
 
-    // 绑定输入事件 (支持合并名)
+        bindSurfRowEvents(wrap, renderSurfaceConfig);
+  }
+
+  function bindSurfRowEvents(wrap, rerender) {
     wrap.querySelectorAll('.surf-price-inp').forEach(inp => {
       inp.addEventListener('input', () => {
         const names = inp.dataset.names.split(',');
@@ -947,16 +947,49 @@ const App = (() => {
         savePriceOverrides();
       });
     });
-    // 绑定锁定事件 (支持合并名)
     wrap.querySelectorAll('.cfg-lock-btn[data-type="surf"]').forEach(btn => {
       btn.addEventListener('click', () => {
         const names = btn.dataset.names.split(',');
         const locked = !priceOverrides.surfaceLocked[names[0]];
         names.forEach(n => { priceOverrides.surfaceLocked[n] = locked; });
         savePriceOverrides();
-        renderSurfaceConfig();
+        if (typeof rerender === 'function') rerender(); else renderSurfaceConfig();
       });
     });
+  }
+
+  // 2026-08-24 用户规则：单张加工单价独立板块，按宽度档分组，三组颜色区分
+  function renderSheetSurfaceConfig() {
+    const wrap = dom('sheetSurfaceConfigTable');
+    if (!wrap) return;
+    const qualities = ['单张普磨8K', '单张高普8K', '单张普精8K', '单张精磨8K', '单张超精8K'];
+    const groups = [
+      { cls: 'sg-1000', label: '宽度档 1000mm', filter: t => (t.wMin || 0) === 1000 && (t.wMax || 0) === 1000 },
+      { cls: 'sg-narrow', label: '宽度档 1219 / 1240 / 1250', filter: t => (t.wMin || 0) >= 1219 && (t.wMax || 9999) <= 1250 },
+      { cls: 'sg-wide', label: '宽度档 1500 / 1524 / 1530', filter: t => (t.wMin || 0) >= 1500 }
+    ];
+    let html = '';
+    groups.forEach(g => {
+      const rows = [];
+      qualities.forEach(q => {
+        const cfg = SURFACE_FEES[q];
+        if (!Array.isArray(cfg)) return;
+        const tiers = cfg.filter(g.filter);
+        if (!tiers.length) return;
+        const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
+        const val = priceOverrides.surfaceFees[q] ?? tiers[0].price;
+        const locked = !!priceOverrides.surfaceLocked[q];
+        rows.push(`<tr class="${g.cls}-row">
+          <td><span class="cfg-name">${q}</span></td>
+          <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${q}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
+          <td><span class="cfg-default">${tierDesc}</span></td>
+          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${q}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
+        </tr>`);
+      });
+      html += `<div class="sg-group ${g.cls}"><div class="sg-group-title">${g.label}</div><table><thead><tr><th>单张加工</th><th>覆盖价（元/平方米）</th><th>阶梯默认价</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+    });
+    wrap.innerHTML = html;
+    bindSurfRowEvents(wrap, renderSheetSurfaceConfig);
   }
 
   function renderPriceReference() {

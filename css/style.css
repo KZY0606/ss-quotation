@@ -975,3 +975,14 @@ tr.main-row:hover .delete-btn { opacity:1; }
   padding: 2px;
 }
 
+
+/* 单张加工板块：宽度档分组颜色（2026-08-24 v1.0.82） */
+.sg-group { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.sg-group-title { padding: 6px 10px; font-size: 13px; font-weight: 600; }
+.sg-group table { margin: 0; }
+.sg-1000 .sg-group-title { background: #dbeafe; color: #1d4ed8; }
+.sg-1000-row td { background: #f0f7ff; }
+.sg-narrow .sg-group-title { background: #dcfce7; color: #15803d; }
+.sg-narrow-row td { background: #f4fbf5; }
+.sg-wide .sg-group-title { background: #ffedd5; color: #c2410c; }
+.sg-wide-row td { background: #fff9f0; }
