@@ -974,7 +974,13 @@ const App = (() => {
     if (!wrap) return;
     const qualities = ['单张普磨8K', '单张高普8K', '单张普精8K', '单张精磨8K', '单张超精8K'];
     // 2026-08-24 v1.0.89 用户规则：11 个单张高普8K 彩色板归类到单张高普8K 之下，箭头展开查看/核算
-    const colors = ['单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K钛块古铜', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K中国红', '单张高普8K翡翠绿', '单张高普8K彩虹色'];
+    // 2026-08-24 v1.0.90：彩色按品质分组（高普/普精/精磨/超精 × 11 色）
+    const colorGroups = {
+      '单张高普8K': ['单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K钛块古铜', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K中国红', '单张高普8K翡翠绿', '单张高普8K彩虹色'],
+      '单张普精8K': ['单张普精8K黄钛金', '单张普精8K玫瑰金', '单张普精8K香槟金', '单张普精8K黑钛金', '单张普精8K宝石蓝', '单张普精8K钛块古铜', '单张普精8K紫罗兰', '单张普精8K紫红', '单张普精8K中国红', '单张普精8K翡翠绿', '单张普精8K彩虹色'],
+      '单张精磨8K': ['单张精磨8K黄钛金', '单张精磨8K玫瑰金', '单张精磨8K香槟金', '单张精磨8K黑钛金', '单张精磨8K宝石蓝', '单张精磨8K钛块古铜', '单张精磨8K紫罗兰', '单张精磨8K紫红', '单张精磨8K中国红', '单张精磨8K翡翠绿', '单张精磨8K彩虹色'],
+      '单张超精8K': ['单张超精8K黄钛金', '单张超精8K玫瑰金', '单张超精8K香槟金', '单张超精8K黑钛金', '单张超精8K宝石蓝', '单张超精8K钛块古铜', '单张超精8K紫罗兰', '单张超精8K紫红', '单张超精8K中国红', '单张超精8K翡翠绿', '单张超精8K彩虹色'],
+    };
     const groups = [
       { cls: 'sg-1000', label: '宽度档 1000mm', filter: t => (t.wMin || 0) === 1000 && (t.wMax || 0) === 1000 },
       { cls: 'sg-narrow', label: '宽度档 1219 / 1240 / 1250', filter: t => (t.wMin || 0) >= 1219 && (t.wMax || 9999) <= 1250 },
@@ -991,11 +997,11 @@ const App = (() => {
         const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
         const val = priceOverrides.surfaceFees[q] ?? tiers[0].price;
         const locked = !!priceOverrides.surfaceLocked[q];
-        const isGaoPu = q === '单张高普8K';
+        const colorKeys = colorGroups[q];
         let colorRows = '';
-        if (isGaoPu) {
+        if (colorKeys) {
           const colorRowsHtml = [];
-          colors.forEach(cn => {
+          colorKeys.forEach(cn => {
             const cc = SURFACE_FEES[cn];
             if (!Array.isArray(cc)) return;
             const ct = cc.filter(g.filter);
@@ -1004,7 +1010,7 @@ const App = (() => {
             const cVal = priceOverrides.surfaceFees[cn] ?? ct[0].price;
             const cLocked = !!priceOverrides.surfaceLocked[cn];
             colorRowsHtml.push(`<tr class="sg-color-row sg-color-${g.cls}" style="display:none">
-              <td><span class="cfg-name sg-color-name">${cn.replace('单张高普8K', '')}</span></td>
+              <td><span class="cfg-name sg-color-name">${cn.split('8K').pop()}</span></td>
               <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${cn}" value="${cVal}" step="0.5" ${cLocked ? 'readonly' : ''}></td>
               <td><span class="cfg-default">${cDesc}</span></td>
               <td><button class="cfg-lock-btn ${cLocked ? 'locked' : ''}" data-names="${cn}" data-type="surf">${cLocked ? '🔒' : '🔓'}</button></td>
@@ -1180,7 +1186,7 @@ const App = (() => {
       { display: '砂面/拉丝(NO.4/HL)古铜亮光无指纹(卷)', key: '拉丝古铜亮光无指纹(卷)' },
       { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
     ];
-    const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '单张普磨8K', '单张高普8K', '单张普精8K', '单张精磨8K', '单张超精8K', '单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K翡翠绿', '单张高普8K彩虹色', '单张高普8K钛块古铜', '单张高普8K中国红', '双面8K'];
+    const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '单张普磨8K', '单张高普8K', '单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K钛块古铜', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K中国红', '单张高普8K翡翠绿', '单张高普8K彩虹色', '单张普精8K', '单张普精8K黄钛金', '单张普精8K玫瑰金', '单张普精8K香槟金', '单张普精8K黑钛金', '单张普精8K宝石蓝', '单张普精8K钛块古铜', '单张普精8K紫罗兰', '单张普精8K紫红', '单张普精8K中国红', '单张普精8K翡翠绿', '单张普精8K彩虹色', '单张精磨8K', '单张精磨8K黄钛金', '单张精磨8K玫瑰金', '单张精磨8K香槟金', '单张精磨8K黑钛金', '单张精磨8K宝石蓝', '单张精磨8K钛块古铜', '单张精磨8K紫罗兰', '单张精磨8K紫红', '单张精磨8K中国红', '单张精磨8K翡翠绿', '单张精磨8K彩虹色', '单张超精8K', '单张超精8K黄钛金', '单张超精8K玫瑰金', '单张超精8K香槟金', '单张超精8K黑钛金', '单张超精8K宝石蓝', '单张超精8K钛块古铜', '单张超精8K紫罗兰', '单张超精8K紫红', '单张超精8K中国红', '单张超精8K翡翠绿', '单张超精8K彩虹色', '双面8K'];
 
     function renderSurfaceRows(displayName, cfg) {
       if (Array.isArray(cfg)) {
