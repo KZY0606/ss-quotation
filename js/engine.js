@@ -62,6 +62,32 @@ const PricingEngine = (() => {
     return (l === 'C' || l === 'COIL') ? 'coil' : 'sheet';
   }
 
+  function round4(v) { return Math.round(v * 10000) / 10000; }
+  function round6(v) { return Math.round(v * 1000000) / 1000000; }
+
+  // 单张计算逻辑边部费用（2026-08-24 用户规则）：元/吨
+  // 201/304/400系：毛边+100、切边+200、1000mm切边+400；316L：毛边+300、切边+500
+  function surfSqmSafe(surfaceRaw) {
+    if (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) return surfaceRaw.sqmPrice;
+    if (typeof surfaceRaw === 'number') return surfaceRaw;
+    return 0;
+  }
+
+  function getEdgeFee(material, edgeType, width) {
+    const m = String(material || '').trim().toUpperCase();
+    let group = null;
+    if (/^316L/.test(m)) group = EDGE_FEES['316l'];
+    else if (/^201/.test(m) || /^304/.test(m) || /^(410|420|430|441|444)/.test(m)) group = EDGE_FEES.std;
+    if (!group) return null;
+    if (edgeType === 'rough') return group.rough;
+    if (edgeType === 'trim') {
+      const w = parseFloat(width);
+      if (w === 1000 && group.trim1000 != null) return group.trim1000;
+      return group.trim;
+    }
+    return null;
+  }
+
   // 平板销售加价细分 key（2026-08-22 用户规则，出口木架基准）：命中返回 SHEET_MARKUP_DETAIL 的 key，否则 null
   // 1219/1240: std(201/304/410/430)/316l × 2100-2500/3000-4000
   // 1250/1280: 304/410430(410/430系)/316l × 2100-2500/3000-4000（304 与 410/430 分开定价）
@@ -546,8 +572,58 @@ const PricingEngine = (() => {
     const film2PerTon = film2Fee ? round2(film2Fee * sqmPerTon) : 0;
     const afpPerTon = round2(afpSqmFee * sqmPerTon);
 
+    const calcMode = item.calcMode === 'sheet' ? 'sheet' : 'weight';
+
+    // ---- 单张计算逻辑（2026-08-24 用户规则）：按张卖，输出 元/张 ----
+    // 公式：(基价+厚度加价+边部费用)/1000 × 体积m³ × 密度g/cm³ × 1000 + 面积×单张加工费 + 面积×膜价
+    let sheetResult = null;
+    if (calcMode === 'sheet') {
+      if (boardType !== 'sheet') errors.push('单张计算逻辑仅适用于平板（按张数销售的板材）');
+      if (!SHEET_MODE_SURFACES.includes(baseSurface)) errors.push('单张计算逻辑目前仅支持 2B 与五种单张8K（当前表面：' + baseSurface + '）');
+      if (typeof surfaceRaw === 'number' && surfaceRaw > 0) errors.push('单张计算逻辑需要按面积计价的表面加工费（当前表面按吨计价）');
+      const edgeFee = getEdgeFee(material, edgeType, width);
+      if (edgeFee === null) errors.push('材质/边部类型无匹配边部费用（单张计算逻辑）');
+      if (errors.length === 0) {
+        const L = parseFloat(length);
+        const sheetArea = round4(width * L / 1e6);                 // ㎡
+        const sheetVolume = round6(width * L * thickness / 1e9);   // m³
+        const sheetWeightKg = round3(sheetVolume * density * 1000); // kg
+        const sheetMaterialCostRaw = (basePrice + thickSurcharge + edgeFee) / 1000 * sheetVolume * density * 1000;
+        const surfSqm = (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : 0;
+        const sheetSurfaceCostRaw = sheetArea * surfSqm;
+        const filmSqm1 = film1Fee || 0;
+        const filmSqm2 = film2Fee || 0;
+        const sheetFilmCostRaw = sheetArea * (filmSqm1 + filmSqm2);
+        // 先求和再统一四舍五入（+epsilon 抵消浮点误差，2026-08-24：用户例 77.795 → 77.8）
+        const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + 1e-9);
+        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice };
+      }
+    }
+
     if (errors.length > 0) {
       return { success: false, errors };
+    }
+
+    if (calcMode === 'sheet') {
+      return {
+        success: true,
+        calcMode: 'sheet',
+        detail: {
+          origin: item.origin || '', material, surface: item.surface || '', normSurface: baseSurface, thickness: thicknessRaw || String(thickness), width, length, film1, film2, basePrice,
+          isYanYan, density, sqmPerTon: round2(sqmPerTon),
+          thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
+          surfaceFeeSqm: surfSqmSafe(surfaceRaw),
+          surfaceFeePerTon: 0, linenFeePerTon: 0, afpFeeSqm: 0, afpPerTon: 0,
+          film1FeeSqm: film1Fee || 0, film1PerTon: 0, film2FeeSqm: film2Fee || 0, film2PerTon: 0,
+          costRaw: null, costNoTaxRaw: null, materialNoTaxRaw: null, costTax: null, costNoTax: null,
+          edgeType, boardType, markup: 0, widthSurcharge, packing, saleTax: null, saleNoTax: null,
+          calcMode: 'sheet',
+          edgeFee: sheetResult.edgeFee,
+          sheetArea: sheetResult.sheetArea, sheetVolume: sheetResult.sheetVolume, sheetWeightKg: sheetResult.sheetWeightKg,
+          sheetMaterialCost: sheetResult.sheetMaterialCost, sheetSurfaceCost: sheetResult.sheetSurfaceCost,
+          sheetFilmCost: sheetResult.sheetFilmCost, sheetPrice: sheetResult.sheetPrice
+        }
+      };
     }
 
     const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon);
@@ -887,13 +963,14 @@ const PricingEngine = (() => {
     calculate, calculateBatch, parseSpec, parseFreeText,
     normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge, addExtras, calcTotal,
     parseThicknessRange,
-    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey,
+    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, SHEET_LENGTH_BANDS_WIDE, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
-    THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500
+    THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500,
+    EDGE_FEES, SHEET_MODE_SURFACES
   };
 })();

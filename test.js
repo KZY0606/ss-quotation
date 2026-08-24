@@ -1290,5 +1290,54 @@ test('单张普磨8K 1030mm: 仍报错（未给 1030 价）', () => {
   eq(r.success, false, '1030 应报错 实际 success=' + r.success);
 });
 
+// ===== 单张计算逻辑（v1.0.76：2026-08-24 用户规则，按张卖，输出 元/张）=====
+// 公式：(基价+厚度加价+边部费用)/1000 × 体积m³ × 密度 × 1000 + 面积×单张加工费 + 面积×膜价
+// 边部费用：201/304/400系 毛边+100 切边+200(1000mm切边+400)；316L 毛边+300 切边+500
+const sheetCalc = (o) => PricingEngine.calculate(Object.assign({ film1: '', film2: '', packing: '木架', calcMode: 'sheet' }, o));
+
+test('单张逻辑 用户例: 宏旺201J2 单张普磨8K 0.5*1000*2000 基价7800 5C膜 → 77.8元/张', () => {
+  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, film1: '5C-FILM' });
+  eq(r.success && r.detail.sheetPrice === 77.8, true, '期望77.8 实际=' + (r.success ? r.detail.sheetPrice : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.edgeFee === 400, true, '边费400');
+  eq(r.success && r.detail.sheetMaterialCost === 68.3, true, '材料68.3 实际=' + (r.success ? r.detail.sheetMaterialCost : ''));
+  eq(r.success && r.detail.sheetSurfaceCost === 7.5, true, '加工7.5');
+  eq(r.success && r.detail.sheetFilmCost === 2, true, '膜2');
+  eq(r.success && r.detail.sheetWeightKg === 7.85, true, '重量7.85kg');
+});
+
+test('单张逻辑 2B: 无加工费 → 68.3元/张', () => {
+  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800 });
+  eq(r.success && r.detail.sheetPrice === 68.3, true, '期望68.3 实际=' + (r.success ? r.detail.sheetPrice : JSON.stringify(r.errors)));
+});
+
+test('单张逻辑 边部费用: 201毛边+100(1240) / 316L切边+500(1219) / 316L毛边+300(1530)', () => {
+  let r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1240', length: '2440', basePrice: 7800 });
+  eq(r.success && r.detail.edgeFee === 100, true, '201 1240毛边应100 实际=' + (r.success ? r.detail.edgeFee : JSON.stringify(r.errors)));
+  r = sheetCalc({ origin: '张浦', material: '316L', surface: '单张超精8K', thickness: '1.0', width: '1219', length: '2438', basePrice: 15100 });
+  eq(r.success && r.detail.edgeFee === 500, true, '316L 1219切边应500 实际=' + (r.success ? r.detail.edgeFee : JSON.stringify(r.errors)));
+  r = sheetCalc({ origin: '张浦', material: '316L', surface: '单张超精8K', thickness: '1.0', width: '1530', length: '2440', basePrice: 15100 });
+  eq(r.success && r.detail.edgeFee === 300, true, '316L 1530毛边应300 实际=' + (r.success ? r.detail.edgeFee : JSON.stringify(r.errors)));
+});
+
+test('单张逻辑 仅限平板: 卷板报错', () => {
+  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1000', length: 'C', basePrice: 7800 });
+  eq(r.success, false, '卷板应报错');
+});
+
+test('单张逻辑 表面限制: 卷磨8K 不支持', () => {
+  const r = sheetCalc({ origin: '张浦', material: '316L', surface: '8K', thickness: '1.0', width: '1219', length: '2438', basePrice: 15100 });
+  eq(r.success, false, '8K卷磨应报错');
+});
+
+test('单张逻辑 1030mm 单张普磨8K: 无匹配加工费', () => {
+  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1030', length: '2000', basePrice: 7800 });
+  eq(r.success, false, '1030应报错');
+});
+
+test('单张逻辑 过磅模式不受影响: 316L 单张超精8K 1219 saleNoTax=17560', () => {
+  const r = PricingEngine.calculate({ origin: '张浦', material: '316L', surface: '单张超精8K', thickness: '1.0', width: '1219', length: '2438', film1: '', film2: '', basePrice: 15100, packing: '木架' });
+  eq(r.success && r.detail.saleNoTax === 17560, true, '实际=' + (r.success ? r.detail.saleNoTax : JSON.stringify(r.errors)));
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

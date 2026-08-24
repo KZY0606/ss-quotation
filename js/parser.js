@@ -295,7 +295,7 @@ const ExcelParser = (() => {
       { width: 10 }, { width: 10 }, { width: 16 }, { width: 24 }, { width: 22 },
       { width: 12 }, { width: 12 }, { width: 14 }, { width: 16 }, { width: 14 }, { width: 16 }
     ];
-    let totalCny = 0, totalUsd = 0, totalW = 0, hasWeight = false;
+    let totalCny = 0, totalUsd = 0, totalW = 0, hasWeight = false, hasSheetRows = false;
 
     for (const r of results) {
       if (!r.success) {
@@ -312,6 +312,25 @@ const ExcelParser = (() => {
       // 边：毛边 Mill Edge / 齐边 Slit Edge（只用英文）
       const edge = d.edgeType === 'rough' ? 'Mill Edge' : 'Slit Edge';
       // 术语加价（FOB/CIF = EXW + 美元加价）+ 附加费用（人民币/吨）→ 不含税最终单价
+      if (d && d.calcMode === 'sheet') {
+        hasSheetRows = true;
+        const usdV = PricingEngine.cnToUsd(d.sheetPrice, ti.rate);
+        totalCny += d.sheetPrice; totalUsd += (usdV || 0); totalW += 1; hasWeight = true;
+        ws.addRow([
+          d.origin || '',
+          (d.material || '') + (d.isYanYan ? '压延' : ''),
+          d.surface || '',
+          film,
+          spec,
+          edge,
+          '',
+          Math.round(d.sheetPrice),
+          usdV == null ? '' : Math.round(usdV * 100) / 100,
+          Math.round(d.sheetPrice),
+          usdV == null ? '' : Math.round(usdV * 100) / 100
+        ]);
+        continue;
+      }
       const s = ti.term === 'FOB' ? (ti.fobUsd || 0) : (ti.term === 'CIF' ? (ti.cifUsd || 0) : 0);
       const tp = PricingEngine.addUsdSurcharge(d.saleNoTax, s, ti.rate);
       const base = tp ? tp.cny : d.saleNoTax;
@@ -338,7 +357,7 @@ const ExcelParser = (() => {
     }
     // 合计总价：术语 EXW/FOB/CIF 只保留在这一行（总价前一格）
     if (hasWeight) {
-      ws.addRow(['', '', '', '', '合计', '', Math.round(totalW * 1000) / 1000, '', ti.term, Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
+      ws.addRow(['', '', '', '', '合计', '', hasSheetRows ? '' : Math.round(totalW * 1000) / 1000, '', hasSheetRows ? '单张' : ti.term, Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
     }
 
     // 样式：外边框+内框（加粗 medium）、数据居中、表头加粗

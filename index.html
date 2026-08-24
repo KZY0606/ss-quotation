@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.75">
+  <link rel="stylesheet" href="css/style.css?v=1.0.76">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -166,6 +166,13 @@
             <div class="extra-input-wrap"><input type="number" step="1" min="0" id="profitVal" placeholder="0" disabled><span class="term-unit">元/吨</span></div>
           </div>
         </div>
+        <!-- 计算逻辑（2026-08-24 用户规则）：过磅计价（元/吨）默认 / 单张计价（元/张，按张卖的板材） -->
+        <div class="term-bar" id="calcModeBar">
+          <span class="term-label">🧮 计算逻辑</span>
+          <label class="term-radio"><input type="radio" name="calcMode" value="weight" checked><span>过磅计价（元/吨）</span></label>
+          <label class="term-radio"><input type="radio" name="calcMode" value="sheet" id="calcModeSheet"><span>单张计价（元/张）</span></label>
+          <span style="margin-left:8px;font-size:12px;color:var(--text-muted)">单张逻辑限平板：2B 与五种单张8K</span>
+        </div>
         <div class="tab-bar">
           <button class="tab-btn active" data-tab="text"><span>📝</span> 粘贴文本</button>
           <button class="tab-btn" data-tab="manual"><span>✏️</span> 手动添加</button>
@@ -308,10 +315,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/config.js?v=1.0.75"></script>
-  <script src="js/engine.js?v=1.0.75"></script>
-  <script src="js/parser.js?v=1.0.75"></script>
-  <script src="js/app.js?v=1.0.75"></script>
+  <script src="js/config.js?v=1.0.76"></script>
+  <script src="js/engine.js?v=1.0.76"></script>
+  <script src="js/parser.js?v=1.0.76"></script>
+  <script src="js/app.js?v=1.0.76"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

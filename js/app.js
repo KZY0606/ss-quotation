@@ -203,6 +203,7 @@ const App = (() => {
     els.totalC = dom('totalCount'); els.okC = dom('successCount'); els.errC = dom('errorCount');
     els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
+    els.calcModeSheet = dom('calcModeSheet');
     els.rateBar = dom('rateBar'); els.rateLive = dom('rateLive'); els.rateManual = dom('rateManual'); els.rateReset = dom('rateReset');
     els.termBar = dom('termBar'); els.termRadios = document.querySelectorAll('input[name="tradeTerm"]');
     els.fobSurcharge = dom('fobSurcharge'); els.cifSurcharge = dom('cifSurcharge');
@@ -1420,6 +1421,8 @@ const App = (() => {
     } else { showToast('未能解析（检查各产地基价是否已设置）', 'error'); }
   }
 
+  function isSheetMode() { return !!(els.calcModeSheet && els.calcModeSheet.checked); }
+
   function runCalc() {
     if (!dataItems.length) { showToast('请先添加数据', 'error'); return; }
     // Sync 北港 J5
@@ -1441,6 +1444,7 @@ const App = (() => {
         }
       }
     });
+    dataItems.forEach(it => { it.calcMode = isSheetMode() ? 'sheet' : 'weight'; });
     results = PricingEngine.calculateBatch(dataItems);
     // 把基价预检的详细原因合并进行级错误（替换笼统的"基价无效"）
     results.forEach((r, i) => {
@@ -1621,7 +1625,7 @@ const App = (() => {
     els.okC.textContent = sr.length;
     els.errC.textContent = results.filter(r => !r.success).length;
     if (sr.length > 0) {
-      const sp = sr.map(r => finalPrice(r.detail.saleTax));
+      const sp = sr.map(r => (r.detail && r.detail.calcMode === 'sheet') ? (r.detail.sheetPrice || 0) : finalPrice(r.detail.saleTax));
       const mn = Math.min(...sp), mx = Math.max(...sp);
       if (termState.term === 'EXW') {
         els.minP.textContent = mn.toLocaleString() + '  /  ' + fmtUsd(usd(mn));
@@ -1643,6 +1647,13 @@ const App = (() => {
     if (!els.totalBar) return;
     const sr = results.filter(r => r.success);
     if (sr.length === 0) { els.totalValue.textContent = '-'; els.totalValue.classList.add('total-muted'); return; }
+    const hasSheet = sr.some(r => r.detail && r.detail.calcMode === 'sheet');
+    if (hasSheet) {
+      const sum = sr.reduce((a, r) => a + (r.detail.sheetPrice || 0), 0);
+      els.totalValue.classList.remove('total-muted');
+      els.totalValue.textContent = `¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}（单张计价合计）`;
+      return;
+    }
     const cnyArr = [], wArr = [];
     sr.forEach(r => {
       cnyArr.push(finalNoTax(r.detail.saleNoTax));
@@ -1693,6 +1704,15 @@ const App = (() => {
       h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
+        if (d && d.calcMode === 'sheet') {
+          const uSheet = usd(d.sheetPrice);
+          const sheetCell = `${d.sheetPrice.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uSheet)}</div>`;
+          h.push('<td class="price-cell price-subtle">—</td>');
+          h.push('<td class="price-cell price-subtle">—</td>');
+          h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-sheet">板</span></td>`);
+          h.push(`<td class="price-cell price-sale"><span class="term-tag">单张</span>${sheetCell}</td>`);
+          h.push('<td class="price-cell price-subtle">—</td>');
+        } else {
         const tSaleTax = finalPrice(d.saleTax), tSaleNoTax = finalPrice(d.saleNoTax);
         const uSaleTax = usd(tSaleTax), uSaleNoTax = usd(tSaleNoTax);
         const isExw = termState.term === 'EXW';
@@ -1712,6 +1732,7 @@ const App = (() => {
         h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-${d.boardType}">${d.boardType === 'coil' ? '卷' : '板'}</span></td>`);
         h.push(`<td class="price-cell price-sale"><span class="term-tag">${termState.term}</span>${taxCell}${extraRef}${exwRef}</td>`);
         h.push(`<td class="price-cell price-subtle"><span class="term-tag">${termState.term}</span>${noTaxCell}${extraRef}${exwRef}</td>`);
+        }
       } else if (isErr) { h.push(`<td colspan="6" class="error-text">⚠️ ${r.errors.join('；')}</td>`); }
       else { h.push(`<td colspan="6" style="color:var(--text-muted);font-size:12px">待计算</td>`); }
       h.push(`<td><button class="btn-icon btn-ghost delete-btn" onclick="App.removeRow(${idx})">✕</button></td></tr>`);
@@ -1729,7 +1750,27 @@ const App = (() => {
   const fmtI = (v) => v.toLocaleString();
   const fmtThk = (v) => { const s = String(v == null ? '' : v).trim(); if (!s) return ''; if (/\d\s*[-~—–]\s*\d/.test(s)) return s; const n = parseFloat(s); return isNaN(n) ? s : n.toFixed(2); };
 
+  function renderSheetBreakdown(d, item) {
+    const spec = `${fmtThk(d.thickness)} × ${d.width} × ${d.length}`;
+    const mat = d.material + (d.isYanYan ? ' 压延料' : '');
+    const bt = (d.edgeType === 'rough' ? '毛边' : '齐边') + '平板';
+    const hd = `规格：${spec}　～　产地：${item.origin||''}　～　材质：${mat}　～　表面：${d.surface}　～　类型：${bt}`;
+    const edgeTxt = `${d.edgeType === 'rough' ? '毛边' : '切边'}${d.width === 1000 ? '（1000mm 特殊+400）' : ''}`;
+    const filmSqm = (d.film1FeeSqm || 0) + (d.film2FeeSqm || 0);
+    const filmTxt = [d.film1, d.film2].filter(Boolean).join(' + ');
+    let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（2026-08-24 规则：按张计价，输出 元/张）</div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)} + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）)/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">③ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">单张价格（一张板卖多少钱）</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">单张重量（过磅参考）</span><span class="calc-step-value zero">${fmt(d.sheetWeightKg)} kg</span></div>`;
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">贸易术语与附加费用（元/吨口径）不适用于单张计价。</div>';
+    html += '</div></div>';
+    return html;
+  }
+
   function renderBreakdown(d, item) {
+    if (d && d.calcMode === 'sheet') return renderSheetBreakdown(d, item);
     const spec = `${fmtThk(d.thickness)} × ${d.width} × ${d.length}`;
     const mat = d.material + (d.isYanYan ? ' 压延料' : '');
     const bt = (d.edgeType === 'rough' ? '毛边' : '齐边') + (d.boardType === 'coil' ? '卷板' : '平板');
