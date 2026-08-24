@@ -204,6 +204,7 @@ const App = (() => {
     els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
     els.calcModeSheet = dom('calcModeSheet');
+    els.thSaleTax = dom('thSaleTax'); els.thSaleNoTax = dom('thSaleNoTax');
     els.rateBar = dom('rateBar'); els.rateLive = dom('rateLive'); els.rateManual = dom('rateManual'); els.rateReset = dom('rateReset');
     els.termBar = dom('termBar'); els.termRadios = document.querySelectorAll('input[name="tradeTerm"]');
     els.fobSurcharge = dom('fobSurcharge'); els.cifSurcharge = dom('cifSurcharge');
@@ -1422,6 +1423,11 @@ const App = (() => {
   }
 
   function isSheetMode() { return !!(els.calcModeSheet && els.calcModeSheet.checked); }
+  function updateSheetHeaders() {
+    const sheet = isSheetMode();
+    if (els.thSaleTax) els.thSaleTax.innerHTML = (sheet ? '含税成本' : '含税售价') + '<sup class="usd-sup">（$）</sup>';
+    if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = (sheet ? '不含税成本' : '不含税售价') + '<sup class="usd-sup">（$）</sup>';
+  }
 
   function runCalc() {
     if (!dataItems.length) { showToast('请先添加数据', 'error'); return; }
@@ -1445,6 +1451,7 @@ const App = (() => {
       }
     });
     dataItems.forEach(it => { it.calcMode = isSheetMode() ? 'sheet' : 'weight'; });
+    updateSheetHeaders();
     results = PricingEngine.calculateBatch(dataItems);
     // 把基价预检的详细原因合并进行级错误（替换笼统的"基价无效"）
     results.forEach((r, i) => {
@@ -1652,7 +1659,7 @@ const App = (() => {
       const sum = sr.reduce((a, r) => a + (r.detail.sheetTotal || 0), 0);
       const sumTax = sr.reduce((a, r) => a + (r.detail.sheetTotalTax || 0), 0);
       els.totalValue.classList.remove('total-muted');
-      els.totalValue.innerHTML = `<div>不含税 ¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}</div><div>含税 ¥${sumTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sumTax))}</div>`;
+      els.totalValue.innerHTML = `<div>不含税成本 ¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}</div><div>含税成本 ¥${sumTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sumTax))}</div>`;
       return;
     }
     const cnyArr = [], wArr = [];
@@ -1763,7 +1770,7 @@ const App = (() => {
     const edgeTxt = `${d.edgeType === 'rough' ? '毛边' : '切边'}${d.width === 1000 ? '（1000mm 特殊+400）' : ''}`;
     const filmSqm = (d.film1FeeSqm || 0) + (d.film2FeeSqm || 0);
     const filmTxt = [d.film1, d.film2].filter(Boolean).join(' + ');
-    let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（2026-08-24 规则：按张计价，输出 元/张）</div>`;
+    let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（成本价，按张计价）</div>`;
     html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）)/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">③ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
@@ -1772,7 +1779,7 @@ const App = (() => {
     html += `<div class="calc-step"><span class="calc-step-label">数量 × 单张价格（不含税）</span><span class="calc-step-value positive">${d.quantity || 1} 张 × ${fmt(d.sheetPrice)} = ${fmt(d.sheetTotal)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">数量 × 单张价格（含税）</span><span class="calc-step-value positive">${d.quantity || 1} 张 × ${fmt(d.sheetPriceTax)} = ${fmt(d.sheetTotalTax)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">单张重量</span><span class="calc-step-value zero">${fmt(d.sheetWeightKg)} kg</span></div>`;
-    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">贸易术语与附加费用（元/吨口径）不适用于单张计价。</div>';
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">以上为成本价（不含包装费/装柜费，数据整理中）；贸易术语与附加费用（元/吨口径）不适用于单张计价。</div>';
     html += '</div></div>';
     return html;
   }
