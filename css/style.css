@@ -986,3 +986,8 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .sg-narrow-row td { background: #f4fbf5; }
 .sg-wide .sg-group-title { background: #ffedd5; color: #c2410c; }
 .sg-wide-row td { background: #fff9f0; }
+
+/* 2026-08-24 v1.0.89 单张高普8K 彩色展开 */
+.cfg-expand { cursor: pointer; margin-right: 5px; color: var(--accent, #2f6fed); font-size: 12px; user-select: none; display: inline-block; width: 14px; }
+.sg-color-row td { background: rgba(255,255,255,0.5); padding-left: 28px !important; font-size: 12px; }
+.sg-color-name { color: var(--text-muted, #666); }

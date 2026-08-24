@@ -956,6 +956,16 @@ const App = (() => {
         if (typeof rerender === 'function') rerender(); else renderSurfaceConfig();
       });
     });
+    // 2026-08-24 v1.0.89：单张高普8K 彩色行箭头展开/收起
+    wrap.querySelectorAll('.cfg-expand').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const g = btn.dataset.group;
+        const rows = wrap.querySelectorAll('.sg-color-row.sg-color-' + g);
+        const open = btn.textContent === '▼';
+        rows.forEach(r => { r.style.display = open ? 'none' : ''; });
+        btn.textContent = open ? '▶' : '▼';
+      });
+    });
   }
 
   // 2026-08-24 用户规则：单张加工单价独立板块，按宽度档分组，三组颜色区分
@@ -963,6 +973,8 @@ const App = (() => {
     const wrap = dom('sheetSurfaceConfigTable');
     if (!wrap) return;
     const qualities = ['单张普磨8K', '单张高普8K', '单张普精8K', '单张精磨8K', '单张超精8K'];
+    // 2026-08-24 v1.0.89 用户规则：11 个单张高普8K 彩色板归类到单张高普8K 之下，箭头展开查看/核算
+    const colors = ['单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K钛块古铜', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K中国红', '单张高普8K翡翠绿', '单张高普8K彩虹色'];
     const groups = [
       { cls: 'sg-1000', label: '宽度档 1000mm', filter: t => (t.wMin || 0) === 1000 && (t.wMax || 0) === 1000 },
       { cls: 'sg-narrow', label: '宽度档 1219 / 1240 / 1250', filter: t => (t.wMin || 0) >= 1219 && (t.wMax || 9999) <= 1250 },
@@ -979,14 +991,35 @@ const App = (() => {
         const tierDesc = tiers.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
         const val = priceOverrides.surfaceFees[q] ?? tiers[0].price;
         const locked = !!priceOverrides.surfaceLocked[q];
-        rows.push(`<tr class="${g.cls}-row">
-          <td><span class="cfg-name">${q}</span></td>
+        const isGaoPu = q === '单张高普8K';
+        let colorRows = '';
+        if (isGaoPu) {
+          const colorRowsHtml = [];
+          colors.forEach(cn => {
+            const cc = SURFACE_FEES[cn];
+            if (!Array.isArray(cc)) return;
+            const ct = cc.filter(g.filter);
+            if (!ct.length) return;
+            const cDesc = ct.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
+            const cVal = priceOverrides.surfaceFees[cn] ?? ct[0].price;
+            const cLocked = !!priceOverrides.surfaceLocked[cn];
+            colorRowsHtml.push(`<tr class="sg-color-row sg-color-${g.cls}" style="display:none">
+              <td><span class="cfg-name sg-color-name">${cn.replace('单张高普8K', '')}</span></td>
+              <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${cn}" value="${cVal}" step="0.5" ${cLocked ? 'readonly' : ''}></td>
+              <td><span class="cfg-default">${cDesc}</span></td>
+              <td><button class="cfg-lock-btn ${cLocked ? 'locked' : ''}" data-names="${cn}" data-type="surf">${cLocked ? '🔒' : '🔓'}</button></td>
+            </tr>`);
+          });
+          colorRows = colorRowsHtml.join('');
+        }
+        rows.push(`<tr class="${g.cls}-row${colorRows ? ' has-color' : ''}">
+          <td>${colorRows ? `<span class="cfg-expand" data-group="${g.cls}">▶</span> ` : ''}<span class="cfg-name">${q}</span></td>
           <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${q}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
           <td><span class="cfg-default">${tierDesc}</span></td>
           <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${q}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
-        </tr>`);
+        </tr>${colorRows}`);
       });
-      html += `<div class="sg-group ${g.cls}"><div class="sg-group-title">${g.label}</div><table><thead><tr><th>单张加工</th><th>覆盖价（元/平方米）</th><th>阶梯默认价</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+      html += `<div class="sg-group ${g.cls}"><div class="sg-group-title">${g.label}</div><table><thead><tr><th>单张加工</th><th>覆盖价（元/平方米）</th><th>阶段默认价</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
     });
     wrap.innerHTML = html;
     bindSurfRowEvents(wrap, renderSheetSurfaceConfig);
