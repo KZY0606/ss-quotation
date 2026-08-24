@@ -960,7 +960,8 @@ const App = (() => {
     wrap.querySelectorAll('.cfg-expand').forEach(btn => {
       btn.addEventListener('click', () => {
         const g = btn.dataset.group;
-        const rows = wrap.querySelectorAll('.sg-color-row.sg-color-' + g);
+        const q = btn.dataset.owner;
+        const rows = wrap.querySelectorAll('.sg-color-row[data-group="' + g + '"][data-owner="' + q + '"]');
         const open = btn.textContent === '▼';
         rows.forEach(r => { r.style.display = open ? 'none' : ''; });
         btn.textContent = open ? '▶' : '▼';
@@ -1009,7 +1010,7 @@ const App = (() => {
             const cDesc = ct.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
             const cVal = priceOverrides.surfaceFees[cn] ?? ct[0].price;
             const cLocked = !!priceOverrides.surfaceLocked[cn];
-            colorRowsHtml.push(`<tr class="sg-color-row sg-color-${g.cls}" style="display:none">
+            colorRowsHtml.push(`<tr class="sg-color-row" data-owner="${q}" data-group="${g.cls}" style="display:none">
               <td><span class="cfg-name sg-color-name">${cn.split('8K').pop()}</span></td>
               <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${cn}" value="${cVal}" step="0.5" ${cLocked ? 'readonly' : ''}></td>
               <td><span class="cfg-default">${cDesc}</span></td>
@@ -1019,7 +1020,7 @@ const App = (() => {
           colorRows = colorRowsHtml.join('');
         }
         rows.push(`<tr class="${g.cls}-row${colorRows ? ' has-color' : ''}">
-          <td>${colorRows ? `<span class="cfg-expand" data-group="${g.cls}">▶</span> ` : ''}<span class="cfg-name">${q}</span></td>
+          <td>${colorRows ? `<span class="cfg-expand" data-group="${g.cls}" data-owner="${q}">▶</span> ` : ''}<span class="cfg-name">${q}</span></td>
           <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${q}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
           <td><span class="cfg-default">${tierDesc}</span></td>
           <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${q}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
