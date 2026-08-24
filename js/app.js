@@ -1625,7 +1625,7 @@ const App = (() => {
     els.okC.textContent = sr.length;
     els.errC.textContent = results.filter(r => !r.success).length;
     if (sr.length > 0) {
-      const sp = sr.map(r => (r.detail && r.detail.calcMode === 'sheet') ? (r.detail.sheetPrice || 0) : finalPrice(r.detail.saleTax));
+      const sp = sr.map(r => (r.detail && r.detail.calcMode === 'sheet') ? (r.detail.sheetTotal || 0) : finalPrice(r.detail.saleTax));
       const mn = Math.min(...sp), mx = Math.max(...sp);
       if (termState.term === 'EXW') {
         els.minP.textContent = mn.toLocaleString() + '  /  ' + fmtUsd(usd(mn));
@@ -1649,9 +1649,9 @@ const App = (() => {
     if (sr.length === 0) { els.totalValue.textContent = '-'; els.totalValue.classList.add('total-muted'); return; }
     const hasSheet = sr.some(r => r.detail && r.detail.calcMode === 'sheet');
     if (hasSheet) {
-      const sum = sr.reduce((a, r) => a + (r.detail.sheetPrice || 0), 0);
+      const sum = sr.reduce((a, r) => a + (r.detail.sheetTotal || 0), 0);
       els.totalValue.classList.remove('total-muted');
-      els.totalValue.textContent = `¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}（单张计价合计）`;
+      els.totalValue.textContent = `¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}`;
       return;
     }
     const cnyArr = [], wArr = [];
@@ -1706,12 +1706,15 @@ const App = (() => {
       if (isOk) {
         if (d && d.calcMode === 'sheet') {
           const uSheet = usd(d.sheetPrice);
+          const uTotal = usd(d.sheetTotal);
+          const qty = d.quantity || 1;
           const sheetCell = `${d.sheetPrice.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uSheet)}</div>`;
+          const totalCell = `${d.sheetTotal.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uTotal)}</div>`;
           h.push('<td class="price-cell price-subtle">—</td>');
           h.push('<td class="price-cell price-subtle">—</td>');
           h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-sheet">板</span></td>`);
           h.push(`<td class="price-cell price-sale"><span class="term-tag">单张</span>${sheetCell}</td>`);
-          h.push('<td class="price-cell price-subtle">—</td>');
+          h.push(`<td class="price-cell price-sale"><span class="term-tag">×${qty}张</span>${totalCell}</td>`);
         } else {
         const tSaleTax = finalPrice(d.saleTax), tSaleNoTax = finalPrice(d.saleNoTax);
         const uSaleTax = usd(tSaleTax), uSaleNoTax = usd(tSaleNoTax);
@@ -1759,11 +1762,12 @@ const App = (() => {
     const filmSqm = (d.film1FeeSqm || 0) + (d.film2FeeSqm || 0);
     const filmTxt = [d.film1, d.film2].filter(Boolean).join(' + ');
     let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（2026-08-24 规则：按张计价，输出 元/张）</div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)} + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）)/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）)/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">③ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">单张价格（一张板卖多少钱）</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">单张重量（过磅参考）</span><span class="calc-step-value zero">${fmt(d.sheetWeightKg)} kg</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">单张价格</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">数量 × 单张价格</span><span class="calc-step-value positive">${d.quantity || 1} 张 × ${fmt(d.sheetPrice)} = ${fmt(d.sheetTotal)} 元</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">单张重量</span><span class="calc-step-value zero">${fmt(d.sheetWeightKg)} kg</span></div>`;
     html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">贸易术语与附加费用（元/吨口径）不适用于单张计价。</div>';
     html += '</div></div>';
     return html;

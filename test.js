@@ -1297,9 +1297,9 @@ const sheetCalc = (o) => PricingEngine.calculate(Object.assign({ film1: '', film
 
 test('单张逻辑 用户例: 宏旺201J2 单张普磨8K 0.5*1000*2000 基价7800 5C膜 → 77.8元/张', () => {
   const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, film1: '5C-FILM' });
-  eq(r.success && r.detail.sheetPrice === 77.8, true, '期望77.8 实际=' + (r.success ? r.detail.sheetPrice : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.sheetPrice === 73.51, true, '期望73.51 实际=' + (r.success ? r.detail.sheetPrice : JSON.stringify(r.errors)));
   eq(r.success && r.detail.edgeFee === 400, true, '边费400');
-  eq(r.success && r.detail.sheetMaterialCost === 68.3, true, '材料68.3 实际=' + (r.success ? r.detail.sheetMaterialCost : ''));
+  eq(r.success && r.detail.sheetMaterialCost === 64.01, true, '材料64.01 实际=' + (r.success ? r.detail.sheetMaterialCost : ''));
   eq(r.success && r.detail.sheetSurfaceCost === 7.5, true, '加工7.5');
   eq(r.success && r.detail.sheetFilmCost === 2, true, '膜2');
   eq(r.success && r.detail.sheetWeightKg === 7.85, true, '重量7.85kg');
@@ -1307,7 +1307,7 @@ test('单张逻辑 用户例: 宏旺201J2 单张普磨8K 0.5*1000*2000 基价780
 
 test('单张逻辑 2B: 无加工费 → 68.3元/张', () => {
   const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800 });
-  eq(r.success && r.detail.sheetPrice === 68.3, true, '期望68.3 实际=' + (r.success ? r.detail.sheetPrice : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.sheetPrice === 64.01, true, '期望64.01 实际=' + (r.success ? r.detail.sheetPrice : JSON.stringify(r.errors)));
 });
 
 test('单张逻辑 边部费用: 201毛边+100(1240) / 316L切边+500(1219) / 316L毛边+300(1530)', () => {
@@ -1337,6 +1337,12 @@ test('单张逻辑 1030mm 单张普磨8K: 无匹配加工费', () => {
 test('单张逻辑 过磅模式不受影响: 316L 单张超精8K 1219 saleNoTax=17560', () => {
   const r = PricingEngine.calculate({ origin: '张浦', material: '316L', surface: '单张超精8K', thickness: '1.0', width: '1219', length: '2438', film1: '', film2: '', basePrice: 15100, packing: '木架' });
   eq(r.success && r.detail.saleNoTax === 17560, true, '实际=' + (r.success ? r.detail.saleNoTax : JSON.stringify(r.errors)));
+});
+
+test('单张逻辑 数量识别: qty=50 → 总价=单价×50 (73.51×50=3675.5)', () => {
+  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, film1: '5C-FILM', quantity: '50' });
+  eq(r.success && r.detail.quantity === 50, true, '数量50 实际=' + (r.success ? r.detail.quantity : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.sheetTotal === 3675.5, true, '总价3675.5 实际=' + (r.success ? r.detail.sheetTotal : JSON.stringify(r.errors)));
 });
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);

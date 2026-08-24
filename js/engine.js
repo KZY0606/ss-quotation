@@ -588,7 +588,8 @@ const PricingEngine = (() => {
         const sheetArea = round4(width * L / 1e6);                 // ㎡
         const sheetVolume = round6(width * L * thickness / 1e9);   // m³
         const sheetWeightKg = round3(sheetVolume * density * 1000); // kg
-        const sheetMaterialCostRaw = (basePrice + thickSurcharge + edgeFee) / 1000 * sheetVolume * density * 1000;
+        // v1.0.77（2026-08-24 用户规则）：单张不含税 = 基价×0.93，其余不变
+        const sheetMaterialCostRaw = (basePrice * 0.93 + thickSurcharge + edgeFee) / 1000 * sheetVolume * density * 1000;
         const surfSqm = (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : 0;
         const sheetSurfaceCostRaw = sheetArea * surfSqm;
         const filmSqm1 = film1Fee || 0;
@@ -596,7 +597,8 @@ const PricingEngine = (() => {
         const sheetFilmCostRaw = sheetArea * (filmSqm1 + filmSqm2);
         // 先求和再统一四舍五入（+epsilon 抵消浮点误差，2026-08-24：用户例 77.795 → 77.8）
         const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + 1e-9);
-        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice };
+        const qty = (item.quantity != null && parseFloat(item.quantity) > 0) ? parseFloat(item.quantity) : 1;
+        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9) };
       }
     }
 
@@ -621,7 +623,8 @@ const PricingEngine = (() => {
           edgeFee: sheetResult.edgeFee,
           sheetArea: sheetResult.sheetArea, sheetVolume: sheetResult.sheetVolume, sheetWeightKg: sheetResult.sheetWeightKg,
           sheetMaterialCost: sheetResult.sheetMaterialCost, sheetSurfaceCost: sheetResult.sheetSurfaceCost,
-          sheetFilmCost: sheetResult.sheetFilmCost, sheetPrice: sheetResult.sheetPrice
+          sheetFilmCost: sheetResult.sheetFilmCost, sheetPrice: sheetResult.sheetPrice,
+          quantity: sheetResult.quantity, sheetTotal: sheetResult.sheetTotal
         }
       };
     }
