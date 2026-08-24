@@ -205,6 +205,7 @@ const App = (() => {
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
     els.calcModeSheet = dom('calcModeSheet');
     els.thSaleTax = dom('thSaleTax'); els.thSaleNoTax = dom('thSaleNoTax');
+    els.thWeight = dom('thWeight'); els.thCostTax = dom('thCostTax'); els.thCostNoTax = dom('thCostNoTax');
     els.rateBar = dom('rateBar'); els.rateLive = dom('rateLive'); els.rateManual = dom('rateManual'); els.rateReset = dom('rateReset');
     els.termBar = dom('termBar'); els.termRadios = document.querySelectorAll('input[name="tradeTerm"]');
     els.fobSurcharge = dom('fobSurcharge'); els.cifSurcharge = dom('cifSurcharge');
@@ -1427,6 +1428,9 @@ const App = (() => {
     const sheet = isSheetMode();
     if (els.thSaleTax) els.thSaleTax.innerHTML = (sheet ? '含税成本' : '含税售价') + '<sup class="usd-sup">（$）</sup>';
     if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = (sheet ? '不含税成本' : '不含税售价') + '<sup class="usd-sup">（$）</sup>';
+    if (els.thWeight) els.thWeight.textContent = sheet ? '数量' : '重量(吨)';
+    if (els.thCostTax) els.thCostTax.style.display = sheet ? 'none' : '';
+    if (els.thCostNoTax) els.thCostNoTax.style.display = sheet ? 'none' : '';
   }
 
   function runCalc() {
@@ -1708,7 +1712,9 @@ const App = (() => {
             <option value="木箱" ${pk === '木箱' ? 'selected' : ''}>木箱</option>
           </select>`}</td>`);
       const wgt = d && d.weight != null ? d.weight : (item.weight || null);
-      h.push(`<td>${wgt != null ? wgt : '<span style="color:var(--text-muted)">-</span>'}</td>`);
+      h.push(d && d.calcMode === 'sheet'
+        ? `<td><span style="color:var(--accent);font-weight:600">${d.quantity || 1}</span></td>`
+        : `<td>${wgt != null ? wgt : '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
@@ -1719,8 +1725,6 @@ const App = (() => {
           const qty = d.quantity || 1;
           const taxCell = `${d.sheetPriceTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uTax)}</div><div class=\"exw-sub\">×${qty}张 ${d.sheetTotalTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
           const noTaxCell = `${d.sheetPrice.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uSheet)}</div><div class=\"exw-sub\">×${qty}张 ${d.sheetTotal.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
-          h.push('<td class="price-cell price-subtle">—</td>');
-          h.push('<td class="price-cell price-subtle">—</td>');
           h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-sheet">板</span></td>`);
           h.push(`<td class="price-cell price-sale"><span class="term-tag">含税</span>${taxCell}</td>`);
           h.push(`<td class="price-cell price-subtle"><span class="term-tag">单张</span>${noTaxCell}</td>`);
