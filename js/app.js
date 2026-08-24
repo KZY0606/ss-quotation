@@ -978,7 +978,8 @@ const App = (() => {
     const wrap = dom('sheetSurfaceConfigTable');
     if (!wrap) return;
     // v1.0.94 用户规则：单张砂面NO.4/单张拉丝HL 合并一行（价格永远一致，覆盖价同步），1250 单独一行区分
-    const qualities = ['单张普磨8K', '单张砂面NO.4', '单张拉丝HL', '单张高普8K', '单张普精8K', '单张精磨8K', '单张超精8K'];
+    // v1.0.95：砂面/拉丝合并行排每个宽度档第一位
+    const qualities = ['单张砂面NO.4', '单张普磨8K', '单张拉丝HL', '单张高普8K', '单张普精8K', '单张精磨8K', '单张超精8K'];
     const colorGroups = {
       '单张高普8K': ['单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K钛块古铜', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K中国红', '单张高普8K翡翠绿', '单张高普8K彩虹色'],
       '单张普精8K': ['单张普精8K黄钛金', '单张普精8K玫瑰金', '单张普精8K香槟金', '单张普精8K黑钛金', '单张普精8K宝石蓝', '单张普精8K钛块古铜', '单张普精8K紫罗兰', '单张普精8K紫红', '单张普精8K中国红', '单张普精8K翡翠绿', '单张普精8K彩虹色'],
@@ -999,13 +1000,17 @@ const App = (() => {
         if (q === '单张拉丝HL') return; // 合并进砂面行
         const cfg = SURFACE_FEES[q];
         if (!Array.isArray(cfg)) return;
-        // 砂面/拉丝：窄板组拆 1219/1240 与 1250 两行；其余一行
+        // v1.0.95：砂面/拉丝所有宽度档统一合并名；窄板组拆 1219/1240 与 1250 两行；其余一组一行
         let rowDefs;
-        if (q === '单张砂面NO.4' && g.cls === 'sg-narrow') {
-          rowDefs = [
-            { name: '单张砂面NO.4/单张拉丝HL', tierFilter: t => t.wMax <= 1240, owner: q, names: ['单张砂面NO.4', '单张拉丝HL'] },
-            { name: '单张砂面NO.4/单张拉丝HL (1250)', tierFilter: t => t.wMin >= 1250, owner: q + '_1250', names: ['单张砂面NO.4', '单张拉丝HL'] }
-          ];
+        if (q === '单张砂面NO.4') {
+          if (g.cls === 'sg-narrow') {
+            rowDefs = [
+              { name: '单张砂面NO.4/单张拉丝HL', tierFilter: t => t.wMax <= 1240, owner: q, names: ['单张砂面NO.4', '单张拉丝HL'] },
+              { name: '单张砂面NO.4/单张拉丝HL (1250)', tierFilter: t => t.wMin >= 1250, owner: q + '_1250', names: ['单张砂面NO.4', '单张拉丝HL'] }
+            ];
+          } else {
+            rowDefs = [{ name: '单张砂面NO.4/单张拉丝HL', tierFilter: g.filter, owner: q, names: ['单张砂面NO.4', '单张拉丝HL'] }];
+          }
         } else {
           rowDefs = [{ name: q, tierFilter: g.filter, owner: q, names: [q] }];
         }
