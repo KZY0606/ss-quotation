@@ -598,7 +598,7 @@ const PricingEngine = (() => {
         // 先求和再统一四舍五入（+epsilon 抵消浮点误差，2026-08-24：用户例 77.795 → 77.8）
         const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + 1e-9);
         const qty = (item.quantity != null && parseFloat(item.quantity) > 0) ? parseFloat(item.quantity) : 1;
-        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9) };
+        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice, sheetPriceTax: round2(sheetPrice / 0.91 + 1e-9), quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9) };
       }
     }
 
@@ -623,7 +623,7 @@ const PricingEngine = (() => {
           edgeFee: sheetResult.edgeFee,
           sheetArea: sheetResult.sheetArea, sheetVolume: sheetResult.sheetVolume, sheetWeightKg: sheetResult.sheetWeightKg,
           sheetMaterialCost: sheetResult.sheetMaterialCost, sheetSurfaceCost: sheetResult.sheetSurfaceCost,
-          sheetFilmCost: sheetResult.sheetFilmCost, sheetPrice: sheetResult.sheetPrice,
+          sheetFilmCost: sheetResult.sheetFilmCost, sheetPrice: sheetResult.sheetPrice, sheetPriceTax: sheetResult.sheetPriceTax,
           quantity: sheetResult.quantity, sheetTotal: sheetResult.sheetTotal
         }
       };
