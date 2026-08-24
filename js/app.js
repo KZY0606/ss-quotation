@@ -977,64 +977,87 @@ const App = (() => {
   function renderSheetSurfaceConfig() {
     const wrap = dom('sheetSurfaceConfigTable');
     if (!wrap) return;
+    // v1.0.94 用户规则：单张砂面NO.4/单张拉丝HL 合并一行（价格永远一致，覆盖价同步），1250 单独一行区分
     const qualities = ['单张普磨8K', '单张砂面NO.4', '单张拉丝HL', '单张高普8K', '单张普精8K', '单张精磨8K', '单张超精8K'];
-    // 2026-08-24 v1.0.89 用户规则：11 个单张高普8K 彩色板归类到单张高普8K 之下，箭头展开查看/核算
-    // 2026-08-24 v1.0.90：彩色按品质分组（高普/普精/精磨/超精 × 11 色）
     const colorGroups = {
       '单张高普8K': ['单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K钛块古铜', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K中国红', '单张高普8K翡翠绿', '单张高普8K彩虹色'],
       '单张普精8K': ['单张普精8K黄钛金', '单张普精8K玫瑰金', '单张普精8K香槟金', '单张普精8K黑钛金', '单张普精8K宝石蓝', '单张普精8K钛块古铜', '单张普精8K紫罗兰', '单张普精8K紫红', '单张普精8K中国红', '单张普精8K翡翠绿', '单张普精8K彩虹色'],
       '单张精磨8K': ['单张精磨8K黄钛金', '单张精磨8K玫瑰金', '单张精磨8K香槟金', '单张精磨8K黑钛金', '单张精磨8K宝石蓝', '单张精磨8K钛块古铜', '单张精磨8K紫罗兰', '单张精磨8K紫红', '单张精磨8K中国红', '单张精磨8K翡翠绿', '单张精磨8K彩虹色'],
       '单张超精8K': ['单张超精8K黄钛金', '单张超精8K玫瑰金', '单张超精8K香槟金', '单张超精8K黑钛金', '单张超精8K宝石蓝', '单张超精8K钛块古铜', '单张超精8K紫罗兰', '单张超精8K紫红', '单张超精8K中国红', '单张超精8K翡翠绿', '单张超精8K彩虹色'],
+      '单张砂面NO.4': ['单张砂面NO.4黄钛金', '单张拉丝HL黄钛金', '单张砂面NO.4玫瑰金', '单张拉丝HL玫瑰金', '单张砂面NO.4香槟金', '单张拉丝HL香槟金', '单张砂面NO.4黑钛金', '单张拉丝HL黑钛金', '单张砂面NO.4宝石蓝', '单张拉丝HL宝石蓝', '单张砂面NO.4钛块古铜', '单张拉丝HL钛块古铜', '单张砂面NO.4紫罗兰', '单张拉丝HL紫罗兰', '单张砂面NO.4紫红', '单张拉丝HL紫红', '单张砂面NO.4中国红', '单张拉丝HL中国红', '单张砂面NO.4翡翠绿', '单张拉丝HL翡翠绿', '单张砂面NO.4彩虹色', '单张拉丝HL彩虹色']
     };
     const groups = [
-      { cls: 'sg-1000', label: '宽度档 1000mm', filter: t => (t.wMin || 0) === 1000 && (t.wMax || 0) === 1000 },
-      { cls: 'sg-narrow', label: '宽度档 1219 / 1240 / 1250', filter: t => (t.wMin || 0) >= 1219 && (t.wMax || 9999) <= 1250 },
-      { cls: 'sg-wide', label: '宽度档 1500 / 1524 / 1530', filter: t => (t.wMin || 0) >= 1500 }
+      { cls: 'sg-1000', label: '宽度档：1000mm', filter: t => (t.wMin || 0) === 1000 && (t.wMax || 0) === 1000 },
+      { cls: 'sg-narrow', label: '宽度档：1219 / 1240 / 1250', filter: t => (t.wMin || 0) >= 1219 && (t.wMax || 9999) <= 1250 },
+      { cls: 'sg-wide', label: '宽度档：1500 / 1524 / 1530', filter: t => (t.wMin || 0) >= 1500 }
     ];
+    const colorNameOf = cn => cn.split('8K').pop().replace(/^单张砂面NO\.4/, '').replace(/^单张拉丝HL/, '');
     let html = '';
     groups.forEach(g => {
       const rows = [];
       qualities.forEach(q => {
+        if (q === '单张拉丝HL') return; // 合并进砂面行
         const cfg = SURFACE_FEES[q];
         if (!Array.isArray(cfg)) return;
-        const tiers = cfg.filter(g.filter);
-        if (!tiers.length) return;
-        const tierDesc = tiers.map(t => {
-          const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
-          const w = stdW ? '' : `【${t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax}】`;
-          return `${t.tMin}-${t.tMax}mm${w}: ${t.price}元`;
-        }).join(' / ');
-        const val = priceOverrides.surfaceFees[q] ?? tiers[0].price;
-        const locked = !!priceOverrides.surfaceLocked[q];
-        const colorKeys = colorGroups[q];
-        let colorRows = '';
-        if (colorKeys) {
-          const colorRowsHtml = [];
-          colorKeys.forEach(cn => {
-            const cc = SURFACE_FEES[cn];
-            if (!Array.isArray(cc)) return;
-            const ct = cc.filter(g.filter);
-            if (!ct.length) return;
-            const cDesc = ct.map(t => `${t.tMin}-${t.tMax}mm: ${t.price}元`).join(' / ');
-            const cVal = priceOverrides.surfaceFees[cn] ?? ct[0].price;
-            const cLocked = !!priceOverrides.surfaceLocked[cn];
-            colorRowsHtml.push(`<tr class="sg-color-row" data-owner="${q}" data-group="${g.cls}" style="display:none">
-              <td><span class="cfg-name sg-color-name">${cn.split('8K').pop()}</span></td>
-              <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${cn}" value="${cVal}" step="0.5" ${cLocked ? 'readonly' : ''}></td>
-              <td><span class="cfg-default">${cDesc}</span></td>
-              <td><button class="cfg-lock-btn ${cLocked ? 'locked' : ''}" data-names="${cn}" data-type="surf">${cLocked ? '🔒' : '🔓'}</button></td>
-            </tr>`);
-          });
-          colorRows = colorRowsHtml.join('');
+        // 砂面/拉丝：窄板组拆 1219/1240 与 1250 两行；其余一行
+        let rowDefs;
+        if (q === '单张砂面NO.4' && g.cls === 'sg-narrow') {
+          rowDefs = [
+            { name: '单张砂面NO.4/单张拉丝HL', tierFilter: t => t.wMax <= 1240, owner: q, names: ['单张砂面NO.4', '单张拉丝HL'] },
+            { name: '单张砂面NO.4/单张拉丝HL (1250)', tierFilter: t => t.wMin >= 1250, owner: q + '_1250', names: ['单张砂面NO.4', '单张拉丝HL'] }
+          ];
+        } else {
+          rowDefs = [{ name: q, tierFilter: g.filter, owner: q, names: [q] }];
         }
-        rows.push(`<tr class="${g.cls}-row${colorRows ? ' has-color' : ''}">
-          <td>${colorRows ? `<span class="cfg-expand" data-group="${g.cls}" data-owner="${q}">▶</span> ` : ''}<span class="cfg-name">${q}</span></td>
-          <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${q}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
-          <td><span class="cfg-default">${tierDesc}</span></td>
-          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${q}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
-        </tr>${colorRows}`);
+        rowDefs.forEach(rd => {
+          const tiers = cfg.filter(rd.tierFilter);
+          if (!tiers.length) return;
+          const tierDesc = tiers.map(t => {
+            const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
+            const w = stdW ? '' : '【' + (t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax) + '】';
+            return t.tMin + '-' + t.tMax + 'mm' + w + ': ' + t.price + '元';
+          }).join(' / ');
+          const val = priceOverrides.surfaceFees[rd.names[0]] ?? tiers[0].price;
+          const locked = !!priceOverrides.surfaceLocked[rd.names[0]];
+          const colorKeys = colorGroups[q];
+          let colorRows = '';
+          let hasColor = false;
+          if (colorKeys) {
+            // 按颜色名分组（砂面/拉丝同色合并一行，覆盖价同步）
+            const colorMap = {};
+            colorKeys.forEach(cn => {
+              const cc = SURFACE_FEES[cn];
+              if (!Array.isArray(cc)) return;
+              const ct = cc.filter(rd.tierFilter);
+              if (!ct.length) return;
+              const cn2 = colorNameOf(cn);
+              (colorMap[cn2] = colorMap[cn2] || []).push(cn);
+            });
+            Object.keys(colorMap).forEach(cn2 => {
+              const keys = colorMap[cn2];
+              const ct = SURFACE_FEES[keys[0]].filter(rd.tierFilter);
+              if (!ct.length) return;
+              hasColor = true;
+              const cDesc = ct.map(t => t.tMin + '-' + t.tMax + 'mm: ' + t.price + '元').join(' / ');
+              const cVal = priceOverrides.surfaceFees[keys[0]] ?? ct[0].price;
+              const cLocked = !!priceOverrides.surfaceLocked[keys[0]];
+              colorRows += '<tr class="sg-color-row" data-owner="' + rd.owner + '" data-group="' + g.cls + '" style="display:none">' +
+                '<td><span class="cfg-name sg-color-name">' + cn2 + '</span></td>' +
+                '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + keys.join(',') + '" value="' + cVal + '" step="0.5" ' + (cLocked ? 'readonly' : '') + '></td>' +
+                '<td><span class="cfg-default">' + cDesc + '</span></td>' +
+                '<td><button class="cfg-lock-btn ' + (cLocked ? 'locked' : '') + '" data-names="' + keys.join(',') + '" data-type="surf">' + (cLocked ? '🔒' : '🔓') + '</button></td>' +
+                '</tr>';
+            });
+          }
+          rows.push('<tr class="' + g.cls + '-row' + (hasColor ? ' has-color' : '') + '">' +
+            '<td>' + (hasColor ? '<span class="cfg-expand" data-group="' + g.cls + '" data-owner="' + rd.owner + '">▶</span> ' : '') + '<span class="cfg-name">' + rd.name + '</span></td>' +
+            '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + rd.names.join(',') + '" value="' + val + '" step="0.5" ' + (locked ? 'readonly' : '') + '></td>' +
+            '<td><span class="cfg-default">' + tierDesc + '</span></td>' +
+            '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + rd.names.join(',') + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
+            '</tr>' + colorRows);
+        });
       });
-      html += `<div class="sg-group ${g.cls}"><div class="sg-group-title">${g.label}</div><table><thead><tr><th>单张加工</th><th>覆盖价（元/平方米）</th><th>阶段默认价</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+      html += '<div class="sg-group ' + g.cls + '"><div class="sg-group-title">' + g.label + '</div><table><thead><tr><th>单张加工</th><th>覆盖价（元/平方米）</th><th>阶段默认价</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
     wrap.innerHTML = html;
     bindSurfRowEvents(wrap, renderSheetSurfaceConfig);
@@ -1195,7 +1218,7 @@ const App = (() => {
       { display: '砂面/拉丝(NO.4/HL)古铜亮光无指纹(卷)', key: '拉丝古铜亮光无指纹(卷)' },
       { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
     ];
-    const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '单张普磨8K', '单张砂面NO.4', '单张拉丝HL', '单张高普8K', '单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K钛块古铜', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K中国红', '单张高普8K翡翠绿', '单张高普8K彩虹色', '单张普精8K', '单张普精8K黄钛金', '单张普精8K玫瑰金', '单张普精8K香槟金', '单张普精8K黑钛金', '单张普精8K宝石蓝', '单张普精8K钛块古铜', '单张普精8K紫罗兰', '单张普精8K紫红', '单张普精8K中国红', '单张普精8K翡翠绿', '单张普精8K彩虹色', '单张精磨8K', '单张精磨8K黄钛金', '单张精磨8K玫瑰金', '单张精磨8K香槟金', '单张精磨8K黑钛金', '单张精磨8K宝石蓝', '单张精磨8K钛块古铜', '单张精磨8K紫罗兰', '单张精磨8K紫红', '单张精磨8K中国红', '单张精磨8K翡翠绿', '单张精磨8K彩虹色', '单张超精8K', '单张超精8K黄钛金', '单张超精8K玫瑰金', '单张超精8K香槟金', '单张超精8K黑钛金', '单张超精8K宝石蓝', '单张超精8K钛块古铜', '单张超精8K紫罗兰', '单张超精8K紫红', '单张超精8K中国红', '单张超精8K翡翠绿', '单张超精8K彩虹色', '双面8K'];
+    const standardSurfaces = ['2B', '砂面/拉丝(NO.4/HL)', '单面抛光', '双面抛光', '6K', '双面6K', '8K', '单张普磨8K', '单张砂面NO.4', '单张砂面NO.4黄钛金', '单张砂面NO.4玫瑰金', '单张砂面NO.4香槟金', '单张砂面NO.4黑钛金', '单张砂面NO.4宝石蓝', '单张砂面NO.4钛块古铜', '单张砂面NO.4紫罗兰', '单张砂面NO.4紫红', '单张砂面NO.4中国红', '单张砂面NO.4翡翠绿', '单张砂面NO.4彩虹色', '单张拉丝HL', '单张拉丝HL黄钛金', '单张拉丝HL玫瑰金', '单张拉丝HL香槟金', '单张拉丝HL黑钛金', '单张拉丝HL宝石蓝', '单张拉丝HL钛块古铜', '单张拉丝HL紫罗兰', '单张拉丝HL紫红', '单张拉丝HL中国红', '单张拉丝HL翡翠绿', '单张拉丝HL彩虹色', '单张高普8K', '单张高普8K黄钛金', '单张高普8K玫瑰金', '单张高普8K香槟金', '单张高普8K黑钛金', '单张高普8K宝石蓝', '单张高普8K钛块古铜', '单张高普8K紫罗兰', '单张高普8K紫红', '单张高普8K中国红', '单张高普8K翡翠绿', '单张高普8K彩虹色', '单张普精8K', '单张普精8K黄钛金', '单张普精8K玫瑰金', '单张普精8K香槟金', '单张普精8K黑钛金', '单张普精8K宝石蓝', '单张普精8K钛块古铜', '单张普精8K紫罗兰', '单张普精8K紫红', '单张普精8K中国红', '单张普精8K翡翠绿', '单张普精8K彩虹色', '单张精磨8K', '单张精磨8K黄钛金', '单张精磨8K玫瑰金', '单张精磨8K香槟金', '单张精磨8K黑钛金', '单张精磨8K宝石蓝', '单张精磨8K钛块古铜', '单张精磨8K紫罗兰', '单张精磨8K紫红', '单张精磨8K中国红', '单张精磨8K翡翠绿', '单张精磨8K彩虹色', '单张超精8K', '单张超精8K黄钛金', '单张超精8K玫瑰金', '单张超精8K香槟金', '单张超精8K黑钛金', '单张超精8K宝石蓝', '单张超精8K钛块古铜', '单张超精8K紫罗兰', '单张超精8K紫红', '单张超精8K中国红', '单张超精8K翡翠绿', '单张超精8K彩虹色', '双面8K'];
 
     function renderSurfaceRows(displayName, cfg) {
       if (Array.isArray(cfg)) {
