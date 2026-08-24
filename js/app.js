@@ -1650,8 +1650,9 @@ const App = (() => {
     const hasSheet = sr.some(r => r.detail && r.detail.calcMode === 'sheet');
     if (hasSheet) {
       const sum = sr.reduce((a, r) => a + (r.detail.sheetTotal || 0), 0);
+      const sumTax = sr.reduce((a, r) => a + (r.detail.sheetTotalTax || 0), 0);
       els.totalValue.classList.remove('total-muted');
-      els.totalValue.textContent = `¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}`;
+      els.totalValue.innerHTML = `<div>不含税 ¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}</div><div>含税 ¥${sumTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sumTax))}</div>`;
       return;
     }
     const cnyArr = [], wArr = [];
@@ -1709,7 +1710,7 @@ const App = (() => {
           const uTax = usd(d.sheetPriceTax);
           const uTotal = usd(d.sheetTotal);
           const qty = d.quantity || 1;
-          const taxCell = `${d.sheetPriceTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uTax)}</div>`;
+          const taxCell = `${d.sheetPriceTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uTax)}</div><div class=\"exw-sub\">×${qty}张 ${d.sheetTotalTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
           const noTaxCell = `${d.sheetPrice.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uSheet)}</div><div class=\"exw-sub\">×${qty}张 ${d.sheetTotal.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
           h.push('<td class="price-cell price-subtle">—</td>');
           h.push('<td class="price-cell price-subtle">—</td>');
@@ -1769,6 +1770,7 @@ const App = (() => {
     html += `<div class="calc-step"><span class="calc-step-label">单张价格</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">含税单张价格（不含税 ÷ 0.91）</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} ÷ 0.91 = ${fmt(d.sheetPriceTax)} 元/张</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">数量 × 单张价格（不含税）</span><span class="calc-step-value positive">${d.quantity || 1} 张 × ${fmt(d.sheetPrice)} = ${fmt(d.sheetTotal)} 元</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">数量 × 单张价格（含税）</span><span class="calc-step-value positive">${d.quantity || 1} 张 × ${fmt(d.sheetPriceTax)} = ${fmt(d.sheetTotalTax)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">单张重量</span><span class="calc-step-value zero">${fmt(d.sheetWeightKg)} kg</span></div>`;
     html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">贸易术语与附加费用（元/吨口径）不适用于单张计价。</div>';
     html += '</div></div>';

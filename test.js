@@ -1352,5 +1352,11 @@ test('单张逻辑 三价格: 不含税73.51 / 含税=÷0.91→80.78 / 总价=×
   eq(r.success && r.detail.sheetTotal === 3675.5, true, '总价3675.5 实际=' + (r.success ? r.detail.sheetTotal : JSON.stringify(r.errors)));
 });
 
+test('单张逻辑 双总价: 不含税总价3675.5 / 含税总价4039', () => {
+  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, film1: '5C-FILM', quantity: '50' });
+  eq(r.success && r.detail.sheetTotal === 3675.5, true, '不含税总价3675.5 实际=' + (r.success ? r.detail.sheetTotal : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.sheetTotalTax === 4039, true, '含税总价4039 实际=' + (r.success ? r.detail.sheetTotalTax : JSON.stringify(r.errors)));
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
