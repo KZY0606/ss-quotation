@@ -1459,8 +1459,8 @@ const App = (() => {
   function isSheetMode() { return !!(els.calcModeSheet && els.calcModeSheet.checked); }
   function updateSheetHeaders() {
     const sheet = isSheetMode();
-    if (els.thSaleTax) els.thSaleTax.innerHTML = (sheet ? '含税成本' : '含税售价') + '<sup class="usd-sup">（$）</sup>';
-    if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = (sheet ? '不含税成本' : '不含税售价') + '<sup class="usd-sup">（$）</sup>';
+    if (els.thSaleTax) els.thSaleTax.innerHTML = (sheet ? '含税售价' : '含税售价') + '<sup class="usd-sup">（$）</sup>';
+    if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = (sheet ? '不含税售价' : '不含税售价') + '<sup class="usd-sup">（$）</sup>';
     if (els.thWeight) els.thWeight.textContent = sheet ? '数量' : '重量(吨)';
     if (els.thCostTax) els.thCostTax.style.display = sheet ? 'none' : '';
     if (els.thCostNoTax) els.thCostNoTax.style.display = sheet ? 'none' : '';
@@ -1537,6 +1537,14 @@ const App = (() => {
     const i = idx - 1;
     if (!dataItems[i]) return;
     dataItems[i].packing = val;
+    results = [];
+    render();
+  }
+
+  function setPackingFee(idx, val) {
+    const i = idx - 1;
+    if (!dataItems[i]) return;
+    dataItems[i].packingFee = parseFloat(val) > 0 ? parseFloat(val) : 0;
     results = [];
     render();
   }
@@ -1669,7 +1677,7 @@ const App = (() => {
     els.okC.textContent = sr.length;
     els.errC.textContent = results.filter(r => !r.success).length;
     if (sr.length > 0) {
-      const sp = sr.map(r => (r.detail && r.detail.calcMode === 'sheet') ? (r.detail.sheetTotal || 0) : finalPrice(r.detail.saleTax));
+      const sp = sr.map(r => (r.detail && r.detail.calcMode === 'sheet') ? ((r.detail.sheetTotalSaleNoTax != null ? r.detail.sheetTotalSaleNoTax : r.detail.sheetTotal) || 0) : finalPrice(r.detail.saleTax));
       const mn = Math.min(...sp), mx = Math.max(...sp);
       if (termState.term === 'EXW') {
         els.minP.textContent = mn.toLocaleString() + '  /  ' + fmtUsd(usd(mn));
@@ -1693,10 +1701,10 @@ const App = (() => {
     if (sr.length === 0) { els.totalValue.textContent = '-'; els.totalValue.classList.add('total-muted'); return; }
     const hasSheet = sr.some(r => r.detail && r.detail.calcMode === 'sheet');
     if (hasSheet) {
-      const sum = sr.reduce((a, r) => a + (r.detail.sheetTotal || 0), 0);
-      const sumTax = sr.reduce((a, r) => a + (r.detail.sheetTotalTax || 0), 0);
+      const sum = sr.reduce((a, r) => a + ((r.detail.sheetTotalSaleNoTax != null ? r.detail.sheetTotalSaleNoTax : r.detail.sheetTotal) || 0), 0);
+      const sumTax = sr.reduce((a, r) => a + ((r.detail.sheetTotalSaleTax != null ? r.detail.sheetTotalSaleTax : r.detail.sheetTotalTax) || 0), 0);
       els.totalValue.classList.remove('total-muted');
-      els.totalValue.innerHTML = `<div>不含税成本 ¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}</div><div>含税成本 ¥${sumTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sumTax))}</div>`;
+      els.totalValue.innerHTML = `<div>不含税售价 ¥${sum.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sum))}</div><div>含税售价 ¥${sumTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${fmtUsd(usd(sumTax))}</div>`;
       return;
     }
     const cnyArr = [], wArr = [];
@@ -1737,13 +1745,15 @@ const App = (() => {
       h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
       const isCoil = String(item.length || 'C').trim().toUpperCase() === 'C';
       const pk = item.packing || '';
-      h.push(`<td>${isCoil
-        ? '<span style="color:var(--text-muted)">-</span>'
-        : `<select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
-            <option value="" ${!pk ? 'selected' : ''}>请选择</option>
-            <option value="木架" ${pk === '木架' ? 'selected' : ''}>木架</option>
-            <option value="木箱" ${pk === '木箱' ? 'selected' : ''}>木箱</option>
-          </select>`}</td>`);
+      h.push(d && d.calcMode === 'sheet'
+        ? `<td><input type="number" class="packing-fee-inp" value="${item.packingFee != null && item.packingFee > 0 ? item.packingFee : ''}" placeholder="元" min="0" step="1" oninput="App.setPackingFee(${idx}, this.value)" style="width:72px;font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);"></td>`
+        : `<td>${isCoil
+          ? '<span style="color:var(--text-muted)">-</span>'
+          : `<select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
+              <option value="" ${!pk ? 'selected' : ''}>请选择</option>
+              <option value="木架" ${pk === '木架' ? 'selected' : ''}>木架</option>
+              <option value="木箱" ${pk === '木箱' ? 'selected' : ''}>木箱</option>
+            </select>`}</td>`);
       const wgt = d && d.weight != null ? d.weight : (item.weight || null);
       h.push(d && d.calcMode === 'sheet'
         ? `<td><span style="color:var(--accent);font-weight:600">${d.quantity || 1}</span></td>`
@@ -1752,12 +1762,12 @@ const App = (() => {
       h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
         if (d && d.calcMode === 'sheet') {
-          const uSheet = usd(d.sheetPrice);
-          const uTax = usd(d.sheetPriceTax);
-          const uTotal = usd(d.sheetTotal);
+          const uSheet = usd(d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice);
+          const uTax = usd(d.sheetSaleTax != null ? d.sheetSaleTax : d.sheetPriceTax);
+          const uTotal = usd(d.sheetTotalSaleNoTax != null ? d.sheetTotalSaleNoTax : d.sheetTotal);
           const qty = d.quantity || 1;
-          const taxCell = `${d.sheetPriceTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uTax)}</div><div class=\"exw-sub\">×${qty}张 ${d.sheetTotalTax.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
-          const noTaxCell = `${d.sheetPrice.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uSheet)}</div><div class=\"exw-sub\">×${qty}张 ${d.sheetTotal.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
+          const taxCell = `${(d.sheetSaleTax != null ? d.sheetSaleTax : d.sheetPriceTax).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uTax)}</div><div class=\"exw-sub\">×${qty}张 ${(d.sheetTotalSaleTax != null ? d.sheetTotalSaleTax : d.sheetTotalTax).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
+          const noTaxCell = `${(d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uSheet)}</div><div class=\"exw-sub\">×${qty}张 ${(d.sheetTotalSaleNoTax != null ? d.sheetTotalSaleNoTax : d.sheetTotal).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
           h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-sheet">板</span></td>`);
           h.push(`<td class="price-cell price-sale"><span class="term-tag">含税</span>${taxCell}</td>`);
           h.push(`<td class="price-cell price-subtle"><span class="term-tag">单张</span>${noTaxCell}</td>`);
@@ -1807,16 +1817,21 @@ const App = (() => {
     const edgeTxt = `${d.edgeType === 'rough' ? '毛边' : '切边'}${d.width === 1000 ? '（1000mm 特殊+400）' : ''}`;
     const filmSqm = (d.film1FeeSqm || 0) + (d.film2FeeSqm || 0);
     const filmTxt = [d.film1, d.film2].filter(Boolean).join(' + ');
-    let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（成本价，按张计价）</div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）)/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
+    const qty = d.quantity || 1;
+    const pf = d.packingFee || 0;
+    const pps = d.packingPerSheet || 0;
+    let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（售价 = 成本 + 包装均摊，按张计价）</div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">③ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">单张价格</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">含税单张价格（不含税 ÷ 0.91）</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} ÷ 0.91 = ${fmt(d.sheetPriceTax)} 元/张</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">数量 × 单张价格（不含税）</span><span class="calc-step-value positive">${d.quantity || 1} 张 × ${fmt(d.sheetPrice)} = ${fmt(d.sheetTotal)} 元</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">数量 × 单张价格（含税）</span><span class="calc-step-value positive">${d.quantity || 1} 张 × ${fmt(d.sheetPriceTax)} = ${fmt(d.sheetTotalTax)} 元</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">单张价格（成本）</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">包装均摊费：${fmt(pf)} ÷ ${qty} 张</span><span class="calc-step-value ${pps > 0 ? 'positive' : 'zero'}">${pps > 0 ? '+' + fmt(pps) : '0'} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">不含税售价：${fmt(d.sheetPrice)} + ${fmt(pps)}</span><span class="calc-step-value positive">= ${fmt(d.sheetSaleNoTax)} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">含税售价（不含税 ÷ 0.91）：${fmt(d.sheetSaleNoTax)} ÷ 0.91</span><span class="calc-step-value positive">= ${fmt(d.sheetSaleTax)} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">数量 × 不含税售价</span><span class="calc-step-value positive">${qty} 张 × ${fmt(d.sheetSaleNoTax)} = ${fmt(d.sheetTotalSaleNoTax)} 元</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">数量 × 含税售价</span><span class="calc-step-value positive">${qty} 张 × ${fmt(d.sheetSaleTax)} = ${fmt(d.sheetTotalSaleTax)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">单张重量</span><span class="calc-step-value zero">${fmt(d.sheetWeightKg)} kg</span></div>`;
-    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">以上为成本价（不含包装费/装柜费，数据整理中）；贸易术语与附加费用（元/吨口径）不适用于单张计价。</div>';
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">售价 = 成本 + 包装均摊费（装柜费待接入）；贸易术语与附加费用（元/吨口径）不适用于单张计价。</div>';
     html += '</div></div>';
     return html;
   }

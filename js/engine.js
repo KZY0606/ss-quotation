@@ -512,7 +512,8 @@ const PricingEngine = (() => {
     let packing = null;
     if (/木箱/.test(packingRaw)) packing = '木箱';
     else if (/木架/.test(packingRaw)) packing = '木架';
-    if (boardType === 'sheet' && !packing) {
+    // v1.0.83：单张计价用包装费用（packingFee），不再要求包装方式；过磅计价平板仍要求木架/木箱
+    if (boardType === 'sheet' && !packing && item.calcMode !== 'sheet') {
       errors.push('平板必须填写包装方式（木架/木箱）');
     }
 
@@ -599,7 +600,12 @@ const PricingEngine = (() => {
         const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + 1e-9);
         const qty = (item.quantity != null && parseFloat(item.quantity) > 0) ? parseFloat(item.quantity) : 1;
         const sheetPriceTax = round2(sheetPrice / 0.91 + 1e-9);
-        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice, sheetPriceTax, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9), sheetTotalTax: round2(sheetPriceTax * qty + 1e-9) };
+        // v1.0.83：包装费用均摊（包装费 ÷ 张数）→ 不含税售价 = 不含税成本 + 均摊；含税售价 = 不含税售价 ÷ 0.91
+        const packingFee = parseFloat(item.packingFee) > 0 ? parseFloat(item.packingFee) : 0;
+        const packingPerSheet = qty > 0 ? round2(packingFee / qty + 1e-9) : 0;
+        const sheetSaleNoTax = round2(sheetPrice + packingPerSheet + 1e-9);
+        const sheetSaleTax = round2(sheetSaleNoTax / 0.91 + 1e-9);
+        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice, sheetPriceTax, packingFee, packingPerSheet, sheetSaleNoTax, sheetSaleTax, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9), sheetTotalTax: round2(sheetPriceTax * qty + 1e-9), sheetTotalSaleNoTax: round2(sheetSaleNoTax * qty + 1e-9), sheetTotalSaleTax: round2(sheetSaleTax * qty + 1e-9) };
       }
     }
 
@@ -625,7 +631,10 @@ const PricingEngine = (() => {
           sheetArea: sheetResult.sheetArea, sheetVolume: sheetResult.sheetVolume, sheetWeightKg: sheetResult.sheetWeightKg,
           sheetMaterialCost: sheetResult.sheetMaterialCost, sheetSurfaceCost: sheetResult.sheetSurfaceCost,
           sheetFilmCost: sheetResult.sheetFilmCost, sheetPrice: sheetResult.sheetPrice, sheetPriceTax: sheetResult.sheetPriceTax,
-          quantity: sheetResult.quantity, sheetTotal: sheetResult.sheetTotal, sheetTotalTax: sheetResult.sheetTotalTax
+          packingFee: sheetResult.packingFee, packingPerSheet: sheetResult.packingPerSheet,
+          sheetSaleNoTax: sheetResult.sheetSaleNoTax, sheetSaleTax: sheetResult.sheetSaleTax,
+          quantity: sheetResult.quantity, sheetTotal: sheetResult.sheetTotal, sheetTotalTax: sheetResult.sheetTotalTax,
+          sheetTotalSaleNoTax: sheetResult.sheetTotalSaleNoTax, sheetTotalSaleTax: sheetResult.sheetTotalSaleTax
         }
       };
     }

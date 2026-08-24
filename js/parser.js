@@ -258,7 +258,8 @@ const ExcelParser = (() => {
         else if (h.includes('膜2') || h.includes('film2') || h.includes('膜二')) item.film2 = val;
         else if (h.includes('数量') || h.includes('qty') || h.includes('quantity')) item.quantity = val;
         else if (h.includes('重量') || h.includes('weight')) item.weight = val;
-        else if (h.includes('包装') || h.includes('packing')) item.packing = val;
+        else if (h.includes('包装费') || h.includes('packingFee') || h.includes('packing_fee')) item.packingFee = parseFloat(val) > 0 ? parseFloat(val) : 0;
+        else if (h.includes('包装') || h.includes('packing')) { const pv = parseFloat(val); item.packing = (val && isNaN(pv)) ? val : ''; if (!isNaN(pv) && val !== '') item.packingFee = pv; }
         else if (h.includes('压延') || h.includes('yan') || h.includes('yanyan')) item.isYanYan = val === '是' || val === 'Y' || val === 'yes';
       }
       return item;
@@ -315,8 +316,9 @@ const ExcelParser = (() => {
       // 术语加价（FOB/CIF = EXW + 美元加价）+ 附加费用（人民币/吨）→ 不含税最终单价
       if (d && d.calcMode === 'sheet') {
         hasSheetRows = true;
-        const usdV = PricingEngine.cnToUsd(d.sheetPrice, ti.rate);
-        totalCny += d.sheetPrice; totalUsd += (usdV || 0); totalW += 1; hasWeight = true;
+        const usdV = PricingEngine.cnToUsd(d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice, ti.rate);
+        const exPrice = d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice;
+        totalCny += exPrice; totalUsd += (usdV || 0); totalW += 1; hasWeight = true;
         ws.addRow([
           d.origin || '',
           (d.material || '') + (d.isYanYan ? '压延' : ''),
@@ -325,9 +327,9 @@ const ExcelParser = (() => {
           spec,
           edge,
           '',
-          Math.round(d.sheetPrice),
+          Math.round(exPrice),
           usdV == null ? '' : Math.round(usdV * 100) / 100,
-          Math.round(d.sheetPrice),
+          Math.round(exPrice),
           usdV == null ? '' : Math.round(usdV * 100) / 100
         ]);
         continue;

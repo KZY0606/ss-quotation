@@ -1358,5 +1358,14 @@ test('单张逻辑 双总价: 不含税总价3675.5 / 含税总价4039', () => {
   eq(r.success && r.detail.sheetTotalTax === 4039, true, '含税总价4039 实际=' + (r.success ? r.detail.sheetTotalTax : JSON.stringify(r.errors)));
 });
 
+test('单张逻辑 包装均摊: 包装200/50张→4元/张→不含税售价77.51/含税85.18/总价3875.5/4259', () => {
+  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, film1: '5C-FILM', quantity: '50', packingFee: '200' });
+  eq(r.success && r.detail.packingPerSheet === 4, true, '均摊4元/张 实际=' + (r.success ? r.detail.packingPerSheet : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.sheetSaleNoTax === 77.51, true, '不含税售价77.51 实际=' + (r.success ? r.detail.sheetSaleNoTax : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.sheetSaleTax === 85.18, true, '含税售价85.18 实际=' + (r.success ? r.detail.sheetSaleTax : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.sheetTotalSaleNoTax === 3875.5, true, '不含税总价3875.5 实际=' + (r.success ? r.detail.sheetTotalSaleNoTax : JSON.stringify(r.errors)));
+  eq(r.success && r.detail.sheetTotalSaleTax === 4259, true, '含税总价4259 实际=' + (r.success ? r.detail.sheetTotalSaleTax : JSON.stringify(r.errors)));
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
