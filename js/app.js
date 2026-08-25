@@ -340,6 +340,7 @@ const App = (() => {
         if (btn.dataset.config === 'surfaces') renderSurfaceConfig();
         if (btn.dataset.config === 'sheetSurfaces') renderSheetSurfaceConfig();
         if (btn.dataset.config === 'reference') renderPriceReference();
+        if (btn.dataset.config === 'coilMarkup') renderCoilMarkupConfig();
       });
     });
 
@@ -1410,13 +1411,6 @@ const App = (() => {
     h.push('<tr><td>哑光抗指纹 (AFP Matte)</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
     h.push('<tr><td colspan="2" style="padding:4px"></td></tr>');
     h.push('<tr><th>销售加价</th><th class="ref-num">元/吨</th></tr>');
-    h.push('<tr><td colspan="2" style="padding:6px 0 2px;font-weight:600;">卷板销售加价（销售加价 = 边部加价 + 包装费用 + 装柜费用，2026-08-25）</td></tr>');
-    for (const row of COIL_MARKUP_DETAIL) {
-      const w = row.widths.join('/');
-      h.push('<tr><td>' + w + 'mm ' + row.label + '卷板销售加价' + '</td><td class="ref-num">+' + row.total + '</td></tr>');
-      h.push('<tr><td colspan="2" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">' + w + 'mm ' + row.label + '卷板销售加价' + ' = ' + row.label + '加价' + row.edgeFee + '元/吨' + ' + ' + '包装费用' + row.packingFee + '元/吨' + ' + ' + '装柜费用' + row.containerFee + '元/吨' + ' = ' + row.total + '元/吨' + '</td></tr>');
-    }
-    h.push('<tr><td colspan="2" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">四尺=1219/1240/1250/1280，米尺=1000，五尺=1500/1524/1530；316L 待提供数据暂用通用表</td></tr>');
     // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）
     const sheetRows = [
       ['201/304/410/430', '1240毛边', '2100-2500', 'std_1240_s'],
@@ -1484,6 +1478,24 @@ const App = (() => {
 
     el.innerHTML = h.join('');
   }
+
+  function renderCoilMarkupConfig() {
+    const el = dom('coilMarkupTable');
+    if (!el) return;
+    let h = [];
+    h.push('<div class="ref-section"><h3 class="ref-title">📈 卷板销售加价（销售加价 = 边部加价 + 包装费用 + 装柜费用）</h3>');
+    h.push('<table class="ref-table"><tr><th>宽度</th><th>类型</th><th>边部加价</th><th>包装费用</th><th>装柜费用</th><th class="ref-num">合计 (元/吨)</th></tr>');
+    for (const row of COIL_MARKUP_DETAIL) {
+      const w = row.widths.join('/');
+      h.push('<tr><td>' + w + 'mm</td><td>' + row.label + '</td><td class="ref-num">+' + row.edgeFee + '</td><td class="ref-num">+' + row.packingFee + '</td><td class="ref-num">+' + row.containerFee + '</td><td class="ref-num">+' + row.total + '</td></tr>');
+      h.push('<tr><td colspan="6" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">' + w + 'mm ' + row.label + '卷板销售加价 = ' + row.label + '边部加价' + row.edgeFee + '元/吨 + 包装费用' + row.packingFee + '元/吨 + 装柜费用' + row.containerFee + '元/吨 = ' + row.total + '元/吨</td></tr>');
+    }
+    h.push('</table>');
+    h.push('<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">四尺=1219/1240/1250/1280，米尺=1000，五尺=1500/1524/1530；316L 待提供数据暂用通用表</div>');
+    h.push('</div>');
+    el.innerHTML = h.join('');
+  }
+
 
   // ========== 数据操作 ==========
   function handleFile(e) {
