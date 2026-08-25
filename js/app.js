@@ -1440,9 +1440,17 @@ const App = (() => {
     if (!el) return;
     let h = [];
     h.push('<div class="ref-section"><h3 class="ref-title">📈 销售加价</h3>');
-    h.push('<h4 class="ref-subtitle">卷板销售加价（销售加价 = 边部加价 + 包装费用 + 装柜费用）</h4>');
+    h.push('<h4 class="ref-subtitle">卷板销售加价（201/304/410/430）</h4>');
     h.push('<table class="ref-table"><tr><th>宽度</th><th>类型</th><th>边部加价</th><th>包装费用</th><th>装柜费用</th><th class="ref-num">合计 (元/吨)</th></tr>');
     for (const row of COIL_MARKUP_DETAIL) {
+      const w = row.widths.join('/');
+      h.push('<tr><td>' + w + 'mm</td><td>' + row.label + '</td><td class="ref-num">+' + row.edgeFee + '</td><td class="ref-num">+' + row.packingFee + '</td><td class="ref-num">+' + row.containerFee + '</td><td class="ref-num">+' + row.total + '</td></tr>');
+      h.push('<tr><td colspan="6" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">' + w + 'mm ' + row.label + '卷板销售加价 = ' + row.label + '边部加价' + row.edgeFee + '元/吨 + 包装费用' + row.packingFee + '元/吨 + 装柜费用' + row.containerFee + '元/吨 = ' + row.total + '元/吨</td></tr>');
+    }
+    h.push('</table>');
+    h.push('<h4 class="ref-subtitle">卷板销售加价（316L）</h4>');
+    h.push('<table class="ref-table"><tr><th>宽度</th><th>类型</th><th>边部加价</th><th>包装费用</th><th>装柜费用</th><th class="ref-num">合计 (元/吨)</th></tr>');
+    for (const row of COIL_MARKUP_DETAIL_316L) {
       const w = row.widths.join('/');
       h.push('<tr><td>' + w + 'mm</td><td>' + row.label + '</td><td class="ref-num">+' + row.edgeFee + '</td><td class="ref-num">+' + row.packingFee + '</td><td class="ref-num">+' + row.containerFee + '</td><td class="ref-num">+' + row.total + '</td></tr>');
       h.push('<tr><td colspan="6" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">' + w + 'mm ' + row.label + '卷板销售加价 = ' + row.label + '边部加价' + row.edgeFee + '元/吨 + 包装费用' + row.packingFee + '元/吨 + 装柜费用' + row.containerFee + '元/吨 = ' + row.total + '元/吨</td></tr>');
@@ -1510,7 +1518,7 @@ const App = (() => {
     h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td colspan="2"></td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
     h.push('<tr><td colspan="4" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + '元/吨</td></tr>');
     h.push('</table>');
-    h.push('<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">四尺=1219/1240/1250/1280，米尺=1000，五尺=1500/1524/1530；316L 待提供数据暂用通用表</div>');
+    h.push('<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">201/304/410/430 与 316L 分别定价；1250mm 与 1000mm 同价（201/304/410/430=550、316L=850）；四尺=1219/1240/1250/1280，米尺=1000，五尺=1500/1524/1530</div>');
     h.push('</div>');
     el.innerHTML = h.join('');
   }
