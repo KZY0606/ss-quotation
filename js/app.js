@@ -2134,7 +2134,9 @@ const App = (() => {
     html += step(`(基价 ${fmtI(d.basePrice)} + 厚度加价 ${fmtI(d.thickSurcharge)}) × 0.92`, d.materialNoTaxRaw, '元/吨', true);
     html += step('+ 表面加工费（含纹路/AFP）', d.surfaceFeePerTon + (d.linenFeePerTon || 0) + (d.afpPerTon || 0), '元/吨', true);
     html += step('+ 膜费', (d.film1PerTon || 0) + (d.film2PerTon || 0), '元/吨', true);
-    const mkExtra = d.markupDetail ? ' = ' + d.markupDetail.label + '加价' + d.markupDetail.edgeFee + '+' + '包装费用' + d.markupDetail.packingFee + '+' + '装柜费用' + d.markupDetail.containerFee : '';
+    const mkExtra = d.markupDetail ? (d.markupDetail.group === 'sheet'
+      ? ' = 边部加价(' + d.markupDetail.label + ')' + d.markupDetail.edgeFee + ' + 木架' + d.markupDetail.rackFee + ' + 包装' + d.markupDetail.packFee + ' + 加工损耗' + d.markupDetail.lossFee
+      : ' = ' + d.markupDetail.label + '加价' + d.markupDetail.edgeFee + ' + 包装费用' + d.markupDetail.packingFee + ' + 装柜费用' + d.markupDetail.containerFee) : '';
     html += step('+ 销售加价(' + markupLabel + ')' + mkExtra, d.markup, '元/吨', d.markup > 0);
     html += total('不含税售价（十位取整）', d.saleNoTax, 'sale');
     html += total('含税售价', d.saleTax, 'sale');

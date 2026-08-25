@@ -653,18 +653,31 @@ const PricingEngine = (() => {
     }
     // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）：
     // 1219/1240 按 材质组×宽度×长度区间（2100-2500/3000-4000）；1030/1000 按 材质组×宽度×长度区间（1001-2000/2001-4000）
+    // v1.0.105：平板命中细分时构造组成 = 边部加价 + 木架100 + 包装50 + 加工损耗50（出口木架基准固定 200，边部=总价-200）
     let usedSheetDetail = false;
     if (boardType === 'sheet') {
       const detailKey = getSheetMarkupKey(material, width, length);
       if (detailKey && SHEET_MARKUP_DETAIL[detailKey] != null) {
         markup = SHEET_MARKUP_DETAIL[detailKey];
         usedSheetDetail = true;
+        markupDetail = {
+          group: 'sheet',
+          label: sheetMarkupLabel(detailKey),
+          edgeFee: markup - 200,
+          rackFee: 100, packFee: 50, lossFee: 50,
+          total: markup
+        };
       }
       // 未命中细分（非细分宽度/材质组或区间外）：沿用旧加价（rough_sheet=300 / trim_sheet=500）
     }
     // 出口木箱：在出口木架基准上加 50 元/吨（2026-08-22 用户规则，卷板不受影响）
-    if (packing === '木箱' && !markupDetail) {
+    if (packing === '木箱' && !(markupDetail && markupDetail.group === 'coil')) {
       markup += PACKING_WOODEN_BOX_SURCHARGE;
+      if (markupDetail && markupDetail.group === 'sheet') {
+        // 木箱 = 木架 +50 → 组成中木架位显示为 150（边部不变，总价同步 +50）
+        markupDetail.rackFee += PACKING_WOODEN_BOX_SURCHARGE;
+        markupDetail.total += PACKING_WOODEN_BOX_SURCHARGE;
+      }
     }
     // 1000mm 宽度特殊加价：仅对未命中 1000 细分表的材质生效（命中细分的已含明确价格，2026-08-22）
     if (width === 1000 && !usedSheetDetail && !markupDetail) {
@@ -695,10 +708,24 @@ const PricingEngine = (() => {
         costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded), materialNoTaxRaw: round2(materialNoTaxRaw),
         costTax, costNoTax,
         edgeType, boardType, markup, widthSurcharge, packing,
-        markupDetail: markupDetail ? { group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee, packingFee: markupDetail.packingFee, containerFee: markupDetail.containerFee, total: markupDetail.total } : null,
+        markupDetail: markupDetail ? { group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee, packingFee: markupDetail.packingFee, containerFee: markupDetail.containerFee, rackFee: markupDetail.rackFee, packFee: markupDetail.packFee, lossFee: markupDetail.lossFee, total: markupDetail.total } : null,
         saleTax, saleNoTax
       }
     };
+  }
+
+  // v1.0.105: sheet markup detail key -> readable width/edge label
+  function sheetMarkupLabel(detailKey) {
+    const map = {
+      'std_1240': '1240毛边', 'std_1219': '1219齐边', 'std_1030': '1030毛边', 'std_1000': '1000齐边',
+      '410430_1280': '1280毛边(410/430)', '410430_1250': '1250齐边(410/430)',
+      '304_1280': '1280毛边(304)', '304_1250': '1250齐边(304)',
+      'std_1530': '1530毛边', 'std_1500': '1500齐边',
+      '316l_1240': '1240毛边(316L)', '316l_1219': '1219齐边(316L)', '316l_1030': '1030毛边(316L)', '316l_1000': '1000齐边(316L)',
+      '316l_1280': '1280毛边(316L)', '316l_1250': '1250齐边(316L)', '316l_1530': '1530毛边(316L)', '316l_1500': '1500齐边(316L)'
+    };
+    const base = detailKey.replace(/_(s|l)$/, '');
+    return map[base] || detailKey;
   }
 
   // v1.0.98 (2026-08-25 user rule): coil sales markup lookup by width

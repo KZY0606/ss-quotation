@@ -382,9 +382,9 @@ const ExcelParser = (() => {
     // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
     const detailRows = _buildDetailRows(results, ti);
     if (detailRows.length > 0) {
-      const ds = wb.addWorksheet('内部明细', { state: 'hidden' });
+      const ds = wb.addWorksheet('价格明细');
       detailRows.forEach(arr => ds.addRow(arr));
-      const widths = [5, 10, 10, 20, 10, 10, 10, 16, 16, 12, 14, 14, 12, 12, 12, 16, 16, 10, 10, 12, 16, 16, 16, 14, 14, 12, 14, 16, 10, 14, 16];
+      const widths = [5, 10, 10, 20, 10, 10, 10, 16, 16, 12, 14, 14, 12, 12, 12, 16, 16, 10, 10, 12, 24, 16, 16, 14, 14, 12, 14, 16, 10, 14, 16];
       widths.forEach((w2, i) => { ds.getColumn(i + 1).width = w2; });
       ds.eachRow((row) => {
         row.eachCell((cell) => {
@@ -456,7 +456,9 @@ const ExcelParser = (() => {
         d.costTax, d.costNoTax,
         d.edgeType === 'rough' ? '毛边' : '齐边',
         d.boardType === 'coil' ? '卷板' : '平板',
-        d.markup,
+        d.markupDetail ? (d.markupDetail.group === 'sheet'
+          ? d.markup + '（边部' + d.markupDetail.edgeFee + '+木架' + d.markupDetail.rackFee + '+包装' + d.markupDetail.packFee + '+损耗' + d.markupDetail.lossFee + '）'
+          : d.markup + '（边部' + d.markupDetail.edgeFee + '+包装' + d.markupDetail.packingFee + '+装柜' + d.markupDetail.containerFee + '）') : d.markup,
         fmtCny(termCny(d.saleNoTax, 0)),
         fmtUsd(termUsd(d.saleNoTax, ti.fobUsd || 0)),
         fmtUsd(termUsd(d.saleNoTax, ti.cifUsd || 0)),

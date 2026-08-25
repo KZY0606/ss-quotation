@@ -1537,5 +1537,34 @@ test('卷板销售加价: 1030 未命中新表回落旧逻辑 rough_coil=200', (
   eq(r.detail.markup, 200);
 });
 
+
+// ===== v1.0.105: 平板销售加价组成（边部+木架100+包装50+损耗50）=====
+test('v1.0.105: 平板销售加价组成（边部+木架100+包装50+损耗50）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2500', film1:'', film2:'', basePrice: 13000, packing: '木架'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markupDetail.group, 'sheet', 'group=' + r.detail.markupDetail.group);
+  eq(r.detail.markupDetail.label, '1280毛边(304)', 'label=' + r.detail.markupDetail.label);
+  eq(r.detail.markupDetail.edgeFee, 300, '500-200');
+  eq(r.detail.markupDetail.rackFee, 100, 'rack');
+  eq(r.detail.markupDetail.packFee, 50, 'pack');
+  eq(r.detail.markupDetail.lossFee, 50, 'loss');
+  eq(r.detail.markupDetail.total, 500, 'total');
+});
+test('v1.0.105: 平板木箱组成（木架位150，总价+50）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2500', film1:'', film2:'', basePrice: 13000, packing: '木箱'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markup, 550, '500+50');
+  eq(r.detail.markupDetail.rackFee, 150, 'rack=150');
+  eq(r.detail.markupDetail.total, 550, 'total=550');
+  eq(r.detail.markupDetail.edgeFee, 300, '边部不变');
+});
+test('v1.0.105: 316L 平板组成（1500 → 1500齐边(316L)）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'1.00', width:'1500', length:'2440', film1:'', film2:'', basePrice: 15000, packing: '木架'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markupDetail.label, '1500齐边(316L)', 'label=' + r.detail.markupDetail.label);
+  eq(r.detail.markupDetail.edgeFee, 500, '700-200');
+  eq(r.detail.markupDetail.total, 700, 'total');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
