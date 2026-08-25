@@ -1371,15 +1371,33 @@ test('单张逻辑 双总价: 不含税总价3675.5 / 含税总价4039', () => {
   eq(r.success && r.detail.sheetTotalTax === 4039, true, '含税总价4039 实际=' + (r.success ? r.detail.sheetTotalTax : JSON.stringify(r.errors)));
 });
 
-test('单张逻辑 包装均摊: 包装200/50张→4元/张→不含税售价77.51/含税85.18/总价3875.5/4259', () => {
-  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张普磨8K', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, film1: '5C-FILM', quantity: '50', packingFee: '200' });
-  eq(r.success && r.detail.packingPerSheet === 4, true, '均摊4元/张 实际=' + (r.success ? r.detail.packingPerSheet : JSON.stringify(r.errors)));
-  eq(r.success && r.detail.sheetSaleNoTax === 77.51, true, '不含税售价77.51 实际=' + (r.success ? r.detail.sheetSaleNoTax : JSON.stringify(r.errors)));
-  eq(r.success && r.detail.sheetSaleTax === 85.18, true, '含税售价85.18 实际=' + (r.success ? r.detail.sheetSaleTax : JSON.stringify(r.errors)));
-  eq(r.success && r.detail.sheetTotalSaleNoTax === 3875.5, true, '不含税总价3875.5 实际=' + (r.success ? r.detail.sheetTotalSaleNoTax : JSON.stringify(r.errors)));
-  eq(r.success && r.detail.sheetTotalSaleTax === 4259, true, '含税总价4259 实际=' + (r.success ? r.detail.sheetTotalSaleTax : JSON.stringify(r.errors)));
+test('单张逻辑 v1.0.106 包装/装柜/FOB均摊: 木架100元/吨→0.1元/kg×7.85kg=0.785元/张，装柜0.393，FOB55×6.708=368.94元/吨→2.896，合计4.07', () => {
+  const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '单张高普8K黄钛金', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, term: 'FOB', fobUsd: 55, cifUsd: 0, usdRate: 6.708 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.sheetWeightKg, 7.85, '重量7.85kg');
+  eq(r.detail.packingFee, 100, '木架100元/吨');
+  eq(r.detail.packingPerSheet, 0.785, '包装平摊0.785');
+  eq(r.detail.containerPerSheet, 0.393, '装柜平摊0.393');
+  eq(r.detail.termPerTon, 368.94, 'FOB 55×6.708=368.94元/吨');
+  eq(r.detail.termPerSheet, 2.896, 'FOB平摊2.896');
+  eq(r.detail.extraPerSheet, 4.07, '合计4.07');
 });
-
+test('单张逻辑 v1.0.106 五种包装平摊: 木架0.785/木箱1.178/密封木箱1.963/出口铁架1.57/出口铁箱1.963', () => {
+  const g = (p) => { const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, packing: p }); return r.success ? r.detail.packingPerSheet : -1; };
+  eq(g('木架'), 0.785, '木架'); eq(g('木箱'), 1.178, '木箱'); eq(g('密封木箱'), 1.963, '密封木箱'); eq(g('出口铁架'), 1.57, '出口铁架'); eq(g('出口铁箱'), 1.963, '出口铁箱');
+});
+test('单张逻辑 v1.0.106 CIF 均摊 + EXW 无术语费 + 无包装报错', () => {
+  const r1 = sheetCalc({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, term: 'CIF', fobUsd: 0, cifUsd: 60, usdRate: 6.708 });
+  eq(r1.success && r1.detail.termPerSheet === 3.159, true, 'CIF 60×6.708=402.48元/吨→0.40248×7.85=3.159 实际=' + (r1.success ? r1.detail.termPerSheet : JSON.stringify(r1.errors)));
+  const r2 = sheetCalc({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, term: 'EXW', fobUsd: 0, cifUsd: 0, usdRate: 6.708 });
+  eq(r2.success && r2.detail.termPerSheet === 0 && r2.detail.extraPerSheet === 1.18, true, 'EXW 无术语费 实际=' + (r2.success ? r2.detail.extraPerSheet : JSON.stringify(r2.errors)));
+  const r3 = PricingEngine.calculate({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', film1: '', film2: '', basePrice: 7800, calcMode: 'sheet' });
+  eq(r3.success, false, '无包装应报错');
+});
+test('单张逻辑 v1.0.106 过磅平板仅支持木架/木箱: 密封木箱报错', () => {
+  const r = PricingEngine.calculate({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', film1: '', film2: '', basePrice: 7800, packing: '密封木箱' });
+  eq(r.success, false, '过磅+密封木箱应报错');
+});
 test('单张高普8K彩色系列 11色（2026-08-24 v1.0.87 用户修正：高普按厚度档[新5档] + 颜色基础价 + 颜色厚度加价；1000mm ×1.25）', () => {
   const g = (surface, t, w) => { const r = PricingEngine.getSurfaceFee(surface, t, w, '304'); return r ? (r.sqmPrice != null ? r.sqmPrice : r.price) : null; };
   // 黄钛金 窄板 7 段：0.24-1.2=10 / 1.21-1.5=14（合并档+2）/ 1.51-1.59=18 / 1.60-1.69=28 / 1.70-1.79=31 / 1.80-1.89=34 / 1.90-2.00=38
@@ -1437,7 +1455,7 @@ test('单张高普8K彩色系列 11色（2026-08-24 v1.0.87 用户修正：高�
   eq(g('单张高普8K黄钛金', 2.1, 1219), null, '彩色>2.00无加价→null');
   eq(g('单张高普8K黄钛金', 0.5, 1500), null, '彩色1500宽无价→null');
   // 单张模式完整计算：黄钛金 1.3mm 平板 1219×2500，表面加工费 = 14元/㎡ × 3.0475㎡ = 42.67
-  const r = PricingEngine.calculate({ origin: '宏旺', material: '201J2', surface: '单张高普8K黄钛金', thickness: '1.3', width: '1219', length: '2500', film1: '', film2: '', basePrice: 7800, calcMode: 'sheet', quantity: '50', packingFee: '0' });
+  const r = PricingEngine.calculate({ origin: '宏旺', material: '201J2', surface: '单张高普8K黄钛金', thickness: '1.3', width: '1219', length: '2500', film1: '', film2: '', basePrice: 7800, calcMode: 'sheet', packing: '木架', quantity: '50', packingFee: '0' });
   eq(r.success, true, '单张彩色计算成功');
   eq(r.success && r.detail.sheetSurfaceCost, 42.67, '表面加工费42.67 实际=' + (r.success ? r.detail.sheetSurfaceCost : JSON.stringify(r.errors)));
   // 别名

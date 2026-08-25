@@ -2090,8 +2090,13 @@ const SHEET_LENGTH_BANDS_WIDE = [
 
 // 包装方式（2026-08-22 用户规则）：平板必须二选一（木架/木箱），卷板不校验
 // 出口木箱 = 出口木架基准 + PACKING_WOODEN_BOX_SURCHARGE
-const PACKING_OPTIONS = ['木架', '木箱'];
+// v1.0.106（2026-08-25 用户规则）：单张计价支持 5 种包装，按每张板重量均摊
+const PACKING_OPTIONS = ['木架', '木箱', '密封木箱', '出口铁架', '出口铁箱'];
 const PACKING_WOODEN_BOX_SURCHARGE = 50;
+// 单张计价包装费用（元/吨）：元/吨 ÷ 1000 = 元/kg × 单张重量kg = 元/张（v1.0.106 用户规则）
+const SHEET_PACKING_FEES = { '木架': 100, '木箱': 150, '密封木箱': 250, '出口铁架': 200, '出口铁箱': 250 };
+// 装柜费用固定 50 元/吨（v1.0.106 用户规则）
+const SHEET_CONTAINER_FEE = 50;
 
 // 表面名称标准化映射
 // 预设常用产地

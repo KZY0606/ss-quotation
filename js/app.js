@@ -1742,7 +1742,16 @@ const App = (() => {
         }
       }
     });
-    dataItems.forEach(it => { it.calcMode = isSheetMode() ? 'sheet' : 'weight'; });
+    dataItems.forEach(it => {
+      it.calcMode = isSheetMode() ? 'sheet' : 'weight';
+      // v1.0.106：单张计价注入 汇率(元/美元) + 贸易术语 FOB/CIF 美元价（按当天汇率均摊）
+      if (it.calcMode === 'sheet') {
+        it.usdRate = effectiveRate() / 100;
+        it.term = termState.term;
+        it.fobUsd = termState.fobUsd || 0;
+        it.cifUsd = termState.cifUsd || 0;
+      }
+    });
     updateSheetHeaders();
     results = PricingEngine.calculateBatch(dataItems);
     // 把基价预检的详细原因合并进行级错误（替换笼统的"基价无效"）
@@ -2000,7 +2009,10 @@ const App = (() => {
       const isCoil = String(item.length || 'C').trim().toUpperCase() === 'C';
       const pk = item.packing || '';
       h.push(isSheetMode()
-        ? `<td><input type="number" class="packing-fee-inp" value="${item.packingFee != null && item.packingFee > 0 ? item.packingFee : ''}" placeholder="元" min="0" step="1" onchange="App.setPackingFee(${idx}, this.value)" style="width:72px;font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);"></td>`
+        ? `<td><select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
+            <option value="" ${!pk ? 'selected' : ''}>请选择</option>
+            ${['木架','木箱','密封木箱','出口铁架','出口铁箱'].map(o => `<option value="${o}" ${pk === o ? 'selected' : ''}>${o}</option>`).join('')}
+          </select></td>`
         : `<td>${isCoil
           ? '<span style="color:var(--text-muted)">-</span>'
           : `<select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
@@ -2072,20 +2084,30 @@ const App = (() => {
     const filmSqm = (d.film1FeeSqm || 0) + (d.film2FeeSqm || 0);
     const filmTxt = [d.film1, d.film2].filter(Boolean).join(' + ');
     const qty = d.quantity || 1;
-    const pf = d.packingFee || 0;
-    const pps = d.packingPerSheet || 0;
-    let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（售价 = 成本 + 包装均摊，按张计价）</div>`;
+    // v1.0.106：包装/装柜/FOB均摊（按单张重量 kg）
+    const pp = d.packingPerSheet || 0;
+    const cp = d.containerPerSheet || 0;
+    const tp = d.termPerSheet || 0;
+    const ex = d.extraPerSheet || 0;
+    const packLabel = d.packingName || d.packing || '';
+    const packPerKg = d.packingFee ? (d.packingFee / 1000) : 0;
+    const termLabel = d.term || 'EXW';
+    let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（售价 = 成本 + 包装/装柜/FOB均摊，按张计价）</div>`;
     html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">③ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">单张价格（成本）</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">包装均摊费：${fmt(pf)} ÷ ${qty} 张</span><span class="calc-step-value ${pps > 0 ? 'positive' : 'zero'}">${pps > 0 ? '+' + fmt(pps) : '0'} 元/张</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">不含税售价：${fmt(d.sheetPrice)} + ${fmt(pps)}</span><span class="calc-step-value positive">= ${fmt(d.sheetSaleNoTax)} 元/张</span></div>`;
+    // v1.0.106 均摊三项
+    html += `<div class="calc-step"><span class="calc-step-label">包装均摊：${packLabel || '?'} ${fmtI(d.packingFee || 0)}元/吨 = ${packPerKg}元/kg × ${fmt(d.sheetWeightKg)}kg</span><span class="calc-step-value ${pp > 0 ? 'positive' : 'zero'}">${pp > 0 ? '+' + fmt(pp) : '0'} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">装柜均摊：50元/吨 = 0.05元/kg × ${fmt(d.sheetWeightKg)}kg</span><span class="calc-step-value ${cp > 0 ? 'positive' : 'zero'}">${cp > 0 ? '+' + fmt(cp) : '0'} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">${termLabel}均摊：${d.termUsd || 0}$ × 汇率${d.usdRate || 0} = ${fmtI(d.termPerTon || 0)}元/吨 → ${d.termPerTon ? (d.termPerTon / 1000) : 0}元/kg × ${fmt(d.sheetWeightKg)}kg</span><span class="calc-step-value ${tp > 0 ? 'positive' : 'zero'}">${tp > 0 ? '+' + fmt(tp) : '0'} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">均摊合计：${fmt(pp)} + ${fmt(cp)} + ${fmt(tp)}</span><span class="calc-step-value positive">+ ${fmt(ex)} 元/张</span></div>`;
+    html += `<div class="calc-step"><span class="calc-step-label">不含税售价：${fmt(d.sheetPrice)} + ${fmt(ex)}</span><span class="calc-step-value positive">= ${fmt(d.sheetSaleNoTax)} 元/张</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">含税售价（不含税 ÷ 0.91）：${fmt(d.sheetSaleNoTax)} ÷ 0.91</span><span class="calc-step-value positive">= ${fmt(d.sheetSaleTax)} 元/张</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">数量 × 不含税售价</span><span class="calc-step-value positive">${qty} 张 × ${fmt(d.sheetSaleNoTax)} = ${fmt(d.sheetTotalSaleNoTax)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">数量 × 含税售价</span><span class="calc-step-value positive">${qty} 张 × ${fmt(d.sheetSaleTax)} = ${fmt(d.sheetTotalSaleTax)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">单张重量</span><span class="calc-step-value zero">${fmt(d.sheetWeightKg)} kg</span></div>`;
-    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">售价 = 成本 + 包装均摊费（装柜费待接入）；贸易术语与附加费用（元/吨口径）不适用于单张计价。</div>';
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">包装/装柜/FOB均摊 = 元/吨 ÷ 1000 = 元/kg × 单张重量kg（包装5档：木架100/木箱150/密封木箱250/出口铁架200/出口铁箱250元/吨，装柜固定50元/吨，FOB/CIF 按当天汇率×美元价）</div>';
     html += '</div></div>';
     return html;
   }

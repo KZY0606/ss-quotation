@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.105">
+  <link rel="stylesheet" href="css/style.css?v=1.0.106">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -269,10 +269,13 @@
               <label>包装方式 <span class="packing-required" style="color:var(--danger);font-weight:700;">*</span></label>
               <select id="manualPacking" style="width:100%;">
                 <option value="">请选择（平板必填）</option>
-                <option value="木架">木架</option>
-                <option value="木箱">木箱</option>
+                <option value="木架">木架（100元/吨）</option>
+                <option value="木箱">木箱（150元/吨）</option>
+                <option value="密封木箱">密封木箱（250元/吨）</option>
+                <option value="出口铁架">出口铁架（200元/吨）</option>
+                <option value="出口铁箱">出口铁箱（250元/吨）</option>
               </select>
-              <span style="font-size:11px;color:var(--text-muted);">平板必填：木架=基准价，木箱=+50元/吨；卷板不填</span>
+              <span style="font-size:11px;color:var(--text-muted);">过磅平板仅支持 木架/木箱；单张计价 5 种包装均摊到每张（元/吨→元/kg×重量）；木箱=木架+50元/吨</span>
             </div>
             <div class="input-group" style="justify-content:end;">
               <button class="btn btn-primary" id="addManualBtn" style="width:100%;">➕ 添加</button>
@@ -329,10 +332,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/config.js?v=1.0.105"></script>
-  <script src="js/engine.js?v=1.0.105"></script>
-  <script src="js/parser.js?v=1.0.105"></script>
-  <script src="js/app.js?v=1.0.105"></script>
+  <script src="js/config.js?v=1.0.106"></script>
+  <script src="js/engine.js?v=1.0.106"></script>
+  <script src="js/parser.js?v=1.0.106"></script>
+  <script src="js/app.js?v=1.0.106"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

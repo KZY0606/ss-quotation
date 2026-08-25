@@ -507,14 +507,18 @@ const PricingEngine = (() => {
       }
     }
 
-    // 包装方式（2026-08-22 用户规则）：平板必须填木架/木箱，卷板不校验
+    // 包装方式（2026-08-22 用户规则）：平板必填木架/木箱，卷板不校验；v1.0.106：单张计价支持 5 种包装（长词优先）
     const packingRaw = item.packing != null ? String(item.packing).trim() : '';
     let packing = null;
-    if (/木箱/.test(packingRaw)) packing = '木箱';
+    if (/密封木箱/.test(packingRaw)) packing = '密封木箱';
+    else if (/出口铁架/.test(packingRaw)) packing = '出口铁架';
+    else if (/出口铁箱/.test(packingRaw)) packing = '出口铁箱';
+    else if (/木箱/.test(packingRaw)) packing = '木箱';
     else if (/木架/.test(packingRaw)) packing = '木架';
-    // v1.0.83：单张计价用包装费用（packingFee），不再要求包装方式；过磅计价平板仍要求木架/木箱
-    if (boardType === 'sheet' && !packing && item.calcMode !== 'sheet') {
-      errors.push('平板必须填写包装方式（木架/木箱）');
+    // v1.0.83：单张计价曾用包装费用（packingFee）不再要求包装方式；v1.0.106 改回：单张按包装方式×重量均摊，过磅平板仍要求木架/木箱
+    if (boardType === 'sheet' && item.calcMode !== 'sheet') {
+      if (!packing) errors.push('平板必须填写包装方式（木架/木箱）');
+      else if (packing !== '木架' && packing !== '木箱') errors.push('过磅平板包装仅支持 木架/木箱（密封木箱/出口铁架/出口铁箱 请使用单张计价）');
     }
 
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
@@ -582,6 +586,8 @@ const PricingEngine = (() => {
       if (boardType !== 'sheet') errors.push('单张计算逻辑仅适用于平板（按张数销售的板材）');
       if (!SHEET_MODE_SURFACES.includes(baseSurface)) errors.push('单张计算逻辑目前仅支持 2B 与五种单张8K（当前表面：' + baseSurface + '）');
       if (typeof surfaceRaw === 'number' && surfaceRaw > 0) errors.push('单张计算逻辑需要按面积计价的表面加工费（当前表面按吨计价）');
+      const packingName106 = item.packing != null ? String(item.packing).trim() : '';
+      if (!SHEET_PACKING_FEES[packingName106]) errors.push('单张计价需选择包装方式（木架/木箱/密封木箱/出口铁架/出口铁箱）');
       const edgeFee = getEdgeFee(material, edgeType, width);
       if (edgeFee === null) errors.push('材质/边部类型无匹配边部费用（单张计算逻辑）');
       if (errors.length === 0) {
@@ -600,12 +606,19 @@ const PricingEngine = (() => {
         const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + 1e-9);
         const qty = (item.quantity != null && parseFloat(item.quantity) > 0) ? parseFloat(item.quantity) : 1;
         const sheetPriceTax = round2(sheetPrice / 0.91 + 1e-9);
-        // v1.0.83：包装费用均摊（包装费 ÷ 张数）→ 不含税售价 = 不含税成本 + 均摊；含税售价 = 不含税售价 ÷ 0.91
-        const packingFee = parseFloat(item.packingFee) > 0 ? parseFloat(item.packingFee) : 0;
-        const packingPerSheet = qty > 0 ? round2(packingFee / qty + 1e-9) : 0;
-        const sheetSaleNoTax = round2(sheetPrice + packingPerSheet + 1e-9);
+        // v1.0.106（2026-08-25 用户规则）：单张均摊 = 包装(元/吨÷1000=元/kg×kg) + 装柜(50元/吨) + FOB/CIF(美元×汇率=元/吨)
+        const packFeePerTon = SHEET_PACKING_FEES[packingName106] || 0;
+        const packingPerSheet = round3(packFeePerTon / 1000 * sheetWeightKg + 1e-9);
+        const containerPerSheet = round3(SHEET_CONTAINER_FEE / 1000 * sheetWeightKg + 1e-9);
+        const term106 = item.term === 'FOB' ? 'FOB' : (item.term === 'CIF' ? 'CIF' : null);
+        const termUsd106 = term106 === 'FOB' ? (parseFloat(item.fobUsd) > 0 ? parseFloat(item.fobUsd) : 0) : (term106 === 'CIF' ? (parseFloat(item.cifUsd) > 0 ? parseFloat(item.cifUsd) : 0) : 0);
+        const usdRate106 = parseFloat(item.usdRate) > 0 ? parseFloat(item.usdRate) : 0;
+        const termPerTon106 = round2(termUsd106 * usdRate106 + 1e-9);
+        const termPerSheet = round3(termPerTon106 / 1000 * sheetWeightKg + 1e-9);
+        const extraPerSheet = round2(packingPerSheet + containerPerSheet + termPerSheet + 1e-9);
+        const sheetSaleNoTax = round2(sheetPrice + extraPerSheet + 1e-9);
         const sheetSaleTax = round2(sheetSaleNoTax / 0.91 + 1e-9);
-        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice, sheetPriceTax, packingFee, packingPerSheet, sheetSaleNoTax, sheetSaleTax, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9), sheetTotalTax: round2(sheetPriceTax * qty + 1e-9), sheetTotalSaleNoTax: round2(sheetSaleNoTax * qty + 1e-9), sheetTotalSaleTax: round2(sheetSaleTax * qty + 1e-9) };
+        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice, sheetPriceTax, packingFee: packFeePerTon, packingName: packingName106, packingPerSheet, containerPerSheet, term: term106 || '', termUsd: termUsd106, usdRate: usdRate106, termPerTon: termPerTon106, termPerSheet, extraPerSheet, sheetSaleNoTax, sheetSaleTax, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9), sheetTotalTax: round2(sheetPriceTax * qty + 1e-9), sheetTotalSaleNoTax: round2(sheetSaleNoTax * qty + 1e-9), sheetTotalSaleTax: round2(sheetSaleTax * qty + 1e-9) };
       }
     }
 
@@ -631,7 +644,8 @@ const PricingEngine = (() => {
           sheetArea: sheetResult.sheetArea, sheetVolume: sheetResult.sheetVolume, sheetWeightKg: sheetResult.sheetWeightKg,
           sheetMaterialCost: sheetResult.sheetMaterialCost, sheetSurfaceCost: sheetResult.sheetSurfaceCost,
           sheetFilmCost: sheetResult.sheetFilmCost, sheetPrice: sheetResult.sheetPrice, sheetPriceTax: sheetResult.sheetPriceTax,
-          packingFee: sheetResult.packingFee, packingPerSheet: sheetResult.packingPerSheet,
+          packingFee: sheetResult.packingFee, packingName: sheetResult.packingName, packingPerSheet: sheetResult.packingPerSheet,
+          containerPerSheet: sheetResult.containerPerSheet, term: sheetResult.term, termUsd: sheetResult.termUsd, usdRate: sheetResult.usdRate, termPerTon: sheetResult.termPerTon, termPerSheet: sheetResult.termPerSheet, extraPerSheet: sheetResult.extraPerSheet,
           sheetSaleNoTax: sheetResult.sheetSaleNoTax, sheetSaleTax: sheetResult.sheetSaleTax,
           quantity: sheetResult.quantity, sheetTotal: sheetResult.sheetTotal, sheetTotalTax: sheetResult.sheetTotalTax,
           sheetTotalSaleNoTax: sheetResult.sheetTotalSaleNoTax, sheetTotalSaleTax: sheetResult.sheetTotalSaleTax
@@ -947,11 +961,14 @@ const PricingEngine = (() => {
       }
     }
 
-    // 包装方式（2026-08-22 用户规则）：自由文本识别 木箱/木架
+    // 包装方式（2026-08-22 用户规则）：自由文本识别；v1.0.106 单张支持 5 种（长词优先）
     let packing = null;
-    if (/木箱/.test(remaining)) packing = '木箱';
+    if (/密封木箱/.test(remaining)) packing = '密封木箱';
+    else if (/出口铁架/.test(remaining)) packing = '出口铁架';
+    else if (/出口铁箱/.test(remaining)) packing = '出口铁箱';
+    else if (/木箱/.test(remaining)) packing = '木箱';
     else if (/木架/.test(remaining)) packing = '木架';
-    if (packing) remaining = remaining.replace(/木箱|木架/g, ' ').trim();
+    if (packing) remaining = remaining.replace(/密封木箱|出口铁架|出口铁箱|木箱|木架/g, ' ').trim();
 
     // 根据材质 + 压延 计算基价
     let basePrice = 0;
@@ -1028,6 +1045,7 @@ const PricingEngine = (() => {
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, COIL_MARKUP_DETAIL, COIL_MARKUP_DETAIL_316L, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, SHEET_LENGTH_BANDS_WIDE, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
+    SHEET_PACKING_FEES, SHEET_CONTAINER_FEE,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
     THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500,
     EDGE_FEES, SHEET_MODE_SURFACES
