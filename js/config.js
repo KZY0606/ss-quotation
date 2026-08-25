@@ -2046,7 +2046,7 @@ const COIL_MARKUP_DETAIL_316L = [
   { group: '五尺齐边', widths: [1500, 1524], label: '齐边', edgeFee: 650, packingFee: 100, containerFee: 50, total: 800 }
 ];
 
-// 平板销售加价细分（2026-08-22 用户规则，出口木架基准；出口木箱=基准+50 待后续加 UI）
+// 平板销售加价细分（2026-08-22 用户规则，出口木架基准；出口木箱=木架+50 / 密封木箱=木架+150 / 出口铁架=木架+100 / 出口铁箱=木架+150（v1.0.107 过磅平板销售加价 5 档））
 // group: std=201/304/410/430, 316l=316L；band: s=2100-2500mm, l=3000-4000mm
 // 仅 1219/1240 宽度平板走此表；其他宽度平板沿用 SALES_MARKUP 旧价
 const SHEET_MARKUP_DETAIL = {
@@ -2088,13 +2088,13 @@ const SHEET_LENGTH_BANDS_WIDE = [
   { key: 'l', min: 3056, max: 4000 }
 ];
 
-// 包装方式（2026-08-22 用户规则）：平板必须二选一（木架/木箱），卷板不校验
-// 出口木箱 = 出口木架基准 + PACKING_WOODEN_BOX_SURCHARGE
+// 包装方式（2026-08-22 用户规则）：平板五选一（木架/出口木箱/密封木箱/出口铁架/出口铁箱），卷板不校验
+// 出口木箱 = 木架基准 + PACKING_WOODEN_BOX_SURCHARGE
 // v1.0.106（2026-08-25 用户规则）：单张计价支持 5 种包装，按每张板重量均摊
-const PACKING_OPTIONS = ['木架', '木箱', '密封木箱', '出口铁架', '出口铁箱'];
+const PACKING_OPTIONS = ['木架', '出口木箱', '密封木箱', '出口铁架', '出口铁箱'];
 const PACKING_WOODEN_BOX_SURCHARGE = 50;
 // 单张计价包装费用（元/吨）：元/吨 ÷ 1000 = 元/kg × 单张重量kg = 元/张（v1.0.106 用户规则）
-const SHEET_PACKING_FEES = { '木架': 100, '木箱': 150, '密封木箱': 250, '出口铁架': 200, '出口铁箱': 250 };
+const SHEET_PACKING_FEES = { '木架': 100, '出口木箱': 150, '密封木箱': 250, '出口铁架': 200, '出口铁箱': 250 };
 // 装柜费用固定 50 元/吨（v1.0.106 用户规则）
 const SHEET_CONTAINER_FEE = 50;
 

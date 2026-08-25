@@ -983,8 +983,8 @@ test('平板加价: 1000 长度边界 2000=s / 2001=l', () => {
 });
 test('平板加价: 1030 长度区间外报错 1030*1000', () => sheetMarkupCase('1030l1000', '201J2', 1030, 1000, null, false));
 test('平板加价: 1000 长度区间外报错 1000*4500', () => sheetMarkupCase('1000l4500', '201J2', 1000, 4500, null, false));
-test('平板加价: 1030 木箱 = 基准+50（1030*1500 std 木箱 = 550）', () => {
-  const r = PricingEngine.calculate({origin:'', material:'201J2', surface:'2B', thickness:'0.50', width:'1030', length:'1500', film1:'', film2:'', basePrice: 7800, packing: '木箱'});
+test('平板加价: 1030 出口木箱 = 基准+50（1030*1500 std 出口木箱 = 550）', () => {
+  const r = PricingEngine.calculate({origin:'', material:'201J2', surface:'2B', thickness:'0.50', width:'1030', length:'1500', film1:'', film2:'', basePrice: 7800, packing: '出口木箱'});
   eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 550);
 });
 
@@ -1014,8 +1014,8 @@ test('平板加价: 1280 长度边界 2500=s / 3000=l（304）', () => {
 });
 test('平板加价: 1250 长度区间外报错 1250*2800（304）', () => sheetMarkupCase('3041250bad', '304', 1250, 2800, null, false, '德龙'));
 test('平板加价: 1280 长度区间外报错 1280*1800（430）', () => sheetMarkupCase('4301280bad', '430', 1280, 1800, null, false, '瑞钢'));
-test('平板加价: 304 1280 木箱 = 550（500+50）', () => {
-  const r = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2440', film1:'', film2:'', basePrice: 13000, packing: '木箱'});
+test('平板加价: 304 1280 出口木箱 = 550（500+50）', () => {
+  const r = PricingEngine.calculate({origin:'德龙', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2440', film1:'', film2:'', basePrice: 13000, packing: '出口木箱'});
   eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 550);
 });
 
@@ -1046,8 +1046,8 @@ test('平板加价: 1500/1530 长度区间外报错 1530*2000 / 1500*4100', () =
   eq(r2.success, false, '1500*4100 应报错'); eq(r2.errors.length > 0, true);
 });
 test('平板加价: 201 1530 走新细分价 400（std 组含 201）', () => sheetMarkupCase('std1530s_201', '201J2', 1530, 2440, 400, true, '', '1.00'));
-test('平板加价: 316L 1530 木箱 = 550（500+50）', () => {
-  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15000, packing: '木箱'});
+test('平板加价: 316L 1530 出口木箱 = 550（500+50）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1530', length:'2440', film1:'', film2:'', basePrice: 15000, packing: '出口木箱'});
   eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 550);
 });
 test('平板加价: 1524 归类 1500 同价（2026-08-22 用户规则，齐边，2100-3055=500）', () => sheetMarkupCase('w1524_1500s', '201J2', 1524, 2440, 500, true, '', '1.00'));
@@ -1074,7 +1074,7 @@ test('平板加价: 201 1280 不计算（2026-08-22 用户规则，卷板/平板
 });
 
 
-// ===== 包装方式（2026-08-22 用户规则：平板必填 木架/木箱，卷板不校验，木箱=木架+50） =====
+// ===== 包装方式（2026-08-22 用户规则：平板必填 木架/出口木箱，卷板不校验，出口木箱=木架+50） =====
 test('包装: 平板未填包装方式 → 报错', () => {
   const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1240', length:'2440', film1:'', film2:'', basePrice: 7800});
   eq(r.success, false, '应报错: ' + JSON.stringify(r.errors));
@@ -1084,25 +1084,25 @@ test('包装: 平板木架 = 基准价（1219*2500 std = 400）', () => {
   const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1219', length:'2500', film1:'', film2:'', basePrice: 7800, packing:'木架'});
   eq(r.success, true); eq(r.detail.markup, 400); eq(r.detail.packing, '木架');
 });
-test('包装: 平板木箱 = 基准+50（1219*2500 std = 450）', () => {
-  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1219', length:'2500', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
+test('包装: 平板出口木箱 = 基准+50（1219*2500 std = 450）', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1219', length:'2500', film1:'', film2:'', basePrice: 7800, packing:'出口木箱'});
   eq(r.success, true); eq(r.detail.markup, 450);
 });
-test('包装: 316L 木箱 1240*2440 = 550（500+50）', () => {
-  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1240', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
+test('包装: 316L 出口木箱 1240*2440 = 550（500+50）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'316L', surface:'2B', thickness:'0.50', width:'1240', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'出口木箱'});
   eq(r.success, true); eq(r.detail.markup, 550);
 });
-test('包装: 非1219/1240平板木箱 = 旧价+50（1250 现为 201 禁用宽度，改 1500 验证 500+50=550）', () => {
-  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'1.00', width:'1500', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'木箱'});
+test('包装: 非1219/1240平板出口木箱 = 旧价+50（1250 现为 201 禁用宽度，改 1500 验证 500+50=550）', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'1.00', width:'1500', length:'2440', film1:'', film2:'', basePrice: 7800, packing:'出口木箱'});
   eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 550);
 });
 test('包装: 卷板未填包装正常计算（1240*C）', () => {
   const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1240', length:'C', film1:'', film2:'', basePrice: 7800});
   eq(r.success, true, JSON.stringify(r.errors)); eq(r.detail.markup, 200);
 });
-test('包装: 自由文本识别"木箱"', () => {
-  const p = PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 木箱', {});
-  eq(p.packing, '木箱', '应识别木箱');
+test('包装: 自由文本识别"出口木箱"', () => {
+  const p = PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 出口木箱', {});
+  eq(p.packing, '出口木箱', '应识别出口木箱');
 });
 test('包装: 自由文本识别"木架"', () => {
   const p = PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 木架', {});
@@ -1382,9 +1382,9 @@ test('单张逻辑 v1.0.106 包装/装柜/FOB均摊: 木架100元/吨→0.1元/k
   eq(r.detail.termPerSheet, 2.896, 'FOB平摊2.896');
   eq(r.detail.extraPerSheet, 4.07, '合计4.07');
 });
-test('单张逻辑 v1.0.106 五种包装平摊: 木架0.785/木箱1.178/密封木箱1.963/出口铁架1.57/出口铁箱1.963', () => {
+test('单张逻辑 v1.0.106 五种包装平摊: 木架0.785/出口木箱1.178/密封木箱1.963/出口铁架1.57/出口铁箱1.963', () => {
   const g = (p) => { const r = sheetCalc({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, packing: p }); return r.success ? r.detail.packingPerSheet : -1; };
-  eq(g('木架'), 0.785, '木架'); eq(g('木箱'), 1.178, '木箱'); eq(g('密封木箱'), 1.963, '密封木箱'); eq(g('出口铁架'), 1.57, '出口铁架'); eq(g('出口铁箱'), 1.963, '出口铁箱');
+  eq(g('木架'), 0.785, '木架'); eq(g('出口木箱'), 1.178, '出口木箱'); eq(g('密封木箱'), 1.963, '密封木箱'); eq(g('出口铁架'), 1.57, '出口铁架'); eq(g('出口铁箱'), 1.963, '出口铁箱');
 });
 test('单张逻辑 v1.0.106 CIF 均摊 + EXW 无术语费 + 无包装报错', () => {
   const r1 = sheetCalc({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', basePrice: 7800, term: 'CIF', fobUsd: 0, cifUsd: 60, usdRate: 6.708 });
@@ -1394,9 +1394,9 @@ test('单张逻辑 v1.0.106 CIF 均摊 + EXW 无术语费 + 无包装报错', ()
   const r3 = PricingEngine.calculate({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', film1: '', film2: '', basePrice: 7800, calcMode: 'sheet' });
   eq(r3.success, false, '无包装应报错');
 });
-test('单张逻辑 v1.0.106 过磅平板仅支持木架/木箱: 密封木箱报错', () => {
+test('单张逻辑 v1.0.107 过磅平板支持5种包装: 密封木箱销售加价+150 成功计算', () => {
   const r = PricingEngine.calculate({ origin: '宏旺', material: '201J2', surface: '2B', thickness: '0.5', width: '1000', length: '2000', film1: '', film2: '', basePrice: 7800, packing: '密封木箱' });
-  eq(r.success, false, '过磅+密封木箱应报错');
+  eq(r.success, true, '过磅+密封木箱应成功 ' + (r.success ? '' : JSON.stringify(r.errors)));
 });
 test('单张高普8K彩色系列 11色（2026-08-24 v1.0.87 用户修正：高普按厚度档[新5档] + 颜色基础价 + 颜色厚度加价；1000mm ×1.25）', () => {
   const g = (surface, t, w) => { const r = PricingEngine.getSurfaceFee(surface, t, w, '304'); return r ? (r.sqmPrice != null ? r.sqmPrice : r.price) : null; };
@@ -1568,8 +1568,8 @@ test('v1.0.105: 平板销售加价组成（边部+木架100+包装50+损耗50）
   eq(r.detail.markupDetail.lossFee, 50, 'loss');
   eq(r.detail.markupDetail.total, 500, 'total');
 });
-test('v1.0.105: 平板木箱组成（木架位150，总价+50）', () => {
-  const r = PricingEngine.calculate({origin:'张浦', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2500', film1:'', film2:'', basePrice: 13000, packing: '木箱'});
+test('v1.0.105: 平板出口木箱组成（木架位150，总价+50）', () => {
+  const r = PricingEngine.calculate({origin:'张浦', material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'2500', film1:'', film2:'', basePrice: 13000, packing: '出口木箱'});
   eq(r.success, true, JSON.stringify(r.errors));
   eq(r.detail.markup, 550, '500+50');
   eq(r.detail.markupDetail.rackFee, 150, 'rack=150');
@@ -1586,3 +1586,19 @@ test('v1.0.105: 316L 平板组成（1500 → 1500齐边(316L)）', () => {
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
+
+test('v1.0.107: 过磅平板销售加价 5 档包装（304 1280*2500 基准500）：出口木箱550/密封木箱650/出口铁架600/出口铁箱650', () => {
+  const mk = (p) => { const r = PricingEngine.calculate({ origin: '德龙', material: '304', surface: '2B', thickness: '0.50', width: '1280', length: '2500', film1: '', film2: '', basePrice: 13000, packing: p }); return r.success ? { m: r.detail.markup, rf: r.detail.markupDetail.rackFee, rl: r.detail.markupDetail.rackLabel, tot: r.detail.markupDetail.total } : { err: r.errors }; };
+  const a = mk('木架'); eq(a.m === 500 && a.rf === 100 && a.rl === '木架' && a.tot === 500, true, '木架=' + JSON.stringify(a));
+  const b = mk('出口木箱'); eq(b.m === 550 && b.rf === 150 && b.rl === '出口木箱' && b.tot === 550, true, '出口木箱=' + JSON.stringify(b));
+  const c = mk('密封木箱'); eq(c.m === 650 && c.rf === 250 && c.rl === '密封木箱' && c.tot === 650, true, '密封木箱=' + JSON.stringify(c));
+  const d = mk('出口铁架'); eq(d.m === 600 && d.rf === 200 && d.rl === '出口铁架' && d.tot === 600, true, '出口铁架=' + JSON.stringify(d));
+  const e = mk('出口铁箱'); eq(e.m === 650 && e.rf === 250 && e.rl === '出口铁箱' && e.tot === 650, true, '出口铁箱=' + JSON.stringify(e));
+});
+test('v1.0.107: 自由文本识别 出口木箱/密封木箱/出口铁架/出口铁箱', () => {
+  eq(PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 出口木箱', {}).packing, '出口木箱', '出口木箱');
+  eq(PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 密封木箱', {}).packing, '密封木箱', '密封木箱');
+  eq(PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 出口铁架', {}).packing, '出口铁架', '出口铁架');
+  eq(PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 出口铁箱', {}).packing, '出口铁箱', '出口铁箱');
+  eq(PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 木箱', {}).packing, '出口木箱', '旧叫法木箱→出口木箱');
+});

@@ -513,12 +513,11 @@ const PricingEngine = (() => {
     if (/密封木箱/.test(packingRaw)) packing = '密封木箱';
     else if (/出口铁架/.test(packingRaw)) packing = '出口铁架';
     else if (/出口铁箱/.test(packingRaw)) packing = '出口铁箱';
-    else if (/木箱/.test(packingRaw)) packing = '木箱';
+    else if (/出口木箱|木箱/.test(packingRaw)) packing = '出口木箱';
     else if (/木架/.test(packingRaw)) packing = '木架';
     // v1.0.83：单张计价曾用包装费用（packingFee）不再要求包装方式；v1.0.106 改回：单张按包装方式×重量均摊，过磅平板仍要求木架/木箱
     if (boardType === 'sheet' && item.calcMode !== 'sheet') {
-      if (!packing) errors.push('平板必须填写包装方式（木架/木箱）');
-      else if (packing !== '木架' && packing !== '木箱') errors.push('过磅平板包装仅支持 木架/木箱（密封木箱/出口铁架/出口铁箱 请使用单张计价）');
+      if (!packing) errors.push('平板必须填写包装方式（木架/出口木箱/密封木箱/出口铁架/出口铁箱）');
     }
 
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
@@ -587,7 +586,7 @@ const PricingEngine = (() => {
       if (!SHEET_MODE_SURFACES.includes(baseSurface)) errors.push('单张计算逻辑目前仅支持 2B 与五种单张8K（当前表面：' + baseSurface + '）');
       if (typeof surfaceRaw === 'number' && surfaceRaw > 0) errors.push('单张计算逻辑需要按面积计价的表面加工费（当前表面按吨计价）');
       const packingName106 = item.packing != null ? String(item.packing).trim() : '';
-      if (!SHEET_PACKING_FEES[packingName106]) errors.push('单张计价需选择包装方式（木架/木箱/密封木箱/出口铁架/出口铁箱）');
+      if (!SHEET_PACKING_FEES[packingName106]) errors.push('单张计价需选择包装方式（木架/出口木箱/密封木箱/出口铁架/出口铁箱）');
       const edgeFee = getEdgeFee(material, edgeType, width);
       if (edgeFee === null) errors.push('材质/边部类型无匹配边部费用（单张计算逻辑）');
       if (errors.length === 0) {
@@ -678,27 +677,22 @@ const PricingEngine = (() => {
           group: 'sheet',
           label: sheetMarkupLabel(detailKey),
           edgeFee: markup - 200,
-          rackFee: 100, packFee: 50, lossFee: 50,
-          total: markup
+          rackFee: (packing && SHEET_PACKING_FEES[packing]) ? SHEET_PACKING_FEES[packing] : 100, packFee: 50, lossFee: 50,
+          total: (markup - 200) + ((packing && SHEET_PACKING_FEES[packing]) ? SHEET_PACKING_FEES[packing] : 100) + 100,
+          rackLabel: packing || '木架',
         };
       }
       // 未命中细分（非细分宽度/材质组或区间外）：沿用旧加价（rough_sheet=300 / trim_sheet=500）
     }
-    // 出口木箱：在出口木架基准上加 50 元/吨（2026-08-22 用户规则，卷板不受影响）
-    if (packing === '木箱' && !(markupDetail && markupDetail.group === 'coil')) {
-      markup += PACKING_WOODEN_BOX_SURCHARGE;
-      if (markupDetail && markupDetail.group === 'sheet') {
-        // 木箱 = 木架 +50 → 组成中木架位显示为 150（边部不变，总价同步 +50）
-        markupDetail.rackFee += PACKING_WOODEN_BOX_SURCHARGE;
-        markupDetail.total += PACKING_WOODEN_BOX_SURCHARGE;
-      }
+    // 包装档位销售加价（v1.0.107 用户规则）：出口木箱=木架+50 / 密封木箱=木架+150 / 出口铁架=木架+100 / 出口铁箱=木架+150（卷板不受影响）
+    if (boardType === 'sheet' && packing && SHEET_PACKING_FEES[packing] && SHEET_PACKING_FEES[packing] !== 100) {
+      markup += SHEET_PACKING_FEES[packing] - 100;
     }
     // 1000mm 宽度特殊加价：仅对未命中 1000 细分表的材质生效（命中细分的已含明确价格，2026-08-22）
     if (width === 1000 && !usedSheetDetail && !markupDetail) {
       markup += 200;
     }
     const saleTax = round10(costTax + markup);
-    // 2026-08-22 用户规则：不含税售价 = (基价+厚度加价)×0.92 + 表面加工费(含纹路/AFP) + 膜费 + 销售加价；含税售价 = 各项直接相加（不打折）
     const materialNoTaxRaw = round2((basePrice + thickSurcharge) * 0.92);
     const saleNoTax = round10(materialNoTaxRaw + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon + markup);
 
@@ -722,7 +716,7 @@ const PricingEngine = (() => {
         costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded), materialNoTaxRaw: round2(materialNoTaxRaw),
         costTax, costNoTax,
         edgeType, boardType, markup, widthSurcharge, packing,
-        markupDetail: markupDetail ? { group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee, packingFee: markupDetail.packingFee, containerFee: markupDetail.containerFee, rackFee: markupDetail.rackFee, packFee: markupDetail.packFee, lossFee: markupDetail.lossFee, total: markupDetail.total } : null,
+        markupDetail: markupDetail ? { group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee, packingFee: markupDetail.packingFee, containerFee: markupDetail.containerFee, rackFee: markupDetail.rackFee, packFee: markupDetail.packFee, lossFee: markupDetail.lossFee, total: markupDetail.total, rackLabel: markupDetail.rackLabel } : null,
         saleTax, saleNoTax
       }
     };
@@ -966,7 +960,7 @@ const PricingEngine = (() => {
     if (/密封木箱/.test(remaining)) packing = '密封木箱';
     else if (/出口铁架/.test(remaining)) packing = '出口铁架';
     else if (/出口铁箱/.test(remaining)) packing = '出口铁箱';
-    else if (/木箱/.test(remaining)) packing = '木箱';
+    else if (/出口木箱|木箱/.test(remaining)) packing = '出口木箱';
     else if (/木架/.test(remaining)) packing = '木架';
     if (packing) remaining = remaining.replace(/密封木箱|出口铁架|出口铁箱|木箱|木架/g, ' ').trim();
 

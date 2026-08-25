@@ -2011,14 +2011,17 @@ const App = (() => {
       h.push(isSheetMode()
         ? `<td><select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
             <option value="" ${!pk ? 'selected' : ''}>请选择</option>
-            ${['木架','木箱','密封木箱','出口铁架','出口铁箱'].map(o => `<option value="${o}" ${pk === o ? 'selected' : ''}>${o}</option>`).join('')}
+            ${['木架','出口木箱','密封木箱','出口铁架','出口铁箱'].map(o => `<option value="${o}" ${pk === o ? 'selected' : ''}>${o}</option>`).join('')}
           </select></td>`
         : `<td>${isCoil
           ? '<span style="color:var(--text-muted)">-</span>'
           : `<select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
               <option value="" ${!pk ? 'selected' : ''}>请选择</option>
               <option value="木架" ${pk === '木架' ? 'selected' : ''}>木架</option>
-              <option value="木箱" ${pk === '木箱' ? 'selected' : ''}>木箱</option>
+              <option value="出口木箱" ${pk === '出口木箱' ? 'selected' : ''}>出口木箱</option>
+              <option value="密封木箱" ${pk === '密封木箱' ? 'selected' : ''}>密封木箱</option>
+              <option value="出口铁架" ${pk === '出口铁架' ? 'selected' : ''}>出口铁架</option>
+              <option value="出口铁箱" ${pk === '出口铁箱' ? 'selected' : ''}>出口铁箱</option>
             </select>`}</td>`);
       const wgt = d && d.weight != null ? d.weight : (item.weight || null);
       h.push(d && d.calcMode === 'sheet'
@@ -2107,7 +2110,7 @@ const App = (() => {
     html += `<div class="calc-step"><span class="calc-step-label">数量 × 不含税售价</span><span class="calc-step-value positive">${qty} 张 × ${fmt(d.sheetSaleNoTax)} = ${fmt(d.sheetTotalSaleNoTax)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">数量 × 含税售价</span><span class="calc-step-value positive">${qty} 张 × ${fmt(d.sheetSaleTax)} = ${fmt(d.sheetTotalSaleTax)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">单张重量</span><span class="calc-step-value zero">${fmt(d.sheetWeightKg)} kg</span></div>`;
-    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">包装/装柜/FOB均摊 = 元/吨 ÷ 1000 = 元/kg × 单张重量kg（包装5档：木架100/木箱150/密封木箱250/出口铁架200/出口铁箱250元/吨，装柜固定50元/吨，FOB/CIF 按当天汇率×美元价）</div>';
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">包装/装柜/FOB均摊 = 元/吨 ÷ 1000 = 元/kg × 单张重量kg（包装5档：木架100/出口木箱150/密封木箱250/出口铁架200/出口铁箱250元/吨，装柜固定50元/吨，FOB/CIF 按当天汇率×美元价）</div>';
     html += '</div></div>';
     return html;
   }
@@ -2157,7 +2160,7 @@ const App = (() => {
     html += step('+ 表面加工费（含纹路/AFP）', d.surfaceFeePerTon + (d.linenFeePerTon || 0) + (d.afpPerTon || 0), '元/吨', true);
     html += step('+ 膜费', (d.film1PerTon || 0) + (d.film2PerTon || 0), '元/吨', true);
     const mkExtra = d.markupDetail ? (d.markupDetail.group === 'sheet'
-      ? ' = 边部加价(' + d.markupDetail.label + ')' + d.markupDetail.edgeFee + ' + 木架' + d.markupDetail.rackFee + ' + 包装' + d.markupDetail.packFee + ' + 加工损耗' + d.markupDetail.lossFee
+      ? ' = 边部加价(' + d.markupDetail.label + ')' + d.markupDetail.edgeFee + ' + ' + (d.markupDetail.rackLabel || '木架') + d.markupDetail.rackFee + ' + 包装' + d.markupDetail.packFee + ' + 加工损耗' + d.markupDetail.lossFee
       : ' = ' + d.markupDetail.label + '加价' + d.markupDetail.edgeFee + ' + 包装费用' + d.markupDetail.packingFee + ' + 装柜费用' + d.markupDetail.containerFee) : '';
     html += step('+ 销售加价(' + markupLabel + ')' + mkExtra, d.markup, '元/吨', d.markup > 0);
     html += total('不含税售价（十位取整）', d.saleNoTax, 'sale');
