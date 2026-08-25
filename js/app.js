@@ -1410,8 +1410,26 @@ const App = (() => {
     h.push('<tr><td>亮光抗指纹 (AFP Bright)</td><td class="ref-num">' + AFP_BRIGHT_FEE + ' 元/㎡</td></tr>');
     h.push('<tr><td>哑光抗指纹 (AFP Matte)</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
     h.push('<tr><td colspan="2" style="padding:4px"></td></tr>');
-    h.push('<tr><th>销售加价</th><th class="ref-num">元/吨</th></tr>');
-    // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）
+    h.push('</table></div>');
+
+    el.innerHTML = h.join('');
+  }
+
+  function renderCoilMarkupConfig() {
+    const el = dom('coilMarkupTable');
+    if (!el) return;
+    let h = [];
+    h.push('<div class="ref-section"><h3 class="ref-title">📈 销售加价</h3>');
+    h.push('<h4 class="ref-subtitle">卷板销售加价（销售加价 = 边部加价 + 包装费用 + 装柜费用）</h4>');
+    h.push('<table class="ref-table"><tr><th>宽度</th><th>类型</th><th>边部加价</th><th>包装费用</th><th>装柜费用</th><th class="ref-num">合计 (元/吨)</th></tr>');
+    for (const row of COIL_MARKUP_DETAIL) {
+      const w = row.widths.join('/');
+      h.push('<tr><td>' + w + 'mm</td><td>' + row.label + '</td><td class="ref-num">+' + row.edgeFee + '</td><td class="ref-num">+' + row.packingFee + '</td><td class="ref-num">+' + row.containerFee + '</td><td class="ref-num">+' + row.total + '</td></tr>');
+      h.push('<tr><td colspan="6" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">' + w + 'mm ' + row.label + '卷板销售加价 = ' + row.label + '边部加价' + row.edgeFee + '元/吨 + 包装费用' + row.packingFee + '元/吨 + 装柜费用' + row.containerFee + '元/吨 = ' + row.total + '元/吨</td></tr>');
+    }
+    h.push('</table>');
+    h.push('<h4 class="ref-subtitle">平板销售加价（出口木架基准）</h4>');
+    h.push('<table class="ref-table"><tr><th>材质</th><th>宽度/边部</th><th>长度区间</th><th class="ref-num">加价 (元/吨)</th></tr>');
     const sheetRows = [
       ['201/304/410/430', '1240毛边', '2100-2500', 'std_1240_s'],
       ['201/304/410/430', '1240毛边', '3000-4000', 'std_1240_l'],
@@ -1423,9 +1441,8 @@ const App = (() => {
       ['316L', '1219齐边', '3000-4000', '316l_1219_l']
     ];
     for (const [m, w, l, key] of sheetRows) {
-      h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
     }
-    // 1030 毛边 / 1000 齐边 细分（2026-08-22 用户规则，出口木架基准）
     const narrowRows = [
       ['201/304/410/430', '1030毛边', '1001-2000', 'std_1030_s'],
       ['201/304/410/430', '1030毛边', '2001-4000', 'std_1030_l'],
@@ -1437,9 +1454,8 @@ const App = (() => {
       ['316L', '1000齐边', '2001-4000', '316l_1000_l']
     ];
     for (const [m, w, l, key] of narrowRows) {
-      h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
     }
-    // 1250 齐边 / 1280 毛边 细分（2026-08-22 用户规则，出口木架基准；304 与 410/430 分开定价）
     const wideRows = [
       ['410/430', '1280毛边', '2100-2500', '410430_1280_s'],
       ['410/430', '1280毛边', '3000-4000', '410430_1280_l'],
@@ -1455,9 +1471,8 @@ const App = (() => {
       ['316L', '1250齐边', '3000-4000', '316l_1250_l']
     ];
     for (const [m, w, l, key] of wideRows) {
-      h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
     }
-    // 1500 齐边 / 1530 毛边 细分（2026-08-22 用户规则，出口木架基准；201/304/410/430 合并 std 组，316L 独立；2100-3055/3056-4000）
     const wide2Rows = [
       ['201/304/410/430', '1530毛边', '2100-3055', 'std_1530_s'],
       ['201/304/410/430', '1530毛边', '3056-4000', 'std_1530_l'],
@@ -1469,27 +1484,11 @@ const App = (() => {
       ['316L', '1500齐边', '3056-4000', '316l_1500_l']
     ];
     for (const [m, w, l, key] of wide2Rows) {
-      h.push(`<tr><td>${m} 平板 ${w} 长度${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
     }
-    h.push('<tr><td>其他宽度平板 毛边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.rough_sheet + '</td></tr>');
-    h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
-    h.push('<tr><td colspan="2" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + ' 元/吨；平板长度须在 2100-2500/3000-4000（1219/1240/1250/1280）、2100-3055/3056-4000（1500/1524/1530，1524 与 1500 同价）或 1001-2000/2001-4000（1030/1000）；201 材质不提供 1250/1280mm 宽度</td></tr>');
-    h.push('</table></div>');
-
-    el.innerHTML = h.join('');
-  }
-
-  function renderCoilMarkupConfig() {
-    const el = dom('coilMarkupTable');
-    if (!el) return;
-    let h = [];
-    h.push('<div class="ref-section"><h3 class="ref-title">📈 卷板销售加价（销售加价 = 边部加价 + 包装费用 + 装柜费用）</h3>');
-    h.push('<table class="ref-table"><tr><th>宽度</th><th>类型</th><th>边部加价</th><th>包装费用</th><th>装柜费用</th><th class="ref-num">合计 (元/吨)</th></tr>');
-    for (const row of COIL_MARKUP_DETAIL) {
-      const w = row.widths.join('/');
-      h.push('<tr><td>' + w + 'mm</td><td>' + row.label + '</td><td class="ref-num">+' + row.edgeFee + '</td><td class="ref-num">+' + row.packingFee + '</td><td class="ref-num">+' + row.containerFee + '</td><td class="ref-num">+' + row.total + '</td></tr>');
-      h.push('<tr><td colspan="6" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">' + w + 'mm ' + row.label + '卷板销售加价 = ' + row.label + '边部加价' + row.edgeFee + '元/吨 + 包装费用' + row.packingFee + '元/吨 + 装柜费用' + row.containerFee + '元/吨 = ' + row.total + '元/吨</td></tr>');
-    }
+    h.push('<tr><td>其他宽度平板 毛边（旧价）</td><td colspan="2"></td><td class="ref-num">+' + SALES_MARKUP.rough_sheet + '</td></tr>');
+    h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td colspan="2"></td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
+    h.push('<tr><td colspan="4" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + '元/吨</td></tr>');
     h.push('</table>');
     h.push('<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">四尺=1219/1240/1250/1280，米尺=1000，五尺=1500/1524/1530；316L 待提供数据暂用通用表</div>');
     h.push('</div>');
