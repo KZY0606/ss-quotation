@@ -2030,6 +2030,15 @@ const SALES_MARKUP = {
   'rough_sheet': 300,
   'trim_sheet':  500
 };
+// 卷板销售加价（2026-08-25 用户规则）：销售加价 = 边部加价 + 包装费用 + 装柜费用；四尺=1219/1240/1250/1280，米尺=1000，五尺=1500/1524/1530；316L 独立档待用户提供数据（暂回落通用表）
+const COIL_MARKUP_DETAIL = [
+  { group: '四尺毛边', widths: [1240, 1280], label: '毛边', edgeFee: 50, packingFee: 100, containerFee: 50, total: 200 },
+  { group: '四尺齐边', widths: [1219, 1250], label: '齐边', edgeFee: 200, packingFee: 100, containerFee: 50, total: 350 },
+  { group: '米尺齐边', widths: [1000], label: '齐边', edgeFee: 400, packingFee: 100, containerFee: 50, total: 550 },
+  { group: '五尺毛边', widths: [1530], label: '毛边', edgeFee: 100, packingFee: 100, containerFee: 50, total: 250 },
+  { group: '五尺齐边', widths: [1500, 1524], label: '齐边', edgeFee: 250, packingFee: 100, containerFee: 50, total: 400 }
+];
+const COIL_MARKUP_DETAIL_316L = [];
 
 // 平板销售加价细分（2026-08-22 用户规则，出口木架基准；出口木箱=基准+50 待后续加 UI）
 // group: std=201/304/410/430, 316l=316L；band: s=2100-2500mm, l=3000-4000mm

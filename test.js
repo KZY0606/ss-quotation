@@ -1457,5 +1457,53 @@ test('单张8K 基础系列新厚度档边界（v1.0.87：0.24-1.2/1.21-1.5/1.51
   });
 });
 
+
+// ===== 卷板销售加价（2026-08-25 用户规则：销售加价 = 边部加价 + 包装费用 + 装柜费用）=====
+test('卷板销售加价: 1240/1280 毛边 = 50+100+50 = 200', () => {
+  const r = PricingEngine.calculate({material:'201J2', surface:'2B', thickness:'0.50', width:'1240', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markup, 200);
+  eq(r.detail.markupDetail.edgeFee, 50); eq(r.detail.markupDetail.packingFee, 100); eq(r.detail.markupDetail.containerFee, 50);
+  const r2 = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1280', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r2.detail.markup, 200);
+});
+test('卷板销售加价: 1219/1250 齐边 = 200+100+50 = 350', () => {
+  const r = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1219', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markup, 350);
+  const r2 = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1250', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r2.detail.markup, 350);
+});
+test('卷板销售加价: 1000 齐边 = 400+100+50 = 550（不叠加旧+200）', () => {
+  const r = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1000', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markup, 550, '应550实际=' + r.detail.markup);
+});
+test('卷板销售加价: 1530 毛边 = 100+100+50 = 250', () => {
+  const r = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1530', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markup, 250);
+});
+test('卷板销售加价: 1500/1524 齐边 = 250+100+50 = 400', () => {
+  const r = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1500', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markup, 400);
+  const r2 = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1524', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r2.detail.markup, 400);
+});
+test('卷板销售加价: 316L 数据待补，暂用通用表 1240=200', () => {
+  const r = PricingEngine.calculate({origin:'甬金', material:'316L', surface:'2B', thickness:'0.60', width:'1240', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markup, 200);
+});
+test('卷板销售加价: 1030 未命中新表回落旧逻辑 rough_coil=200', () => {
+  const r = PricingEngine.calculate({material:'304', surface:'2B', thickness:'0.50', width:'1030', length:'C', film1:'', film2:'', basePrice: 7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.markup, 200);
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

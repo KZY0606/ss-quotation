@@ -645,6 +645,12 @@ const PricingEngine = (() => {
     const costNoTax = round10(taxExcluded);
     const markupKey = `${edgeType}_${boardType}`;
     let markup = SALES_MARKUP[markupKey];
+    let markupDetail = null;
+    // v1.0.98 (2026-08-25 user rule): coil sales markup = edge fee + packing fee + container fee
+    if (boardType === 'coil') {
+      const coilInfo = getCoilMarkupInfo(material, width);
+      if (coilInfo) { markup = coilInfo.total; markupDetail = coilInfo; }
+    }
     // 平板销售加价细分（2026-08-22 用户规则，出口木架基准）：
     // 1219/1240 按 材质组×宽度×长度区间（2100-2500/3000-4000）；1030/1000 按 材质组×宽度×长度区间（1001-2000/2001-4000）
     let usedSheetDetail = false;
@@ -657,11 +663,11 @@ const PricingEngine = (() => {
       // 未命中细分（非细分宽度/材质组或区间外）：沿用旧加价（rough_sheet=300 / trim_sheet=500）
     }
     // 出口木箱：在出口木架基准上加 50 元/吨（2026-08-22 用户规则，卷板不受影响）
-    if (packing === '木箱') {
+    if (packing === '木箱' && !markupDetail) {
       markup += PACKING_WOODEN_BOX_SURCHARGE;
     }
     // 1000mm 宽度特殊加价：仅对未命中 1000 细分表的材质生效（命中细分的已含明确价格，2026-08-22）
-    if (width === 1000 && !usedSheetDetail) {
+    if (width === 1000 && !usedSheetDetail && !markupDetail) {
       markup += 200;
     }
     const saleTax = round10(costTax + markup);
@@ -689,9 +695,22 @@ const PricingEngine = (() => {
         costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded), materialNoTaxRaw: round2(materialNoTaxRaw),
         costTax, costNoTax,
         edgeType, boardType, markup, widthSurcharge, packing,
+        markupDetail: markupDetail ? { group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee, packingFee: markupDetail.packingFee, containerFee: markupDetail.containerFee, total: markupDetail.total } : null,
         saleTax, saleNoTax
       }
     };
+  }
+
+  // v1.0.98 (2026-08-25 user rule): coil sales markup lookup by width
+  function getCoilMarkupInfo(material, width) {
+    const w = parseFloat(width);
+    if (!w || !Number.isFinite(w)) return null;
+    const is316 = material && /^316L/.test(material);
+    const table = is316 && COIL_MARKUP_DETAIL_316L.length ? COIL_MARKUP_DETAIL_316L : COIL_MARKUP_DETAIL;
+    for (const row of table) {
+      if (row.widths.indexOf(w) !== -1) return row;
+    }
+    return null;
   }
 
   function getThickTableName(isYanYan, material, origin, surface) {
@@ -976,11 +995,11 @@ const PricingEngine = (() => {
     calculate, calculateBatch, parseSpec, parseFreeText,
     normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge, addExtras, calcTotal,
     parseThicknessRange,
-    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee,
+    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee, getCoilMarkupInfo,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
-    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
+    SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, COIL_MARKUP_DETAIL, COIL_MARKUP_DETAIL_316L, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, SHEET_LENGTH_BANDS_WIDE, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
     THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500,
