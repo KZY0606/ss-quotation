@@ -991,3 +991,12 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .cfg-expand { cursor: pointer; margin-right: 5px; color: var(--accent, #2f6fed); font-size: 12px; user-select: none; display: inline-block; width: 14px; }
 .sg-color-row td { background: rgba(255,255,255,0.5); padding-left: 28px !important; font-size: 12px; }
 .sg-color-name { color: var(--text-muted, #666); }
+
+/* v1.0.101: reference panel sticky nav + collapsible sections */
+.ref-nav{position:sticky;top:0;z-index:20;background:var(--card-bg,#ffffff);padding:8px 4px;margin-bottom:10px;border-bottom:1px solid var(--border,#e8e8e8);display:flex;flex-wrap:wrap;gap:6px;}
+.ref-nav-btn{border:1px solid var(--border,#d8d8d8);background:var(--bg,#f5f6f8);color:var(--text,#333);border-radius:14px;padding:4px 12px;font-size:12px;cursor:pointer;transition:all .15s;}
+.ref-nav-btn:hover{border-color:var(--accent,#4a90d9);color:var(--accent,#4a90d9);}
+.ref-title{cursor:pointer;user-select:none;}
+.ref-toggle{display:inline-block;width:14px;font-size:10px;color:var(--text-muted,#999);transition:transform .15s;}
+.ref-section.ref-collapsed .ref-toggle{transform:rotate(-90deg);}
+.ref-section.ref-collapsed h3 ~ *{display:none;}

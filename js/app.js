@@ -1185,9 +1185,15 @@ const App = (() => {
     const el = dom('priceReferenceTable');
     if (!el) return;
     let h = [];
-
+    h.push('<div class="ref-nav">' +
+      '<button class="ref-nav-btn" data-target="ref-sec-1">📋 厚度加价</button>' +
+      '<button class="ref-nav-btn" data-target="ref-sec-2">✅ 表面加工费</button>' +
+      '<button class="ref-nav-btn" data-target="ref-sec-3">🔒 保护膜</button>' +
+      '<button class="ref-nav-btn" data-target="ref-sec-4">⚙️ 辅助参数</button>' +
+      '<button class="ref-nav-btn" data-target="ref-top">↑ 顶部</button>' +
+      '</div>');
     // ===== 1. 厚度加价总表 =====
-    h.push('<div class="ref-section"><h3 class="ref-title">📐 厚度加价总表</h3>');
+    h.push('<div class="ref-section" id="ref-sec-1"><h3 class="ref-title"><span class="ref-toggle">▾</span>📐 厚度加价总表</h3>');
     // 默认表
     h.push('<h4 class="ref-subtitle">宏旺201(正材）</h4>');
     h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
@@ -1269,7 +1275,7 @@ const App = (() => {
     h.push('</div>');
 
     // ===== 2. 表面加工费总表 =====
-    h.push('<div class="ref-section"><h3 class="ref-title">✨ 表面加工费总表</h3>');
+    h.push('<div class="ref-section" id="ref-sec-2"><h3 class="ref-title"><span class="ref-toggle">▾</span>✨ 表面加工费总表</h3>');
     h.push('<h4 class="ref-subtitle">201 表面加工费</h4>');
     h.push('<table class="ref-table"><tr><th>表面</th><th>厚度范围 (mm)</th><th>宽度范围 (mm)</th><th>单价</th></tr>');
 
@@ -1393,7 +1399,7 @@ const App = (() => {
     h.push('</div>');
 
     // ===== 3. 保护膜价格表 =====
-    h.push('<div class="ref-section"><h3 class="ref-title">🔖 保护膜价格</h3>');
+    h.push('<div class="ref-section" id="ref-sec-3"><h3 class="ref-title"><span class="ref-toggle">▾</span>🔖 保护膜价格</h3>');
     h.push('<table class="ref-table"><tr><th>膜型号</th><th>单价 (元/㎡)</th></tr>');
     Object.entries(FILM_FEES).forEach(([name, price]) => {
       h.push(`<tr><td>${name}</td><td class="ref-num">${price}</td></tr>`);
@@ -1401,7 +1407,7 @@ const App = (() => {
     h.push('</table></div>');
 
     // ===== 4. 辅助参数 =====
-    h.push('<div class="ref-section"><h3 class="ref-title">⚙️ 辅助参数</h3>');
+    h.push('<div class="ref-section" id="ref-sec-4"><h3 class="ref-title"><span class="ref-toggle">▾</span>⚙️ 辅助参数</h3>');
     h.push('<table class="ref-table">');
     h.push('<tr><td>密度 (201)</td><td class="ref-num">' + DENSITY['201'] + '</td></tr>');
     h.push('<tr><td>密度 (304)</td><td class="ref-num">' + DENSITY['304'] + '</td></tr>');
@@ -1413,6 +1419,20 @@ const App = (() => {
     h.push('</table></div>');
 
     el.innerHTML = h.join('');
+    // v1.0.101: 目录导航 + 折叠
+    el.querySelectorAll('.ref-nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const t = document.getElementById(btn.dataset.target);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+    el.querySelectorAll('.ref-title').forEach(h3 => {
+      h3.addEventListener('click', () => {
+        const sec = h3.parentElement;
+        if (!sec || !sec.classList.contains('ref-section')) return;
+        sec.classList.toggle('ref-collapsed');
+      });
+    });
   }
 
   function renderCoilMarkupConfig() {
