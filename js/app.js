@@ -34,6 +34,13 @@ const App = (() => {
   const ORIGINS_316L = ['甬金', '张浦', '太钢'];
   let originPrices316L = {};
   let lockedOrigins316L = {};
+  // v1.0.96 五尺（1500/1524/1530mm）基价：仅部分产地提供
+  let fiveFootPrices304 = {};
+  let fiveFootPrices316L = {};
+  let fiveFootPrices400 = {};
+  let lockedFiveFoot304 = {};
+  let lockedFiveFoot316L = {};
+  let lockedFiveFoot400 = {};
   // 北港 J5 基价（北港只卖 J5，单独一行填写，不分宽度）
   let beigangJ5Price = 0;
   let beigangJ5Locked = false;
@@ -111,20 +118,47 @@ const App = (() => {
   let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
 
   // ========== 基价计算 ==========
+  function isFiveFootWidth(width) {
+    const w = parseFloat(width);
+    return w === 1500 || w === 1524 || w === 1530;
+  }
+
   function getMaterialPrice(origin, material, surface, width, thickness) {
     // 400系：查独立基价表（按产地+材质），410S/BA 是一个整体材质名
     if (origin && material) {
       const normMat = normalize400Material(material);
       if (PRODUCTS_400.some(p => p.origin === origin && p.material === normMat)) {
         const key = origin + '-' + normMat;
+        // v1.0.96 五尺（1500/1524/1530mm）：仅宏旺410S/2BA、宏旺430W/2BA 提供
+        if (isFiveFootWidth(width)) {
+          if (FIVE_FOOT_ORIGINS['400'].includes(key)) {
+            const p = fiveFootPrices400[key];
+            return (p && p > 0) ? p : null;
+          }
+          return null;
+        }
         return prices400[key] || null;
       }
     }
     if (material === '304' || material.startsWith('304')) {
+      if (isFiveFootWidth(width)) {
+        if (FIVE_FOOT_ORIGINS['304'].includes(origin)) {
+          const p = fiveFootPrices304[origin];
+          return (p && p > 0) ? p : null;
+        }
+        return null;
+      }
       const p = originPrices304[origin];
       return (p && p > 0) ? p : null;
     }
     if (material === '316L') {
+      if (isFiveFootWidth(width)) {
+        if (FIVE_FOOT_ORIGINS['316L'].includes(origin)) {
+          const p = fiveFootPrices316L[origin];
+          return (p && p > 0) ? p : null;
+        }
+        return null;
+      }
       const p = originPrices316L[origin];
       return (p && p > 0) ? p : null;
     }
@@ -483,6 +517,9 @@ const App = (() => {
         <span class="oname" style="min-width:56px">${origin}</span>
         <div class="oj2" style="width:90px"><label>304</label><input type="number" class="origin-304-input" data-origin="${origin}" value="${price304 || ''}" step="10" placeholder="未填" style="width:70px;font-size:13px;" ${locked304 ? 'readonly' : ''}></div>
         <button class="o-lock ${locked304 ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="304" title="${locked304 ? '点击解锁' : '点击锁定'}">${locked304 ? '🔒' : '🔓'}</button>
+        ${FIVE_FOOT_ORIGINS['304'].includes(origin) ? `
+        <div class="oj2" style="width:90px"><label>五尺</label><input type="number" class="origin-304-ff-input" data-origin="${origin}" value="${fiveFootPrices304[origin] || ''}" step="10" placeholder="未填" style="width:70px;font-size:13px;" ${lockedFiveFoot304[origin] ? 'readonly' : ''}></div>
+        <button class="o-lock ${lockedFiveFoot304[origin] ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="304" data-ff="1" title="${lockedFiveFoot304[origin] ? '点击解锁' : '点击锁定'}">${lockedFiveFoot304[origin] ? '🔒' : '🔓'}</button>` : ''}
         <span class="oderived" style="margin-left:4px;font-size:12px;color:var(--text-secondary);">
           ${price304 > 0 ? `基价: <b>${price304.toLocaleString()}</b>` : '<span class="oderived-hint">请填写基价</span>'}
         </span>
@@ -490,7 +527,16 @@ const App = (() => {
       els.originRows304.appendChild(div);
     });
     bindOriginInputs('.origin-304-input', originPrices304);
-    document.querySelectorAll('.o-lock[data-mat="304"]').forEach(btn => {
+    bindOriginInputs('.origin-304-ff-input', fiveFootPrices304);
+    document.querySelectorAll('.o-lock[data-mat="304"][data-ff="1"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const o = btn.dataset.origin;
+        lockedFiveFoot304[o] = !lockedFiveFoot304[o];
+        saveLockedPrices();
+        renderOriginGrid304();
+      });
+    });
+    document.querySelectorAll('.o-lock[data-mat="304"]:not([data-ff])').forEach(btn => {
       btn.addEventListener('click', () => {
         lockedOrigins304[btn.dataset.origin] = !lockedOrigins304[btn.dataset.origin];
         saveLockedPrices();
@@ -511,6 +557,9 @@ const App = (() => {
         <span class="oname" style="min-width:56px">${origin}</span>
         <div class="oj2" style="width:90px"><label>316L</label><input type="number" class="origin-316L-input" data-origin="${origin}" value="${price316L || ''}" step="10" placeholder="未填" style="width:70px;font-size:13px;" ${locked316L ? 'readonly' : ''}></div>
         <button class="o-lock ${locked316L ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="316L" title="${locked316L ? '点击解锁' : '点击锁定'}">${locked316L ? '🔒' : '🔓'}</button>
+        ${FIVE_FOOT_ORIGINS['316L'].includes(origin) ? `
+        <div class="oj2" style="width:90px"><label>五尺</label><input type="number" class="origin-316L-ff-input" data-origin="${origin}" value="${fiveFootPrices316L[origin] || ''}" step="10" placeholder="未填" style="width:70px;font-size:13px;" ${lockedFiveFoot316L[origin] ? 'readonly' : ''}></div>
+        <button class="o-lock ${lockedFiveFoot316L[origin] ? 'locked' : ''}" style="padding:0 2px;font-size:11px" data-origin="${origin}" data-mat="316L" data-ff="1" title="${lockedFiveFoot316L[origin] ? '点击解锁' : '点击锁定'}">${lockedFiveFoot316L[origin] ? '🔒' : '🔓'}</button>` : ''}
         <span class="oderived" style="margin-left:4px;font-size:12px;color:var(--text-secondary);">
           ${price316L > 0 ? `基价: <b>${price316L.toLocaleString()}</b>` : '<span class="oderived-hint">请填写基价</span>'}
         </span>
@@ -518,7 +567,16 @@ const App = (() => {
       els.originRows316L.appendChild(div);
     });
     bindOriginInputs('.origin-316L-input', originPrices316L);
-    document.querySelectorAll('.o-lock[data-mat="316L"]').forEach(btn => {
+    bindOriginInputs('.origin-316L-ff-input', fiveFootPrices316L);
+    document.querySelectorAll('.o-lock[data-mat="316L"][data-ff="1"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const o = btn.dataset.origin;
+        lockedFiveFoot316L[o] = !lockedFiveFoot316L[o];
+        saveLockedPrices();
+        renderOriginGrid316L();
+      });
+    });
+    document.querySelectorAll('.o-lock[data-mat="316L"]:not([data-ff])').forEach(btn => {
       btn.addEventListener('click', () => {
         lockedOrigins316L[btn.dataset.origin] = !lockedOrigins316L[btn.dataset.origin];
         saveLockedPrices();
@@ -609,6 +667,13 @@ const App = (() => {
         if (lockedOrigins316L[o]) data316L[o] = p;
       }
       localStorage.setItem('kk_locked_prices_316L', JSON.stringify(data316L));
+      // 304/316L 五尺锁定价
+      const data304ff = {};
+      for (const [o, p] of Object.entries(fiveFootPrices304)) { if (lockedFiveFoot304[o]) data304ff[o] = p; }
+      localStorage.setItem('kk_locked_prices_304_ff', JSON.stringify(data304ff));
+      const data316Lff = {};
+      for (const [o, p] of Object.entries(fiveFootPrices316L)) { if (lockedFiveFoot316L[o]) data316Lff[o] = p; }
+      localStorage.setItem('kk_locked_prices_316L_ff', JSON.stringify(data316Lff));
       saveBeigangJ5();
     } catch (e) { /* ignore */ }
   }
@@ -657,7 +722,14 @@ const App = (() => {
       }
     } catch (e) { /* ignore */ }
     try {
-      const raw304 = localStorage.getItem('kk_locked_prices_304');
+      try {
+      const raw304ff = localStorage.getItem('kk_locked_prices_304_ff');
+      if (raw304ff) {
+        const d = JSON.parse(raw304ff);
+        for (const [o, p] of Object.entries(d)) { fiveFootPrices304[o] = p; lockedFiveFoot304[o] = true; }
+      }
+    } catch (e) { /* ignore */ }
+    const raw304 = localStorage.getItem('kk_locked_prices_304');
       if (!raw304) return;
       const data304 = JSON.parse(raw304);
       for (const [o, p] of Object.entries(data304)) {
@@ -668,7 +740,14 @@ const App = (() => {
       }
     } catch (e) { /* ignore */ }
     try {
-      const raw316L = localStorage.getItem('kk_locked_prices_316L');
+      try {
+      const raw316Lff = localStorage.getItem('kk_locked_prices_316L_ff');
+      if (raw316Lff) {
+        const d = JSON.parse(raw316Lff);
+        for (const [o, p] of Object.entries(d)) { fiveFootPrices316L[o] = p; lockedFiveFoot316L[o] = true; }
+      }
+    } catch (e) { /* ignore */ }
+    const raw316L = localStorage.getItem('kk_locked_prices_316L');
       if (raw316L) {
         const data316L = JSON.parse(raw316L);
         for (const [o, p] of Object.entries(data316L)) {
@@ -685,12 +764,20 @@ const App = (() => {
   function get400Key(origin, material) { return origin + '-' + material; }
 
   function savePrices400() {
-    try { localStorage.setItem('kk_prices_400', JSON.stringify(prices400)); }
+    try { localStorage.setItem('kk_prices_400', JSON.stringify(prices400)); localStorage.setItem('kk_prices_400_ff', JSON.stringify(fiveFootPrices400)); }
     catch (e) { /* ignore */ }
   }
   function loadPrices400() {
     try {
-      const raw = localStorage.getItem('kk_prices_400');
+      try {
+      const rawFF = localStorage.getItem('kk_prices_400_ff');
+      if (rawFF) {
+        const dataFF = JSON.parse(rawFF);
+        fiveFootPrices400 = {};
+        for (const [k, v] of Object.entries(dataFF)) { if (v > 0) fiveFootPrices400[k] = v; }
+      } else { fiveFootPrices400 = {}; }
+    } catch (e) { fiveFootPrices400 = {}; }
+    const raw = localStorage.getItem('kk_prices_400');
       if (!raw) { prices400 = {}; return; }
       const data = JSON.parse(raw);
       // 旧格式数据（纯键值对）直接废弃，以新格式覆盖
@@ -727,6 +814,9 @@ const App = (() => {
           <span class="p400-mat">${item.material}</span>
           <div class="oj2"><label>基价</label><input type="number" class="p400-input" data-key="${key}" value="${val || ''}" step="10" placeholder="未填" ${locked ? 'readonly' : ''}></div>
           <button class="o-lock ${locked ? 'locked' : ''}" data-key="${key}" title="${locked ? '解锁' : '锁定'}">${locked ? '🔒' : '🔓'}</button>
+        ${FIVE_FOOT_ORIGINS['400'].includes(key) ? `
+        <div class="oj2"><label>五尺</label><input type="number" class="p400-ff-input" data-key="${key}" value="${fiveFootPrices400[key] || ''}" step="10" placeholder="未填" ${lockedFiveFoot400[key] ? 'readonly' : ''}></div>
+        <button class="o-lock ${lockedFiveFoot400[key] ? 'locked' : ''}" data-key="${key}" data-ff="1" title="${lockedFiveFoot400[key] ? '解锁' : '锁定'}">${lockedFiveFoot400[key] ? '🔒' : '🔓'}</button>` : ''}
         `;
         section.appendChild(div);
       });
@@ -745,7 +835,29 @@ const App = (() => {
         if (lockedPrices400[key]) savePrices400();
       });
     });
-    document.querySelectorAll('.p400-row .o-lock').forEach(btn => {
+    document.querySelectorAll('.p400-ff-input').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const key = inp.dataset.key;
+        const v = parseFloat(inp.value);
+        fiveFootPrices400[key] = (v > 0) ? v : 0;
+        if (lockedFiveFoot400[key]) savePrices400();
+      });
+      inp.addEventListener('blur', () => {
+        const key = inp.dataset.key;
+        const v = parseFloat(inp.value);
+        fiveFootPrices400[key] = (v > 0) ? v : 0;
+        if (lockedFiveFoot400[key]) savePrices400();
+      });
+    });
+    document.querySelectorAll('.p400-row .o-lock[data-ff="1"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        lockedFiveFoot400[key] = !lockedFiveFoot400[key];
+        savePrices400();
+        renderPrices400();
+      });
+    });
+    document.querySelectorAll('.p400-row .o-lock:not([data-ff])').forEach(btn => {
       btn.addEventListener('click', () => {
         const key = btn.dataset.key;
         lockedPrices400[key] = !lockedPrices400[key];
@@ -1518,11 +1630,10 @@ const App = (() => {
         originPrices[p.origin] = emptyOrigin201();
       }
       const bp = getMaterialPrice(p.origin || '宏旺', p.material, null, parseFloat(p.width), parseFloat(p.thickness));
-      if (bp && bp > 0) {
-        p.basePrice = bp;
-        dataItems.push(p);
-        count++;
-      }
+      // v1.0.96：基价无效也入行（计算时给出明确错误，如五尺宽度未提供），不再静默丢弃
+      p.basePrice = bp || 0;
+      dataItems.push(p);
+      count++;
     }
     if (count > 0) {
       results = []; renderOriginGrid();
@@ -1556,7 +1667,10 @@ const App = (() => {
       item.basePrice = bp || 0;
       item._bpError = null;
       if (!bp || bp <= 0) {
-        if (/^201/.test(item.material) && item.material !== '201J5' && PricingEngine.getWidthBand201(w) === null) {
+        const isFF = w === 1500 || w === 1524 || w === 1530;
+        if (isFF && !/^201/.test(item.material)) {
+          item._bpError = item.origin + ' ' + item.material + ' 暂不提供五尺（1500/1524/1530mm）宽度或五尺基价未填，请在基价面板填写「五尺」基价';
+        } else if (/^201/.test(item.material) && item.material !== '201J5' && PricingEngine.getWidthBand201(w) === null) {
           item._bpError = `宽度 ${isNaN(w) ? (item.width || '?') : w}mm 不在 201 基价档位（1219/1240、1250/1280、1500/1530），请检查宽度或补充对应档位基价`;
         } else {
           item._bpError = `${item.origin || '?'} ${item.material} 基价未设置${isNaN(w) ? '' : `（宽度 ${w}mm 对应档位）`}，请在基价面板填写`;
