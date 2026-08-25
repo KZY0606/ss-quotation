@@ -176,9 +176,9 @@ const PricingEngine = (() => {
       }
       return findInTable(THICKNESS_SURCHARGE_304, t);
     }
-    // 201J5（北港）：用户未提供厚度加价数据，暂不计算（2026-08-21 用户确认，不落通用表）
+    // 201J5锛堝寳娓級锛氬帤搴﹀姞浠蜂笌瀹忔椇 201 姝ｆ潗涓€鑷?2026-08-25 鐢ㄦ埛瑙勫垯锛屽鍚嶆椇201姝ｆ潗琛級
     if (material && /^201J5/.test(material)) {
-      return null;
+      return findInTable(THICKNESS_SURCHARGE, t);
     }
     // 201（正材）：暂时不分产地，统一标准
     return findInTable(THICKNESS_SURCHARGE, t);
@@ -466,8 +466,8 @@ const PricingEngine = (() => {
 
     let thickSurcharge = getThicknessSurcharge(thickness, isYanYan, material, item.origin, surface);
     if (thickSurcharge === null) {
-      if (material && /^201J5/.test(material)) errors.push(`北港 J5 未提供厚度加价数据，暂不计算（补数据后恢复报价）`);
-      else errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
+      // v1.0.97: J5 thickness surcharge = standard 201 table (same as HongWang), no special error
+      errors.push(`厚度 ${thickness}mm 不在任何${isYanYan ? '压延料' : ''}加价区间`);
     }
     // 甬金316L 薄料(0.25-0.50mm) 宽度 1500/1530：厚度加价额外 +300（2026-08-21 用户确认）
     let widthSurcharge = 0;

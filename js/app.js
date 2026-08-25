@@ -1194,8 +1194,8 @@ const App = (() => {
       h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
     });
     h.push('</table>');
-    // 2026-08-21：北港 J5 无厚度加价数据
-    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">北港 J5：未提供厚度加价数据，暂不报价（补数据后恢复）</div>');
+    // 2026-08-25: 北港 J5：厚度加价与宏旺 201 正材一致
+    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">北港 J5：厚度加价与宏旺 201 正材一致');
 
     // 压延料表
     h.push('<h4 class="ref-subtitle">本地201(压延）</h4>');

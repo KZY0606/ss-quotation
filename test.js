@@ -391,11 +391,10 @@ test('201 档内宽度正常: 201J2 0.50*1219*C', () => {
   eq(r.success, true);
 });
 
-test('北港J5 不校验宽度: 201J5 0.50*1220*C', () => {
-  const r = PricingEngine.calculate({material:'201J5',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
-  // 2026-08-21：J5 无厚度加价数据，报错而非宽度档错误（原断言 success=true 已随规则变更）
-  eq(r.success, false);
-  eq(r.errors.some(e => e.includes('北港 J5 未提供厚度加价')), true, '报错为无厚度加价提示');
+test('北港J5 不校验宽度: 201J5 0.50*1219*C', () => {
+  const r = PricingEngine.calculate({material:'201J5',surface:'2B',thickness:'0.50',width:'1219',length:'C',film1:'',film2:'',basePrice:7800});
+  // v1.0.97 (2026-08-25 user rule): J5 thickness surcharge = HongWang 201 standard table; J5 has no width band check
+  eq(r.success, true, 'J5 不分宽度且已有厚度加价，应可计算');
 });
 
 test('宽度白名单: 304 0.50*1220*C → 报错（1220 不在可计算宽度）', () => {
@@ -918,14 +917,14 @@ test('400系彩色表面对标304价（2026-08-21）', () => {
   eq(calc('430BA','8K玫瑰金(板)/L','0.50').detail.surfaceFeeSqm, 6.5, '430BA 8K玫瑰金大炉 = 6.5');
 });
 
-test('北港 J5 无厚度加价暂不计算（2026-08-21）', () => {
+test('北港 J5 厚度加价与宏旺 201 正材一致（2026-08-25 v1.0.97）', () => {
   const r = PricingEngine.calculate({origin:'北港', material:'201J5', surface:'NO.4', thickness:'0.5', width:'1240', length:'2500', basePrice:8000, packing: '木架' });
-  eq(r.success, false, '北港 J5 报错不计算');
-  eq(r.errors.some(e => e.includes('北港 J5 未提供厚度加价')), true, '报错文案含北港 J5 提示');
-  // 其他 201 材质不受影响
-  const r2 = PricingEngine.calculate({origin:'青山', material:'201J2', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000, packing: '木架' });
-  eq(r2.success, true, '青山 201J2 正常计算');
-  eq(r2.detail.thickSurcharge, 500, '201J2 厚度加价 500');
+  eq(r.success, true, '北港 J5 已有厚度加价，恢复报价');
+  // 同配置对比 201J2 正材（同基价/同厚度0.5/同表面2B），成本应一致
+  const rJ2 = PricingEngine.calculate({origin:'青山', material:'201J2', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000, packing:'木架'});
+  const rJ5 = PricingEngine.calculate({origin:'北港', material:'201J5', surface:'2B', thickness:'0.5', width:'1240', length:'2500', basePrice:8000, packing:'木架'});
+  eq(rJ5.success, true, 'J5 2B 正常');
+  eq(rJ5.cost, rJ2.cost, 'J5 与 201 正材同厚度加价，成本一致');
 });
 
 
