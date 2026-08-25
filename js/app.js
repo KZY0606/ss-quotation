@@ -1465,7 +1465,9 @@ const App = (() => {
       ['201/304/410/430', '1219齐边', '3000-4000', 'std_1219_l'],
     ];
     for (const [m, w, l, key] of sheetRows) {
-      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      const _v = SHEET_MARKUP_DETAIL[key];
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     const narrowRows = [
       ['201/304/410/430', '1030毛边', '1001-2000', 'std_1030_s'],
@@ -1474,7 +1476,9 @@ const App = (() => {
       ['201/304/410/430', '1000齐边', '2001-4000', 'std_1000_l'],
     ];
     for (const [m, w, l, key] of narrowRows) {
-      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      const _v = SHEET_MARKUP_DETAIL[key];
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     const wideRows = [
       ['410/430', '1280毛边', '2100-2500', '410430_1280_s'],
@@ -1487,7 +1491,9 @@ const App = (() => {
       ['304', '1250齐边', '3000-4000', '304_1250_l'],
     ];
     for (const [m, w, l, key] of wideRows) {
-      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      const _v = SHEET_MARKUP_DETAIL[key];
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     const wide2Rows = [
       ['201/304/410/430', '1530毛边', '2100-3055', 'std_1530_s'],
@@ -1496,7 +1502,9 @@ const App = (() => {
       ['201/304/410/430', '1500齐边', '3056-4000', 'std_1500_l'],
     ];
     for (const [m, w, l, key] of wide2Rows) {
-      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      const _v = SHEET_MARKUP_DETAIL[key];
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     h.push('</table>');
     h.push('<h4 class="ref-subtitle">平板销售加价（316L，出口木架基准）</h4>');
@@ -1520,11 +1528,15 @@ const App = (() => {
       ['316L', '1500齐边', '3056-4000', '316l_1500_l']
     ];
     for (const [m, w, l, key] of sheet316Rows) {
-      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${SHEET_MARKUP_DETAIL[key]}</td></tr>`);
+      const _v = SHEET_MARKUP_DETAIL[key];
+      h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     h.push('</table>');
     h.push('<tr><td>其他宽度平板 毛边（旧价）</td><td colspan="2"></td><td class="ref-num">+' + SALES_MARKUP.rough_sheet + '</td></tr>');
+    h.push('<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价' + (SALES_MARKUP.rough_sheet - 200) + '元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ' + SALES_MARKUP.rough_sheet + '元/吨</td></tr>');
     h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td colspan="2"></td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
+    h.push('<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价' + (SALES_MARKUP.trim_sheet - 200) + '元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ' + SALES_MARKUP.trim_sheet + '元/吨</td></tr>');
     h.push('<tr><td colspan="4" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + '元/吨</td></tr>');
     h.push('</table>');
     h.push('<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">201/304/410/430 与 316L 分别定价；1250mm 与 1000mm 同价（201/304/410/430=550、316L=850）；四尺=1219/1240/1250/1280，米尺=1000，五尺=1500/1524/1530</div>');
