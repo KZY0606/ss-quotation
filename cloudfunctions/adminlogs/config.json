@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "adminLogs-http",
+      "type": "http",
+      "config": {
+        "path": "/adminLogs",
+        "method": "POST"
+      }
+    }
+  ]
+}

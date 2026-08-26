@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "login-http",
+      "type": "http",
+      "config": {
+        "path": "/login",
+        "method": "POST"
+      }
+    }
+  ]
+}

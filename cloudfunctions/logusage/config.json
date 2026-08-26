@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "logUsage-http",
+      "type": "http",
+      "config": {
+        "path": "/logUsage",
+        "method": "POST"
+      }
+    }
+  ]
+}

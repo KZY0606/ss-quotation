@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - KK不锈钢报价系统</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 50%, #3a6ea5 100%);
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    }
+    .login-card {
+      background: #fff; border-radius: 14px; padding: 36px 32px; width: 360px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.28);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 6px; }
+    .logo .kk { font-size: 28px; font-weight: 800; color: #2c5282; }
+    .logo .name { font-size: 20px; font-weight: 700; color: #1a202c; }
+    .sub { text-align: center; color: #718096; font-size: 13px; margin-bottom: 24px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; color: #4a5568; margin-bottom: 6px; font-weight: 600; }
+    .field input {
+      width: 100%; padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 8px;
+      font-size: 15px; outline: none; transition: border-color .15s;
+    }
+    .field input:focus { border-color: #2c5282; box-shadow: 0 0 0 3px rgba(44,82,130,.12); }
+    .btn {
+      width: 100%; padding: 11px; border: none; border-radius: 8px; cursor: pointer;
+      background: #2c5282; color: #fff; font-size: 15px; font-weight: 600; transition: background .15s;
+    }
+    .btn:hover { background: #1e3a5f; }
+    .btn:disabled { background: #a0aec0; cursor: not-allowed; }
+    .err { color: #e53e3e; font-size: 13px; min-height: 20px; margin-bottom: 10px; text-align: center; }
+    .foot { margin-top: 18px; text-align: center; font-size: 12px; color: #a0aec0; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="logo"><span class="kk">KK</span><span class="name">不锈钢报价系统</span></div>
+    <div class="sub">请登录后使用</div>
+    <div class="field">
+      <label>账号</label>
+      <input id="username" type="text" autocomplete="username" placeholder="请输入账号" maxlength="20">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码" maxlength="30">
+    </div>
+    <div class="err" id="err"></div>
+    <button class="btn" id="loginBtn">登 录</button>
+    <div class="foot">登录遇到问题请联系管理员</div>
+  </div>
+  <script src="js/auth.js"></script>
+  <script>
+    var errEl = document.getElementById('err');
+    var uEl = document.getElementById('username');
+    var pEl = document.getElementById('password');
+    var btn = document.getElementById('loginBtn');
+
+    function setErr(m) { errEl.textContent = m || ''; }
+    function goRedirect() {
+      var rd = new URLSearchParams(location.search).get('redirect');
+      location.href = rd && rd.indexOf('login.html') < 0 ? rd : 'index.html';
+    }
+
+    async function doLogin() {
+      var u = uEl.value.trim(), p = pEl.value;
+      if (!u || !p) { setErr('请输入账号和密码'); return; }
+      btn.disabled = true; btn.textContent = '登录中…'; setErr('');
+      try {
+        var r = await KKAuth.login(u, p);
+        if (r && r.ok) { goRedirect(); return; }
+        setErr((r && r.msg) || '登录失败');
+      } catch (e) { setErr('网络错误，请检查网络后重试'); }
+      btn.disabled = false; btn.textContent = '登 录';
+    }
+    btn.addEventListener('click', doLogin);
+    pEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+    uEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') pEl.focus(); });
+    uEl.focus();
+  </script>
+</body>
+</html>

@@ -1852,6 +1852,26 @@ const App = (() => {
       showToast(`完成：${ok} 成功`, 'success');
     }
     renderResults();
+    // v1.0.116: 使用记录上报（异步，失败不影响报价）
+    if (window.KKAuth && KKAuth.isHttp && results && results.length) {
+      var items = [];
+      results.forEach(function (r, i) {
+        if (!r.success) return;
+        var it = dataItems[i];
+        if (!it) return;
+        items.push({
+          material: it.material || '',
+          spec: (it.thickness || '') + '*' + (it.width || '') + '*' + (it.length || ''),
+          surface: it.surface || '',
+          calcMode: it.calcMode || '',
+          unitPrice: r.detail ? r.detail.costTax : null
+        });
+      });
+      if (items.length) {
+        if (items.length <= 200) items.forEach(function (it) { KKAuth.reportUsage(it); });
+        else KKAuth.reportUsage({ material: items[0].material || '', spec: items.length + ' 行批量', surface: items[0].surface || '', calcMode: items[0].calcMode || '', unitPrice: null });
+      }
+    }
   }
 
   function clearAll() { dataItems = []; results = []; allExpanded = false; render(); showToast('已清空', 'info'); }

@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "init-http",
+      "type": "http",
+      "config": {
+        "path": "/init",
+        "method": "POST"
+      }
+    }
+  ]
+}

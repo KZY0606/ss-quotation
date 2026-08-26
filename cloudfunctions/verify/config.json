@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "verify-http",
+      "type": "http",
+      "config": {
+        "path": "/verify",
+        "method": "POST"
+      }
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - KK不锈钢报价系统</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f4f6f8; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: #1f2937; }
+    .top { background: #1e3a5f; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 14px; }
+    .top h1 { font-size: 18px; flex: 1; }
+    .top .user { font-size: 13px; opacity: .9; }
+    .top a, .top button {
+      color: #fff; background: rgba(255,255,255,.15); border: none; border-radius: 6px;
+      padding: 6px 12px; font-size: 13px; cursor: pointer; text-decoration: none;
+    }
+    .top a:hover, .top button:hover { background: rgba(255,255,255,.28); }
+    .wrap { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tabs button {
+      padding: 8px 18px; border: 1px solid #cbd5e0; background: #fff; border-radius: 8px;
+      cursor: pointer; font-size: 14px;
+    }
+    .tabs button.active { background: #2c5282; color: #fff; border-color: #2c5282; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card { background: #fff; border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .card h2 { font-size: 16px; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
+    th { background: #f0f4f8; white-space: nowrap; }
+    tr:nth-child(even) td { background: #fafbfc; }
+    .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; }
+    .badge-on { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .badge-off { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .badge-admin { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .badge-user { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+    .mini { padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 12px; margin-right: 4px; }
+    .mini:hover { background: #f0f4f8; }
+    .mini.danger { color: #dc2626; border-color: #fecaca; }
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+    .form-row input, .form-row select {
+      padding: 7px 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px;
+    }
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; background: #2c5282; color: #fff; cursor: pointer; font-size: 13px; }
+    .btn:hover { background: #1e3a5f; }
+    .msg { font-size: 13px; min-height: 18px; margin: 6px 0; }
+    .msg.ok { color: #059669; } .msg.err { color: #dc2626; }
+    .muted { color: #6b7280; font-size: 12px; }
+    .log-item { padding: 8px 10px; border-bottom: 1px solid #f0f1f3; font-size: 13px; }
+    .log-item:last-child { border-bottom: none; }
+    .log-time { color: #6b7280; font-size: 12px; margin-right: 10px; white-space: nowrap; }
+    .empty { text-align: center; color: #9ca3af; padding: 30px 0; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <h1>KK 报价系统 · 管理后台</h1>
+    <span class="user" id="curUser"></span>
+    <a href="index.html">← 返回报价</a>
+    <button onclick="KKAuth.logout()">退出登录</button>
+  </div>
+
+  <div class="wrap">
+    <div class="msg" id="msg"></div>
+
+    <div class="tabs">
+      <button id="tabUsers" class="active" onclick="switchTab('users')">👤 账号管理</button>
+      <button id="tabLogin" onclick="switchTab('login')">🔑 登录日志</button>
+      <button id="tabUsage" onclick="switchTab('usage')">📊 使用日志</button>
+    </div>
+
+    <!-- 账号管理 -->
+    <div class="panel active" id="panelUsers">
+      <div class="card">
+        <h2>新增账号</h2>
+        <div class="form-row">
+          <input id="nu" placeholder="账号（字母/数字/下划线，2-20位）" maxlength="20">
+          <input id="nr" placeholder="姓名" maxlength="20">
+          <input id="np" type="password" placeholder="初始密码（至少4位）" maxlength="30">
+          <select id="nrole">
+            <option value="user">报价员</option>
+            <option value="admin">管理员</option>
+          </select>
+          <button class="btn" onclick="addUser()">创建账号</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>账号列表 <span class="muted" id="userCount"></span></h2>
+        <table>
+          <thead><tr><th>账号</th><th>姓名</th><th>角色</th><th>状态</th><th>最近登录</th><th>操作</th></tr></thead>
+          <tbody id="userTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 登录日志 -->
+    <div class="panel" id="panelLogin">
+      <div class="card">
+        <h2>登录记录（最近 7 天）</h2>
+        <div id="loginList"><div class="empty">加载中…</div></div>
+      </div>
+    </div>
+
+    <!-- 使用日志 -->
+    <div class="panel" id="panelUsage">
+      <div class="card">
+        <h2>报价记录（最近 7 天）</h2>
+        <div id="usageList"><div class="empty">加载中…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    var auth = null;
+    var msgEl = document.getElementById('msg');
+
+    function setMsg(t, ok) { msgEl.textContent = t || ''; msgEl.className = 'msg ' + (ok === false ? 'err' : 'ok'); }
+    function fmtTime(ts) {
+      if (!ts) return '—';
+      var d = new Date(ts);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' +
+        String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    function switchTab(name) {
+      ['users', 'login', 'usage'].forEach(function (k) {
+        document.getElementById('tab' + k.charAt(0).toUpperCase() + k.slice(1)).className = k === name ? 'active' : '';
+        document.getElementById('panel' + k.charAt(0).toUpperCase() + k.slice(1)).className = 'panel' + (k === name ? ' active' : '');
+      });
+      if (name === 'login') loadLogs('login');
+      if (name === 'usage') loadLogs('usage');
+    }
+
+    async function api(fn, data) {
+      var r = await KKAuth.call(fn, Object.assign({ token: auth.token }, data || {}));
+      if (!r.ok) { setMsg(r.msg || '操作失败', false); throw new Error(r.msg); }
+      return r;
+    }
+
+    async function loadUsers() {
+      try {
+        var r = await api('adminUsers', { action: 'list' });
+        var tb = document.getElementById('userTbody');
+        document.getElementById('userCount').textContent = '共 ' + r.list.length + ' 人';
+        tb.innerHTML = '';
+        r.list.forEach(function (u) {
+          var tr = document.createElement('tr');
+          var roleBadge = u.role === 'admin' ? '<span class="badge badge-admin">管理员</span>' : '<span class="badge badge-user">报价员</span>';
+          var stBadge = u.enabled ? '<span class="badge badge-on">启用</span>' : '<span class="badge badge-off">停用</span>';
+          var ops = '';
+          if (u.role !== 'admin') {
+            ops += '<button class="mini" onclick="resetPwd(\'' + u.username + '\')">重置密码</button>';
+            ops += u.enabled
+              ? '<button class="mini danger" onclick="toggleUser(\'' + u.username + '\', false)">停用</button>'
+              : '<button class="mini" onclick="toggleUser(\'' + u.username + '\', true)">启用</button>';
+            ops += '<button class="mini danger" onclick="removeUser(\'' + u.username + '\')">删除</button>';
+          } else {
+            ops += '<span class="muted">管理员不可操作</span>';
+          }
+          tr.innerHTML = '<td>' + u.username + '</td><td>' + u.realName + '</td><td>' + roleBadge + '</td><td>' + stBadge +
+            '</td><td>' + fmtTime(u.lastLogin) + '</td><td>' + ops + '</td>';
+          tb.appendChild(tr);
+        });
+      } catch (e) {}
+    }
+
+    async function addUser() {
+      var username = document.getElementById('nu').value.trim();
+      var realName = document.getElementById('nr').value.trim();
+      var password = document.getElementById('np').value;
+      var role = document.getElementById('nrole').value;
+      if (!username || !realName || !password) { setMsg('账号/姓名/密码都要填', false); return; }
+      try {
+        var r = await api('adminUsers', { action: 'add', data: { username: username, realName: realName, password: password, role: role } });
+        setMsg(r.msg);
+        document.getElementById('nu').value = ''; document.getElementById('nr').value = ''; document.getElementById('np').value = '';
+        loadUsers();
+      } catch (e) {}
+    }
+
+    async function resetPwd(username) {
+      var p = prompt('为账号「' + username + '」设置新密码（至少4位）：');
+      if (p === null) return;
+      if (!p || p.length < 4) { setMsg('密码至少 4 位', false); return; }
+      try { var r = await api('adminUsers', { action: 'resetPwd', data: { username: username, password: p } }); setMsg(r.msg); } catch (e) {}
+    }
+
+    async function toggleUser(username, enabled) {
+      try {
+        var r = await api('adminUsers', { action: 'toggle', data: { username: username, enabled: enabled } });
+        setMsg(r.msg); loadUsers();
+      } catch (e) {}
+    }
+
+    async function removeUser(username) {
+      if (!confirm('确定删除账号「' + username + '」？删除后该账号无法登录，历史日志保留。')) return;
+      try { var r = await api('adminUsers', { action: 'remove', data: { username: username } }); setMsg(r.msg); loadUsers(); } catch (e) {}
+    }
+
+    async function loadLogs(type) {
+      var el = document.getElementById(type === 'login' ? 'loginList' : 'usageList');
+      el.innerHTML = '<div class="empty">加载中…</div>';
+      try {
+        var r = await api('adminLogs', { type: type, days: 7 });
+        if (!r.list.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
+        el.innerHTML = '';
+        r.list.forEach(function (it) {
+          var div = document.createElement('div');
+          div.className = 'log-item';
+          if (type === 'login') {
+            var st = it.success ? '<span class="badge badge-on">成功</span>' : '<span class="badge badge-off">失败</span>';
+            div.innerHTML = '<span class="log-time">' + fmtTime(it.time) + '</span>' + st + ' <b>' + (it.realName || it.username) + '</b>（' + it.username + '） ' + (it.msg || '');
+          } else {
+            div.innerHTML = '<span class="log-time">' + fmtTime(it.time) + '</span><b>' + (it.realName || it.username) + '</b> ' +
+              (it.material || '') + ' ' + (it.surface || '') + ' ' + (it.spec || '') +
+              (it.unitPrice ? ' 单价 ' + it.unitPrice + ' 元/吨' : '') + (it.calcMode === 'sheet' ? '（平板）' : '');
+          }
+          el.appendChild(div);
+        });
+      } catch (e) {}
+    }
+
+    (async function init() {
+      auth = await KKAuth.requireLogin();
+      if (!auth) return;
+      document.getElementById('curUser').textContent = '当前：' + auth.realName + '（' + auth.username + '）';
+      loadUsers();
+    })();
+  </script>
+</body>
+</html>

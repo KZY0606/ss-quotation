@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.115">
+  <link rel="stylesheet" href="css/style.css?v=1.0.116">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -29,6 +29,9 @@
         </div>
       </div>
       <div class="header-badges">
+        <span class="badge" id="currentUserBadge" style="display:none"></span>
+        <a class="badge badge-accent" id="adminLink" href="admin.html" style="display:none">⚙️ 管理后台</a>
+        <button class="badge" id="logoutBtn" style="display:none" title="退出登录">退出</button>
         <button class="badge badge-accent changelog-btn" id="changelogBtn" title="查看更新公告">📋 更新公告</button>
       </div>
     </div>
@@ -332,11 +335,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/changelog.js?v=1.0.115"></script>
-<script src="js/config.js?v=1.0.115"></script>
-  <script src="js/engine.js?v=1.0.115"></script>
-  <script src="js/parser.js?v=1.0.115"></script>
-  <script src="js/app.js?v=1.0.115"></script>
+  <script src="js/auth.js?v=1.0.116"></script>
+  <script src="js/changelog.js?v=1.0.116"></script>
+<script src="js/config.js?v=1.0.116"></script>
+  <script src="js/engine.js?v=1.0.116"></script>
+  <script src="js/parser.js?v=1.0.116"></script>
+  <script src="js/app.js?v=1.0.116"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -346,6 +350,23 @@
         document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
       });
     });
+  </script>
+  <script>
+    // v1.0.116: 登录态初始化（线上 https 生效；本地 file:// 开发模式自动跳过）
+    (function () {
+      if (!window.KKAuth || !KKAuth.isHttp) return;
+      KKAuth.requireLogin().then(function (a) {
+        if (!a) return;
+        var badge = document.getElementById('currentUserBadge');
+        var adminLink = document.getElementById('adminLink');
+        var logoutBtn = document.getElementById('logoutBtn');
+        if (badge) { badge.textContent = '👤 ' + a.realName; badge.style.display = ''; }
+        if (adminLink) adminLink.style.display = a.role === 'admin' ? '' : 'none';
+        if (logoutBtn) logoutBtn.style.display = '';
+      });
+      var lb = document.getElementById('logoutBtn');
+      if (lb) lb.addEventListener('click', function () { KKAuth.logout(); });
+    })();
   </script>
 
   <!-- Footer -->

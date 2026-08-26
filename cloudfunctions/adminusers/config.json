@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "adminUsers-http",
+      "type": "http",
+      "config": {
+        "path": "/adminUsers",
+        "method": "POST"
+      }
+    }
+  ]
+}
