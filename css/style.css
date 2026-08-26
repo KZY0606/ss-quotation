@@ -1012,3 +1012,62 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .sf-afp-row td { background: #faf5ff; }
 .sf-coil .sg-group-title { background: #cffafe; color: #0e7490; }
 .sf-coil-row td { background: #f0fdfa; }
+
+/* ===== Changelog Modal (v1.0.111) ===== */
+.changelog-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10000; backdrop-filter: blur(3px);
+}
+.changelog-modal {
+  width: 560px; max-width: 92vw; max-height: 80vh;
+  background: var(--card, #fff); border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--border, #e2e8f0);
+}
+.changelog-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border-light, #eef2f7);
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+}
+.changelog-title { font-size: 15px; font-weight: 700; color: var(--text, #0f172a); }
+.changelog-close {
+  border: none; background: transparent; font-size: 15px; cursor: pointer;
+  color: var(--text-secondary, #64748b); padding: 4px 8px; border-radius: 6px;
+}
+.changelog-close:hover { background: rgba(0,0,0,0.06); color: var(--text, #0f172a); }
+.changelog-body {
+  padding: 14px 18px; overflow-y: auto; flex: 1;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.changelog-item { border: 1px solid var(--border-light, #eef2f7); border-radius: 10px; padding: 10px 12px; background: #fbfcfe; }
+.changelog-first { border-color: #bae6fd; background: #f0f9ff; }
+.changelog-ver { font-weight: 700; font-size: 13px; color: #0369a1; }
+.changelog-date { font-weight: 400; color: var(--text-secondary, #64748b); font-size: 12px; margin-left: 4px; }
+.changelog-tag {
+  display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 10px;
+  background: #ef4444; color: #fff; font-size: 11px; font-weight: 600; vertical-align: 1px;
+}
+.changelog-item-title { font-size: 13px; font-weight: 600; color: var(--text, #0f172a); margin-top: 3px; }
+.changelog-item ul { margin: 6px 0 0 0; padding-left: 18px; }
+.changelog-item li { font-size: 12.5px; color: #334155; line-height: 1.6; }
+.changelog-item details summary { cursor: pointer; list-style: none; }
+.changelog-item details summary::-webkit-details-marker { display: none; }
+.changelog-item details summary::before { content: "▸ "; color: #94a3b8; }
+.changelog-item details[open] summary::before { content: "▾ "; }
+.changelog-item details ul { margin-top: 6px; }
+.changelog-hint { text-align: center; font-size: 11.5px; color: var(--text-secondary, #94a3b8); padding-bottom: 2px; }
+.changelog-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px; border-top: 1px solid var(--border-light, #eef2f7); background: #f8fafc;
+}
+.changelog-check { font-size: 12.5px; color: var(--text-secondary, #475569); display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.changelog-check input { accent-color: #0284c7; width: 14px; height: 14px; }
+.changelog-ok {
+  border: none; background: #0284c7; color: #fff; font-size: 13px; font-weight: 600;
+  padding: 7px 26px; border-radius: 8px; cursor: pointer; transition: background 0.15s;
+}
+.changelog-ok:hover { background: #0369a1; }
+.changelog-btn { cursor: pointer; transition: transform 0.1s, background 0.15s; }
+.changelog-btn:hover { transform: translateY(-1px); background: rgba(14,165,233,0.4); }

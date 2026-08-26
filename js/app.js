@@ -226,8 +226,64 @@ const App = (() => {
       mb.textContent = '201/304 全系列';
       mb.className = 'badge badge-accent';
     }
+    initChangelog();
     updateAllDerived();
     render();
+  }
+
+  // ===== 更新公告 v1.0.111 =====
+  function initChangelog() {
+    const btn = dom('changelogBtn');
+    const overlay = dom('changelogOverlay');
+    if (!btn || !overlay || typeof CHANGELOG === 'undefined' || !CHANGELOG.length) return;
+    btn.addEventListener('click', openChangelog);
+    dom('changelogClose').addEventListener('click', closeChangelog);
+    dom('changelogOk').addEventListener('click', () => {
+      try { localStorage.setItem('kk_last_seen_version', CHANGELOG[0].v); } catch (e) {}
+      closeChangelog();
+    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeChangelog(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChangelog(); });
+    // 新版本（或新用户）自动弹出
+    let seen = null;
+    try { seen = localStorage.getItem('kk_last_seen_version'); } catch (e) {}
+    if (seen !== CHANGELOG[0].v) openChangelog();
+  }
+
+  function openChangelog() {
+    const overlay = dom('changelogOverlay');
+    const body = dom('changelogBody');
+    if (!overlay || !body) return;
+    const show = CHANGELOG.slice(0, 10); // 最近 10 个版本
+    let h = '';
+    show.forEach((c, i) => {
+      const items = c.items.map(it => '<li>' + it + '</li>').join('');
+      if (i === 0) {
+        h += '<div class="changelog-item changelog-first">' +
+          '<div class="changelog-ver">v' + c.v + ' <span class="changelog-date">' + c.date + '</span>' + (isNewChangelog() ? '<span class="changelog-tag">新</span>' : '') + '</div>' +
+          '<div class="changelog-item-title">' + c.title + '</div>' +
+          '<ul>' + items + '</ul>' +
+          '</div>';
+      } else {
+        h += '<details class="changelog-item"><summary>' +
+          '<span class="changelog-ver">v' + c.v + '</span> <span class="changelog-date">' + c.date + '</span> <span class="changelog-item-title">' + c.title + '</span>' +
+          '</summary><ul>' + items + '</ul></details>';
+      }
+    });
+    h += '<div class="changelog-hint">仅显示最近 10 个版本的更新公告</div>';
+    body.innerHTML = h;
+    overlay.style.display = 'flex';
+  }
+
+  function closeChangelog() {
+    const overlay = dom('changelogOverlay');
+    if (overlay) overlay.style.display = 'none';
+  }
+
+  function isNewChangelog() {
+    let seen = null;
+    try { seen = localStorage.getItem('kk_last_seen_version'); } catch (e) {}
+    return seen !== CHANGELOG[0].v;
   }
 
   function cacheDom() {

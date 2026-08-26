@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.110">
+  <link rel="stylesheet" href="css/style.css?v=1.0.111">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -30,6 +30,7 @@
       </div>
       <div class="header-badges">
         <span class="badge" id="materialBadge">201/304 全系列</span>
+        <button class="badge badge-accent changelog-btn" id="changelogBtn" title="查看更新公告">📋 更新公告</button>
       </div>
     </div>
   </div>
@@ -332,10 +333,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/config.js?v=1.0.110"></script>
-  <script src="js/engine.js?v=1.0.110"></script>
-  <script src="js/parser.js?v=1.0.110"></script>
-  <script src="js/app.js?v=1.0.110"></script>
+  <script src="js/changelog.js?v=1.0.111"></script>
+<script src="js/config.js?v=1.0.111"></script>
+  <script src="js/engine.js?v=1.0.111"></script>
+  <script src="js/parser.js?v=1.0.111"></script>
+  <script src="js/app.js?v=1.0.111"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -355,6 +357,21 @@
     <span id="footerVersion">v2.2</span>
     &nbsp;·&nbsp;
     <span>Built with ❤️</span>
+  </div>
+
+  <!-- 更新公告弹窗 -->
+  <div class="changelog-overlay" id="changelogOverlay" style="display:none">
+    <div class="changelog-modal">
+      <div class="changelog-head">
+        <span class="changelog-title">📋 更新公告</span>
+        <button class="changelog-close" id="changelogClose" title="关闭">✕</button>
+      </div>
+      <div class="changelog-body" id="changelogBody"></div>
+      <div class="changelog-foot">
+        <label class="changelog-check"><input type="checkbox" id="changelogNoMore"> 不再弹出本次公告</label>
+        <button class="changelog-ok" id="changelogOk">知道了</button>
+      </div>
+    </div>
   </div>
 
 </body>
