@@ -1951,8 +1951,8 @@ const App = (() => {
       if (!isNaN(m) && m > 0) { rateState.manual = m; els.rateManual.value = m; }
     } catch (e) {}
     // 拉取实时汇率（GitHub Actions 定时抓取中行官网写入 rate.json）
-    fetch(USD_RATE_URL + '?t=' + Date.now())
-      .then(r => r.ok ? r.json() : Promise.reject(new Error('rate.json 不可用')))
+    fetch(USD_RATE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('汇率接口不可用')))
       .then(j => {
         const v = parseFloat(j.rate);
         if (!isNaN(v) && v > 0) {

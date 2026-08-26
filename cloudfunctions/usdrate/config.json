@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "usdRate-http",
+      "type": "http",
+      "config": {
+        "path": "/usdRate",
+        "method": "POST"
+      }
+    }
+  ]
+}

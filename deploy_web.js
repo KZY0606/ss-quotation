@@ -28,6 +28,7 @@ fs.mkdirSync(distDir, { recursive: true });
 // 2 复制部署文件（index.html 用真实主页）
 fs.copyFileSync(path.join(webDir, 'index_real.html'), path.join(distDir, 'index.html'));
 ['login.html', 'admin.html'].forEach(f => fs.copyFileSync(path.join(webDir, f), path.join(distDir, f)));
+fs.copyFileSync(path.join(webDir, 'rate.json'), path.join(distDir, 'rate.json')); // 汇率兜底文件
 ['css', 'js'].forEach(d => copyDir(path.join(webDir, d), path.join(distDir, d)));
 
 const files = [];
