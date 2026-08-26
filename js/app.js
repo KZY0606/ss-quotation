@@ -248,7 +248,16 @@ const App = (() => {
     const overlay = dom('changelogOverlay');
     const body = dom('changelogBody');
     if (!overlay || !body) return;
-    const show = CHANGELOG.slice(0, 10); // 最近 10 个版本
+    // v1.0.113 用户规则：按「近两天」过滤（今天+昨天，按公告日期），不再固定条数
+    const dayCut = new Date();
+    dayCut.setDate(dayCut.getDate() - 1);
+    dayCut.setHours(0, 0, 0, 0);
+    let show = CHANGELOG.filter(cc => {
+      const d = new Date(cc.date + 'T00:00:00');
+      return !isNaN(d.getTime()) && d >= dayCut;
+    });
+    // 过滤为空时的缩底：显示最新一条
+    if (!show.length) show = CHANGELOG.slice(0, 1);
     let h = '';
     show.forEach((c, i) => {
       const items = c.items.map(it => '<li>' + it + '</li>').join('');
@@ -264,7 +273,7 @@ const App = (() => {
           '</summary><ul>' + items + '</ul></details>';
       }
     });
-    h += '<div class="changelog-hint">仅显示最近 10 个版本的更新公告</div>';
+    h += '<div class="changelog-hint">显示近两天的更新公告共 ' + show.length + ' 条（更新频繁，只保留最近两天）</div>';
     body.innerHTML = h;
     overlay.style.display = 'flex';
   }
