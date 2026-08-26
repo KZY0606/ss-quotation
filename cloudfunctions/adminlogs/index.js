@@ -58,13 +58,13 @@ exports.main = async (event) => {
     if (!admin) return { ok: false, msg: '无权限或登录已过期' };
 
     if (type === 'login') {
-      const r = await exec('SELECT l.username, u.real_name, l.ip, l.success, l.reason, l.created_at FROM login_logs l LEFT JOIN users u ON u.username = l.username WHERE l.created_at > now() - interval ' + q(days + ' days') + ' ORDER BY l.id DESC LIMIT 500');
+      const r = await exec('SELECT l.username, u.real_name, l.ip, l.success, l.reason, to_char(l.created_at, \'YYYY-MM-DD HH24:MI:SS\') AS created_at FROM login_logs l LEFT JOIN users u ON u.username = l.username WHERE l.created_at > now() - interval ' + q(days + ' days') + ' ORDER BY l.id DESC LIMIT 500');
       const list = rowsToArray(r).map(x => ({ username: x.username, realName: x.real_name, ip: x.ip, success: String(x.success) === 'true', reason: x.reason, createdAt: x.created_at }));
       return { ok: true, logs: list };
     }
 
     if (type === 'usage') {
-      const r = await exec('SELECT l.username, u.real_name, l.material, l.spec, l.surface, l.calc_mode, l.unit_price, l.created_at FROM usage_logs l LEFT JOIN users u ON u.username = l.username WHERE l.created_at > now() - interval ' + q(days + ' days') + ' ORDER BY l.id DESC LIMIT 500');
+      const r = await exec('SELECT l.username, u.real_name, l.material, l.spec, l.surface, l.calc_mode, l.unit_price, to_char(l.created_at, \'YYYY-MM-DD HH24:MI:SS\') AS created_at FROM usage_logs l LEFT JOIN users u ON u.username = l.username WHERE l.created_at > now() - interval ' + q(days + ' days') + ' ORDER BY l.id DESC LIMIT 500');
       const list = rowsToArray(r).map(x => ({ username: x.username, realName: x.real_name, material: x.material, spec: x.spec, surface: x.surface, calcMode: x.calc_mode, unitPrice: x.unit_price === null ? null : Number(x.unit_price), createdAt: x.created_at }));
       return { ok: true, logs: list };
     }

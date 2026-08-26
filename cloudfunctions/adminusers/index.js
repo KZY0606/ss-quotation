@@ -17,6 +17,7 @@ async function exec(Sql) {
 
 async function ensureTables() {
   await exec('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, real_name TEXT NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, role TEXT NOT NULL DEFAULT \'user\', enabled BOOLEAN NOT NULL DEFAULT true, failed_count INT NOT NULL DEFAULT 0, locked_until TIMESTAMP NULL, created_at TIMESTAMP DEFAULT now())');
+  await exec('CREATE TABLE IF NOT EXISTS login_logs (id SERIAL PRIMARY KEY, username TEXT NOT NULL, ip TEXT, success BOOLEAN NOT NULL, reason TEXT, created_at TIMESTAMP DEFAULT now())');
 }
 
 function parseEvt(ev) {
@@ -50,12 +51,12 @@ exports.main = async (event) => {
     if (!admin) return { ok: false, msg: '无权限或登录已过期' };
 
     if (action === 'list') {
-      const r = await exec('SELECT id, username, real_name, role, enabled, failed_count, locked_until, created_at FROM users ORDER BY id');
+      const r = await exec('SELECT u.id, u.username, u.real_name, u.role, u.enabled, u.failed_count, u.locked_until, to_char(u.created_at, \'YYYY-MM-DD HH24:MI:SS\') AS created_at, to_char((SELECT MAX(l.created_at) FROM login_logs l WHERE l.username = u.username), \'YYYY-MM-DD HH24:MI:SS\') AS last_login FROM users u ORDER BY u.id');
       const list = (r.Rows || []).map(s => {
         const row = JSON.parse(s);
         const item = {};
         r.Columns.forEach((c, i) => { item[c] = row[i]; });
-        return { id: item.id, username: item.username, realName: item.real_name, role: item.role, enabled: String(item.enabled) === 'true', failedCount: item.failed_count, lockedUntil: item.locked_until, createdAt: item.created_at };
+        return { id: item.id, username: item.username, realName: item.real_name, role: item.role, enabled: String(item.enabled) === 'true', failedCount: item.failed_count, lockedUntil: item.locked_until, createdAt: item.created_at, lastLogin: item.last_login };
       });
       return { ok: true, users: list };
     }
