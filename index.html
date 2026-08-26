@@ -1,399 +1,65 @@
-﻿﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KK不锈钢报价系统</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.116">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
+  <title>网址已更新</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+      background: linear-gradient(135deg, #1e2a3a 0%, #34455e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+    .logo {
+      width: 64px;
+      height: 64px;
+      background: #34455e;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 20px; color: #1e2a3a; margin-bottom: 10px; }
+    .line { width: 40px; height: 3px; background: #f0a500; border-radius: 2px; margin: 0 auto 18px; }
+    p { font-size: 14px; color: #5a6b7d; line-height: 1.8; }
+    .contact {
+      margin-top: 22px;
+      background: #f5f7fa;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e2a3a;
+      letter-spacing: 1px;
+    }
+  </style>
 </head>
 <body>
-
-  <!-- Header -->
-  <div class="header">
-    <div class="header-bg"></div>
-    <div class="header-inner">
-      <div class="header-left">
-        <div class="header-logo">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="4" width="7" height="7" rx="1"/>
-            <rect x="13" y="4" width="7" height="7" rx="1"/>
-            <rect x="4" y="13" width="7" height="7" rx="1"/>
-            <rect x="13" y="13" width="7" height="7" rx="1"/>
-          </svg>
-        </div>
-        <div>
-          <h1><span class="kk-text">KK</span>不锈钢报价系统</h1>
-          <div class="header-subtitle">Stainless Steel Batch Quotation · <span id="versionBadge">v2.2</span></div>
-        </div>
-      </div>
-      <div class="header-badges">
-        <span class="badge" id="currentUserBadge" style="display:none"></span>
-        <a class="badge badge-accent" id="adminLink" href="admin.html" style="display:none">⚙️ 管理后台</a>
-        <button class="badge" id="logoutBtn" style="display:none" title="退出登录">退出</button>
-        <button class="badge badge-accent changelog-btn" id="changelogBtn" title="查看更新公告">📋 更新公告</button>
-      </div>
-    </div>
+  <div class="card">
+    <div class="logo">KK</div>
+    <h1>此网址已更新</h1>
+    <div class="line"></div>
+    <p>原报价系统已迁移至新地址，<br>请停止使用本网址。</p>
+    <div class="contact">新网址请联系 KK 获取</div>
   </div>
-
-  <div class="toast-container" id="toastContainer"></div>
-
-  <div class="container">
-
-    <!-- ===== 价格参数 ===== -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-header-left">
-          <div class="card-icon card-icon-steel">💰</div>
-          <h2>价格参数</h2>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="config-tabs">
-          <button class="config-tab active" data-config="origins">🏢 基价</button>
-          <button class="config-tab" data-config="films">🔖 保护膜</button>
-          <button class="config-tab" data-config="surfaces">✨ 表面加工</button>
-          <button class="config-tab" data-config="sheetSurfaces">📐 单张加工</button>
-          <button class="config-tab" data-config="coilMarkup">📈 销售加价</button>
-          <button class="config-tab" data-config="reference">📋 价格参考</button>
-        </div>
-
-        <!-- 基价 -->
-        <div class="config-panel active" data-config="origins">
-          <!-- 201 基价 -->
-          <div class="origin-grid" style="margin-bottom:12px;">
-            <div class="config-section-title">201 基价（按宽度档手动填写）</div>
-            <div class="origin-rows" id="originRows201"></div>
-          </div>
-          <!-- 304 基价 -->
-          <div class="origin-grid" style="margin-bottom:12px;">
-            <div class="config-section-title">304 基价</div>
-            <div class="origin-rows" id="originRows304"></div>
-            <div class="origin-footer">
-              <div class="add-origin" style="display:flex;gap:6px;align-items:center;">
-                <input id="newOriginInput" placeholder="输入新产地" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:120px;">
-                <button class="btn btn-sm btn-outline" id="addOriginBtn">+ 添加</button>
-              </div>
-            </div>
-          </div>
-          <!-- 316L 基价 -->
-          <div class="origin-grid" style="margin-bottom:12px;">
-            <div class="config-section-title">316L 基价</div>
-            <div class="origin-rows" id="originRows316L"></div>
-          </div>
-          <!-- 400系基价 -->
-          <div class="origin-grid" style="margin-top:12px;">
-            <div class="origin-footer" style="flex-wrap:wrap;gap:6px;" id="prices400Section">
-              <div class="config-section-title" style="width:100%;margin:0 0 4px;">400系列基价</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 保护膜配置 -->
-        <div class="config-panel" data-config="films">
-          <div class="config-hint">修改单价后点击 🔒 锁定，刷新不会丢失</div>
-          <div id="filmConfigTable" class="config-table-wrap"></div>
-        </div>
-
-        <!-- 表面加工费配置 -->
-        <div class="config-panel" data-config="surfaces">
-          <div class="config-hint">修改单价后点击 🔒 锁定，刷新不会丢失</div>
-          <div id="surfaceConfigTable" class="config-table-wrap"></div>
-        </div>
-
-        <!-- 单张加工单价配置（2026-08-24：独立板块，按宽度档分组，颜色区分） -->
-        <div class="config-panel" data-config="sheetSurfaces">
-          <div class="config-hint">单张加工单价 · 按宽度档分组（蓝=1000 / 绿=1219-1250 / 橙=1500-1530），修改单价后点击 🔒 锁定</div>
-          <div id="sheetSurfaceConfigTable" class="config-table-wrap"></div>
-        </div>
-
-                <!-- 销售加价 -->
-        <div class="config-panel" data-config="coilMarkup">
-          <div class="config-hint">卷板销售加价 = 边部加价 + 包装费用 + 装柜费用，按宽度/类型分档</div>
-          <div id="coilMarkupTable" class="config-table-wrap"></div>
-        </div>
-
-        <!-- 价格参考总表 -->
-        <div class="config-panel" data-config="reference">
-          <div class="config-hint">所有材质/产地的加价规则一览，仅供参考</div>
-          <div id="priceReferenceTable" class="config-table-wrap"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== 数据录入 ===== -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-header-left">
-          <div class="card-icon card-icon-amber">📥</div>
-          <h2>数据录入</h2>
-        </div>
-        <div class="toolbar">
-          <div class="file-upload">
-            <button class="btn btn-primary">📂 上传 Excel</button>
-            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-          </div>
-          <button class="btn btn-success" id="calculateBtn" disabled>⚡ 批量计算</button>
-          <button class="btn btn-outline" id="exportBtn" disabled>📥 导出结果</button>
-          <button class="btn btn-danger-outline" id="clearBtn">🗑️ 清空</button>
-        </div>
-      </div>
-      <div class="card-body">
-        <!-- 美金汇率：计价前始终可见（中行实时买入价 + 手动覆盖） -->
-        <div class="rate-bar" id="rateBar">
-          <span class="rate-label">💱 美金汇率（中国银行买入价）</span>
-          <span class="rate-live" id="rateLive">加载中…</span>
-          <div class="rate-input-group">
-            <label for="rateManual">手动汇率（每100美元）</label>
-            <input type="number" step="0.01" min="0" id="rateManual" placeholder="留空=实时">
-          </div>
-          <button class="btn btn-ghost btn-sm" id="rateReset">↺ 恢复实时</button>
-        </div>
-        <!-- 贸易术语：EXW 默认；FOB/CIF = EXW + 手动美元加价 -->
-        <div class="term-bar" id="termBar">
-          <span class="term-label">🚢 贸易术语</span>
-          <label class="term-radio"><input type="radio" name="tradeTerm" value="EXW" checked><span>EXW（出厂价）</span></label>
-          <label class="term-radio"><input type="radio" name="tradeTerm" value="FOB"><span>FOB</span></label>
-          <label class="term-radio"><input type="radio" name="tradeTerm" value="CIF"><span>CIF</span></label>
-          <div class="term-input-group">
-            <label for="fobSurcharge">FOB 加价</label>
-            <input type="number" step="0.5" min="0" id="fobSurcharge" placeholder="0" title="FOB 加价（USD/吨）">
-            <span class="term-unit">$/吨</span>
-          </div>
-          <div class="term-input-group">
-            <label for="cifSurcharge">CIF 加价</label>
-            <input type="number" step="0.5" min="0" id="cifSurcharge" placeholder="0" title="CIF 加价（USD/吨）">
-            <span class="term-unit">$/吨</span>
-          </div>
-        </div>
-        <!-- 附加费用：公司运营费 / 资金占用利息 / 利润（人民币/吨，勾选生效） -->
-        <div class="extras-bar" id="extrasBar">
-          <span class="extras-label">📎 附加费用（元/吨，勾选生效）</span>
-          <div class="extra-item">
-            <label class="extra-check"><input type="checkbox" id="opFeeOn"><span>公司运营费</span></label>
-            <div class="extra-input-wrap"><input type="number" step="1" min="0" id="opFeeVal" placeholder="0" disabled><span class="term-unit">元/吨</span></div>
-          </div>
-          <div class="extra-item">
-            <label class="extra-check"><input type="checkbox" id="interestOn"><span>资金占用利息</span></label>
-            <div class="extra-input-wrap"><input type="number" step="1" min="0" id="interestVal" placeholder="0" disabled><span class="term-unit">元/吨</span></div>
-          </div>
-          <div class="extra-item">
-            <label class="extra-check"><input type="checkbox" id="profitOn"><span>利润</span></label>
-            <div class="extra-input-wrap"><input type="number" step="1" min="0" id="profitVal" placeholder="0" disabled><span class="term-unit">元/吨</span></div>
-          </div>
-        </div>
-        <!-- 计算逻辑（2026-08-24 用户规则）：过磅计价（元/吨）默认 / 单张计价（元/张，按张卖的板材） -->
-        <div class="term-bar" id="calcModeBar">
-          <span class="term-label">🧮 计算逻辑</span>
-          <label class="term-radio"><input type="radio" name="calcMode" value="weight" checked><span>过磅计价（元/吨）</span></label>
-          <label class="term-radio"><input type="radio" name="calcMode" value="sheet" id="calcModeSheet"><span>单张计价（元/张）</span></label>
-          <span style="margin-left:8px;font-size:12px;color:var(--text-muted)">单张逻辑限平板：2B 与五种单张8K</span>
-        </div>
-        <div class="tab-bar">
-          <button class="tab-btn active" data-tab="text"><span>📝</span> 粘贴文本</button>
-          <button class="tab-btn" data-tab="manual"><span>✏️</span> 手动添加</button>
-        </div>
-
-        <div class="tab-panel active" id="tab-text">
-          <textarea id="freeText" class="free-text-area" placeholder="每行一条，格式示例：
-宏旺201J2 NO.4 5C-FILM 0.50*1240*C
-青山201J1压延 8K黄钛金 7C-FILM 0.50*1219*2500
-联众201J4 2B 0.80*1500*C"></textarea>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
-            <div class="text-hint">
-              支持 <b>产地+材质+表面+保护膜+规格</b>，用 <code>压延</code> 标记压延料，<code>C</code> 表示卷板
-            </div>
-            <button class="btn btn-primary" id="parseTextBtn">解析并添加</button>
-          </div>
-        </div>
-
-        <div class="tab-panel" id="tab-manual">
-          <div class="manual-row">
-            <div class="input-group">
-              <label>产地</label>
-              <select id="manualOrigin"></select>
-            </div>
-            <div class="input-group">
-              <label>材质</label>
-              <select id="manualMaterial">
-                <option value="201J2">201J2</option>
-                <option value="201J1">201J1</option>
-                <option value="201J3">201J3</option>
-                <option value="201J4">201J4</option>
-                <option value="201J5">201J5 (自定义)</option>
-              </select>
-            </div>
-            <div class="input-group" style="flex-direction:row;align-items:center;gap:6px;padding-top:22px;">
-              <input type="checkbox" id="manualYanYan" style="width:16px;height:16px;accent-color:var(--primary);">
-              <label for="manualYanYan" style="font-size:12px;font-weight:600;color:var(--warning);cursor:pointer;text-transform:uppercase;letter-spacing:0.3px;">压延料</label>
-            </div>
-            <div class="input-group">
-              <label>表面</label>
-              <input type="text" id="manualSurface" placeholder="NO.4 / 8K..." list="surfaceList">
-              <datalist id="surfaceList">
-                <option value="2B"><option value="NO.4"><option value="HL"><option value="8K">
-                <option value="8K黄钛金"><option value="8K玫瑰金"><option value="8K黑钛金">
-                <option value="8K宝石蓝"><option value="8K紫罗兰"><option value="8K翡翠绿">
-                <option value="8K紫红"><option value="8K中国红"><option value="8K古铜">
-                <option value="拉丝黄钛金"><option value="拉丝玫瑰金"><option value="拉丝黑钛金">
-                <option value="拉丝古铜哑光抗指纹"><option value="拉丝古铜亮光抗指纹">
-                <option value="单面抛光"><option value="双面抛光">
-              </datalist>
-            </div>
-            <div class="input-group">
-              <label>厚度 (mm)</label>
-              <input type="text" id="manualThickness" placeholder="0.50">
-            </div>
-            <div class="input-group">
-              <label>宽度 (mm)</label>
-              <input type="text" id="manualWidth" placeholder="1240">
-            </div>
-            <div class="input-group">
-              <label>长度</label>
-              <input type="text" id="manualLength" placeholder="C 或 2500">
-            </div>
-            <div class="input-group">
-              <label>保护膜 1</label>
-              <input type="text" id="manualFilm1" placeholder="5C-FILM" list="filmList">
-              <datalist id="filmList">
-                <option value="垫纸"><option value="5C-FILM"><option value="HW 5C-FILM">
-                <option value="7C-FILM"><option value="HW 7C-FILM"><option value="10C-FILM">
-                <option value="7C-LASER-FILM"><option value="7C-ACHEM-FILM">
-                <option value="7C-POLI-FILM"><option value="7C-NOVACEL-FILM">
-                <option value="8C-NOVACEL-FILM"><option value="10C-NOVACEL-FILM">
-              </datalist>
-            </div>
-            <div class="input-group">
-              <label>保护膜 2</label>
-              <input type="text" id="manualFilm2" placeholder="选填">
-            </div>
-            <div class="input-group">
-              <label>包装方式 <span class="packing-required" style="color:var(--danger);font-weight:700;">*</span></label>
-              <select id="manualPacking" style="width:100%;">
-                <option value="">请选择（平板必填）</option>
-                <option value="木架">木架（100元/吨）</option>
-                <option value="出口木箱">出口木箱（150元/吨）</option>
-                <option value="密封木箱">密封木箱（250元/吨）</option>
-                <option value="出口铁架">出口铁架（200元/吨）</option>
-                <option value="出口铁箱">出口铁箱（250元/吨）</option>
-              </select>
-              <span style="font-size:11px;color:var(--text-muted);">过磅平板 5 种包装均计入销售加价（出口木箱=木架+50/密封木箱=木架+150/出口铁架=木架+100/出口铁箱=木架+150 元/吨）；单张计价按重量均摊（元/吨→元/kg×重量）</span>
-            </div>
-            <div class="input-group" style="justify-content:end;">
-              <button class="btn btn-primary" id="addManualBtn" style="width:100%;">➕ 添加</button>
-            </div>
-          </div>
-          <div id="manualPriceDisplay" style="margin-top:8px;font-size:12px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== 报价结果 ===== -->
-    <div class="card" id="resultCard" style="display:none;">
-      <div class="card-header">
-        <div class="card-header-left">
-          <div class="card-icon card-icon-green">📊</div>
-          <h2>报价结果</h2>
-        </div>
-        <div class="toolbar">
-          <button class="btn btn-ghost" id="expandAllBtn">📋 全部明细</button>
-          <button class="btn btn-outline" id="exportBtn2">📥 导出 Excel</button>
-        </div>
-      </div>
-      <div class="stats-bar" id="statsBar">
-        <div class="stat-item"><span class="stat-dot stat-dot-total"></span><span class="stat-label">总条数</span><span class="stat-value" id="totalCount">0</span></div>
-        <div class="stat-item"><span class="stat-dot stat-dot-success"></span><span class="stat-label">成功</span><span class="stat-value" style="color:var(--success)" id="successCount">0</span></div>
-        <div class="stat-item"><span class="stat-dot stat-dot-error"></span><span class="stat-label">错误</span><span class="stat-value" style="color:var(--danger)" id="errorCount">0</span></div>
-        <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最低含税售价</span><span class="stat-value" style="color:var(--accent)" id="minSaleTax">-</span></div>
-        <div class="stat-item"><span class="stat-dot stat-dot-price"></span><span class="stat-label">最高含税售价</span><span class="stat-value" style="color:var(--accent)" id="maxSaleTax">-</span></div>
-      </div>
-      <div class="total-bar" id="totalBar">
-        <span class="total-label">💰 总价（不含税，按导入重量）</span>
-        <span class="total-value" id="totalValue">导入的表格填写重量(吨)后自动计算</span>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:36px;"></th><th style="width:32px;">#</th><th>产地</th><th>材质</th><th>表面</th><th>厚度</th><th>宽度</th><th>长度</th><th>包装</th><th id="thWeight">重量(吨)</th><th>膜1</th><th>膜2</th><th id="thCostTax">含税成本</th><th id="thCostNoTax">不含税成本</th><th>边/板</th><th id="thSaleTax">含税售价<sup class="usd-sup">＄</sup></th><th id="thSaleNoTax">不含税售价<sup class="usd-sup">＄</sup></th><th style="width:36px;"></th>
-            </tr>
-          </thead>
-          <tbody id="resultBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="empty-state" id="emptyState">
-      <div class="empty-icon">🔩</div>
-      <h3>KK不锈钢报价系统</h3>
-      <p>上传 Excel、粘贴文本或手动添加数据开始报价</p>
-    </div>
-
-    <div class="footer">KK不锈钢报价系统 · 201系列 · 含压延料 · 多产地</div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.116"></script>
-  <script src="js/changelog.js?v=1.0.116"></script>
-<script src="js/config.js?v=1.0.116"></script>
-  <script src="js/engine.js?v=1.0.116"></script>
-  <script src="js/parser.js?v=1.0.116"></script>
-  <script src="js/app.js?v=1.0.116"></script>
-  <script>
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-      });
-    });
-  </script>
-  <script>
-    // v1.0.116: 登录态初始化（线上 https 生效；本地 file:// 开发模式自动跳过）
-    (function () {
-      if (!window.KKAuth || !KKAuth.isHttp) return;
-      KKAuth.requireLogin().then(function (a) {
-        if (!a) return;
-        var badge = document.getElementById('currentUserBadge');
-        var adminLink = document.getElementById('adminLink');
-        var logoutBtn = document.getElementById('logoutBtn');
-        if (badge) { badge.textContent = '👤 ' + a.realName; badge.style.display = ''; }
-        if (adminLink) adminLink.style.display = a.role === 'admin' ? '' : 'none';
-        if (logoutBtn) logoutBtn.style.display = '';
-      });
-      var lb = document.getElementById('logoutBtn');
-      if (lb) lb.addEventListener('click', function () { KKAuth.logout(); });
-    })();
-  </script>
-
-  <!-- Footer -->
-  <div class="app-footer">
-    <span class="kk-watermark">KK</span>
-    <a href="#" onclick="return false">KK不锈钢报价系统</a>
-    &nbsp;·&nbsp;
-    <span id="footerVersion">v2.2</span>
-    &nbsp;·&nbsp;
-    <span>Built with ❤️</span>
-  </div>
-
-  <!-- 更新公告弹窗 -->
-  <div class="changelog-overlay" id="changelogOverlay" style="display:none">
-    <div class="changelog-modal">
-      <div class="changelog-head">
-        <span class="changelog-title">📋 更新公告</span>
-        <button class="changelog-close" id="changelogClose" title="关闭">✕</button>
-      </div>
-      <div class="changelog-body" id="changelogBody"></div>
-      <div class="changelog-foot">
-        <label class="changelog-check"><input type="checkbox" id="changelogNoMore"> 不再弹出本次公告</label>
-        <button class="changelog-ok" id="changelogOk">知道了</button>
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>
-
