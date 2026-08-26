@@ -937,124 +937,148 @@ const App = (() => {
     return groups.length ? groups : null;
   }
 
+  // 2026-08-26 用户规则：表面加工板块按类别分组，外观对齐单张加工板块（sg-group 卡片）
   function renderSurfaceConfig() {
     const wrap = dom('surfaceConfigTable');
     if (!wrap) return;
-    const surfOrder = [
-      { display: '2B', key: '2B' },
-      { display: 'NO.4', key: 'NO.4' },
-      { display: 'HL', key: 'HL' },
-      { display: '单面抛光', key: '单面抛光' },
-      { display: '双面抛光', key: '双面抛光' },
-      { display: '6K', key: '6K' },
-      { display: '双面6K', key: '双面6K' },
-      { display: '普磨8K（卷磨）', key: '8K' },
-      { display: '双面8K', key: '双面8K' },
-      // 8K 彩色
-      { display: '8K黄钛金(板)', key: '8K黄钛金' },
-      { display: '8K黄钛金(板)/L', key: '8K黄钛金/L' },
-      { display: '8K黄钛金(板)/S', key: '8K黄钛金/S' },
-      { display: '8K玫瑰金(板)', key: '8K玫瑰金' },
-      { display: '8K玫瑰金(板)/L', key: '8K玫瑰金/L' },
-      { display: '8K玫瑰金(板)/S', key: '8K玫瑰金/S' },
-      { display: '8K香槟金(板)', key: '8K香槟金' },
-      { display: '8K香槟金(板)/L', key: '8K香槟金/L' },
-      { display: '8K香槟金(板)/S', key: '8K香槟金/S' },
-      { display: '8K黑钛金(板)', key: '8K黑钛金' },
-      { display: '8K宝石蓝(板)', key: '8K宝石蓝' },
-      { display: '8K紫罗兰(板)', key: '8K紫罗兰' },
-      { display: '8K翡翠绿(板)', key: '8K翡翠绿' },
-      { display: '8K紫红(板)', key: '8K紫红' },
-      { display: '8K中国红(板)', key: '8K中国红' },
-      { display: '8K古铜(板)', key: '8K古铜' },
-      // 砂面/拉丝 合并
-      { display: '砂面/拉丝(NO.4/HL)黄钛金(板)', keys: ['拉丝黄钛金','磨砂黄钛金'] },
-      { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/L', keys: ['拉丝黄钛金/L','磨砂黄钛金/L'] },
-      { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/S', keys: ['拉丝黄钛金/S','磨砂黄钛金/S'] },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)/L', keys: ['拉丝玫瑰金/L','磨砂玫瑰金/L'] },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)/S', keys: ['拉丝玫瑰金/S','磨砂玫瑰金/S'] },
-      { display: '砂面/拉丝(NO.4/HL)香槟金(板)', keys: ['拉丝香槟金','磨砂香槟金'] },
-      { display: '砂面/拉丝(NO.4/HL)香槟金(板)/L', keys: ['拉丝香槟金/L','磨砂香槟金/L'] },
-      { display: '砂面/拉丝(NO.4/HL)香槟金(板)/S', keys: ['拉丝香槟金/S','磨砂香槟金/S'] },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金(板)', keys: ['拉丝黑钛金','磨砂黑钛金'] },
-      { display: '砂面/拉丝(NO.4/HL)古铜(板)', keys: ['拉丝古铜','磨砂古铜'] },
-      { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹(板)', key: '拉丝古铜哑光抗指纹' },
-      { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹(板)', key: '拉丝古铜亮光抗指纹' },
-      // AFP 彩色表面
-      { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(板)', key: '拉丝黄钛金亮光无指纹' },
-      { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(板)', key: '拉丝黄钛金哑光无指纹' },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(板)', key: '拉丝玫瑰金亮光无指纹' },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(板)', key: '拉丝玫瑰金哑光无指纹' },
-      { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(板)', key: '拉丝香槟金亮光无指纹' },
-      { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(板)', key: '拉丝香槟金哑光无指纹' },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(板)', key: '拉丝黑钛金亮光无指纹' },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(板)', key: '拉丝黑钛金哑光无指纹' },
-      // ===== 卷材 =====
-      { display: '8K黄钛金(卷)', key: '8K黄钛金(卷)' },
-      { display: '8K玫瑰金(卷)', key: '8K玫瑰金(卷)' },
-      { display: '8K香槟金(卷)', key: '8K香槟金(卷)' },
-      { display: '8K黑钛金(卷)', key: '8K黑钛金(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)黄钛金(卷)', keys: ['拉丝黄钛金(卷)','磨砂黄钛金(卷)'] },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金(卷)', keys: ['拉丝玫瑰金(卷)','磨砂玫瑰金(卷)'] },
-      { display: '砂面/拉丝(NO.4/HL)香槟金(卷)', keys: ['拉丝香槟金(卷)','磨砂香槟金(卷)'] },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金(卷)', keys: ['拉丝黑钛金(卷)','磨砂黑钛金(卷)'] },
-      { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(卷)', key: '拉丝黄钛金亮光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(卷)', key: '拉丝黄钛金哑光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(卷)', key: '拉丝玫瑰金亮光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(卷)', key: '拉丝玫瑰金哑光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(卷)', key: '拉丝香槟金亮光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(卷)', key: '拉丝香槟金哑光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(卷)', key: '拉丝黑钛金亮光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(卷)', key: '拉丝黑钛金哑光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)灰钛金哑光无指纹(卷)', key: '拉丝灰钛金哑光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)古铜亮光无指纹(卷)', key: '拉丝古铜亮光无指纹(卷)' },
-      { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
-    ];
-    let html = '<table><thead><tr><th>表面名称</th><th>覆盖价(元/平米)</th><th>阶梯默认价</th><th></th></tr></thead><tbody>';
-    surfOrder.forEach(item => {
-      const cfgKey = item.key || item.keys[0];
-      const cfg = SURFACE_FEES[cfgKey];
-      if (!cfg) return;
-      const names = item.key ? item.key : item.keys.join(',');
-      const display = item.display;
-      if (typeof cfg === 'object' && cfg.price !== undefined && !Array.isArray(cfg)) {
-        const defaultPrice = cfg.price;
-        const val = priceOverrides.surfaceFees[cfgKey] ?? defaultPrice;
-        const locked = !!priceOverrides.surfaceLocked[cfgKey];
-        html += `<tr>
-          <td><span class="cfg-name">${display}</span></td>
-          <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${names}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
-          <td><span class="cfg-default">${defaultPrice}</span></td>
-          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${names}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
-        </tr>`;
-      } else if (Array.isArray(cfg)) {
-        const groups = single8kGroups(display) || [{ label: display, tiers: cfg }];
-        for (const g of groups) {
-          const tiers = g.tiers;
-          if (tiers.length === 0) continue;
-          const tierDesc = tiers.map(t => {
-          const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
-          const w = stdW ? '' : `【${t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax}】`;
-          return `${t.tMin}-${t.tMax}mm${w}: ${t.price}${t.unit === 'ton' ? '元/吨' : '元'}`;
-        }).join(' / ');
-          const val = priceOverrides.surfaceFees[cfgKey] ?? tiers[0].price;
-          const locked = !!priceOverrides.surfaceLocked[cfgKey];
-          html += `<tr>
-          <td><span class="cfg-name">${g.label}</span></td>
-          <td><input type="number" class="cfg-price-input surf-price-inp" data-names="${names}" value="${val}" step="0.5" ${locked ? 'readonly' : ''}></td>
-          <td><span class="cfg-default">${tierDesc}</span></td>
-          <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-names="${names}" data-type="surf">${locked ? '🔒' : '🔓'}</button></td>
-        </tr>`;
-        }
+    const groupDefs = [
+      {
+        cls: 'sf-base', label: '基础表面',
+        items: [
+          { display: '2B', key: '2B' },
+          { display: 'NO.4', key: 'NO.4' },
+          { display: 'HL', key: 'HL' },
+          { display: '单面抛光', key: '单面抛光' },
+          { display: '双面抛光', key: '双面抛光' },
+          { display: '6K', key: '6K' },
+          { display: '双面6K', key: '双面6K' },
+          { display: '普磨8K（卷磨）', key: '8K' },
+          { display: '双面8K', key: '双面8K' }
+        ]
+      },
+      {
+        cls: 'sf-color8k', label: '8K 彩色（板）',
+        items: [
+          { display: '8K黄钛金(板)', key: '8K黄钛金' },
+          { display: '8K黄钛金(板)/L', key: '8K黄钛金/L' },
+          { display: '8K黄钛金(板)/S', key: '8K黄钛金/S' },
+          { display: '8K玫瑰金(板)', key: '8K玫瑰金' },
+          { display: '8K玫瑰金(板)/L', key: '8K玫瑰金/L' },
+          { display: '8K玫瑰金(板)/S', key: '8K玫瑰金/S' },
+          { display: '8K香槟金(板)', key: '8K香槟金' },
+          { display: '8K香槟金(板)/L', key: '8K香槟金/L' },
+          { display: '8K香槟金(板)/S', key: '8K香槟金/S' },
+          { display: '8K黑钛金(板)', key: '8K黑钛金' },
+          { display: '8K宝石蓝(板)', key: '8K宝石蓝' },
+          { display: '8K紫罗兰(板)', key: '8K紫罗兰' },
+          { display: '8K翡翠绿(板)', key: '8K翡翠绿' },
+          { display: '8K紫红(板)', key: '8K紫红' },
+          { display: '8K中国红(板)', key: '8K中国红' },
+          { display: '8K古铜(板)', key: '8K古铜' }
+        ]
+      },
+      {
+        cls: 'sf-hairline', label: '砂面/拉丝（板）',
+        items: [
+          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/L', keys: ['拉丝黄钛金/L','磨砂黄钛金/L'] },
+          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/S', keys: ['拉丝黄钛金/S','磨砂黄钛金/S'] },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)/L', keys: ['拉丝玫瑰金/L','磨砂玫瑰金/L'] },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)/S', keys: ['拉丝玫瑰金/S','磨砂玫瑰金/S'] },
+          { display: '砂面/拉丝(NO.4/HL)香槟金(板)', keys: ['拉丝香槟金','磨砂香槟金'] },
+          { display: '砂面/拉丝(NO.4/HL)香槟金(板)/L', keys: ['拉丝香槟金/L','磨砂香槟金/L'] },
+          { display: '砂面/拉丝(NO.4/HL)香槟金(板)/S', keys: ['拉丝香槟金/S','磨砂香槟金/S'] },
+          { display: '砂面/拉丝(NO.4/HL)黑钛金(板)', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+          { display: '砂面/拉丝(NO.4/HL)古铜(板)', keys: ['拉丝古铜','磨砂古铜'] },
+          { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹(板)', key: '拉丝古铜哑光抗指纹' },
+          { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹(板)', key: '拉丝古铜亮光抗指纹' }
+        ]
+      },
+      {
+        cls: 'sf-afp', label: 'AFP 彩色（板）',
+        items: [
+          { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(板)', key: '拉丝黄钛金亮光无指纹' },
+          { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(板)', key: '拉丝黄钛金哑光无指纹' },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(板)', key: '拉丝玫瑰金亮光无指纹' },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(板)', key: '拉丝玫瑰金哑光无指纹' },
+          { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(板)', key: '拉丝香槟金亮光无指纹' },
+          { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(板)', key: '拉丝香槟金哑光无指纹' },
+          { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(板)', key: '拉丝黑钛金亮光无指纹' },
+          { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(板)', key: '拉丝黑钛金哑光无指纹' }
+        ]
+      },
+      {
+        cls: 'sf-coil', label: '卷材彩色表面',
+        items: [
+          { display: '8K黄钛金(卷)', key: '8K黄钛金(卷)' },
+          { display: '8K玫瑰金(卷)', key: '8K玫瑰金(卷)' },
+          { display: '8K香槟金(卷)', key: '8K香槟金(卷)' },
+          { display: '8K黑钛金(卷)', key: '8K黑钛金(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)黄钛金(卷)', keys: ['拉丝黄钛金(卷)','磨砂黄钛金(卷)'] },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金(卷)', keys: ['拉丝玫瑰金(卷)','磨砂玫瑰金(卷)'] },
+          { display: '砂面/拉丝(NO.4/HL)香槟金(卷)', keys: ['拉丝香槟金(卷)','磨砂香槟金(卷)'] },
+          { display: '砂面/拉丝(NO.4/HL)黑钛金(卷)', keys: ['拉丝黑钛金(卷)','磨砂黑钛金(卷)'] },
+          { display: '砂面/拉丝(NO.4/HL)黄钛金亮光无指纹(卷)', key: '拉丝黄钛金亮光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)黄钛金哑光无指纹(卷)', key: '拉丝黄钛金哑光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金亮光无指纹(卷)', key: '拉丝玫瑰金亮光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金哑光无指纹(卷)', key: '拉丝玫瑰金哑光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)香槟金亮光无指纹(卷)', key: '拉丝香槟金亮光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)香槟金哑光无指纹(卷)', key: '拉丝香槟金哑光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)黑钛金亮光无指纹(卷)', key: '拉丝黑钛金亮光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)黑钛金哑光无指纹(卷)', key: '拉丝黑钛金哑光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)灰钛金哑光无指纹(卷)', key: '拉丝灰钛金哑光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)古铜亮光无指纹(卷)', key: '拉丝古铜亮光无指纹(卷)' },
+          { display: '砂面/拉丝(NO.4/HL)古铜哑光无指纹(卷)', key: '拉丝古铜哑光无指纹(卷)' }
+        ]
       }
+    ];
+    let html = '';
+    groupDefs.forEach(gd => {
+      const rows = [];
+      gd.items.forEach(item => {
+        const cfgKey = item.key || item.keys[0];
+        const cfg = SURFACE_FEES[cfgKey];
+        if (!cfg) return;
+        const names = item.key ? item.key : item.keys.join(',');
+        const display = item.display;
+        const rowCls = ' class="' + gd.cls + '-row"';
+        if (typeof cfg === 'object' && cfg.price !== undefined && !Array.isArray(cfg)) {
+          const defaultPrice = cfg.price;
+          const val = priceOverrides.surfaceFees[cfgKey] ?? defaultPrice;
+          const locked = !!priceOverrides.surfaceLocked[cfgKey];
+          rows.push('<tr' + rowCls + '>' +
+            '<td><span class="cfg-name">' + display + '</span></td>' +
+            '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + names + '" value="' + val + '" step="0.5" ' + (locked ? 'readonly' : '') + '></td>' +
+            '<td><span class="cfg-default">' + defaultPrice + '</span></td>' +
+            '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + names + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
+            '</tr>');
+        } else if (Array.isArray(cfg)) {
+          const subGroups = single8kGroups(display) || [{ label: display, tiers: cfg }];
+          subGroups.forEach(g => {
+            const tiers = g.tiers;
+            if (!tiers || tiers.length === 0) return;
+            const tierDesc = tiers.map(t => {
+              const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
+              const w = stdW ? '' : '【' + (t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax) + '】';
+              return t.tMin + '-' + t.tMax + 'mm' + w + ': ' + t.price + (t.unit === 'ton' ? '元/吨' : '元');
+            }).join(' / ');
+            const val = priceOverrides.surfaceFees[cfgKey] ?? tiers[0].price;
+            const locked = !!priceOverrides.surfaceLocked[cfgKey];
+            rows.push('<tr' + rowCls + '>' +
+              '<td><span class="cfg-name">' + g.label + '</span></td>' +
+              '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + names + '" value="' + val + '" step="0.5" ' + (locked ? 'readonly' : '') + '></td>' +
+              '<td><span class="cfg-default">' + tierDesc + '</span></td>' +
+              '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + names + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
+              '</tr>');
+          });
+        }
+      });
+      html += '<div class="sg-group ' + gd.cls + '"><div class="sg-group-title">' + gd.label + '</div><table><thead><tr><th>表面加工</th><th>覆盖价（元/平方米）</th><th>阶段默认价</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
-    html += '</tbody></table>';
     wrap.innerHTML = html;
-
-        bindSurfRowEvents(wrap, renderSurfaceConfig);
+    bindSurfRowEvents(wrap, renderSurfaceConfig);
   }
-
   function bindSurfRowEvents(wrap, rerender) {
     wrap.querySelectorAll('.surf-price-inp').forEach(inp => {
       inp.addEventListener('input', () => {

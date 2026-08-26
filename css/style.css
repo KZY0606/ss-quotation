@@ -1000,3 +1000,15 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .ref-toggle{display:inline-block;width:14px;font-size:10px;color:var(--text-muted,#999);transition:transform .15s;}
 .ref-section.ref-collapsed .ref-toggle{transform:rotate(-90deg);}
 .ref-section.ref-collapsed h3 ~ *{display:none;}
+
+/* 2026-08-26 surface config groups (align with sg-group look) */
+.sf-base .sg-group-title { background: #dbeafe; color: #1d4ed8; }
+.sf-base-row td { background: #f0f7ff; }
+.sf-color8k .sg-group-title { background: #dcfce7; color: #15803d; }
+.sf-color8k-row td { background: #f4fbf5; }
+.sf-hairline .sg-group-title { background: #ffedd5; color: #c2410c; }
+.sf-hairline-row td { background: #fff9f0; }
+.sf-afp .sg-group-title { background: #f3e8ff; color: #7e22ce; }
+.sf-afp-row td { background: #faf5ff; }
+.sf-coil .sg-group-title { background: #cffafe; color: #0e7490; }
+.sf-coil-row td { background: #f0fdfa; }
