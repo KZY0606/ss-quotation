@@ -220,12 +220,6 @@ const App = (() => {
     if (vb && typeof APP_VERSION !== 'undefined') vb.textContent = 'v' + APP_VERSION;
     const fv = document.getElementById('footerVersion');
     if (fv && typeof APP_VERSION !== 'undefined') fv.textContent = 'v' + APP_VERSION;
-    // 材质标签动态化
-    const mb = document.getElementById('materialBadge');
-    if (mb) {
-      mb.textContent = '201/304 全系列';
-      mb.className = 'badge badge-accent';
-    }
     initChangelog();
     updateAllDerived();
     render();

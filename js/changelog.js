@@ -3,6 +3,12 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.112', date: '2026-08-26', title: '界面优化',
+    items: [
+      '移除右上角「201/304 全系列」材质徽章，界面更简洁'
+    ]
+  },
+  {
     v: '1.0.110', date: '2026-08-26', title: '表面加工板块改版',
     items: [
       '表面加工板块按类别分组展示：基础表面 / 8K彩色（板）/ 砂面拉丝（板）/ AFP彩色（板）/ 卷材彩色表面',
