@@ -199,6 +199,36 @@ test('NO.4 和 HL 价格相同 0.50mm', () => {
   eq(n.sqmPrice, h.sqmPrice);
 });
 
+// === v1.0.121 压花覆盖价测试（配置板块改价后生效）===
+test('覆盖价: 6K+linen 设 linen=350 → 压花 350 元/吨', () => {
+  PricingEngine.setUserOverrides({ surfaceFees: { linen: 350 }, filmFees: {} });
+  const r = PricingEngine.calculate({
+    material:'201J2', surface:'6K+linen', thickness:'2.00', width:'1240', length:'2500',
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
+  });
+  eq(r.success, true);
+  eq(r.detail.surfaceFeePerTon, 400);
+  eq(r.detail.linenFeePerTon, 350);
+  eq(r.detail.costTax, 8750);
+});
+test('覆盖价: 旧格式 8k linen 也走覆盖价 350', () => {
+  const r = PricingEngine.calculate({
+    material:'201J2', surface:'8k linen', thickness:'0.45', width:'1240', length:'2500',
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
+  });
+  eq(r.success, true);
+  eq(r.detail.linenFeePerTon, 350);
+});
+test('恢复默认: 清除覆盖后 linen 回 300', () => {
+  PricingEngine.setUserOverrides({ surfaceFees: {}, filmFees: {} });
+  const r = PricingEngine.calculate({
+    material:'201J2', surface:'6K+linen', thickness:'2.00', width:'1240', length:'2500',
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
+  });
+  eq(r.detail.linenFeePerTon, 300);
+  eq(r.detail.costTax, 8700);
+});
+
 // === 小珠光(LINEN)测试 ===
 test('BA linen 0.45mm → 450元/吨 (单面抛光150+小珠光300)', () => {
   const r = PricingEngine.calculate({

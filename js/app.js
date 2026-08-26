@@ -1202,6 +1202,12 @@ const App = (() => {
         ]
       },
       {
+        cls: 'sf-emboss', label: '压花工艺（附加项·元/吨）', emboss: true,
+        items: [
+          { display: '小珠光(linen)', key: 'linen' }
+        ]
+      },
+      {
         cls: 'sf-coil', label: '卷材彩色表面',
         items: [
           { display: '8K黄钛金(卷)', key: '8K黄钛金(卷)' },
@@ -1231,6 +1237,20 @@ const App = (() => {
       const rows = [];
       gd.items.forEach(item => {
         const cfgKey = item.key || item.keys[0];
+        // v1.0.121 压花工艺行（EMBOSS_FEES 配置，元/吨）
+        if (gd.emboss) {
+          const ecfg = EMBOSS_FEES[item.key];
+          if (!ecfg) return;
+          const ev = priceOverrides.surfaceFees[item.key] ?? ecfg.feePerTon;
+          const elock = !!priceOverrides.surfaceLocked[item.key];
+          rows.push('<tr class="sf-emboss-row">' +
+            '<td><span class="cfg-name">' + item.display + '</span></td>' +
+            '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + item.key + '" value="' + ev + '" step="0.5" ' + (elock ? 'readonly' : '') + '></td>' +
+            '<td><span class="cfg-default">' + ecfg.feePerTon + ' 元/吨</span></td>' +
+            '<td><button class="cfg-lock-btn ' + (elock ? 'locked' : '') + '" data-names="' + item.key + '" data-type="surf">' + (elock ? '🔒' : '🔓') + '</button></td>' +
+            '</tr>');
+          return;
+        }
         const cfg = SURFACE_FEES[cfgKey];
         if (!cfg) return;
         const names = item.key ? item.key : item.keys.join(',');
@@ -1267,7 +1287,8 @@ const App = (() => {
           });
         }
       });
-      html += '<div class="sg-group ' + gd.cls + '"><div class="sg-group-title">' + gd.label + '</div><table><thead><tr><th>表面加工</th><th>覆盖价（元/平方米）</th><th>阶段默认价</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
+      const unitHead = gd.emboss ? '覆盖价（元/吨）' : '覆盖价（元/平方米）';
+      html += '<div class="sg-group ' + gd.cls + '"><div class="sg-group-title">' + gd.label + '</div><table><thead><tr><th>表面加工</th><th>' + unitHead + '</th><th>阶段默认价</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
     wrap.innerHTML = html;
     bindSurfRowEvents(wrap, renderSurfaceConfig);

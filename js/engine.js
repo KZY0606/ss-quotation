@@ -405,7 +405,13 @@ const PricingEngine = (() => {
     const alias = EMBOSS_ALIASES[(seg || '').trim().toLowerCase()];
     if (!alias) return null;
     const e = EMBOSS_FEES[alias];
-    return e ? { key: alias, name: e.name, feePerTon: e.feePerTon } : null;
+    if (!e) return null;
+    // v1.0.121 压花覆盖价：配置板块压花工艺行修改后生效
+    let fee = e.feePerTon;
+    if (userOverrides && userOverrides.surfaceFees && userOverrides.surfaceFees[alias] !== undefined) {
+      fee = userOverrides.surfaceFees[alias];
+    }
+    return { key: alias, name: e.name, feePerTon: fee };
   }
 
   // v1.0.120 压花拆分：统一格式 "表面加工+压花工艺"（如 6K+linen、8K+小珠光），
@@ -562,7 +568,12 @@ const PricingEngine = (() => {
     const linenSuffix = aliasedName ? aliasedName.match(/^(.+)-LINEN$/i) : null;
     const hasLinen = linenSuffix || aliasedName === 'LINEN';
     if (hasLinen && !embossFees.some(e => e.key === 'linen')) {
-      embossFees.push(EMBOSS_FEES.linen);
+      // v1.0.121 支持配置板块覆盖压花价
+      const linCfg = { key: 'linen', name: EMBOSS_FEES.linen.name, feePerTon: EMBOSS_FEES.linen.feePerTon };
+      if (userOverrides && userOverrides.surfaceFees && userOverrides.surfaceFees.linen !== undefined) {
+        linCfg.feePerTon = userOverrides.surfaceFees.linen;
+      }
+      embossFees.push(linCfg);
     }
 
     // AFP: 仅在原始输入不是直接表面命中时检测
