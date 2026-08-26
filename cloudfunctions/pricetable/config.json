@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "priceTable-http",
+      "type": "http",
+      "config": {
+        "path": "/priceTable",
+        "method": "POST"
+      }
+    }
+  ]
+}

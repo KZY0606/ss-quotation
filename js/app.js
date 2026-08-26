@@ -223,6 +223,7 @@ const App = (() => {
     initChangelog();
     updateAllDerived();
     render();
+    initPriceSync(); // v1.0.119 基价云端同步（拉取老板发布的最新基价）
   }
 
   // ===== 更新公告 v1.0.111 =====
@@ -820,6 +821,120 @@ const App = (() => {
     } catch (e) { /* ignore */ }
   }
 
+  // ========== 基价云端同步 v1.0.119（老板/管理员发布，全员自动同步） ==========
+  function collectBasePrices() {
+    return {
+      originPrices: originPrices,
+      originPrices304: originPrices304,
+      originPrices316L: originPrices316L,
+      fiveFootPrices304: fiveFootPrices304,
+      fiveFootPrices316L: fiveFootPrices316L,
+      fiveFootPrices400: fiveFootPrices400,
+      beigangJ5Price: beigangJ5Price,
+      prices400: prices400
+    };
+  }
+  function countBasePrices() {
+    let n = 0;
+    const cnt = (o) => {
+      if (o && typeof o === 'object') {
+        for (const k of Object.keys(o)) {
+          const v = o[k];
+          if (typeof v === 'number' && v > 0) n++;
+          else if (v && typeof v === 'object') cnt(v);
+        }
+      }
+    };
+    cnt(originPrices); cnt(originPrices304); cnt(originPrices316L);
+    cnt(fiveFootPrices304); cnt(fiveFootPrices316L); cnt(fiveFootPrices400);
+    cnt(prices400);
+    if (beigangJ5Price > 0) n++;
+    return n;
+  }
+  function clearLocalLocked() {
+    try {
+      ['kk_locked_prices','kk_locked_prices_304','kk_locked_prices_316L','kk_locked_prices_304_ff','kk_locked_prices_316L_ff','kk_beigang_j5','kk_prices_400','kk_prices_400_ff']
+        .forEach(k => localStorage.removeItem(k));
+    } catch (e) { /* ignore */ }
+  }
+  function applyBasePrices(p) {
+    if (!p || typeof p !== 'object') return false;
+    let changed = false;
+    if (p.originPrices && typeof p.originPrices === 'object') {
+      for (const [o, v] of Object.entries(p.originPrices)) {
+        if (v && typeof v === 'object' && (originPrices.hasOwnProperty(o) || originOrder.includes(o))) {
+          originPrices[o] = v; lockedOrigins[o] = false; changed = true;
+        }
+      }
+    }
+    if (p.originPrices304 && typeof p.originPrices304 === 'object') {
+      for (const [o, v] of Object.entries(p.originPrices304)) {
+        if (originPrices304.hasOwnProperty(o) || originOrder.includes(o)) { originPrices304[o] = v; lockedOrigins304[o] = false; changed = true; }
+      }
+    }
+    if (p.originPrices316L && typeof p.originPrices316L === 'object') {
+      for (const [o, v] of Object.entries(p.originPrices316L)) {
+        if (originPrices316L.hasOwnProperty(o) || originOrder.includes(o)) { originPrices316L[o] = v; lockedOrigins316L[o] = false; changed = true; }
+      }
+    }
+    if (p.fiveFootPrices304 && typeof p.fiveFootPrices304 === 'object') { for (const [o, v] of Object.entries(p.fiveFootPrices304)) { fiveFootPrices304[o] = v; lockedFiveFoot304[o] = false; changed = true; } }
+    if (p.fiveFootPrices316L && typeof p.fiveFootPrices316L === 'object') { for (const [o, v] of Object.entries(p.fiveFootPrices316L)) { fiveFootPrices316L[o] = v; lockedFiveFoot316L[o] = false; changed = true; } }
+    if (p.fiveFootPrices400 && typeof p.fiveFootPrices400 === 'object') { for (const [k, v] of Object.entries(p.fiveFootPrices400)) { fiveFootPrices400[k] = v; lockedFiveFoot400[k] = false; changed = true; } }
+    if (p.prices400 && typeof p.prices400 === 'object') { for (const [k, v] of Object.entries(p.prices400)) { prices400[k] = v; lockedPrices400[k] = false; changed = true; } }
+    if (typeof p.beigangJ5Price === 'number') { beigangJ5Price = p.beigangJ5Price; beigangJ5Locked = false; changed = true; }
+    return changed;
+  }
+  function fmtSyncTime(t) { return t ? String(t).replace('T', ' ').slice(0, 16) : ''; }
+  function initPriceSync() {
+    const bar = dom('pricePublishBar');
+    if (!bar) return;
+    bar.style.display = '';
+    const st = dom('publishStatusText');
+    const btn = dom('publishPriceBtn');
+    let auth = null;
+    try { auth = window.KKAuth && KKAuth.getAuth(); } catch (e) {}
+    const isAdmin = !!(auth && auth.role === 'admin');
+    if (btn) btn.style.display = isAdmin ? '' : 'none';
+    if (btn && !btn._bound) {
+      btn._bound = true;
+      btn.addEventListener('click', () => {
+        const n = countBasePrices();
+        if (!confirm('确认将当前页面基价发布给全体员工？\n（共 ' + n + ' 个有效基价，发布后所有员工打开页面自动生效）')) return;
+        btn.disabled = true;
+        btn.textContent = '发布中…';
+        KKAuth.call('priceTable', { action: 'save', token: (auth && auth.token) || '', prices: collectBasePrices() }).then(r => {
+          btn.disabled = false;
+          btn.textContent = '📢 发布当前基价';
+          if (r && r.ok) {
+            showToast('已发布，全员生效', 'success');
+            if (st) st.textContent = '全员基价：' + (r.updatedBy || '') + ' 发布（刚刚）';
+          } else {
+            showToast((r && r.msg) || '发布失败', 'error');
+          }
+        }).catch(() => {
+          btn.disabled = false;
+          btn.textContent = '📢 发布当前基价';
+          showToast('发布失败：网络错误', 'error');
+        });
+      });
+    }
+    if (!window.KKAuth || !KKAuth.call) { if (st) st.textContent = '基价同步：登录后可用'; return; }
+    KKAuth.call('priceTable', { action: 'get', token: (auth && auth.token) || '' }).then(r => {
+      if (r && r.ok && r.data && r.data.prices) {
+        if (applyBasePrices(r.data.prices)) {
+          clearLocalLocked();
+          renderOriginGrid();
+          if (typeof updateAllDerived === 'function') updateAllDerived();
+          render();
+        }
+        if (st) st.textContent = '全员基价：' + (r.data.updatedBy || '') + ' 发布（' + fmtSyncTime(r.data.updatedAt) + '）';
+      } else {
+        if (st) st.textContent = '基价同步：老板尚未发布，当前使用本地基价';
+      }
+    }).catch(() => {
+      if (st) st.textContent = '基价同步：拉取失败，当前使用本地基价';
+    });
+  }
   // ========== 400系基价 ==========
   function get400Key(origin, material) { return origin + '-' + material; }
 
