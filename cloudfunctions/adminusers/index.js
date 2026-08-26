@@ -78,7 +78,21 @@ exports.main = async (event) => {
       const salt = crypto.randomBytes(16).toString('hex');
       const hash = crypto.scryptSync(password, salt, 64).toString('hex');
       await exec('UPDATE users SET password_hash=' + q(hash) + ', salt=' + q(salt) + ', failed_count=0, locked_until=NULL WHERE username=' + q(username));
+      await exec('DELETE FROM tokens WHERE username=' + q(username));
       return { ok: true, msg: '密码已重置' };
+    }
+
+    if (action === 'rename') {
+      const oldName = String((data && data.oldUsername) || '').trim();
+      const newName = String((data && data.newUsername) || '').trim();
+      if (!oldName || !newName) return { ok: false, msg: '旧账号/新账号必填' };
+      const chk = await exec('SELECT username FROM users WHERE username=' + q(newName) + ' LIMIT 1');
+      if (chk.Rows && chk.Rows.length) return { ok: false, msg: '账号 ' + newName + ' 已存在' };
+      await exec('UPDATE users SET username=' + q(newName) + ' WHERE username=' + q(oldName));
+      await exec('DELETE FROM tokens WHERE username=' + q(oldName));
+      await exec('UPDATE login_logs SET username=' + q(newName) + ' WHERE username=' + q(oldName));
+      await exec('UPDATE usage_logs SET username=' + q(newName) + ' WHERE username=' + q(oldName));
+      return { ok: true, msg: '账号已重命名为 ' + newName };
     }
 
     if (action === 'toggle') {
