@@ -1902,14 +1902,14 @@ const SURFACE_FEES = {
   '6K': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 1.6, unit: 'sqm' },
     { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1280, price: 3.6, unit: 'sqm' },
-    { tMin: 1.51, tMax: 2.00, wMin: 1000, wMax: 1530, price: 400, unit: 'ton' },
-    { tMin: 2.01, tMax: 3.00, wMin: 1000, wMax: 1530, price: 450, unit: 'ton' }
+    { tMin: 1.51, tMax: 2.00, wMin: 1000, wMax: 1280, price: 400, unit: 'ton' },
+    { tMin: 2.01, tMax: 3.00, wMin: 1000, wMax: 1280, price: 450, unit: 'ton' }
   ],
   '双面6K': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 3.2, unit: 'sqm' },
     { tMin: 1.25, tMax: 1.50, wMin: 1000, wMax: 1280, price: 7.2, unit: 'sqm' },
-    { tMin: 1.51, tMax: 2.00, wMin: 1000, wMax: 1530, price: 800, unit: 'ton' },
-    { tMin: 2.01, tMax: 3.00, wMin: 1000, wMax: 1530, price: 900, unit: 'ton' }
+    { tMin: 1.51, tMax: 2.00, wMin: 1000, wMax: 1280, price: 800, unit: 'ton' },
+    { tMin: 2.01, tMax: 3.00, wMin: 1000, wMax: 1280, price: 900, unit: 'ton' }
   ],
 
   '单面抛光': [
