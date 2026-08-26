@@ -1634,5 +1634,26 @@ test('v1.0.108: 双面6K 2.50*1240*C surfaceFeePerTon=900', () => {
   eq(r.detail.surfaceFeePerTon, 900, 'surfaceFeePerTon=' + r.detail.surfaceFeePerTon);
 });
 
+test('v1.0.114: 6K 1.80*1500*C 五尺按吨 surfaceFeePerTon=400', () => {
+  const r = PricingEngine.calculate({material:'304',surface:'6K',thickness:'1.80',width:'1500',length:'C',film1:'',film2:'',basePrice:9000,origin:'张浦'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeePerTon, 400, 'surfaceFeePerTon=' + r.detail.surfaceFeePerTon);
+});
+test('v1.0.114: 6K 2.50*1530*C 五尺按吨 surfaceFeePerTon=450', () => {
+  const r = PricingEngine.calculate({material:'304',surface:'6K',thickness:'2.50',width:'1530',length:'C',film1:'',film2:'',basePrice:9000,origin:'张浦'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeePerTon, 450, 'surfaceFeePerTon=' + r.detail.surfaceFeePerTon);
+});
+test('v1.0.114: 双面6K 1.80*1524*C 五尺按吨 surfaceFeePerTon=800', () => {
+  const r = PricingEngine.calculate({material:'304',surface:'双面6K',thickness:'1.80',width:'1524',length:'C',film1:'',film2:'',basePrice:9000,origin:'张浦'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeePerTon, 800, 'surfaceFeePerTon=' + r.detail.surfaceFeePerTon);
+});
+test('v1.0.114: 双面6K 3.00*1500*C 五尺按吨 surfaceFeePerTon=900', () => {
+  const r = PricingEngine.calculate({material:'304',surface:'双面6K',thickness:'3.00',width:'1500',length:'C',film1:'',film2:'',basePrice:9000,origin:'张浦'});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeePerTon, 900, 'surfaceFeePerTon=' + r.detail.surfaceFeePerTon);
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

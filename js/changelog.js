@@ -3,6 +3,13 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.114', date: '2026-08-26', title: '6K 按吨档位支持五尺',
+    items: [
+      '6K / 双面6K 的按吨计费档位（1.51-3.00mm）扩展到五尺宽度（1500/1524/1530），不再报错'
+    ]
+  },
+
+  {
     v: '1.0.113', date: '2026-08-26', title: '更新公告优化',
     items: [
       '更新公告改为展示近两天的更新内容，不再限制条数'
