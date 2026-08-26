@@ -1985,6 +1985,20 @@ const SURFACE_FEES = {
   '拉丝古铜哑光无指纹(卷)': [{ tMin:0.24, tMax:1.20, wMin:1219, wMax:1280, price:0,   unit:'sqm' }],
 };
 
+// 压花工艺附加费 (元/吨) —— 2026-08-26 用户规则：压花是表面加工的附加项，与表面加工费分开计算
+// 统一输入格式：表面加工+压花工艺（如 6K+linen / 8K+小珠光），engine 拆分后分别计费
+const EMBOSS_FEES = {
+  linen: { name: '小珠光(linen)', feePerTon: 300 }
+};
+// 压花工艺别名（小写 key）→ EMBOSS_FEES 的 key
+const EMBOSS_ALIASES = {
+  'linen': 'linen',
+  '小珠光': 'linen',
+  '小珠光(linen)': 'linen',
+  '小珠光linen': 'linen',
+  '珠光': 'linen'
+};
+
 // 小珠光压花附加费 (元/吨)
 const LINEN_FEE = 300;
 

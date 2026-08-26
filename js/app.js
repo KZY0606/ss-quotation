@@ -324,6 +324,25 @@ const App = (() => {
     els.expBtn2.addEventListener('click', exportResults);
     els.clearBtn.addEventListener('click', clearAll);
     els.addBtn.addEventListener('click', addManual);
+    // v1.0.120 压花工艺勾选 ↔ 表面输入联动（小珠光 linen +300元/吨）
+    const embossCb = dom('manualEmbossLinen');
+    const surfInput = dom('manualSurface');
+    if (embossCb && surfInput) {
+      const hasLinenTxt = (v) => /(^|\+)\s*linen\s*($|\+)/i.test(v) || /小珠光/.test(v);
+      const stripLinen = (v) => v.split('+').map(x => x.trim()).filter(x => x && !/^linen$/i.test(x) && !/小珠光/.test(x)).join('+');
+      embossCb.addEventListener('change', () => {
+        let v = (surfInput.value || '').trim();
+        if (embossCb.checked) {
+          const base = stripLinen(v);
+          surfInput.value = base ? base + '+linen' : 'linen';
+        } else {
+          surfInput.value = stripLinen(v);
+        }
+      });
+      surfInput.addEventListener('input', () => {
+        embossCb.checked = hasLinenTxt(surfInput.value || '');
+      });
+    }
     els.fileInput.addEventListener('change', handleFile);
     els.parseTextBtn.addEventListener('click', parseText);
     els.addOriginBtn.addEventListener('click', addOrigin);
@@ -1610,7 +1629,8 @@ const App = (() => {
     h.push('<tr><td>密度 (201)</td><td class="ref-num">' + DENSITY['201'] + '</td></tr>');
     h.push('<tr><td>密度 (304)</td><td class="ref-num">' + DENSITY['304'] + '</td></tr>');
     h.push('<tr><td>不含税系数</td><td class="ref-num">0.92</td></tr>');
-    h.push('<tr><td>小珠光压花附加费</td><td class="ref-num">' + LINEN_FEE + ' 元/吨</td></tr>');
+    h.push('<tr><td>小珠光压花附加费 (linen)</td><td class="ref-num">' + LINEN_FEE + ' 元/吨</td></tr>');
+    h.push('<tr><td colspan="2" style="font-size:11px;color:var(--text-muted)">压花格式：表面加工+压花工艺（如 6K+linen / 8K+小珠光），加工费分开计算；也可在报价页勾选"压花工艺：小珠光(linen)"</td></tr>');
     h.push('<tr><td>亮光抗指纹 (AFP Bright)</td><td class="ref-num">' + AFP_BRIGHT_FEE + ' 元/㎡</td></tr>');
     h.push('<tr><td>哑光抗指纹 (AFP Matte)</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
     h.push('<tr><td colspan="2" style="padding:4px"></td></tr>');
@@ -2316,7 +2336,14 @@ const App = (() => {
     let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（售价 = 成本 + 包装/装柜/FOB均摊，按张计价）</div>`;
     html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">③ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
+    if (d.linenFeePerTon) {
+      const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', feePerTon: d.linenFeePerTon }];
+      for (const e of embossList) {
+        const perSheet = Math.round(e.feePerTon / 1000 * (d.sheetWeightKg || 0) * 1000) / 1000;
+        html += `<div class="calc-step"><span class="calc-step-label">③ 压花工艺（${e.name}）：${e.feePerTon}元/吨 ÷ 1000 × ${fmt(d.sheetWeightKg)}kg</span><span class="calc-step-value ${perSheet > 0 ? 'positive' : 'zero'}">${perSheet > 0 ? '+' + fmt(perSheet) : '0'} 元</span></div>`;
+      }
+    }
+    html += `<div class="calc-step"><span class="calc-step-label">④ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">单张价格（成本）</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
     // v1.0.106 均摊三项
     html += `<div class="calc-step"><span class="calc-step-label">包装均摊：${packLabel || '?'} ${fmtI(d.packingFee || 0)}元/吨 = ${packPerKg}元/kg × ${fmt(d.sheetWeightKg)}kg</span><span class="calc-step-value ${pp > 0 ? 'positive' : 'zero'}">${pp > 0 ? '+' + fmt(pp) : '0'} 元/张</span></div>`;
@@ -2361,10 +2388,14 @@ const App = (() => {
     if (d.widthSurcharge > 0) {
       html += step(`   宽度加价 (${fmtThk(d.width)}mm × ${fmtThk(d.width)}mm)`, d.widthSurcharge, '元/吨', true);
     }
-    if (d.surfaceFeeSqm > 0) html += step(`③ 表面加工费 (${d.surface}, ${fmt(d.surfaceFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.surfaceFeePerTon, '元/吨', true);
-    else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.surface})`, d.surfaceFeePerTon, '元/吨', true);
-    else html += step(`③ 表面加工费 (${d.surface})`, 0, '', false);
-    if (d.linenFeePerTon) html += step(`④ 小珠光压花`, d.linenFeePerTon, '元/吨', true);
+    if (d.surfaceFeeSqm > 0) html += step(`③ 表面加工费 (${d.normSurface || d.surface}, ${fmt(d.surfaceFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.surfaceFeePerTon, '元/吨', true);
+    else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, d.surfaceFeePerTon, '元/吨', true);
+    else html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, 0, '', false);
+    // v1.0.120 压花工艺明细（表面加工+压花 分开显示，如 6K+linen → 6K加工费 + 小珠光压花300元/吨）
+    if (d.linenFeePerTon) {
+      const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', feePerTon: d.linenFeePerTon }];
+      for (const e of embossList) html += step(`④ 压花工艺（${e.name}）`, e.feePerTon, '元/吨', true);
+    }
     let stepN = d.linenFeePerTon ? 5 : 4;
     if (d.afpPerTon) html += step(`④ 抗指纹${d.afpFeeSqm === 5 ? '(哑光)' : '(亮光)'}`, d.afpPerTon, '元/吨', true);
     if (d.film1PerTon > 0) html += step(`⑤ 保护膜1 (${d.film1}, ${d.film1FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film1PerTon, '元/吨', true);

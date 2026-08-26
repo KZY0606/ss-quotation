@@ -25,7 +25,7 @@ const EDGE_CANDIDATES = [
   'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
 ];
 
-const target = process.argv[2] || 'https://kzy0606.github.io/ss-quotation/';
+const target = process.argv[2] || 'https://kk-quotation-d2gtggelpcd901498-1475503300.tcloudbaseapp.com/';
 
 (async () => {
   let exe = EDGE_CANDIDATES.find(p => require('fs').existsSync(p));
@@ -34,8 +34,18 @@ const target = process.argv[2] || 'https://kzy0606.github.io/ss-quotation/';
   const page = await browser.newPage();
   await page.setViewport({ width: 1400, height: 2200 });
   page.on('pageerror', e => console.log('[pageerror]', e.message));
-  await page.goto(target, { waitUntil: 'networkidle0', timeout: 60000 });
-  await new Promise(r => setTimeout(r, 2000));
+  await page.goto(target, { waitUntil: 'networkidle2', timeout: 60000 });
+  await new Promise(r => setTimeout(r, 2500));
+  // 自动登录（线上需要登录态才渲染基价面板）
+  if (page.url().includes('login.html')) {
+    try {
+      await page.type('#username', 'KK');
+      await page.type('#password', 'kzybs1314');
+      await page.evaluate(() => { (document.querySelector('#loginBtn') || Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('登'))).click(); });
+      await new Promise(r => setTimeout(r, 4000));
+    } catch (e) { console.log('[verify-ui] 自动登录失败（本地 file:// 模式忽略）', e.message.slice(0, 60)); }
+  }
+  await new Promise(r => setTimeout(r, 2500));
 
   const res = await page.evaluate(() => {
     const rows = [...document.querySelectorAll('#originRows201 .origin-row-201')];

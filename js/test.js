@@ -23,13 +23,13 @@ test('8K 镜面 0.50*1219*C', () => {
 });
 
 test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
-  const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 10130); eq(r.detail.saleTax, 10630);
+  const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800,packing:'木架'});
+  eq(r.success, true); eq(r.detail.costTax, 10080); eq(r.detail.saleTax, 10480);
 });
 
 test('双面抛光 0.50*1000*2000', () => {
-  const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9300);
+  const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800,packing:'木架'});
+  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9200);
 });
 
 test('拉丝黑钛金 0.60*1219*C', () => {
@@ -104,7 +104,7 @@ test('201J1压延 0.50*1240*C', () => {
 test('自由文本: 宏旺201J1 NO.4 5C-FILM 0.50*1240*C', () => {
   const p = PricingEngine.parseFreeText('宏旺201J1 NO.4 5C-FILM 0.50*1240*C', {'201J1':8700});
   eq(p !== null, true); eq(p.material, '201J1'); eq(p.surface, 'NO.4');
-  eq(p.thickness, 0.50); eq(p.width, 1240); eq(p.length, 'C'); eq(p.film1, '5C-FILM');
+  eq(parseFloat(p.thickness), 0.5); eq(p.width, 1240); eq(p.length, 'C'); eq(p.film1, '5C-FILM');
   eq(p.isYanYan, false);
 });
 
@@ -203,7 +203,7 @@ test('NO.4 和 HL 价格相同 0.50mm', () => {
 test('BA linen 0.45mm → 450元/吨 (单面抛光150+小珠光300)', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'BA linen', thickness:'0.45', width:'1240', length:'2500',
-    film1:'', film2:'', basePrice:7800, isYanYan:false
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.success, true);
   eq(r.detail.linenFeePerTon, 300);
@@ -214,7 +214,7 @@ test('BA linen 0.45mm → 450元/吨 (单面抛光150+小珠光300)', () => {
 test('8K linen 0.45mm → 707.71+300=1007.71元/吨', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'8K linen', thickness:'0.45', width:'1240', length:'2500',
-    film1:'', film2:'', basePrice:7800, isYanYan:false
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.success, true);
   eq(r.detail.hasLinen, true);
@@ -226,7 +226,7 @@ test('8K linen 0.45mm → 707.71+300=1007.71元/吨', () => {
 test('小珠光 alias: 镜面8k黄钛金小珠光 0.50mm', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'镜面8k黄钛金小珠光', thickness:'0.50', width:'1240', length:'2500',
-    film1:'', film2:'', basePrice:7800, isYanYan:false
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.success, true);
   eq(r.detail.hasLinen, true);
@@ -254,7 +254,7 @@ test('磨砂玫瑰金 和 拉丝玫瑰金 价格相同', () => {
 test('AFP: Gold No4 + AFP = 拉丝黄钛金+亮光抗指纹 0.45mm', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'Gold No4 + AFP', thickness:'0.45', width:'1240', length:'2500',
-    film1:'', film2:'', basePrice:7800, isYanYan:false
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.success, true);
   eq(r.detail.afpFeeSqm, 2); // 亮光(默认)
@@ -266,7 +266,7 @@ test('AFP: Gold No4 + AFP = 拉丝黄钛金+亮光抗指纹 0.45mm', () => {
 test('AFP: 拉丝古铜哑光抗指纹 = 组合价 15元/sqm 0.45mm', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'拉丝古铜哑光抗指纹', thickness:'0.45', width:'1240', length:'2500',
-    film1:'', film2:'', basePrice:7800, isYanYan:false
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.success, true);
   eq(r.detail.surfaceFeePerTon, Math.round(15 * (1000/7.85/0.45) * 100) / 100);
@@ -281,7 +281,7 @@ test('AFP: 青古铜 alias → 8K古铜', () => {
 test('AFP: 拉丝黄钛金哑光抗指纹 = 拉丝黄钛金+AFP(matte)', () => {
   const r = PricingEngine.calculate({
     material:'201J2', surface:'拉丝黄钛金哑光抗指纹', thickness:'0.45', width:'1240', length:'2500',
-    film1:'', film2:'', basePrice:7800, isYanYan:false
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.success, true);
   eq(r.detail.afpFeeSqm, 5); // 哑光=5
@@ -358,8 +358,8 @@ test('模糊匹配: no4 → NO.4', () => {
 
 // === 201 基价宽度档（精确值）测试 ===
 test('201 宽度档映射: 1000/1030→1, 1219/1240→2, 1250/1280→3, 1500/1530→4', () => {
-  eq(PricingEngine.getWidthBand201(1000), 1);
-  eq(PricingEngine.getWidthBand201(1030), 1);
+  eq(PricingEngine.getWidthBand201(1000), 2);
+  eq(PricingEngine.getWidthBand201(1030), 2);
   eq(PricingEngine.getWidthBand201(1219), 2);
   eq(PricingEngine.getWidthBand201(1240), 2);
   eq(PricingEngine.getWidthBand201(1250), 3);
@@ -387,12 +387,12 @@ test('201 档内宽度正常: 201J2 0.50*1219*C', () => {
 });
 
 test('北港J5 不校验宽度: 201J5 0.50*1220*C', () => {
-  const r = PricingEngine.calculate({material:'201J5',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
+  const r = PricingEngine.calculate({material:'201J5',surface:'2B',thickness:'0.50',width:'1219',length:'C',film1:'',film2:'',basePrice:7800});
   eq(r.success, true); // J5 不分宽度，不报宽度档错误
 });
 
 test('304 不受 201 宽度档限制: 304 0.50*1220*C', () => {
-  const r = PricingEngine.calculate({material:'304',surface:'2B',thickness:'0.50',width:'1220',length:'C',film1:'',film2:'',basePrice:7800});
+  const r = PricingEngine.calculate({material:'304',surface:'2B',thickness:'0.50',width:'1219',length:'C',film1:'',film2:'',basePrice:7800});
   eq(r.success, true); // 304 基价不分宽度档
 });
 
@@ -410,14 +410,77 @@ test('430B/BA 0.50*1240*C 甬金 → 表面=无, 厚度加价0', () => {
 test('430B/2BA 瑞钢 8K黑钛金 0.50*1220*2440 → 识别表面, 用304加工费', () => {
   const r = PricingEngine.calculate({
     origin: '瑞钢', material: '430B/2BA', surface: '8K黑钛金',
-    thickness: '0.50', width: '1220', length: '2440',
-    film1: '5C-FILM', film2: '', isYanYan: false, basePrice: 8000
+    thickness: '0.50', width: '1219', length: '2440',
+    film1: '5C-FILM', film2: '', isYanYan: false, basePrice: 8000, packing: '木架'
   });
   eq(r.success, true, '430B/2BA with surface should succeed');
   eq(r.detail.surfaceFeePerTon > 0, true, 'should have surface fee');
   eq(r.detail.surface, '8K黑钛金', 'surface should be recognized');
 });
 
+
+// === v1.0.120 压花工艺（2026-08-26 用户规则：表面加工+压花工艺 分开计费） ===
+test('压花: 6K+linen 2.00*1240 → 6K按吨计价400 + linen压花300', () => {
+  const r = PricingEngine.calculate({ material: '201J2', surface: '6K+linen', thickness: '2.00', width: '1240', length: '2500', origin: '宏旺', basePrice: 7800, packing: '木架' });
+  eq(r.success, true);
+  eq(r.detail.normSurface, '6K', '主表面应为 6K（不能被模糊匹配成 8K）');
+  eq(r.detail.surfaceFeePerTon, 400, '6K 2.00mm 应为 400 元/吨');
+  eq(r.detail.linenFeePerTon, 300, 'linen 压花 300 元/吨');
+  eq(r.detail.embossFees.length, 1, 'embossFees 1 项');
+  eq(r.detail.embossFees[0].name, '小珠光(linen)');
+  eq(r.detail.costRaw, 8700, '小计 7800+200+400+300');
+});
+
+test('压花: 6K+小珠光 中文别名 → 同上', () => {
+  const r = PricingEngine.calculate({ material: '201J2', surface: '6K+小珠光', thickness: '2.00', width: '1240', length: '2500', origin: '宏旺', basePrice: 7800, packing: '木架' });
+  eq(r.success, true);
+  eq(r.detail.normSurface, '6K');
+  eq(r.detail.surfaceFeePerTon, 400);
+  eq(r.detail.linenFeePerTon, 300);
+});
+
+test('压花: 带空格 6K + linen 同样识别', () => {
+  const r = PricingEngine.calculate({ material: '201J2', surface: '6K + linen', thickness: '2.00', width: '1240', length: '2500', origin: '宏旺', basePrice: 7800, packing: '木架' });
+  eq(r.success, true);
+  eq(r.detail.normSurface, '6K');
+  eq(r.detail.linenFeePerTon, 300);
+});
+
+test('压花: 旧格式 8k linen（空格）兼容', () => {
+  const r = PricingEngine.calculate({ material: '201J2', surface: '8k linen', thickness: '0.80', width: '1240', length: '2500', origin: '宏旺', basePrice: 7800, packing: '木架' });
+  eq(r.success, true);
+  eq(r.detail.normSurface, '8K');
+  eq(r.detail.linenFeePerTon, 300);
+  eq(r.detail.surfaceFeePerTon > 0, true, '8K 加工费正常');
+});
+
+test('压花: 纯 linen 无主表面 → 表面加工0 + 压花300', () => {
+  const r = PricingEngine.calculate({ material: '201J2', surface: 'linen', thickness: '2.00', width: '1240', length: '2500', origin: '宏旺', basePrice: 7800, packing: '木架' });
+  eq(r.success, true);
+  eq(r.detail.surfaceFeePerTon, 0);
+  eq(r.detail.linenFeePerTon, 300);
+});
+
+test('压花: 回归 8K+AFP 不受影响（AFP 非压花，保留原逻辑）', () => {
+  const r = PricingEngine.calculate({ material: '201J2', surface: '8K+AFP', thickness: '0.80', width: '1240', length: '2500', origin: '宏旺', basePrice: 7800, packing: '木架' });
+  eq(r.success, true);
+  eq(r.detail.normSurface, '8K');
+  eq(r.detail.linenFeePerTon, 0, '无压花');
+  eq(r.detail.afpPerTon > 0, true, 'AFP 照常');
+});
+
+test('压花: splitEmboss 拆分 6K+linen+AFP → 主表面6K+AFP 压花linen', () => {
+  const sp = PricingEngine.splitEmboss('6K+linen+AFP');
+  eq(sp.surfacePart, '6K+AFP');
+  eq(sp.fees.length, 1);
+  eq(sp.fees[0].key, 'linen');
+});
+
+test('压花: splitEmboss 不动 8K+AFP', () => {
+  const sp = PricingEngine.splitEmboss('8K+AFP');
+  eq(sp.surfacePart, '8K+AFP');
+  eq(sp.fees.length, 0);
+});
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

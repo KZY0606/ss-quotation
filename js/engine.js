@@ -400,10 +400,41 @@ const PricingEngine = (() => {
     return null;
   }
 
+  // v1.0.120 压花工艺：匹配单段（linen/小珠光等）→ EMBOSS_FEES 项或 null
+  function matchEmboss(seg) {
+    const alias = EMBOSS_ALIASES[(seg || '').trim().toLowerCase()];
+    if (!alias) return null;
+    const e = EMBOSS_FEES[alias];
+    return e ? { key: alias, name: e.name, feePerTon: e.feePerTon } : null;
+  }
+
+  // v1.0.120 压花拆分：统一格式 "表面加工+压花工艺"（如 6K+linen、8K+小珠光），
+  // 兼容 "6K+linen+AFP"（非压花段保留回 surfacePart）；无压花段时 surfacePart=原文
+  function splitEmboss(raw) {
+    const src = String(raw || '').trim();
+    const segs = src.split('+').map(s => s.trim()).filter(Boolean);
+    if (segs.length < 2) return { surfacePart: src, fees: [] };
+    const fees = [];
+    const plain = [];
+    for (let i = 1; i < segs.length; i++) {
+      const emb = matchEmboss(segs[i]);
+      if (emb) fees.push(emb); else plain.push(segs[i]);
+    }
+    return {
+      surfacePart: fees.length ? [segs[0], ...plain].join('+') : src,
+      fees
+    };
+  }
+
   function calculate(item) {
     const errors = [];
     const material = (item.material || '').trim();
-    const surface = normalizeSurface(item.surface);
+    // v1.0.120 压花工艺拆分（必须在表面归一化之前，避免 "6K+linen" 被模糊匹配吞掉压花段）
+    const rawTrimmed = (item.surface || '').trim();
+    const embossSplit = splitEmboss(rawTrimmed);
+    const embossFees = embossSplit.fees;         // [{key,name,feePerTon}]
+    const surfacePart = embossSplit.surfacePart; // 去掉压花段后的表面加工部分
+    const surface = normalizeSurface(surfacePart);
     // 厚度支持范围（如 "0.55-0.60"）：保留原始字符串用于显示/导出，计算取下限
     const thicknessRaw = String(item.thickness === null || item.thickness === undefined ? '' : item.thickness).trim();
     const thkRange = parseThicknessRange(thicknessRaw);
@@ -523,14 +554,16 @@ const PricingEngine = (() => {
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
 
     // ---- 附加工艺检测 ----
-    const rawTrimmed = (item.surface || '').trim();
-    const rawLower = rawTrimmed.toLowerCase();
-    const aliasedName = normalizeSurface(rawTrimmed); // 可以有模糊匹配
-    const isExactAlias = SURFACE_FEES[rawTrimmed] || SURFACE_ALIASES[rawLower];
+    const rawLower = surfacePart.toLowerCase();
+    const aliasedName = normalizeSurface(surfacePart); // 可以有模糊匹配
+    const isExactAlias = SURFACE_FEES[surfacePart] || SURFACE_ALIASES[rawLower];
 
-    // LINEN: 在别名归一化后的名称上检测（别名已把小珠光等转为-LINEN后缀）
+    // LINEN: 在别名归一化后的名称上检测（旧格式别名已把小珠光等转为-LINEN后缀，如 '8k linen'）
     const linenSuffix = aliasedName ? aliasedName.match(/^(.+)-LINEN$/i) : null;
     const hasLinen = linenSuffix || aliasedName === 'LINEN';
+    if (hasLinen && !embossFees.some(e => e.key === 'linen')) {
+      embossFees.push(EMBOSS_FEES.linen);
+    }
 
     // AFP: 仅在原始输入不是直接表面命中时检测
     let afpSqmFee = 0;
@@ -540,8 +573,11 @@ const PricingEngine = (() => {
       // 剥离linen，归一化基础表面
       const linBase = normalizeSurface(linenSuffix[1]);
       if (linBase && SURFACE_FEES[linBase]) baseSurface = linBase;
-    } else if (!SURFACE_FEES[rawTrimmed] && !isExactAlias) {
-      const afpInfo = detectAFP(rawTrimmed);
+    } else if (aliasedName === 'LINEN') {
+      // 纯压花（无主表面，如只输 "linen"）：表面加工费为 0，压花费照算
+      baseSurface = '';
+    } else if (!SURFACE_FEES[surfacePart] && !isExactAlias) {
+      const afpInfo = detectAFP(surfacePart);
       if (afpInfo) {
         const afpBase = normalizeSurface(afpInfo.baseName);
         if (afpBase && SURFACE_FEES[afpBase]) {
@@ -552,7 +588,7 @@ const PricingEngine = (() => {
     }
 
     let surfaceFeePerTon = 0;
-    let linenFeePerTon = hasLinen ? LINEN_FEE : 0;
+    let linenFeePerTon = embossFees.reduce((s, e) => s + e.feePerTon, 0);
     // 板/卷自动映射：卷材自动使用 (卷) 定价
     baseSurface = autoMapCoilSurface(baseSurface, boardType, rawTrimmed);
     const surfaceRaw = getSurfaceFee(baseSurface, thickness, width, material);
@@ -601,8 +637,10 @@ const PricingEngine = (() => {
         const filmSqm1 = film1Fee || 0;
         const filmSqm2 = film2Fee || 0;
         const sheetFilmCostRaw = sheetArea * (filmSqm1 + filmSqm2);
+        // v1.0.120 压花工艺（元/吨 → 按单张重量折算）
+        const embossPerSheet = round3(linenFeePerTon / 1000 * sheetWeightKg + 1e-9);
         // 先求和再统一四舍五入（+epsilon 抵消浮点误差，2026-08-24：用户例 77.795 → 77.8）
-        const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + 1e-9);
+        const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + embossPerSheet + 1e-9);
         const qty = (item.quantity != null && parseFloat(item.quantity) > 0) ? parseFloat(item.quantity) : 1;
         const sheetPriceTax = round2(sheetPrice / 0.91 + 1e-9);
         // v1.0.106（2026-08-25 用户规则）：单张均摊 = 包装(元/吨÷1000=元/kg×kg) + 装柜(50元/吨) + FOB/CIF(美元×汇率=元/吨)
@@ -617,7 +655,7 @@ const PricingEngine = (() => {
         const extraPerSheet = round2(packingPerSheet + containerPerSheet + termPerSheet + 1e-9);
         const sheetSaleNoTax = round2(sheetPrice + extraPerSheet + 1e-9);
         const sheetSaleTax = round2(sheetSaleNoTax / 0.91 + 1e-9);
-        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), sheetPrice, sheetPriceTax, packingFee: packFeePerTon, packingName: packingName106, packingPerSheet, containerPerSheet, term: term106 || '', termUsd: termUsd106, usdRate: usdRate106, termPerTon: termPerTon106, termPerSheet, extraPerSheet, sheetSaleNoTax, sheetSaleTax, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9), sheetTotalTax: round2(sheetPriceTax * qty + 1e-9), sheetTotalSaleNoTax: round2(sheetSaleNoTax * qty + 1e-9), sheetTotalSaleTax: round2(sheetSaleTax * qty + 1e-9) };
+        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), embossPerSheet, sheetPrice, sheetPriceTax, packingFee: packFeePerTon, packingName: packingName106, packingPerSheet, containerPerSheet, term: term106 || '', termUsd: termUsd106, usdRate: usdRate106, termPerTon: termPerTon106, termPerSheet, extraPerSheet, sheetSaleNoTax, sheetSaleTax, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9), sheetTotalTax: round2(sheetPriceTax * qty + 1e-9), sheetTotalSaleNoTax: round2(sheetSaleNoTax * qty + 1e-9), sheetTotalSaleTax: round2(sheetSaleTax * qty + 1e-9) };
       }
     }
 
@@ -634,7 +672,7 @@ const PricingEngine = (() => {
           isYanYan, density, sqmPerTon: round2(sqmPerTon),
           thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
           surfaceFeeSqm: surfSqmSafe(surfaceRaw),
-          surfaceFeePerTon: 0, linenFeePerTon: 0, afpFeeSqm: 0, afpPerTon: 0,
+          surfaceFeePerTon: 0, linenFeePerTon, embossFees: embossFees.map(e => ({ key: e.key, name: e.name, feePerTon: e.feePerTon })), afpFeeSqm: 0, afpPerTon: 0,
           film1FeeSqm: film1Fee || 0, film1PerTon: 0, film2FeeSqm: film2Fee || 0, film2PerTon: 0,
           costRaw: null, costNoTaxRaw: null, materialNoTaxRaw: null, costTax: null, costNoTax: null,
           edgeType, boardType, markup: 0, widthSurcharge, packing, saleTax: null, saleNoTax: null,
@@ -710,6 +748,7 @@ const PricingEngine = (() => {
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
         surfaceFeePerTon: round2(surfaceFeePerTon),
         linenFeePerTon,
+        embossFees: embossFees.map(e => ({ key: e.key, name: e.name, feePerTon: e.feePerTon })),
         afpFeeSqm: afpSqmFee, afpPerTon,
         film1FeeSqm: film1Fee || 0, film1PerTon,
         film2FeeSqm: film2Fee || 0, film2PerTon,
@@ -1033,7 +1072,7 @@ const PricingEngine = (() => {
     calculate, calculateBatch, parseSpec, parseFreeText,
     normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge, addExtras, calcTotal,
     parseThicknessRange,
-    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee, getCoilMarkupInfo,
+    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee, getCoilMarkupInfo, matchEmboss, splitEmboss,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
