@@ -1,4 +1,4 @@
-// KK 报价系统 - 登录鉴权模块 (v1.0.116)
+// KK 报价系统 - 登录鉴权模块 (v1.0.117)
 // 依赖：后端云函数 HTTP 触发器（login/verify/logUsage/adminUsers/adminLogs）
 (function () {
   var KK_API = 'https://kk-quotation-d2gtggelpcd901498.service.tcloudbase.com';
@@ -27,7 +27,15 @@
     if (!a || !a.token) return null;
     try {
       var r = await kkCall('verify', { token: a.token });
-      if (r && r.ok) return a;
+      if (r && r.ok) {
+        // 同步后端最新角色/姓名/部门（角色可能被管理员调整，权限即时生效）
+        var changed = false;
+        if (r.role && r.role !== a.role) { a.role = r.role; changed = true; }
+        if (r.realName && r.realName !== a.realName) { a.realName = r.realName; changed = true; }
+        if (r.department !== undefined && r.department !== a.department) { a.department = r.department; changed = true; }
+        if (changed) kkSetAuth(a);
+        return a;
+      }
     } catch (e) {}
     kkClearAuth();
     return null;
@@ -48,7 +56,7 @@
   async function kkLogin(username, password) {
     var r = await kkCall('login', { username: username, password: password });
     if (r && r.ok) {
-      kkSetAuth({ token: r.token, username: r.username, realName: r.realName, role: r.role, expireAt: r.expireAt });
+      kkSetAuth({ token: r.token, username: r.username, realName: r.realName, department: r.department || '', role: r.role, expireAt: r.expireAt });
     }
     return r;
   }

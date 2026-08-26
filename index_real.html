@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.116">
+  <link rel="stylesheet" href="css/style.css?v=1.0.117">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -335,12 +335,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.116"></script>
-  <script src="js/changelog.js?v=1.0.116"></script>
-<script src="js/config.js?v=1.0.116"></script>
-  <script src="js/engine.js?v=1.0.116"></script>
-  <script src="js/parser.js?v=1.0.116"></script>
-  <script src="js/app.js?v=1.0.116"></script>
+  <script src="js/auth.js?v=1.0.117"></script>
+  <script src="js/changelog.js?v=1.0.117"></script>
+<script src="js/config.js?v=1.0.117"></script>
+  <script src="js/engine.js?v=1.0.117"></script>
+  <script src="js/parser.js?v=1.0.117"></script>
+  <script src="js/app.js?v=1.0.117"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -360,7 +360,8 @@
         var badge = document.getElementById('currentUserBadge');
         var adminLink = document.getElementById('adminLink');
         var logoutBtn = document.getElementById('logoutBtn');
-        if (badge) { badge.textContent = '👤 ' + a.realName; badge.style.display = ''; }
+        function rn(r){ if(r==='admin')return '管理员'; if(r==='salesman'||r==='user')return '业务员'; if(r==='sales_supervisor')return '业务主管'; return r||''; }
+        if (badge) { badge.textContent = '👤 ' + a.realName + (a.role ? ' · ' + rn(a.role) : ''); badge.style.display = ''; }
         if (adminLink) adminLink.style.display = a.role === 'admin' ? '' : 'none';
         if (logoutBtn) logoutBtn.style.display = '';
       });

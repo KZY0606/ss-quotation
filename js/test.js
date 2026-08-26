@@ -1,5 +1,5 @@
 ﻿const fs = require('fs');
-const code = fs.readFileSync(__dirname + '/js/config.js', 'utf8') + '\n' + fs.readFileSync(__dirname + '/js/engine.js', 'utf8') + '\nreturn PricingEngine;';
+const code = fs.readFileSync(__dirname + '/config.js', 'utf8') + '\n' + fs.readFileSync(__dirname + '/engine.js', 'utf8') + '\nreturn PricingEngine;';
 const PricingEngine = new Function(code)();
 
 let pass = 0, fail = 0;

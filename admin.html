@@ -15,7 +15,7 @@
       padding: 6px 12px; font-size: 13px; cursor: pointer; text-decoration: none;
     }
     .top a:hover, .top button:hover { background: rgba(255,255,255,.28); }
-    .wrap { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+    .wrap { max-width: 1180px; margin: 20px auto; padding: 0 16px; }
     .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
     .tabs button {
       padding: 8px 18px; border: 1px solid #cbd5e0; background: #fff; border-radius: 8px;
@@ -30,11 +30,13 @@
     th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
     th { background: #f0f4f8; white-space: nowrap; }
     tr:nth-child(even) td { background: #fafbfc; }
-    .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; }
+    .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
     .badge-on { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
     .badge-off { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
     .badge-admin { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-    .badge-user { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+    .badge-salesman { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+    .badge-supervisor { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; }
+    .badge-custom { background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; }
     .mini { padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 12px; margin-right: 4px; }
     .mini:hover { background: #f0f4f8; }
     .mini.danger { color: #dc2626; border-color: #fecaca; }
@@ -51,6 +53,16 @@
     .log-item:last-child { border-bottom: none; }
     .log-time { color: #6b7280; font-size: 12px; margin-right: 10px; white-space: nowrap; }
     .empty { text-align: center; color: #9ca3af; padding: 30px 0; }
+    /* 编辑弹窗 */
+    .mask { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; align-items: center; justify-content: center; }
+    .mask.show { display: flex; }
+    .modal { background: #fff; border-radius: 12px; padding: 22px 24px; width: 380px; max-width: 92vw; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .modal h3 { font-size: 16px; margin-bottom: 14px; }
+    .modal .row { margin-bottom: 12px; }
+    .modal .row label { display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+    .modal .row input, .modal .row select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; }
+    .modal .btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+    .modal .btn-ghost { background: #fff; color: #374151; border: 1px solid #cbd5e0; }
   </style>
 </head>
 <body>
@@ -77,20 +89,26 @@
         <div class="form-row">
           <input id="nu" placeholder="账号（字母/数字/下划线，2-20位）" maxlength="20">
           <input id="nr" placeholder="姓名" maxlength="20">
-          <input id="np" type="password" placeholder="初始密码（至少4位）" maxlength="30">
+          <input id="nd" placeholder="部门（选填）" maxlength="20">
           <select id="nrole">
-            <option value="user">报价员</option>
+            <option value="salesman">业务员</option>
+            <option value="sales_supervisor">业务主管</option>
             <option value="admin">管理员</option>
+            <option value="__custom__">自定义…</option>
           </select>
+          <input id="nroleCustom" placeholder="自定义角色名" maxlength="20" style="display:none;width:110px;">
+          <input id="np" type="password" placeholder="初始密码（至少4位）" maxlength="30">
           <button class="btn" onclick="addUser()">创建账号</button>
         </div>
+        <div class="muted" id="roleHint" style="margin-top:2px;"></div>
       </div>
       <div class="card">
         <h2>账号列表 <span class="muted" id="userCount"></span></h2>
         <table>
-          <thead><tr><th>账号</th><th>姓名</th><th>角色</th><th>状态</th><th>最近登录</th><th>操作</th></tr></thead>
+          <thead><tr><th>账号</th><th>姓名</th><th>部门</th><th>角色</th><th>状态</th><th>最近登录</th><th>操作</th></tr></thead>
           <tbody id="userTbody"></tbody>
         </table>
+        <div class="muted" style="margin-top:6px;">当前登录的账号不可操作（防止误操作锁死自己）；其他账号（含管理员）均可编辑，角色变动后权限立即生效。</div>
       </div>
     </div>
 
@@ -111,10 +129,35 @@
     </div>
   </div>
 
-  <script src="js/auth.js"></script>
+  <!-- 编辑账号弹窗 -->
+  <div class="mask" id="editMask">
+    <div class="modal">
+      <h3>编辑账号</h3>
+      <div class="row"><label>账号（修改后需重新登录）</label><input id="eu" maxlength="20"></div>
+      <div class="row"><label>姓名</label><input id="er" maxlength="20"></div>
+      <div class="row"><label>部门</label><input id="ed" maxlength="20" placeholder="选填"></div>
+      <div class="row">
+        <label>角色</label>
+        <select id="erole">
+          <option value="salesman">业务员</option>
+          <option value="sales_supervisor">业务主管</option>
+          <option value="admin">管理员</option>
+          <option value="__custom__">自定义…</option>
+        </select>
+        <input id="eroleCustom" placeholder="自定义角色名" maxlength="20" style="display:none;margin-top:6px;">
+      </div>
+      <div class="btns">
+        <button class="btn btn-ghost" onclick="closeEdit()">取消</button>
+        <button class="btn" onclick="saveEdit()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js?v=1.0.117"></script>
   <script>
     var auth = null;
     var msgEl = document.getElementById('msg');
+    var editingUser = null;
 
     function setMsg(t, ok) { msgEl.textContent = t || ''; msgEl.className = 'msg ' + (ok === false ? 'err' : 'ok'); }
     function fmtTime(ts) {
@@ -122,6 +165,48 @@
       var d = new Date(ts);
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' +
         String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    // 角色显示名：admin=管理员，salesman=业务员，sales_supervisor=业务主管，user(旧)=业务员，其他=原样
+    function roleName(r) {
+      if (r === 'admin') return '管理员';
+      if (r === 'salesman' || r === 'user') return '业务员';
+      if (r === 'sales_supervisor') return '业务主管';
+      return r || '—';
+    }
+    function roleBadgeClass(r) {
+      if (r === 'admin') return 'badge-admin';
+      if (r === 'salesman' || r === 'user') return 'badge-salesman';
+      if (r === 'sales_supervisor') return 'badge-supervisor';
+      return 'badge-custom';
+    }
+
+    // 角色下拉联动（新增 + 编辑共用）
+    function bindRoleSelect(selectId, customId) {
+      var sel = document.getElementById(selectId);
+      var cus = document.getElementById(customId);
+      sel.addEventListener('change', function () {
+        cus.style.display = sel.value === '__custom__' ? '' : 'none';
+        if (sel.value !== '__custom__') cus.value = '';
+      });
+    }
+    function resolveRole(selectId, customId) {
+      var sel = document.getElementById(selectId);
+      if (sel.value === '__custom__') {
+        var v = document.getElementById(customId).value.trim();
+        return v || '__custom__';
+      }
+      return sel.value;
+    }
+    function setRoleSelect(selectId, customId, role) {
+      var sel = document.getElementById(selectId);
+      var cus = document.getElementById(customId);
+      var known = ['admin', 'salesman', 'sales_supervisor'];
+      if (known.indexOf(role) >= 0) {
+        sel.value = role; cus.style.display = 'none'; cus.value = '';
+      } else {
+        sel.value = '__custom__'; cus.style.display = ''; cus.value = role;
+      }
     }
 
     function switchTab(name) {
@@ -142,40 +227,88 @@
     async function loadUsers() {
       try {
         var r = await api('adminUsers', { action: 'list' });
+        var users = r.users || [];
         var tb = document.getElementById('userTbody');
-        document.getElementById('userCount').textContent = '共 ' + r.users.length + ' 人';
+        document.getElementById('userCount').textContent = '共 ' + users.length + ' 人';
         tb.innerHTML = '';
-        r.users.forEach(function (u) {
+        users.forEach(function (u) {
           var tr = document.createElement('tr');
-          var roleBadge = u.role === 'admin' ? '<span class="badge badge-admin">管理员</span>' : '<span class="badge badge-user">报价员</span>';
+          var roleBadge = '<span class="badge ' + roleBadgeClass(u.role) + '">' + roleName(u.role) + '</span>';
           var stBadge = u.enabled ? '<span class="badge badge-on">启用</span>' : '<span class="badge badge-off">停用</span>';
           var ops = '';
-          if (u.role !== 'admin') {
+          if (u.username === auth.username) {
+            ops += '<span class="muted">当前账号不可操作</span>';
+          } else {
+            ops += '<button class="mini" onclick="openEdit(\'' + u.username + '\')">编辑</button>';
             ops += '<button class="mini" onclick="resetPwd(\'' + u.username + '\')">重置密码</button>';
             ops += u.enabled
               ? '<button class="mini danger" onclick="toggleUser(\'' + u.username + '\', false)">停用</button>'
               : '<button class="mini" onclick="toggleUser(\'' + u.username + '\', true)">启用</button>';
             ops += '<button class="mini danger" onclick="removeUser(\'' + u.username + '\')">删除</button>';
-          } else {
-            ops += '<span class="muted">管理员不可操作</span>';
           }
-          tr.innerHTML = '<td>' + u.username + '</td><td>' + u.realName + '</td><td>' + roleBadge + '</td><td>' + stBadge +
+          tr.innerHTML = '<td>' + u.username + '</td><td>' + u.realName + '</td><td>' + (u.department || '—') + '</td><td>' + roleBadge + '</td><td>' + stBadge +
             '</td><td>' + fmtTime(u.lastLogin) + '</td><td>' + ops + '</td>';
           tb.appendChild(tr);
         });
       } catch (e) {}
     }
 
+    function roleHintText(role) {
+      if (role === 'admin') return '管理员：与老板权限一致（可管理账号、查看全部日志）';
+      if (role === 'sales_supervisor') return '业务主管：可登录报价，使用记录被后台记录';
+      if (role === 'salesman' || role === 'user') return '业务员：可登录报价，使用记录被后台记录';
+      return '自定义角色：可登录报价，使用记录被后台记录';
+    }
+
     async function addUser() {
       var username = document.getElementById('nu').value.trim();
       var realName = document.getElementById('nr').value.trim();
+      var department = document.getElementById('nd').value.trim();
       var password = document.getElementById('np').value;
-      var role = document.getElementById('nrole').value;
+      var role = resolveRole('nrole', 'nroleCustom');
+      if (role === '__custom__') { setMsg('请填写自定义角色名', false); return; }
       if (!username || !realName || !password) { setMsg('账号/姓名/密码都要填', false); return; }
       try {
-        var r = await api('adminUsers', { action: 'add', data: { username: username, realName: realName, password: password, role: role } });
+        var r = await api('adminUsers', { action: 'add', data: { username: username, realName: realName, department: department, password: password, role: role } });
         setMsg(r.msg);
-        document.getElementById('nu').value = ''; document.getElementById('nr').value = ''; document.getElementById('np').value = '';
+        document.getElementById('nu').value = ''; document.getElementById('nr').value = '';
+        document.getElementById('nd').value = ''; document.getElementById('np').value = '';
+        loadUsers();
+      } catch (e) {}
+    }
+
+    // 编辑弹窗
+    function openEdit(username) {
+      var u = (lastUsers || []).filter(function (x) { return x.username === username; })[0];
+      if (!u) return;
+      editingUser = username;
+      document.getElementById('eu').value = u.username;
+      document.getElementById('er').value = u.realName;
+      document.getElementById('ed').value = u.department || '';
+      setRoleSelect('erole', 'eroleCustom', u.role);
+      document.getElementById('editMask').className = 'mask show';
+    }
+    function closeEdit() {
+      editingUser = null;
+      document.getElementById('editMask').className = 'mask';
+    }
+    async function saveEdit() {
+      if (!editingUser) return;
+      var data = { username: editingUser };
+      var newU = document.getElementById('eu').value.trim();
+      var realName = document.getElementById('er').value.trim();
+      var department = document.getElementById('ed').value.trim();
+      var role = resolveRole('erole', 'eroleCustom');
+      if (role === '__custom__') { setMsg('请填写自定义角色名', false); return; }
+      if (!newU || !realName) { setMsg('账号/姓名不能为空', false); return; }
+      data.newUsername = newU;
+      data.realName = realName;
+      data.department = department;
+      data.role = role;
+      try {
+        var r = await api('adminUsers', { action: 'update', data: data });
+        setMsg(r.msg);
+        closeEdit();
         loadUsers();
       } catch (e) {}
     }
@@ -204,7 +337,7 @@
       el.innerHTML = '<div class="empty">加载中…</div>';
       try {
         var r = await api('adminLogs', { type: type, days: 7 });
-        if (!r.logs.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
+        if (!r.logs || !r.logs.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
         el.innerHTML = '';
         r.logs.forEach(function (it) {
           var div = document.createElement('div');
@@ -222,10 +355,24 @@
       } catch (e) {}
     }
 
+    var lastUsers = [];
     (async function init() {
+      bindRoleSelect('nrole', 'nroleCustom');
+      bindRoleSelect('erole', 'eroleCustom');
+      document.getElementById('nrole').addEventListener('change', function () {
+        var r = resolveRole('nrole', 'nroleCustom');
+        document.getElementById('roleHint').textContent = roleHintText(r === '__custom__' ? document.getElementById('nroleCustom').value || 'custom' : r);
+      });
+      var hint = document.getElementById('roleHint');
+      hint.textContent = roleHintText('salesman');
+      document.getElementById('editMask').addEventListener('click', function (e) { if (e.target === this) closeEdit(); });
       auth = await KKAuth.requireLogin();
       if (!auth) return;
       document.getElementById('curUser').textContent = '当前：' + auth.realName + '（' + auth.username + '）';
+      try {
+        var r = await api('adminUsers', { action: 'list' });
+        lastUsers = r.users || [];
+      } catch (e) {}
       loadUsers();
     })();
   </script>
