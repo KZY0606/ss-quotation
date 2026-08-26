@@ -1584,8 +1584,6 @@ test('v1.0.105: 316L 平板组成（1500 → 1500齐边(316L)）', () => {
   eq(r.detail.markupDetail.total, 700, 'total');
 });
 
-console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
-process.exit(fail > 0 ? 1 : 0);
 
 test('v1.0.107: 过磅平板销售加价 5 档包装（304 1280*2500 基准500）：出口木箱550/密封木箱650/出口铁架600/出口铁箱650', () => {
   const mk = (p) => { const r = PricingEngine.calculate({ origin: '德龙', material: '304', surface: '2B', thickness: '0.50', width: '1280', length: '2500', film1: '', film2: '', basePrice: 13000, packing: p }); return r.success ? { m: r.detail.markup, rf: r.detail.markupDetail.rackFee, rl: r.detail.markupDetail.rackLabel, tot: r.detail.markupDetail.total } : { err: r.errors }; };
@@ -1602,3 +1600,39 @@ test('v1.0.107: 自由文本识别 出口木箱/密封木箱/出口铁架/出口
   eq(PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 出口铁箱', {}).packing, '出口铁箱', '出口铁箱');
   eq(PricingEngine.parseFreeText('201J2 2B 0.50*1240*2440 木箱', {}).packing, '出口木箱', '旧叫法木箱→出口木箱');
 });
+
+test('v1.0.108: 6K 1.51-2.00 → 400元/吨', () => {
+  eq(PricingEngine.getSurfaceFee('6K', 1.80, 1240), 400, '6K 1.80');
+  eq(PricingEngine.getSurfaceFee('6K', 1.51, 1240), 400, '6K 1.51');
+  eq(PricingEngine.getSurfaceFee('6K', 2.00, 1240), 400, '6K 2.00');
+});
+test('v1.0.108: 6K 2.01-3.00 → 450元/吨', () => {
+  eq(PricingEngine.getSurfaceFee('6K', 2.50, 1240), 450, '6K 2.50');
+  eq(PricingEngine.getSurfaceFee('6K', 2.01, 1240), 450, '6K 2.01');
+  eq(PricingEngine.getSurfaceFee('6K', 3.00, 1240), 450, '6K 3.00');
+});
+test('v1.0.108: 双面6K 价格翻倍 800/900元/吨', () => {
+  eq(PricingEngine.getSurfaceFee('双面6K', 1.80, 1240), 800, 'dual 1.80');
+  eq(PricingEngine.getSurfaceFee('双面6K', 2.50, 1240), 900, 'dual 2.50');
+  eq(PricingEngine.getSurfaceFee('双面6K', 1.51, 1240), 800, 'dual 1.51');
+  eq(PricingEngine.getSurfaceFee('双面6K', 3.00, 1240), 900, 'dual 3.00');
+});
+test('v1.0.108: 6K 薄板仍按平方 1.6/3.6', () => {
+  const a = PricingEngine.getSurfaceFee('6K', 0.50, 1240);
+  eq(typeof a === 'object' && a.sqmPrice === 1.6, true, '6K 0.50 sqm=' + JSON.stringify(a));
+  const b = PricingEngine.getSurfaceFee('6K', 1.30, 1240);
+  eq(typeof b === 'object' && b.sqmPrice === 3.6, true, '6K 1.30 sqm=' + JSON.stringify(b));
+});
+test('v1.0.108: 6K 1.80*1240*C 完整计算 surfaceFeePerTon=400', () => {
+  const r = PricingEngine.calculate({material:'201',surface:'6K',thickness:'1.80',width:'1240',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeePerTon, 400, 'surfaceFeePerTon=' + r.detail.surfaceFeePerTon);
+});
+test('v1.0.108: 双面6K 2.50*1240*C surfaceFeePerTon=900', () => {
+  const r = PricingEngine.calculate({material:'201',surface:'双面6K',thickness:'2.50',width:'1240',length:'C',film1:'',film2:'',basePrice:7800});
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeePerTon, 900, 'surfaceFeePerTon=' + r.detail.surfaceFeePerTon);
+});
+
+console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
+process.exit(fail > 0 ? 1 : 0);
