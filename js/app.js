@@ -1031,12 +1031,12 @@ const App = (() => {
       } else if (Array.isArray(cfg)) {
         const groups = single8kGroups(display) || [{ label: display, tiers: cfg }];
         for (const g of groups) {
-          const tiers = g.tiers.filter(t => t.unit === 'sqm' || !t.unit);
+          const tiers = g.tiers;
           if (tiers.length === 0) continue;
           const tierDesc = tiers.map(t => {
           const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
           const w = stdW ? '' : `【${t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax}】`;
-          return `${t.tMin}-${t.tMax}mm${w}: ${t.price}元`;
+          return `${t.tMin}-${t.tMax}mm${w}: ${t.price}${t.unit === 'ton' ? '元/吨' : '元'}`;
         }).join(' / ');
           const val = priceOverrides.surfaceFees[cfgKey] ?? tiers[0].price;
           const locked = !!priceOverrides.surfaceLocked[cfgKey];
