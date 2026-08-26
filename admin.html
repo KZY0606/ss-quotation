@@ -143,9 +143,9 @@
       try {
         var r = await api('adminUsers', { action: 'list' });
         var tb = document.getElementById('userTbody');
-        document.getElementById('userCount').textContent = '共 ' + r.list.length + ' 人';
+        document.getElementById('userCount').textContent = '共 ' + r.users.length + ' 人';
         tb.innerHTML = '';
-        r.list.forEach(function (u) {
+        r.users.forEach(function (u) {
           var tr = document.createElement('tr');
           var roleBadge = u.role === 'admin' ? '<span class="badge badge-admin">管理员</span>' : '<span class="badge badge-user">报价员</span>';
           var stBadge = u.enabled ? '<span class="badge badge-on">启用</span>' : '<span class="badge badge-off">停用</span>';
@@ -204,16 +204,16 @@
       el.innerHTML = '<div class="empty">加载中…</div>';
       try {
         var r = await api('adminLogs', { type: type, days: 7 });
-        if (!r.list.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
+        if (!r.logs.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
         el.innerHTML = '';
-        r.list.forEach(function (it) {
+        r.logs.forEach(function (it) {
           var div = document.createElement('div');
           div.className = 'log-item';
           if (type === 'login') {
             var st = it.success ? '<span class="badge badge-on">成功</span>' : '<span class="badge badge-off">失败</span>';
-            div.innerHTML = '<span class="log-time">' + fmtTime(it.time) + '</span>' + st + ' <b>' + (it.realName || it.username) + '</b>（' + it.username + '） ' + (it.msg || '');
+            div.innerHTML = '<span class="log-time">' + fmtTime(it.createdAt) + '</span>' + st + ' <b>' + (it.realName || it.username) + '</b>（' + it.username + '） ' + (it.reason || '');
           } else {
-            div.innerHTML = '<span class="log-time">' + fmtTime(it.time) + '</span><b>' + (it.realName || it.username) + '</b> ' +
+            div.innerHTML = '<span class="log-time">' + fmtTime(it.createdAt) + '</span><b>' + (it.realName || it.username) + '</b> ' +
               (it.material || '') + ' ' + (it.surface || '') + ' ' + (it.spec || '') +
               (it.unitPrice ? ' 单价 ' + it.unitPrice + ' 元/吨' : '') + (it.calcMode === 'sheet' ? '（平板）' : '');
           }
