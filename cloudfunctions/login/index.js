@@ -1,60 +1,72 @@
-// 登录云函数：校验账号密码、限流、签发 token、记登录日志
+// login (PG版) — 账号密码登录
 const crypto = require('crypto');
-const cloud = require('@cloudbase/node-sdk');
-const app = cloud.init({ env: cloud.SYMBOL_CURRENT_ENV });
-const db = app.database();
+const CloudBase = require('@cloudbase/manager-node');
 
-const TOKEN_TTL = 12 * 3600 * 1000; // token 有效期 12 小时
-const MAX_FAIL = 5;                  // 连续失败 5 次
-const LOCK_MS = 15 * 60 * 1000;      // 锁 15 分钟
+const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
+const database = app.database;
 
-function hashPwd(salt, pwd) {
-  return crypto.scryptSync(String(pwd), String(salt), 64).toString('hex');
+function q(v) {
+  if (v === null || v === undefined) return 'NULL';
+  if (typeof v === 'number') return String(v);
+  return "'" + String(v).replace(/'/g, "''") + "'";
+}
+
+async function exec(Sql) {
+  const r = await database.executePGSql({ Sql });
+  return r;
+}
+
+async function ensureTables() {
+  await exec('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, real_name TEXT NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, role TEXT NOT NULL DEFAULT \'user\', enabled BOOLEAN NOT NULL DEFAULT true, failed_count INT NOT NULL DEFAULT 0, locked_until TIMESTAMP NULL, created_at TIMESTAMP DEFAULT now())');
+  await exec('CREATE TABLE IF NOT EXISTS tokens (id SERIAL PRIMARY KEY, token TEXT UNIQUE NOT NULL, username TEXT NOT NULL, role TEXT NOT NULL, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT now())');
+  await exec('CREATE TABLE IF NOT EXISTS login_logs (id SERIAL PRIMARY KEY, username TEXT NOT NULL, ip TEXT, success BOOLEAN NOT NULL, reason TEXT, created_at TIMESTAMP DEFAULT now())');
+  await exec('CREATE TABLE IF NOT EXISTS usage_logs (id SERIAL PRIMARY KEY, username TEXT NOT NULL, material TEXT, spec TEXT, surface TEXT, calc_mode TEXT, unit_price NUMERIC, created_at TIMESTAMP DEFAULT now())');
+}
+
+function parseEvt(ev) {
+  if (ev && ev.body) {
+    try { return JSON.parse(ev.body); } catch (e) {}
+  }
+  return ev || {};
 }
 
 exports.main = async (event) => {
-  const username = String((event && event.username) || '').trim();
-  const password = String((event && event.password) || '');
-  if (!username || !password) return { ok: false, msg: '请输入账号和密码' };
+  const evt = parseEvt(event);
   try {
-    const res = await db.collection('users').where({ username }).limit(1).get();
-    const user = res.data[0];
-    const log = async (success, msg) => {
-      try {
-        await db.collection('login_logs').add({
-          username, realName: user ? user.realName : '', time: Date.now(), success, msg
-        });
-      } catch (e) { /* 日志失败不影响登录 */ }
-    };
-    if (!user) { await log(false, '账号不存在'); return { ok: false, msg: '账号或密码错误' }; }
-    if (!user.enabled) { await log(false, '账号已停用'); return { ok: false, msg: '账号已停用，请联系管理员' }; }
+    await ensureTables();
+    const username = String((evt && evt.username) || '').trim();
+    const password = String((evt && evt.password) || '');
+    if (!username || !password || password.length < 4) return { ok: false, msg: '账号和密码（至少4位）必填' };
 
-    const now = Date.now();
-    if (user.lockUntil && user.lockUntil > now) {
-      const left = Math.ceil((user.lockUntil - now) / 60000);
-      await log(false, '锁定中');
-      return { ok: false, msg: '失败次数过多，请 ' + left + ' 分钟后重试' };
+    const res = await exec('SELECT * FROM users WHERE username=' + q(username) + ' LIMIT 1');
+    if (!res.Rows || !res.Rows.length) {
+      await exec('INSERT INTO login_logs (username, ip, success, reason) VALUES (' + q(username) + ', ' + q(evt.ip || '') + ', false, ' + q('账号不存在') + ')');
+      return { ok: false, msg: '账号或密码错误' };
     }
+    const row = JSON.parse(res.Rows[0]);
+    const user = {};
+    res.Columns.forEach((c, i) => { user[c] = row[i]; });
 
-    const hash = hashPwd(user.salt, password);
-    if (hash !== user.passwordHash) {
-      const failCount = (user.failCount || 0) + 1;
-      let lockUntil = null;
-      let msg = '密码错误，还可尝试 ' + (MAX_FAIL - failCount) + ' 次';
-      if (failCount >= MAX_FAIL) { lockUntil = now + LOCK_MS; msg = '密码错误次数过多，账号已锁定 15 分钟'; }
-      await db.collection('users').doc(user._id).update({ failCount, lockUntil });
-      await log(false, msg);
-      return { ok: false, msg };
+    if (String(user.enabled) !== 'true') return { ok: false, msg: '账号已被停用，请联系管理员' };
+    if (user.locked_until) {
+      const lu = new Date(user.locked_until);
+      if (lu > new Date()) return { ok: false, msg: '失败次数过多，账号已锁定，请15分钟后再试' };
     }
-
-    // 登录成功
-    const token = crypto.randomBytes(24).toString('hex');
-    const expireAt = now + TOKEN_TTL;
-    await db.collection('tokens').add({ token, username, expireAt, createdAt: now });
-    await db.collection('users').doc(user._id).update({ failCount: 0, lockUntil: null, lastLogin: now });
-    await log(true, '登录成功');
-    return { ok: true, token, username, realName: user.realName, role: user.role, expireAt };
+    const hash = crypto.scryptSync(password, user.salt, 64).toString('hex');
+    if (hash !== user.password_hash) {
+      const fail = (parseInt(user.failed_count) || 0) + 1;
+      const lock = fail >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
+      await exec('UPDATE users SET failed_count=' + fail + ', locked_until=' + (lock ? q(lock.toISOString()) : 'NULL') + ' WHERE id=' + user.id);
+      await exec('INSERT INTO login_logs (username, ip, success, reason) VALUES (' + q(username) + ', ' + q(evt.ip || '') + ', false, ' + q('密码错误') + ')');
+      return { ok: false, msg: fail >= 5 ? '失败次数过多，账号锁定15分钟' : '账号或密码错误' };
+    }
+    await exec('UPDATE users SET failed_count=0, locked_until=NULL WHERE id=' + user.id);
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 12 * 3600 * 1000);
+    await exec('INSERT INTO tokens (token, username, role, expires_at) VALUES (' + q(token) + ', ' + q(username) + ', ' + q(user.role) + ', ' + q(expires.toISOString()) + ')');
+    await exec('INSERT INTO login_logs (username, ip, success, reason) VALUES (' + q(username) + ', ' + q(evt.ip || '') + ', true, ' + q('') + ')');
+    return { ok: true, token: token, username: username, realName: user.real_name, role: user.role, expiresAt: expires.toISOString() };
   } catch (e) {
-    return { ok: false, msg: '服务器错误：' + e.message };
+    return { ok: false, msg: '服务器错误：' + (e.message || e) };
   }
 };

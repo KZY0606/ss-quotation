@@ -1,0 +1,12 @@
+{
+  "envId": "kk-quotation-d2gtggelpcd901498",
+  "functionRoot": "./cloudfunctions",
+  "functions": [
+    { "name": "login", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
+    { "name": "verify", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
+    { "name": "logUsage", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
+    { "name": "adminUsers", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
+    { "name": "adminLogs", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
+    { "name": "init", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true }
+  ]
+}

@@ -1,102 +1,112 @@
-// adminUsers 云函数：账号管理（仅 admin 角色可调）
-// actions: list / add / resetPwd / toggle / remove
+// adminUsers (PG版) — 账号管理（仅 admin）
 const crypto = require('crypto');
-const cloud = require('@cloudbase/node-sdk');
-const app = cloud.init({ env: cloud.SYMBOL_CURRENT_ENV });
-const db = app.database();
+const CloudBase = require('@cloudbase/manager-node');
+const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
+const database = app.database;
 
-function hashPwd(salt, pwd) {
-  return crypto.scryptSync(String(pwd), String(salt), 64).toString('hex');
+function q(v) {
+  if (v === null || v === undefined) return 'NULL';
+  if (typeof v === 'number') return String(v);
+  return "'" + String(v).replace(/'/g, "''") + "'";
 }
 
-// 校验调用者必须是启用中的 admin
-async function requireAdmin(token) {
-  if (!token) return { error: '未登录' };
-  const tres = await db.collection('tokens').where({ token }).limit(1).get();
-  const t = tres.data[0];
-  if (!t || t.expireAt < Date.now()) return { error: '登录已失效' };
-  const ures = await db.collection('users').where({ username: t.username }).limit(1).get();
-  const user = ures.data[0];
-  if (!user || !user.enabled) return { error: '账号已停用' };
-  if (user.role !== 'admin') return { error: '无权限，仅管理员可操作' };
-  return { user };
+async function exec(Sql) {
+  const r = await database.executePGSql({ Sql });
+  return r;
+}
+
+async function ensureTables() {
+  await exec('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, real_name TEXT NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, role TEXT NOT NULL DEFAULT \'user\', enabled BOOLEAN NOT NULL DEFAULT true, failed_count INT NOT NULL DEFAULT 0, locked_until TIMESTAMP NULL, created_at TIMESTAMP DEFAULT now())');
+}
+
+function parseEvt(ev) {
+  if (ev && ev.body) {
+    try { return JSON.parse(ev.body); } catch (e) {}
+  }
+  return ev || {};
+}
+
+// 校验 admin token
+async function checkAdmin(token) {
+  if (!token) return null;
+  const r = await exec('SELECT t.username, t.role, u.enabled FROM tokens t LEFT JOIN users u ON u.username = t.username WHERE t.token=' + q(token) + ' AND t.expires_at > now() LIMIT 1');
+  if (!r.Rows || !r.Rows.length) return null;
+  const row = JSON.parse(r.Rows[0]);
+  const item = {};
+  r.Columns.forEach((c, i) => { item[c] = row[i]; });
+  if (String(item.enabled) !== 'true') return null;
+  if (item.role !== 'admin') return null;
+  return item;
 }
 
 exports.main = async (event) => {
-  const token = String((event && event.token) || '');
-  const action = String((event && event.action) || '');
-  const data = (event && event.data) || {};
+  const evt = parseEvt(event);
   try {
-    const auth = await requireAdmin(token);
-    if (auth.error) return { ok: false, msg: auth.error };
+    await ensureTables();
+    const token = String((evt && evt.token) || '').trim();
+    const action = String((evt && evt.action) || '').trim();
+    const data = (evt && evt.data) || {};
+    const admin = await checkAdmin(token);
+    if (!admin) return { ok: false, msg: '无权限或登录已过期' };
 
-    switch (action) {
-      case 'list': {
-        const res = await db.collection('users').orderBy('createdAt', 'desc').limit(100).get();
-        const list = res.data.map(u => ({
-          username: u.username, realName: u.realName, role: u.role,
-          enabled: !!u.enabled, lastLogin: u.lastLogin || null, createdAt: u.createdAt || null
-        }));
-        return { ok: true, list };
-      }
-      case 'add': {
-        const username = String(data.username || '').trim();
-        const realName = String(data.realName || '').trim();
-        const role = data.role === 'admin' ? 'admin' : 'user';
-        const password = String(data.password || '');
-        if (!username || !password || !realName) return { ok: false, msg: '账号/姓名/密码不能为空' };
-        if (!/^[a-zA-Z0-9_]{2,20}$/.test(username)) return { ok: false, msg: '账号只能由字母/数字/下划线组成，2-20 位' };
-        if (password.length < 4) return { ok: false, msg: '密码至少 4 位' };
-        const dup = await db.collection('users').where({ username }).limit(1).get();
-        if (dup.data.length > 0) return { ok: false, msg: '账号已存在' };
-        const salt = crypto.randomBytes(8).toString('hex');
-        const passwordHash = hashPwd(salt, password);
-        await db.collection('users').add({
-          username, realName, role, salt, passwordHash,
-          enabled: true, failCount: 0, lockUntil: null, createdAt: Date.now(), lastLogin: null
-        });
-        return { ok: true, msg: '已创建账号 ' + username };
-      }
-      case 'resetPwd': {
-        const username = String(data.username || '').trim();
-        const password = String(data.password || '');
-        if (!username || password.length < 4) return { ok: false, msg: '账号和不少于 4 位的新密码必填' };
-        const res = await db.collection('users').where({ username }).limit(1).get();
-        const user = res.data[0];
-        if (!user) return { ok: false, msg: '账号不存在' };
-        const salt = crypto.randomBytes(8).toString('hex');
-        const passwordHash = hashPwd(salt, password);
-        await db.collection('users').doc(user._id).update({ salt, passwordHash, failCount: 0, lockUntil: null });
-        return { ok: true, msg: '已重置 ' + username + ' 的密码' };
-      }
-      case 'toggle': {
-        const username = String(data.username || '').trim();
-        const enabled = !!data.enabled;
-        if (!username) return { ok: false, msg: '账号必填' };
-        const res = await db.collection('users').where({ username }).limit(1).get();
-        const user = res.data[0];
-        if (!user) return { ok: false, msg: '账号不存在' };
-        if (user.role === 'admin' && !enabled) return { ok: false, msg: '不能停用管理员账号' };
-        await db.collection('users').doc(user._id).update({ enabled });
-        return { ok: true, msg: enabled ? '已启用 ' + username : '已停用 ' + username };
-      }
-      case 'remove': {
-        const username = String(data.username || '').trim();
-        if (!username) return { ok: false, msg: '账号必填' };
-        const res = await db.collection('users').where({ username }).limit(1).get();
-        const user = res.data[0];
-        if (!user) return { ok: false, msg: '账号不存在' };
-        if (user.role === 'admin') return { ok: false, msg: '不能删除管理员账号' };
-        await db.collection('users').doc(user._id).remove();
-        // 清理该用户的 token
-        const tokens = await db.collection('tokens').where({ username }).limit(100).get();
-        for (const t of tokens.data) { await db.collection('tokens').doc(t._id).remove().catch(() => {}); }
-        return { ok: true, msg: '已删除账号 ' + username };
-      }
-      default:
-        return { ok: false, msg: '未知操作' };
+    if (action === 'list') {
+      const r = await exec('SELECT id, username, real_name, role, enabled, failed_count, locked_until, created_at FROM users ORDER BY id');
+      const list = (r.Rows || []).map(s => {
+        const row = JSON.parse(s);
+        const item = {};
+        r.Columns.forEach((c, i) => { item[c] = row[i]; });
+        return { id: item.id, username: item.username, realName: item.real_name, role: item.role, enabled: String(item.enabled) === 'true', failedCount: item.failed_count, lockedUntil: item.locked_until, createdAt: item.created_at };
+      });
+      return { ok: true, users: list };
     }
+
+    if (action === 'add') {
+      const username = String((data && data.username) || '').trim();
+      const realName = String((data && data.realName) || '').trim();
+      const password = String((data && data.password) || '');
+      if (!username || !realName || password.length < 4) return { ok: false, msg: '账号/姓名/密码（至少4位）必填' };
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+      await exec('INSERT INTO users (username, real_name, password_hash, salt, role, enabled) VALUES (' + q(username) + ', ' + q(realName) + ', ' + q(hash) + ', ' + q(salt) + ', ' + q('user') + ', true)');
+      return { ok: true, msg: '账号 ' + username + ' 创建成功' };
+    }
+
+    if (action === 'resetPwd') {
+      const username = String((data && data.username) || '').trim();
+      const password = String((data && data.password) || '');
+      if (!username || password.length < 4) return { ok: false, msg: '账号/密码（至少4位）必填' };
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+      await exec('UPDATE users SET password_hash=' + q(hash) + ', salt=' + q(salt) + ', failed_count=0, locked_until=NULL WHERE username=' + q(username));
+      return { ok: true, msg: '密码已重置' };
+    }
+
+    if (action === 'toggle') {
+      const username = String((data && data.username) || '').trim();
+      const enabled = data && data.enabled ? true : false;
+      await exec('UPDATE users SET enabled=' + (enabled ? 'true' : 'false') + ' WHERE username=' + q(username));
+      return { ok: true, msg: (enabled ? '已启用' : '已停用') + '账号 ' + username };
+    }
+
+    if (action === 'update') {
+      const username = String((data && data.username) || '').trim();
+      const realName = String((data && data.realName) || '').trim();
+      if (!username || !realName) return { ok: false, msg: '账号/姓名必填' };
+      await exec('UPDATE users SET real_name=' + q(realName) + ' WHERE username=' + q(username));
+      return { ok: true, msg: '姓名已更新' };
+    }
+
+    if (action === 'remove') {
+      const username = String((data && data.username) || '').trim();
+      if (!username) return { ok: false, msg: '缺少账号' };
+      if (username === admin.username) return { ok: false, msg: '不能删除当前登录的管理员' };
+      await exec('DELETE FROM tokens WHERE username=' + q(username));
+      await exec('DELETE FROM users WHERE username=' + q(username));
+      return { ok: true, msg: '账号 ' + username + ' 已删除' };
+    }
+
+    return { ok: false, msg: '未知操作: ' + action };
   } catch (e) {
-    return { ok: false, msg: '服务器错误：' + e.message };
+    return { ok: false, msg: '服务器错误：' + (e.message || e) };
   }
 };
