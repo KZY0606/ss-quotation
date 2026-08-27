@@ -729,8 +729,9 @@ tr.main-row:hover .delete-btn { opacity:1; }
 /* v1.0.128 档位格：等宽对齐，上下行输入框列对仗 */
 .tier-cells { display: flex; gap: 8px; align-items: flex-start; }
 .tier-cell { display: flex; flex-direction: column; width: 86px; flex: 0 0 86px; }
-.tier-label { font-size: 11px; color: var(--text-muted); margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tier-sub { font-size: 10px; color: var(--text-muted); opacity: 0.75; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 12px; }
+.tier-label { font-size: 11px; color: var(--text); font-weight: 600; margin-bottom: 0; white-space: nowrap; }
+.tier-width { font-size: 10px; color: var(--text-muted); margin-bottom: 0; white-space: nowrap; min-height: 13px; line-height: 13px; }
+.tier-sub { font-size: 10px; color: var(--text-muted); opacity: 0.75; margin-bottom: 3px; white-space: nowrap; min-height: 12px; line-height: 12px; }
 .tier-cell .cfg-price-input { width: 100%; box-sizing: border-box; }
 /* v1.0.128 保护膜拖拽排序 */
 .film-drag-handle { cursor: grab; color: var(--text-muted); margin-right: 4px; user-select: none; font-size: 13px; letter-spacing: -2px; }

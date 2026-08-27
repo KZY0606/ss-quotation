@@ -1352,10 +1352,10 @@ const App = (() => {
   }
 
   // 2026-08-26 用户规则：表面加工板块按类别分组，外观对齐单张加工板块（sg-group 卡片）
-  function tierLabel(t) {
-    const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
-    const w = stdW ? '' : '【' + (t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax) + '】';
-    return t.tMin + '-' + t.tMax + 'mm' + w;
+  function tierLabelParts(t) {
+    const thick = t.tMin + '-' + t.tMax + 'mm';
+    const w = (t.wMin !== undefined && t.wMin !== null) ? '【' + (t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax) + '】' : '';
+    return { thick: thick, width: w };
   }
   function tierCellsHtml(tiers, names, locked) {
     const main = names.split(',')[0];
@@ -1364,7 +1364,10 @@ const App = (() => {
       const ov = priceOverrides.surfaceTiers[main];
       const v = (ov && ov[idx] !== undefined) ? ov[idx] : t.price;
       const unit = t.unit === 'ton' ? '元/吨' : '元/㎡';
-      return '<div class="tier-cell"><span class="tier-label">' + tierLabel(t) + '</span>' +
+      const parts = tierLabelParts(t);
+      const full = parts.thick + parts.width + ' ' + unit;
+      return '<div class="tier-cell" title="' + full + '"><span class="tier-label">' + parts.thick + '</span>' +
+        '<span class="tier-width">' + parts.width + '</span>' +
         '<span class="tier-sub">' + unit + '</span>' +
         '<input type="number" class="cfg-price-input surf-tier-inp" data-names="' + names + '" data-tier="' + idx + '" value="' + v + '" step="0.5" ' + (locked ? 'readonly' : '') + '></div>';
     }).join('');
@@ -1484,7 +1487,7 @@ const App = (() => {
           const elock = !!priceOverrides.surfaceLocked[item.key];
           rows.push('<tr class="sf-emboss-row">' +
             '<td><span class="cfg-name">' + item.display + '</span></td>' +
-            '<td class="tier-cells"><div class="tier-cell"><span class="tier-label">附加项</span><span class="tier-sub">元/吨</span>' +
+            '<td class="tier-cells"><div class="tier-cell"><span class="tier-label">附加项</span><span class="tier-width"></span><span class="tier-sub">元/吨</span>' +
             '<input type="number" class="cfg-price-input surf-price-inp" data-names="' + item.key + '" value="' + ev + '" step="0.5" ' + (elock ? 'readonly' : '') + '></div></td>' +
             '<td><button class="cfg-lock-btn ' + (elock ? 'locked' : '') + '" data-names="' + item.key + '" data-type="surf">' + (elock ? '🔒' : '🔓') + '</button></td>' +
             '</tr>');
