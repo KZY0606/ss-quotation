@@ -224,6 +224,7 @@ const App = (() => {
     updateAllDerived();
     render();
     initPriceSync(); // v1.0.119 基价云端同步（拉取老板发布的最新基价）
+    initFilmSync(); // v1.0.124 保护膜价云端同步（拉取老板发布的最新膜价）
   }
 
   // ===== 更新公告 v1.0.111 =====
@@ -967,6 +968,84 @@ const App = (() => {
       }
     }).catch(() => {
       if (st) st.textContent = '基价同步：拉取失败，当前使用本地基价';
+    });
+  }
+  // ========== 保护膜价云端同步 v1.0.124（老板/管理员发布，全员自动同步） ==========
+  function collectFilmPrices() {
+    const out = {};
+    for (const [name, def] of Object.entries(FILM_FEES)) {
+      const v = priceOverrides.filmFees[name] ?? def;
+      if (typeof v === 'number' && v >= 0) out[name] = v;
+    }
+    return out;
+  }
+  function countFilmPrices() {
+    let n = 0;
+    for (const v of Object.values(collectFilmPrices())) if (v > 0) n++;
+    return n;
+  }
+  function applyFilmPrices(p) {
+    if (!p || typeof p !== 'object') return false;
+    let changed = false;
+    for (const [name, v] of Object.entries(p)) {
+      if (FILM_FEES.hasOwnProperty(name) && typeof v === 'number' && v >= 0) {
+        priceOverrides.filmFees[name] = v;
+        changed = true;
+      }
+    }
+    if (changed) {
+      // 云端价优先：清掉本机膜价锁定，刷新后仍以云端价为准
+      priceOverrides.filmLocked = {};
+      savePriceOverrides();
+      renderFilmConfig();
+    }
+    return changed;
+  }
+  function initFilmSync() {
+    const bar = dom('filmPublishBar');
+    if (!bar) return;
+    bar.style.display = '';
+    const st = dom('filmStatusText');
+    const btn = dom('publishFilmBtn');
+    let auth = null;
+    try { auth = window.KKAuth && KKAuth.getAuth(); } catch (e) {}
+    const isAdmin = !!(auth && auth.role === 'admin');
+    if (btn) btn.style.display = isAdmin ? '' : 'none';
+    if (btn && !btn._bound) {
+      btn._bound = true;
+      btn.addEventListener('click', () => {
+        const n = countFilmPrices();
+        if (!confirm('确认将当前页面保护膜价格发布给全体员工？\n（共 ' + n + ' 项保护膜价格，发布后所有员工打开页面自动生效）')) return;
+        btn.disabled = true;
+        btn.textContent = '发布中…';
+        KKAuth.call('priceTable', { action: 'save', scope: 'films', token: (auth && auth.token) || '', prices: collectFilmPrices() }).then(r => {
+          btn.disabled = false;
+          btn.textContent = '📢 发布当前保护膜价格';
+          if (r && r.ok) {
+            showToast('已发布，全员生效', 'success');
+            if (st) st.textContent = '全员膜价：' + (r.updatedBy || '') + ' 发布（刚刚）';
+          } else {
+            showToast((r && r.msg) || '发布失败', 'error');
+          }
+        }).catch(() => {
+          btn.disabled = false;
+          btn.textContent = '📢 发布当前保护膜价格';
+          showToast('发布失败：网络错误', 'error');
+        });
+      });
+    }
+    if (!window.KKAuth || !KKAuth.call) { if (st) st.textContent = '保护膜同步：登录后可用'; return; }
+    KKAuth.call('priceTable', { action: 'get', scope: 'films', token: (auth && auth.token) || '' }).then(r => {
+      if (r && r.ok && r.data && r.data.prices) {
+        if (applyFilmPrices(r.data.prices)) {
+          render();
+        }
+        if (st) st.textContent = '全员膜价：' + (r.data.updatedBy || '') + ' 发布（' + fmtSyncTime(r.data.updatedAt) + '）';
+      } else {
+        if (st) st.textContent = '保护膜同步：老板尚未发布，当前使用本地膜价';
+      }
+    }).catch(() => {
+      if (st) st.textContent = '保护膜同步：拉取失败，当前使用本地膜价';
     });
   }
   // ========== 400系基价 ==========

@@ -1,5 +1,6 @@
-// priceTable — 中央基价表（v1.0.119）
-// get: 任意登录用户拉取最新发布基价；save: 仅 admin 发布（每次保存留历史，取最新）
+// priceTable — 中央价格发布表（v1.0.119 基价 / v1.0.124 保护膜价）
+// scope: origins=基价 / films=保护膜价（默认 origins）
+// get: 任意登录用户拉取最新发布；save: 仅 admin 发布（每次保存留历史，取最新）；clear: 仅 admin 清空（按 scope）
 const CloudBase = require('@cloudbase/manager-node');
 const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
 const database = app.database;
@@ -17,7 +18,8 @@ async function exec(Sql) {
 
 async function ensureTables() {
   await exec('CREATE TABLE IF NOT EXISTS tokens (id SERIAL PRIMARY KEY, token TEXT UNIQUE NOT NULL, username TEXT NOT NULL, role TEXT NOT NULL, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT now())');
-  await exec('CREATE TABLE IF NOT EXISTS base_price_history (id SERIAL PRIMARY KEY, data TEXT NOT NULL, updated_by TEXT NOT NULL, created_at TIMESTAMP DEFAULT now())');
+  await exec("CREATE TABLE IF NOT EXISTS base_price_history (id SERIAL PRIMARY KEY, key TEXT DEFAULT 'origins', data TEXT NOT NULL, updated_by TEXT NOT NULL, created_at TIMESTAMP DEFAULT now())");
+  await exec("ALTER TABLE base_price_history ADD COLUMN IF NOT EXISTS key TEXT DEFAULT 'origins'");
 }
 
 function parseEvt(ev) {
@@ -52,27 +54,30 @@ exports.main = async (event) => {
     if (action === 'save') {
       const user = await checkToken(String((evt && evt.token) || ''));
       if (!user) return { ok: false, msg: '未登录或登录已过期' };
-      if (String(user.role) !== 'admin') return { ok: false, msg: '只有管理员可以发布基价' };
+      if (String(user.role) !== 'admin') return { ok: false, msg: '只有管理员可以发布价格' };
       const prices = evt.prices;
-      if (!prices || typeof prices !== 'object') return { ok: false, msg: '基价数据无效' };
+      if (!prices || typeof prices !== 'object') return { ok: false, msg: '价格数据无效' };
       const dataJson = JSON.stringify(prices);
-      if (dataJson.length > 300000) return { ok: false, msg: '基价数据过大' };
-      await exec('INSERT INTO base_price_history (data, updated_by) VALUES (' + q(dataJson) + ', ' + q(user.username) + ')');
+      if (dataJson.length > 300000) return { ok: false, msg: '价格数据过大' };
+      const scope = String((evt && evt.scope) || 'origins');
+      await exec('INSERT INTO base_price_history (key, data, updated_by) VALUES (' + q(scope) + ', ' + q(dataJson) + ', ' + q(user.username) + ')');
       return { ok: true, updatedBy: user.username, updatedAt: new Date().toISOString() };
     }
 
     if (action === 'clear') {
       const user = await checkToken(String((evt && evt.token) || ''));
       if (!user) return { ok: false, msg: '未登录或登录已过期' };
-      if (String(user.role) !== 'admin') return { ok: false, msg: '只有管理员可以清空基价' };
-      await exec('DELETE FROM base_price_history');
+      if (String(user.role) !== 'admin') return { ok: false, msg: '只有管理员可以清空价格' };
+      const scope = String((evt && evt.scope) || 'origins');
+      await exec('DELETE FROM base_price_history WHERE key=' + q(scope));
       return { ok: true };
     }
 
     // 默认 get：登录即可
     const user = await checkToken(String((evt && evt.token) || ''));
     if (!user) return { ok: false, msg: '未登录或登录已过期' };
-    const res = await exec('SELECT id, data, updated_by, created_at FROM base_price_history ORDER BY id DESC LIMIT 1');
+    const scope = String((evt && evt.scope) || 'origins');
+    const res = await exec('SELECT id, key, data, updated_by, created_at FROM base_price_history WHERE key=' + q(scope) + ' ORDER BY id DESC LIMIT 1');
     if (!res.Rows || !res.Rows.length) return { ok: true, data: null };
     const row = JSON.parse(res.Rows[0]);
     const item = {};
