@@ -52,6 +52,11 @@
     .log-item { padding: 8px 10px; border-bottom: 1px solid #f0f1f3; font-size: 13px; }
     .log-item:last-child { border-bottom: none; }
     .log-time { color: #6b7280; font-size: 12px; margin-right: 10px; white-space: nowrap; }
+    .log-toggle { color: #2563eb; font-size: 12px; margin-left: 8px; text-decoration: none; cursor: pointer; }
+    .log-toggle:hover { text-decoration: underline; }
+    .log-sub { margin-top: 6px; padding: 6px 0 2px 14px; border-left: 2px solid #e5e7eb; }
+    .log-sub-item { padding: 3px 0 3px 8px; font-size: 12px; color: #4b5563; border-bottom: 1px dashed #f0f1f3; }
+    .log-sub-item:last-child { border-bottom: none; }
     .empty { text-align: center; color: #9ca3af; padding: 30px 0; }
     /* 编辑弹窗 */
     .mask { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; align-items: center; justify-content: center; }
@@ -337,18 +342,32 @@
       el.innerHTML = '<div class="empty">加载中…</div>';
       try {
         var r = await api('adminLogs', { type: type, days: 7 });
-        if (!r.logs || !r.logs.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
+        var list = type === 'usage' ? (r.groups || []) : (r.logs || []);
+        if (!list || !list.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
         el.innerHTML = '';
-        r.logs.forEach(function (it) {
+        list.forEach(function (it) {
           var div = document.createElement('div');
           div.className = 'log-item';
           if (type === 'login') {
             var st = it.success ? '<span class="badge badge-on">成功</span>' : '<span class="badge badge-off">失败</span>';
             div.innerHTML = '<span class="log-time">' + fmtTime(it.createdAt) + '</span>' + st + ' <b>' + (it.realName || it.username) + '</b>（' + it.username + '） ' + (it.reason || '');
           } else {
+            // v1.0.131: 批次合并为一条，箭头点击展开明细
             div.innerHTML = '<span class="log-time">' + fmtTime(it.createdAt) + '</span><b>' + (it.realName || it.username) + '</b> ' +
-              (it.material || '') + ' ' + (it.surface || '') + ' ' + (it.spec || '') +
-              (it.unitPrice ? ' 单价 ' + it.unitPrice + ' 元/吨' : '') + (it.calcMode === 'sheet' ? '（平板）' : '');
+              (it.count > 0 ? '（' + it.count + ' 条报价）' : '') +
+              ' <a class="log-toggle" data-open="0" href="javascript:;">▸ 展开</a>' +
+              '<div class="log-sub" style="display:none">' + it.items.map(function (x) {
+                return '<div class="log-sub-item">' + fmtTime(x.createdAt) + ' ' + (x.material || '') + ' ' + (x.surface || '') + ' ' + (x.spec || '') +
+                  (x.unitPrice ? ' 单价 ' + x.unitPrice + ' 元/吨' : '') + (x.calcMode === 'sheet' ? '（平板）' : '') + '</div>';
+              }).join('') + '</div>';
+            div.querySelector('.log-toggle').addEventListener('click', function (ev) {
+              ev.preventDefault();
+              var sub = div.querySelector('.log-sub');
+              var open = sub.style.display !== 'none';
+              sub.style.display = open ? 'none' : 'block';
+              this.textContent = open ? '▸ 展开' : '▾ 收起';
+              this.dataset.open = open ? '0' : '1';
+            });
           }
           el.appendChild(div);
         });

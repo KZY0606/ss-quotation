@@ -2259,8 +2259,10 @@ const App = (() => {
         });
       });
       if (items.length) {
-        if (items.length <= 200) items.forEach(function (it) { KKAuth.reportUsage(it); });
-        else KKAuth.reportUsage({ material: items[0].material || '', spec: items.length + ' 行批量', surface: items[0].surface || '', calcMode: items[0].calcMode || '', unitPrice: null });
+        // v1.0.131: 同一次计算共用一个批次号，管理后台按批次合并展示
+        var batchId = String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8);
+        if (items.length <= 200) items.forEach(function (it) { it.batchId = batchId; KKAuth.reportUsage(it); });
+        else KKAuth.reportUsage({ material: items[0].material || '', spec: items.length + ' 行批量', surface: items[0].surface || '', calcMode: items[0].calcMode || '', unitPrice: null, batchId: batchId });
       }
     }
   }
