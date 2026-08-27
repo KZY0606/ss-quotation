@@ -792,5 +792,45 @@ test('v1.0.136 单张+检测全检：runCalc 注入后 inspect=1.5 → 计费（
   eq(r.detail.inspectPerSheet > 0, true);
 });
 
+// === v1.0.137 模板新列头（钢种/保护膜·垫纸/标厚/件数/序号） ===
+test('v1.0.137 用户模板全列头识别（13列）', () => {
+  const headers = ['序号', '产地', '钢种', '表面', '保护膜/垫纸', '标厚', '厚度', '宽度', '长度', '包装方式', '检测要求', '件数', '重量(吨)'];
+  const it = ExcelParser.parseRow(['1', '上克', '304', '单张砂面NO.4', '10C-NOVACEL-LASER-FILM+7C-FILM', '1.2', '1.14-1.15', '1219', '3000', '密封木箱', '全检', '', ''], headers, {});
+  eq(it.seq, '1');
+  eq(it.origin, '上克');
+  eq(it.material, '304');
+  eq(it.surface, '单张砂面NO.4');
+  eq(it.film1, '10C-NOVACEL-LASER-FILM+7C-FILM');
+  eq(it.film2, undefined);
+  eq(it.stdThickness, '1.2');
+  eq(it.thickness, '1.14-1.15');
+  eq(it.width, '1219');
+  eq(it.length, '3000');
+  eq(it.packing, '密封木箱');
+  eq(it.inspectFlag, true);
+});
+
+test('v1.0.137 件数列识别 + 重量列', () => {
+  const headers = ['产地', '钢种', '厚度', '件数', '重量(吨)'];
+  const it = ExcelParser.parseRow(['宏旺', '304', '0.80', '25', '3.5'], headers, {});
+  eq(it.quantity, '25');
+  eq(it.weight, '3.5');
+});
+
+test('v1.0.137 组合膜整串入 film1（引擎组合计价链路）', () => {
+  const fee = PricingEngine.getFilmFee('10C-NOVACEL-LASER-FILM+7C-FILM');
+  eq(fee != null && fee > 0, true);
+});
+
+test('v1.0.137 垫纸列头别名识别', () => {
+  const it = ExcelParser.parseRow(['5C-FILM'], ['垫纸'], {});
+  eq(it.film1, '5C-FILM');
+});
+
+test('v1.0.137 旧「材质」列头仍兼容', () => {
+  const it = ExcelParser.parseRow(['304'], ['材质'], {});
+  eq(it.material, '304');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

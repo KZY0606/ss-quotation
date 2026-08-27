@@ -2120,7 +2120,7 @@ const App = (() => {
       // v1.0.136 表头表格识别（Excel 粘贴：tab/逗号分隔，首行含表头如「检测要求」）
       const firstLine = trimmed[0] || '';
       const headCells = firstLine.split(/[\t,，;；]+/).map(s => s.trim());
-      const hasHeader = headCells.length >= 3 && headCells.some(h => /检测|材质|厚度|宽度|规格|表面/.test(h));
+      const hasHeader = headCells.length >= 3 && headCells.some(h => /检测|材质|钢种|厚度|标厚|宽度|规格|表面|保护膜|垫纸|件数/.test(h));
       if (hasHeader) {
         for (let i = 1; i < trimmed.length; i++) {
           const row = trimmed[i].split(/[\t,，;；]+/).map(s => s.trim());
@@ -2159,12 +2159,12 @@ const App = (() => {
 
   function isSheetMode() { return !!(els.calcModeSheet && els.calcModeSheet.checked); }
   function updateSheetHeaders() {
-    const sheet = isSheetMode();
-    if (els.thSaleTax) els.thSaleTax.innerHTML = (sheet ? '含税售价' : '含税售价') + '<sup class="usd-sup">（$）</sup>';
-    if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = (sheet ? '不含税售价' : '不含税售价') + '<sup class="usd-sup">（$）</sup>';
-    if (els.thWeight) els.thWeight.textContent = sheet ? '数量' : '重量(吨)';
-    if (els.thCostTax) els.thCostTax.style.display = sheet ? 'none' : '';
-    if (els.thCostNoTax) els.thCostNoTax.style.display = sheet ? 'none' : '';
+    // v1.0.137：件数/重量/成本列固定显示（单张行成本列填空），不再按模式隐藏/改名
+    if (els.thSaleTax) els.thSaleTax.innerHTML = '含税售价<sup class="usd-sup">（$）</sup>';
+    if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = '不含税售价<sup class="usd-sup">（$）</sup>';
+    if (els.thWeight) els.thWeight.textContent = '重量(吨)';
+    if (els.thCostTax) els.thCostTax.style.display = '';
+    if (els.thCostNoTax) els.thCostNoTax.style.display = '';
   }
 
   function runCalc() {
@@ -2483,12 +2483,16 @@ const App = (() => {
 
       h.push(`<tr class="${isErr ? 'error-row' : 'main-row'}">`);
       h.push(isOk ? `<td><button class="expand-btn" id="expand-btn-${idx}" onclick="App.toggleExpand(${idx})">▶</button></td>` : '<td></td>');
-      h.push(`<td><div class="index-cell"><span class="index-num">${idx}</span></div></td>`);
+      h.push(`<td><div class="index-cell"><span class="index-num">${item.seq || idx}</span></div></td>`);
       h.push(`<td>${item.origin || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       let mat = item.material || '';
       if (item.isYanYan) mat += ' <span class="tag tag-yanyan">压延</span>';
       h.push(`<td>${mat}</td>`);
       h.push(`<td>${item.surface || '<span style="color:var(--text-muted)">2B</span>'}</td>`);
+      // v1.0.137：保护膜统一一列（膜1+膜2 合并显示）
+      const filmAll = [item.film1, item.film2].filter(Boolean).join(' + ');
+      h.push(`<td>${filmAll || '<span style="color:var(--text-muted)">-</span>'}</td>`);
+      h.push(`<td>${item.stdThickness || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       h.push(`<td>${fmtThk(item.thickness)}</td><td>${item.width}</td>`);
       h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
       const isCoil = String(item.length || 'C').trim().toUpperCase() === 'C';
@@ -2508,12 +2512,17 @@ const App = (() => {
               <option value="出口铁架" ${pk === '出口铁架' ? 'selected' : ''}>出口铁架</option>
               <option value="出口铁箱" ${pk === '出口铁箱' ? 'selected' : ''}>出口铁箱</option>
             </select>`}</td>`);
-      const wgt = d && d.weight != null ? d.weight : (item.weight || null);
+      // v1.0.137：检测要求 + 件数 + 重量（分列显示，有就填没有留空）
+      h.push(item.inspectFlag
+        ? `<td><span class="tag tag-sheet" style="font-weight:600;">全检</span></td>`
+        : `<td><span style="color:var(--text-muted)">-</span></td>`);
       h.push(d && d.calcMode === 'sheet'
         ? `<td><span style="color:var(--accent);font-weight:600">${d.quantity || 1}</span></td>`
+        : `<td>${item.quantity != null && item.quantity !== '' ? item.quantity : '<span style="color:var(--text-muted)">-</span>'}</td>`);
+      const wgt = d && d.weight != null ? d.weight : (item.weight || null);
+      h.push(d && d.calcMode === 'sheet'
+        ? `<td><span style="color:var(--text-muted)">-</span></td>`
         : `<td>${wgt != null ? wgt : '<span style="color:var(--text-muted)">-</span>'}</td>`);
-      h.push(`<td>${item.film1 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
-      h.push(`<td>${item.film2 || '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
         if (d && d.calcMode === 'sheet') {
           const uSheet = usd(d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice);
@@ -2523,6 +2532,8 @@ const App = (() => {
           const taxCell = `${(d.sheetSaleTax != null ? d.sheetSaleTax : d.sheetPriceTax).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uTax)}</div><div class=\"exw-sub\">×${qty}张 ${(d.sheetTotalSaleTax != null ? d.sheetTotalSaleTax : d.sheetTotalTax).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
           const noTaxCell = `${(d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}<div class=\"usd-sub\">${fmtUsd(uSheet)}</div><div class=\"exw-sub\">×${qty}张 ${(d.sheetTotalSaleNoTax != null ? d.sheetTotalSaleNoTax : d.sheetTotal).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
           h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-sheet">板</span></td>`);
+          h.push(`<td class="price-cell" style="color:var(--text-muted)">-</td>`);
+          h.push(`<td class="price-cell" style="color:var(--text-muted)">-</td>`);
           h.push(`<td class="price-cell price-sale"><span class="term-tag">含税</span>${taxCell}</td>`);
           h.push(`<td class="price-cell price-subtle"><span class="term-tag">单张</span>${noTaxCell}</td>`);
         } else {
@@ -2540,18 +2551,18 @@ const App = (() => {
           ? `<div class="exw-sub">EXW ¥${d.saleTax.toLocaleString()} / ${fmtUsd(usd(d.saleTax))}</div>` : '';
         const extraRef = extraTotal() > 0
           ? `<div class="exw-sub">含附加费 ${extraTotal().toLocaleString()} 元/吨</div>` : '';
+        h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-${d.boardType}">${d.boardType === 'coil' ? '卷' : '板'}</span></td>`);
         h.push(`<td class="price-cell price-cost">${d.costTax.toLocaleString()}</td>`);
         h.push(`<td class="price-cell price-subtle">${d.costNoTax.toLocaleString()}</td>`);
-        h.push(`<td><span class="tag tag-${d.edgeType}">${d.edgeType === 'rough' ? '毛边' : '齐边'}</span> <span class="tag tag-${d.boardType}">${d.boardType === 'coil' ? '卷' : '板'}</span></td>`);
         h.push(`<td class="price-cell price-sale"><span class="term-tag">${termState.term}</span>${taxCell}${extraRef}${exwRef}</td>`);
         h.push(`<td class="price-cell price-subtle"><span class="term-tag">${termState.term}</span>${noTaxCell}${extraRef}${exwRef}</td>`);
         }
-      } else if (isErr) { h.push(`<td colspan="6" class="error-text">⚠️ ${r.errors.join('；')}</td>`); }
-      else { h.push(`<td colspan="6" style="color:var(--text-muted);font-size:12px">待计算</td>`); }
+      } else if (isErr) { h.push(`<td colspan="5" class="error-text">⚠️ ${r.errors.join('；')}</td>`); }
+      else { h.push(`<td colspan="5" style="color:var(--text-muted);font-size:12px">待计算</td>`); }
       h.push(`<td><button class="btn-icon btn-ghost delete-btn" onclick="App.removeRow(${idx})">✕</button></td></tr>`);
 
       if (isOk) {
-        h.push(`<tr class="detail-row" id="detail-${idx}"><td colspan="17"><div class="detail-content">`);
+        h.push(`<tr class="detail-row" id="detail-${idx}"><td colspan="19"><div class="detail-content">`);
         h.push(renderBreakdown(d, item));
         h.push('</div></td></tr>');
       }

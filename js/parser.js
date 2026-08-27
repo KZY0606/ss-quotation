@@ -245,7 +245,9 @@ const ExcelParser = (() => {
         const h = headers[i];
 
         if (h.includes('产地') || h.includes('origin')) item.origin = val;
-        else if (h.includes('材质')) item.material = val;
+        else if (h.includes('序号') || h === '#' || h.toLowerCase() === 'no' || h.toLowerCase() === 'no.') item.seq = val;
+        // v1.0.137：模板列头「钢种」（兼容旧「材质」）
+        else if (h.includes('钢种') || h.includes('材质') || h.includes('material') || h.includes('grade')) item.material = val;
         else if (h.includes('表面')) item.surface = val;
         else if (h.includes('厚度') || h.includes('thickness')) item.thickness = val;
         else if (h.includes('宽度') || h.includes('width')) item.width = val;
@@ -254,9 +256,13 @@ const ExcelParser = (() => {
           const spec = PricingEngine.parseSpec(val);
           if (spec) { item.thickness = spec.thickness; item.width = spec.width; item.length = spec.length; }
         }
-        else if (h.includes('膜1') || h === '保护膜' || h.includes('film1') || h.includes('膜一')) item.film1 = val;
+        else if (h.includes('膜1') || h.includes('film1') || h.includes('膜一')) item.film1 = val;
         else if (h.includes('膜2') || h.includes('film2') || h.includes('膜二')) item.film2 = val;
-        else if (h.includes('数量') || h.includes('qty') || h.includes('quantity')) item.quantity = val;
+        // v1.0.137：模板列头「保护膜/垫纸」统一一列（值可为组合膜如 10C-NOVACEL-LASER-FILM+7C-FILM，整串入 film1 由引擎组合计价）
+        else if (h.includes('保护膜') || h.includes('垫纸') || h === '膜' || h.toLowerCase() === 'film') item.film1 = val;
+        // v1.0.137：「件数」「标厚」列
+        else if (h.includes('件数') || h.includes('数量') || h.includes('qty') || h.includes('quantity')) item.quantity = val;
+        else if (h.includes('标厚')) item.stdThickness = val;
         else if (h.includes('重量') || h.includes('weight')) item.weight = val;
         else if (h.includes('包装费') || h.includes('packingFee') || h.includes('packing_fee')) item.packingFee = parseFloat(val) > 0 ? parseFloat(val) : 0;
         else if (h.includes('包装') || h.includes('packing')) { const pv = parseFloat(val); item.packing = (val && isNaN(pv)) ? val : ''; if (!isNaN(pv) && val !== '') item.packingFee = pv; }
