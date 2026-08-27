@@ -3,6 +3,14 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.134', date: '2026-08-27', title: '保护膜组合灵活识别',
+    items: [
+      '保护膜支持任意组合：如 10C-NOVACEL-LASER-FILM+5C-FILM，系统自动拆开逐段识别价格并相加（8.8+1.0=9.8元/方）'
+      ,'小写/中英别名同样支持组合（如 10c-novacel-laser-film+5c-film、10c进口膜+垫纸）'
+      ,'预定义组合（如 7C-FILM+5C-FILM）与带+单膜（BLUE+KBE-5C-FILM）优先按整名识别，不会误拆'
+    ]
+  },
+  {
     v: '1.0.133', date: '2026-08-27', title: '新增压花6WL + 喷砂工艺',
     items: [
       '压花工艺新增 6WL（85元/㎡，按面积计费），支持表面+6WL 格式（如 NO.4+6WL）'

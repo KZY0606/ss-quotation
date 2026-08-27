@@ -633,5 +633,54 @@ test('v1.0.133 喷砂: 打底非高普（单张普磨8K+喷砂）报错', () => 
   eq(r.errors.some(e => /单张高普8K打底/.test(e)), true, JSON.stringify(r.errors));
 });
 
+// === v1.0.134 保护膜组合动态识别（10C-NOVACEL-LASER-FILM+5C-FILM = 8.8+1.0 = 9.8） ===
+test('v1.0.134 组合膜 10C-NOVACEL-LASER-FILM+5C-FILM = 8.8+1.0 = 9.8 元/方', () => {
+  eq(PricingEngine.getFilmFee('10C-NOVACEL-LASER-FILM+5C-FILM'), 9.8);
+});
+
+test('v1.0.134 组合膜 10C-NOVACEL-LASER-FILM+7C-FILM = 8.8+1.2 = 10.0 元/方', () => {
+  eq(PricingEngine.getFilmFee('10C-NOVACEL-LASER-FILM+7C-FILM'), 10.0);
+});
+
+test('v1.0.134 组合膜三段 7C-LASER-FILM+5C-FILM+垫纸 = 1.5+1.0+0.3 = 2.8', () => {
+  eq(PricingEngine.getFilmFee('7C-LASER-FILM+5C-FILM+垫纸'), 2.8);
+});
+
+test('v1.0.134 小写组合 10c-novacel-laser-film+5c-film = 9.8（大小写归一+别名）', () => {
+  eq(PricingEngine.getFilmFee('10c-novacel-laser-film+5c-film'), 9.8);
+});
+
+test('v1.0.134 预定义组合优先 7C-FILM+5C-FILM = 2.2（FILM_FEES 整名命中不拆分）', () => {
+  eq(PricingEngine.getFilmFee('7C-FILM+5C-FILM'), 2.2);
+});
+
+test('v1.0.134 带+单膜 BLUE+KBE-5C-FILM 不误拆 = 1.0（整名命中）', () => {
+  eq(PricingEngine.getFilmFee('BLUE+KBE-5C-FILM'), 1.0);
+});
+
+test('v1.0.134 组合膜含未知段 → null（无法识别）', () => {
+  eq(PricingEngine.getFilmFee('UNKNOWN-XXX+5C-FILM'), null);
+});
+
+test('v1.0.134 组合膜整单计算：卷板 304 1.00*1240*C 10C-NOVACEL+5C 膜费并入', () => {
+  const r = PricingEngine.calculate({
+    material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C',
+    film1: '10C-NOVACEL-LASER-FILM+5C-FILM', film2: '', basePrice: 15000, packing: '木架'
+  });
+  eq(r.success, true);
+  eq(r.detail.film1FeeSqm, 9.8); // 元/方（组合价）
+  // 折算元/吨：9.8 × 1000/7.93/1.00
+  const perTon = Math.round(9.8 * 1000 / 7.93 / 1.00 * 100) / 100;
+  eq(r.detail.film1PerTon, perTon);
+});
+
+test('v1.0.134 组合膜别名段（中文+英文混合）进口膜+垫纸 = 4.5+0.3', () => {
+  eq(PricingEngine.getFilmFee('10c进口膜+垫纸'), 4.8);
+});
+
+test('v1.0.134 小写 normalizeFilm 大小写归一 10c-film → 10C-FILM', () => {
+  eq(PricingEngine.normalizeFilm('10c-film'), '10C-FILM');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

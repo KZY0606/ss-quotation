@@ -262,13 +262,37 @@ const PricingEngine = (() => {
     return surface;
   }
 
+  function getFilmFeePart(part) {
+    const norm = normalizeFilm(part);
+    if (userOverrides && userOverrides.filmFees && userOverrides.filmFees[norm] !== undefined) {
+      return userOverrides.filmFees[norm];
+    }
+    const v = FILM_FEES[norm];
+    return (v !== undefined) ? v : null;
+  }
+
   function getFilmFee(filmName) {
     if (!filmName || filmName.trim() === '' || filmName.trim() === '无' || filmName.trim() === '/') return 0;
-    // 优先使用用户覆盖
+    // 优先使用用户覆盖（整名，含发布的自定义膜价）
     if (userOverrides && userOverrides.filmFees && userOverrides.filmFees[filmName] !== undefined) {
       return userOverrides.filmFees[filmName];
     }
-    return FILM_FEES[filmName] || null;
+    // 整名命中（含预定义组合如 5C-FILM+5C-FILM、带+的单膜 BLUE+KBE-5C-FILM）→ 不拆分
+    if (FILM_FEES[filmName] !== undefined) {
+      return FILM_FEES[filmName];
+    }
+    // 组合膜：按 + 拆分逐段识别，价格相加（10C-NOVACEL-LASER-FILM+5C-FILM = 8.8+1.0 = 9.8）
+    if (filmName.includes('+')) {
+      const parts = filmName.split('+').map(function (x) { return x.trim(); }).filter(Boolean);
+      let total = 0;
+      for (let k = 0; k < parts.length; k++) {
+        const fee = getFilmFeePart(parts[k]);
+        if (fee === null || fee === undefined) return null; // 任一段无法识别 → 整体无法识别（上层报错）
+        total += fee;
+      }
+      return round2(total);
+    }
+    return FILM_FEES[filmName] ?? null;
   }
 
   function getSquareMetersPerTon(density, thickness) {
@@ -366,6 +390,8 @@ const PricingEngine = (() => {
     if (FILM_FEES[s]) return s;
     const lower = s.toLowerCase();
     if (FILM_ALIASES[lower]) return FILM_ALIASES[lower];
+    const upper = s.toUpperCase();
+    if (FILM_FEES[upper] !== undefined) return upper; // 大小写归一（小写输入如 10c-film）
     return s;
   }
 
