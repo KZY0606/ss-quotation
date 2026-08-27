@@ -9,6 +9,28 @@ function eq(a, b, l) { if (a !== b) throw new Error(`${l}: ${a} !== ${b}`); }
 // === 原有测试 ===
 // === v1.0.125 五尺 201J2 厚度档：第一档 0.68-0.88 → 0.78-0.88 === 
 // === v1.0.126 保护膜新增 6C-NOVACEL-LASER-FILM 4.7元/方 === 
+// === v1.0.127 表面加工档位级覆盖（surfaceTiers） === 
+test('6K 第一档档位覆盖 1.6→2.2 生效', () => {
+  const tiers = PricingEngine.SURFACE_FEES['6K'];
+  const idx0 = tiers[0].wMin === 1000 ? 0 : tiers.findIndex(t => t.wMin === 1000);
+  PricingEngine.setUserOverrides({ surfaceTiers: { '6K': { 0: 2.2 } }, surfaceFees: {} });
+  const r = PricingEngine.getSurfaceFee('6K', 0.5, 1000, '201');
+  eq(r.sqmPrice, 2.2, 'tier0 override');
+  PricingEngine.setUserOverrides({ surfaceTiers: {}, surfaceFees: {} });
+  const r2 = PricingEngine.getSurfaceFee('6K', 0.5, 1000, '201');
+  eq(r2.sqmPrice, tiers[0].price, '恢复默认');
+});
+test('NO.4 档位覆盖后其余档不受影响', () => {
+  const tiers = PricingEngine.SURFACE_FEES['NO.4'];
+  const t1 = tiers.find(t => t.wMin === 1000);
+  const idx1 = tiers.indexOf(t1);
+  const t2 = tiers.find(t => t.wMin !== 1000 || t.wMin !== t1.wMin || t.tMin !== t1.tMin);
+  PricingEngine.setUserOverrides({ surfaceTiers: { 'NO.4': { 0: 9.9 } }, surfaceFees: {} });
+  const r = PricingEngine.getSurfaceFee('NO.4', t1.tMin + 0.01, t1.wMin, '201');
+  eq(r.sqmPrice, 9.9, '首档被覆盖');
+  PricingEngine.setUserOverrides({ surfaceTiers: {}, surfaceFees: {} });
+});
+
 test('6C-NOVACEL-LASER-FILM 膜费 = 4.7 元/方', () => { eq(PricingEngine.getFilmFee('6C-NOVACEL-LASER-FILM'), 4.7); });
 
 test('五尺 201J2 0.78 命中 t1 档', () => { eq(PricingEngine.getThickBand1500('201J2', 0.78), 't1'); });

@@ -710,10 +710,11 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .config-hint { font-size:12px; color:var(--text-muted); margin-bottom:10px; }
 
 .config-table-wrap {
-  max-height:400px; overflow-y:auto;
+  max-height:400px; overflow:auto;
   border:1px solid var(--border);
   border-radius:var(--radius-xs);
 }
+.config-table-wrap table { width:max-content; min-width:100%; }
 .config-table-wrap table { width:100%; border-collapse:collapse; font-size:13px; }
 .config-table-wrap th {
   background:var(--steel-2); color:var(--text-secondary);
@@ -725,6 +726,13 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .config-table-wrap tr:last-child td { border-bottom:none; }
 
 .cfg-name { font-weight:600; color:var(--text); font-size:13px; }
+.tier-cells { white-space: nowrap; }
+.tier-cell { display: inline-flex; flex-direction: column; align-items: stretch; margin-right: 8px; vertical-align: top; }
+.tier-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; white-space: nowrap; }
+.tier-cell .cfg-price-input { width: 76px; }
+.film-order-btn { border: 1px solid var(--border); background: var(--card); border-radius: 4px; width: 22px; height: 22px; line-height: 1; font-size: 12px; cursor: pointer; margin-left: 3px; }
+.film-order-btn:hover { background: var(--primary-bg); }
+
 .cfg-price-input {
   width:90px; padding:4px 8px;
   border:1.5px solid var(--border); border-radius:5px;
@@ -977,7 +985,8 @@ tr.main-row:hover .delete-btn { opacity:1; }
 
 
 /* 单张加工板块：宽度档分组颜色（2026-08-24 v1.0.82） */
-.sg-group { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.sg-group { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
+.sg-group table { min-width: max-content; }
 .sg-group-title { padding: 6px 10px; font-size: 13px; font-weight: 600; }
 .sg-group table { margin: 0; }
 .sg-1000 .sg-group-title { background: #dbeafe; color: #1d4ed8; }

@@ -115,7 +115,7 @@ const App = (() => {
   }
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
-  let priceOverrides = { filmFees: {}, surfaceFees: {}, filmLocked: {}, surfaceLocked: {} };
+  let priceOverrides = { filmFees: {}, surfaceFees: {}, surfaceTiers: {}, filmLocked: {}, surfaceLocked: {} };
 
   // ========== 基价计算 ==========
   function isFiveFootWidth(width) {
@@ -225,6 +225,8 @@ const App = (() => {
     render();
     initPriceSync(); // v1.0.119 基价云端同步（拉取老板发布的最新基价）
     initFilmSync(); // v1.0.124 保护膜价云端同步（拉取老板发布的最新膜价）
+    initSurfaceSync('surfaces', 'surfacePublishBar', 'surfaceStatusText', 'publishSurfaceBtn', '📢 发布当前表面加工价格'); // v1.0.127 表面加工价一键发布
+    initSurfaceSync('sheetSurfaces', 'sheetSurfacePublishBar', 'sheetSurfaceStatusText', 'publishSheetSurfaceBtn', '📢 发布当前单张加工价格'); // v1.0.127 单张加工价一键发布
   }
 
   // ===== 更新公告 v1.0.111 =====
@@ -1048,6 +1050,76 @@ const App = (() => {
       if (st) st.textContent = '保护膜同步：拉取失败，当前使用本地膜价';
     });
   }
+  // ========== 表面加工/单张加工价云端同步 v1.0.127（老板/管理员发布，全员自动同步） ==========
+  function collectSurfacePrices() {
+    return { surfaceFees: priceOverrides.surfaceFees || {}, surfaceTiers: priceOverrides.surfaceTiers || {} };
+  }
+  function applySurfacePrices(p) {
+    if (!p || typeof p !== 'object') return false;
+    let changed = false;
+    if (p.surfaceFees && typeof p.surfaceFees === 'object') {
+      for (const [k, v] of Object.entries(p.surfaceFees)) { priceOverrides.surfaceFees[k] = v; changed = true; }
+    }
+    if (p.surfaceTiers && typeof p.surfaceTiers === 'object') {
+      for (const [k, v] of Object.entries(p.surfaceTiers)) { priceOverrides.surfaceTiers[k] = v; changed = true; }
+    }
+    if (changed) {
+      priceOverrides.surfaceLocked = {};
+      savePriceOverrides();
+      renderSurfaceConfig();
+      renderSheetSurfaceConfig();
+      if (typeof render === 'function') render();
+    }
+    return changed;
+  }
+  function initSurfaceSync(scope, barId, statusId, btnId, btnText) {
+    const bar = dom(barId);
+    if (!bar) return;
+    bar.style.display = '';
+    const st = dom(statusId);
+    const btn = dom(btnId);
+    let auth = null;
+    try { auth = window.KKAuth && KKAuth.getAuth(); } catch (e) {}
+    const isAdmin = !!(auth && auth.role === 'admin');
+    if (btn) btn.style.display = isAdmin ? '' : 'none';
+    if (btn && !btn._bound) {
+      btn._bound = true;
+      btn.addEventListener('click', () => {
+        const prices = collectSurfacePrices();
+        const n = Object.keys(prices.surfaceFees).length + Object.keys(prices.surfaceTiers).length;
+        if (!confirm('确认将当前页面价格发布给全体员工？\n（共 ' + n + ' 项价格设置，发布后所有员工打开页面自动生效）')) return;
+        btn.disabled = true;
+        btn.textContent = '发布中…';
+        KKAuth.call('priceTable', { action: 'save', scope: scope, token: (auth && auth.token) || '', prices: prices }).then(r => {
+          btn.disabled = false;
+          btn.textContent = btnText;
+          if (r && r.ok) {
+            showToast('已发布，全员生效', 'success');
+            if (st) st.textContent = '全员价格：' + (r.updatedBy || '') + ' 发布（刚刚）';
+          } else {
+            showToast((r && r.msg) || '发布失败', 'error');
+          }
+        }).catch(() => {
+          btn.disabled = false;
+          btn.textContent = btnText;
+          showToast('发布失败：网络错误', 'error');
+        });
+      });
+    }
+    if (!window.KKAuth || !KKAuth.call) { if (st) st.textContent = '价格同步：登录后可用'; return; }
+    KKAuth.call('priceTable', { action: 'get', scope: scope, token: (auth && auth.token) || '' }).then(r => {
+      if (r && r.ok && r.data && r.data.prices) {
+        if (applySurfacePrices(r.data.prices)) {
+          if (typeof render === 'function') render();
+        }
+        if (st) st.textContent = '全员价格：' + (r.data.updatedBy || '') + ' 发布（' + fmtSyncTime(r.data.updatedAt) + '）';
+      } else {
+        if (st) st.textContent = '价格同步：老板尚未发布，当前使用本地价格';
+      }
+    }).catch(() => {
+      if (st) st.textContent = '价格同步：拉取失败，当前使用本地价格';
+    });
+  }
   // ========== 400系基价 ==========
   function get400Key(origin, material) { return origin + '-' + material; }
 
@@ -1168,27 +1240,55 @@ const App = (() => {
       const data = JSON.parse(raw);
       priceOverrides.filmFees = data.filmFees || {};
       priceOverrides.surfaceFees = data.surfaceFees || {};
+      priceOverrides.surfaceTiers = data.surfaceTiers || {};
       priceOverrides.filmLocked = data.filmLocked || {};
       priceOverrides.surfaceLocked = data.surfaceLocked || {};
     } catch (e) { /* ignore */ }
   }
 
+  function getFilmOrder() {
+    try { const o = JSON.parse(localStorage.getItem('kk_film_order') || '[]'); return Array.isArray(o) ? o : []; } catch (e) { return []; }
+  }
+  function saveFilmOrder(o) { try { localStorage.setItem('kk_film_order', JSON.stringify(o)); } catch (e) { /* ignore */ } }
   function renderFilmConfig() {
     const wrap = dom('filmConfigTable');
     if (!wrap) return;
+    const order = getFilmOrder();
+    const inOrder = order.filter(x => FILM_FEES.hasOwnProperty(x));
+    const rest = Object.keys(FILM_FEES).filter(x => !inOrder.includes(x));
+    const names = inOrder.concat(rest);
     let html = '<table><thead><tr><th>保护膜名称</th><th>单价(元/平米)</th><th>默认</th><th></th></tr></thead><tbody>';
-    for (const [name, defaultPrice] of Object.entries(FILM_FEES)) {
+    names.forEach((name, i) => {
+      const defaultPrice = FILM_FEES[name];
       const val = priceOverrides.filmFees[name] ?? defaultPrice;
       const locked = !!priceOverrides.filmLocked[name];
       html += `<tr>
-        <td><span class="cfg-name">${name}</span></td>
+        <td><span class="cfg-name">${name}</span>
+          <button class="film-order-btn" data-name="${name}" data-action="up" title="上移">↑</button>
+          <button class="film-order-btn" data-name="${name}" data-action="down" title="下移">↓</button></td>
         <td><input type="number" class="cfg-price-input film-price-inp" data-name="${name}" value="${val}" step="0.1" ${locked ? 'readonly' : ''}></td>
         <td><span class="cfg-default">${defaultPrice}</span></td>
         <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="film">${locked ? '🔒' : '🔓'}</button></td>
       </tr>`;
-    }
+    });
     html += '</tbody></table>';
     wrap.innerHTML = html;
+    // 排序按钮事件
+    wrap.querySelectorAll('.film-order-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nm = btn.dataset.name;
+        const act = btn.dataset.action;
+        const order2 = getFilmOrder();
+        const all = Object.keys(FILM_FEES);
+        const ordered = order2.filter(x => all.includes(x)).concat(all.filter(x => !order2.includes(x)));
+        const idx = ordered.indexOf(nm);
+        const tgt = act === 'up' ? idx - 1 : idx + 1;
+        if (tgt < 0 || tgt >= ordered.length) return;
+        const t = ordered[tgt]; ordered[tgt] = ordered[idx]; ordered[idx] = t;
+        saveFilmOrder(ordered);
+        renderFilmConfig();
+      });
+    });
 
     // 绑定输入事件
     wrap.querySelectorAll('.film-price-inp').forEach(inp => {
@@ -1214,9 +1314,10 @@ const App = (() => {
     if (!display || display.indexOf('单张') !== 0) return null;
     const cfg = SURFACE_FEES[display];
     if (!Array.isArray(cfg)) return null;
-    const narrow = cfg.filter(t => (t.wMin || 0) >= 1219 && (t.wMax || 9999) <= 1250);
-    const w1000 = cfg.filter(t => (t.wMin || 0) === 1000 && (t.wMax || 0) === 1000);
-    const wide = cfg.filter(t => (t.wMin || 0) >= 1500);
+    const withIdx = cfg.map((t, i) => Object.assign({}, t, { _i: i }));
+    const narrow = withIdx.filter(t => (t.wMin || 0) >= 1219 && (t.wMax || 9999) <= 1250);
+    const w1000 = withIdx.filter(t => (t.wMin || 0) === 1000 && (t.wMax || 0) === 1000);
+    const wide = withIdx.filter(t => (t.wMin || 0) >= 1500);
     const groups = [];
     if (w1000.length) groups.push({ label: display + '（1000）', tiers: w1000 });
     if (narrow.length) groups.push({ label: display + '（1219/1240/1250）', tiers: narrow });
@@ -1225,6 +1326,21 @@ const App = (() => {
   }
 
   // 2026-08-26 用户规则：表面加工板块按类别分组，外观对齐单张加工板块（sg-group 卡片）
+  function tierLabel(t) {
+    const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
+    const w = stdW ? '' : '【' + (t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax) + '】';
+    return t.tMin + '-' + t.tMax + 'mm' + w;
+  }
+  function tierCellsHtml(tiers, names, locked) {
+    const main = names.split(',')[0];
+    return tiers.map((t, j) => {
+      const idx = t._i !== undefined ? t._i : j;
+      const ov = priceOverrides.surfaceTiers[main];
+      const v = (ov && ov[idx] !== undefined) ? ov[idx] : t.price;
+      return '<div class="tier-cell"><span class="tier-label">' + tierLabel(t) + '</span>' +
+        '<input type="number" class="cfg-price-input surf-tier-inp" data-names="' + names + '" data-tier="' + idx + '" value="' + v + '" step="0.5" ' + (locked ? 'readonly' : '') + '></div>';
+    }).join('');
+  }
   function renderSurfaceConfig() {
     const wrap = dom('surfaceConfigTable');
     if (!wrap) return;
@@ -1352,43 +1468,45 @@ const App = (() => {
         const display = item.display;
         const rowCls = ' class="' + gd.cls + '-row"';
         if (typeof cfg === 'object' && cfg.price !== undefined && !Array.isArray(cfg)) {
-          const defaultPrice = cfg.price;
-          const val = priceOverrides.surfaceFees[cfgKey] ?? defaultPrice;
           const locked = !!priceOverrides.surfaceLocked[cfgKey];
           rows.push('<tr' + rowCls + '>' +
             '<td><span class="cfg-name">' + display + '</span></td>' +
-            '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + names + '" value="' + val + '" step="0.5" ' + (locked ? 'readonly' : '') + '></td>' +
-            '<td><span class="cfg-default">' + defaultPrice + '</span></td>' +
+            '<td class="tier-cells">' + tierCellsHtml([{ tMin: cfg.tMin, tMax: cfg.tMax, wMin: cfg.wMin, wMax: cfg.wMax, price: cfg.price, _i: 0 }], names, locked) + '</td>' +
             '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + names + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
             '</tr>');
         } else if (Array.isArray(cfg)) {
-          const subGroups = single8kGroups(display) || [{ label: display, tiers: cfg }];
+          const subGroups = single8kGroups(display) || [{ label: display, tiers: cfg.map((t, i) => Object.assign({}, t, { _i: i })) }];
           subGroups.forEach(g => {
             const tiers = g.tiers;
             if (!tiers || tiers.length === 0) return;
-            const tierDesc = tiers.map(t => {
-              const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
-              const w = stdW ? '' : '【' + (t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax) + '】';
-              return t.tMin + '-' + t.tMax + 'mm' + w + ': ' + t.price + (t.unit === 'ton' ? '元/吨' : '元');
-            }).join(' / ');
-            const val = priceOverrides.surfaceFees[cfgKey] ?? tiers[0].price;
             const locked = !!priceOverrides.surfaceLocked[cfgKey];
             rows.push('<tr' + rowCls + '>' +
               '<td><span class="cfg-name">' + g.label + '</span></td>' +
-              '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + names + '" value="' + val + '" step="0.5" ' + (locked ? 'readonly' : '') + '></td>' +
-              '<td><span class="cfg-default">' + tierDesc + '</span></td>' +
+              '<td class="tier-cells">' + tierCellsHtml(tiers, names, locked) + '</td>' +
               '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + names + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
               '</tr>');
           });
         }
       });
-      const unitHead = gd.emboss ? '覆盖价（元/吨）' : '覆盖价（元/平方米）';
-      html += '<div class="sg-group ' + gd.cls + '"><div class="sg-group-title">' + gd.label + '</div><table><thead><tr><th>表面加工</th><th>' + unitHead + '</th><th>阶段默认价</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
+      const unitHead = gd.emboss ? '覆盖价（元/吨）' : '各档位价格（元/平方米，可横拉）';
+      html += '<div class="sg-group ' + gd.cls + '"><div class="sg-group-title">' + gd.label + '</div><table><thead><tr><th>表面加工</th><th>' + unitHead + '</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
     wrap.innerHTML = html;
     bindSurfRowEvents(wrap, renderSurfaceConfig);
   }
   function bindSurfRowEvents(wrap, rerender) {
+    wrap.querySelectorAll('.surf-tier-inp').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const names = inp.dataset.names.split(',');
+        const idx = parseInt(inp.dataset.tier, 10);
+        const v = parseFloat(inp.value) || 0;
+        names.forEach(nm => {
+          priceOverrides.surfaceTiers[nm] = priceOverrides.surfaceTiers[nm] || {};
+          priceOverrides.surfaceTiers[nm][idx] = v;
+        });
+        savePriceOverrides();
+      });
+    });
     wrap.querySelectorAll('.surf-price-inp').forEach(inp => {
       inp.addEventListener('input', () => {
         const names = inp.dataset.names.split(',');
@@ -1461,14 +1579,8 @@ const App = (() => {
           rowDefs = [{ name: q, tierFilter: g.filter, owner: q, names: [q] }];
         }
         rowDefs.forEach(rd => {
-          const tiers = cfg.filter(rd.tierFilter);
+          const tiers = cfg.map((t, i) => Object.assign({}, t, { _i: i })).filter(rd.tierFilter);
           if (!tiers.length) return;
-          const tierDesc = tiers.map(t => {
-            const stdW = (t.wMin === 1219 && t.wMax === 1250) || (t.wMin === 1000 && t.wMax === 1000) || (t.wMin === 1500 && t.wMax === 1530);
-            const w = stdW ? '' : '【' + (t.wMin === t.wMax ? t.wMin : t.wMin + '-' + t.wMax) + '】';
-            return t.tMin + '-' + t.tMax + 'mm' + w + ': ' + t.price + '元';
-          }).join(' / ');
-          const val = priceOverrides.surfaceFees[rd.names[0]] ?? tiers[0].price;
           const locked = !!priceOverrides.surfaceLocked[rd.names[0]];
           const colorKeys = colorGroups[q];
           let colorRows = '';
@@ -1486,29 +1598,25 @@ const App = (() => {
             });
             Object.keys(colorMap).forEach(cn2 => {
               const keys = colorMap[cn2];
-              const ct = SURFACE_FEES[keys[0]].filter(rd.tierFilter);
+              const ct = SURFACE_FEES[keys[0]].map((t, i) => Object.assign({}, t, { _i: i })).filter(rd.tierFilter);
               if (!ct.length) return;
               hasColor = true;
-              const cDesc = ct.map(t => t.tMin + '-' + t.tMax + 'mm: ' + t.price + '元').join(' / ');
-              const cVal = priceOverrides.surfaceFees[keys[0]] ?? ct[0].price;
               const cLocked = !!priceOverrides.surfaceLocked[keys[0]];
               colorRows += '<tr class="sg-color-row" data-owner="' + rd.owner + '" data-group="' + g.cls + '" style="display:none">' +
                 '<td><span class="cfg-name sg-color-name">' + cn2 + '</span></td>' +
-                '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + keys.join(',') + '" value="' + cVal + '" step="0.5" ' + (cLocked ? 'readonly' : '') + '></td>' +
-                '<td><span class="cfg-default">' + cDesc + '</span></td>' +
+                '<td class="tier-cells">' + tierCellsHtml(ct, keys.join(','), cLocked) + '</td>' +
                 '<td><button class="cfg-lock-btn ' + (cLocked ? 'locked' : '') + '" data-names="' + keys.join(',') + '" data-type="surf">' + (cLocked ? '🔒' : '🔓') + '</button></td>' +
                 '</tr>';
             });
           }
           rows.push('<tr class="' + g.cls + '-row' + (hasColor ? ' has-color' : '') + '">' +
             '<td>' + (hasColor ? '<span class="cfg-expand" data-group="' + g.cls + '" data-owner="' + rd.owner + '">▶</span> ' : '') + '<span class="cfg-name">' + rd.name + '</span></td>' +
-            '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + rd.names.join(',') + '" value="' + val + '" step="0.5" ' + (locked ? 'readonly' : '') + '></td>' +
-            '<td><span class="cfg-default">' + tierDesc + '</span></td>' +
+            '<td class="tier-cells">' + tierCellsHtml(tiers, rd.names.join(','), locked) + '</td>' +
             '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + rd.names.join(',') + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
             '</tr>' + colorRows);
         });
       });
-      html += '<div class="sg-group ' + g.cls + '"><div class="sg-group-title">' + g.label + '</div><table><thead><tr><th>单张加工</th><th>覆盖价（元/平方米）</th><th>阶段默认价</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
+      html += '<div class="sg-group ' + g.cls + '"><div class="sg-group-title">' + g.label + '</div><table><thead><tr><th>单张加工</th><th>各档位价格（元/平方米，可横拉）</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
     wrap.innerHTML = html;
     bindSurfRowEvents(wrap, renderSheetSurfaceConfig);

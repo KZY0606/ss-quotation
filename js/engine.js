@@ -200,10 +200,13 @@ const PricingEngine = (() => {
     if ((is304 || is400) && SURFACE_FEES_304[surface]) {
       const fee304 = SURFACE_FEES_304[surface];
       if (Array.isArray(fee304)) {
-        for (const tier of fee304) {
+        for (let i = 0; i < fee304.length; i++) {
+          const tier = fee304[i];
           if (t >= tier.tMin && t <= tier.tMax && w >= tier.wMin && w <= tier.wMax) {
-            if (tier.unit === 'ton') return tier.price;
-            return { sqmPrice: tier.price, needConvert: true };
+            const ov = userOverrides && userOverrides.surfaceTiers && userOverrides.surfaceTiers[surface];
+            const price = (ov && ov[i] !== undefined) ? ov[i] : tier.price;
+            if (tier.unit === 'ton') return price;
+            return { sqmPrice: price, needConvert: true };
           }
         }
       }
@@ -220,13 +223,16 @@ const PricingEngine = (() => {
     if (!fee) return null;
     if (fee.type === 'none') return 0;
     if (Array.isArray(fee)) {
-      for (const tier of fee) {
+      for (let i = 0; i < fee.length; i++) {
+        const tier = fee[i];
+        const ov = userOverrides && userOverrides.surfaceTiers && userOverrides.surfaceTiers[surface];
+        const price = (ov && ov[i] !== undefined) ? ov[i] : tier.price;
         if (surface === '单面抛光' || surface === '双面抛光') {
-          if (t >= tier.tMin && t <= tier.tMax) return tier.price;
+          if (t >= tier.tMin && t <= tier.tMax) return price;
         } else {
           if (t >= tier.tMin && t <= tier.tMax && w >= tier.wMin && w <= tier.wMax) {
-            if (tier.unit === 'ton') return tier.price;
-            return { sqmPrice: tier.price, needConvert: true };
+            if (tier.unit === 'ton') return price;
+            return { sqmPrice: price, needConvert: true };
           }
         }
       }
@@ -234,7 +240,9 @@ const PricingEngine = (() => {
     }
     if (fee.type === 'sqm') {
       if (t >= fee.tMin && t <= fee.tMax && w >= fee.wMin && w <= fee.wMax) {
-        return { sqmPrice: fee.price, needConvert: true };
+        const ov = userOverrides && userOverrides.surfaceTiers && userOverrides.surfaceTiers[surface];
+        const price = (ov && ov[0] !== undefined) ? ov[0] : fee.price;
+        return { sqmPrice: price, needConvert: true };
       }
     }
     return null;
