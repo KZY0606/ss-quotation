@@ -750,6 +750,7 @@ const PricingEngine = (() => {
         success: true,
         calcMode: 'sheet',
         detail: {
+    stdThickness: item.stdThickness || '', inspectFlag: !!item.inspectFlag,
           origin: item.origin || '', material, surface: item.surface || '', normSurface: baseSurface, thickness: thicknessRaw || String(thickness), width, length, film1, film2, basePrice,
           isYanYan, density, sqmPerTon: round2(sqmPerTon),
           thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
@@ -825,6 +826,8 @@ const PricingEngine = (() => {
       success: true,
       detail: {
         origin: item.origin || '',
+    // v1.0.139 导出报价单 18 列需要：标厚/检测要求/件数 透传
+    stdThickness: item.stdThickness || '', inspectFlag: !!item.inspectFlag, quantity: (item.quantity != null && item.quantity !== '') ? item.quantity : '',
         material, surface: item.surface || '', normSurface: baseSurface, thickness: thicknessRaw || String(thickness), width, length, weight, film1, film2, basePrice,
         isYanYan, hasLinen: !!hasLinen,
         density, sqmPerTon: round2(sqmPerTon),

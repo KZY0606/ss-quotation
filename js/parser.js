@@ -302,19 +302,19 @@ const ExcelParser = (() => {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('报价单');
     const titleRow = ws.addRow(['不锈钢报价单（' + termLabel + '）']);
-    ws.mergeCells(titleRow.number, 1, titleRow.number, 11);
+    ws.mergeCells(titleRow.number, 1, titleRow.number, 18);
     titleRow.getCell(1).font = { bold: true, size: 14 };
     titleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.addRow(['产地', '材质', '表面', '保护膜', '规格', 'Edge', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
+    ws.addRow(['序号', '产地', '材质', '表面', '保护膜', '标厚', '厚度', '宽度', '长度', 'Edge', '包装方式', '检测要求', '件数', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
     ws.columns = [
-      { width: 10 }, { width: 10 }, { width: 16 }, { width: 24 }, { width: 22 },
-      { width: 12 }, { width: 12 }, { width: 14 }, { width: 16 }, { width: 14 }, { width: 16 }
+      { width: 6 }, { width: 10 }, { width: 10 }, { width: 20 }, { width: 26 }, { width: 8 }, { width: 10 }, { width: 8 }, { width: 8 }, { width: 10 },
+      { width: 12 }, { width: 10 }, { width: 8 }, { width: 10 }, { width: 14 }, { width: 16 }, { width: 14 }, { width: 16 }
     ];
     let totalCny = 0, totalUsd = 0, totalW = 0, hasWeight = false, hasSheetRows = false;
 
     for (const r of results) {
       if (!r.success) {
-        ws.addRow([r.index, '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '']);
+        ws.addRow([r.index, '', '', '', '', '', '', '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '', '']);
         continue;
       }
       const d = r.detail;
@@ -333,12 +333,19 @@ const ExcelParser = (() => {
         const exPrice = d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice;
         totalCny += exPrice; totalUsd += (usdV || 0); totalW += 1; hasWeight = true;
         ws.addRow([
+          r.index,
           d.origin || '',
           (d.material || '') + (d.isYanYan ? '压延' : ''),
           d.surface || '',
           film,
-          spec,
+          d.stdThickness || '',
+          fmtExportThk(d.thickness),
+          d.width,
+          d.length,
           edge,
+          d.packingName || d.packing || '',
+          d.inspectFlag ? '全检' : '',
+          (d.quantity != null && d.quantity !== '') ? d.quantity : '',
           '',
           Math.round(exPrice),
           usdV == null ? '' : Math.round(usdV * 100) / 100,
@@ -357,12 +364,19 @@ const ExcelParser = (() => {
       const amtUsd = (w != null && usdV != null) ? usdV * w : null;
       if (amtCny != null) { totalCny += cny * w; totalUsd += usdV * w; totalW += w; hasWeight = true; }
       ws.addRow([
+        r.index,
         d.origin || '',
         (d.material || '') + (d.isYanYan ? '压延' : ''),
         d.surface || '',
         film,
-        spec,
+        d.stdThickness || '',
+        fmtExportThk(d.thickness),
+        d.width,
+        d.length,
         edge,
+        d.packing || '',
+        d.inspectFlag ? '全检' : '',
+        (d.quantity != null && d.quantity !== '') ? d.quantity : '',
         w != null ? w : '',
         // 单价/总价：存数字值，数字格式显示 ¥/$ 符号（FOB/CIF 同样给人民币）
         Math.round(cny),
@@ -373,7 +387,7 @@ const ExcelParser = (() => {
     }
     // 合计总价：术语 EXW/FOB/CIF 只保留在这一行（总价前一格）
     if (hasWeight) {
-      ws.addRow(['', '', '', '', '合计', '', hasSheetRows ? '' : Math.round(totalW * 1000) / 1000, '', hasSheetRows ? '单张' : ti.term, Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
+      ws.addRow(['', '', '', '', '合计', '', '', '', '', '', '', '', '', hasSheetRows ? '' : Math.round(totalW * 1000) / 1000, hasSheetRows ? '单张' : ti.term, '', Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
     }
 
     // 样式：外边框+内框（加粗 medium）、数据居中、表头加粗
@@ -388,8 +402,8 @@ const ExcelParser = (() => {
     // 数字格式：人民币 ¥ 整数、美元 $ 两位小数（数据行+合计行）
     for (let R = 2; R <= ws.rowCount; R++) {
       const row = ws.getRow(R);
-      [8, 10].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
-      [9, 11].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
+      [15, 17].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
+      [16, 18].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
     }
 
     // 隐藏工作表：保存完整明细，必要时可手动取消隐藏

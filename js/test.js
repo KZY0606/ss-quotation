@@ -863,5 +863,29 @@ test('v1.0.138 喷砂: 非高普8K 打底（单张精磨8K+喷砂）仍报错', 
   eq(r.errors.some(e => /单张高普8K打底/.test(e)), true, JSON.stringify(r.errors));
 });
 
+// === v1.0.139 导出字段透传 ===
+test('v1.0.139 过磅模式 detail 透传 标厚/检测要求/件数', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金+喷砂', thickness: '0.80', width: '1219', length: '3000', origin: '上克', basePrice: 15000, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱', stdThickness: '1.2', inspectFlag: true, quantity: '25' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.stdThickness, '1.2');
+  eq(r.detail.inspectFlag, true);
+  eq(r.detail.quantity, '25');
+});
+
+test('v1.0.139 单张模式 detail 透传 标厚/检测要求', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架', stdThickness: '1.2', inspectFlag: true });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.stdThickness, '1.2');
+  eq(r.detail.inspectFlag, true);
+  eq(r.detail.quantity, 1, '单张默认数量1');
+});
+
+test('v1.0.139 无标厚/检测要求时为空/否', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '2B', thickness: '0.80', width: '1219', length: '3000', origin: '宏旺', basePrice: 15000, calcMode: 'weight', boardType: 'sheet', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.stdThickness, '');
+  eq(r.detail.inspectFlag, false);
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
