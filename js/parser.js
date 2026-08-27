@@ -302,19 +302,19 @@ const ExcelParser = (() => {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('报价单');
     const titleRow = ws.addRow(['不锈钢报价单（' + termLabel + '）']);
-    ws.mergeCells(titleRow.number, 1, titleRow.number, 18);
+    ws.mergeCells(titleRow.number, 1, titleRow.number, 20);
     titleRow.getCell(1).font = { bold: true, size: 14 };
     titleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.addRow(['序号', '产地', '材质', '表面', '保护膜', '标厚', '厚度', '宽度', '长度', 'Edge', '包装方式', '检测要求', '件数', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
+    ws.addRow(['NO.序号', 'PRODUCER制造商', 'GRADE钢种', 'SURFACE表面', 'FILM/PAPER保护膜/垫纸', 'THK厚度/MM', 'THK TOL厚度公差/MM', 'WIDTH宽度/MM', 'LENGH长度/MM', 'Edge边', 'PCS件数', 'MT重量(吨)', 'UNIT FOB单价(RMB)', 'UNIT FOB单价(USD)', 'TOTAL合计(RMB)', 'TOTAL合计(USD)', 'PACKING包装方式', 'PRINT喷码要求', 'INSPECTION检测要求', 'WEIGHT/PACK单包重']);
     ws.columns = [
-      { width: 6 }, { width: 10 }, { width: 10 }, { width: 20 }, { width: 26 }, { width: 8 }, { width: 10 }, { width: 8 }, { width: 8 }, { width: 10 },
-      { width: 12 }, { width: 10 }, { width: 8 }, { width: 10 }, { width: 14 }, { width: 16 }, { width: 14 }, { width: 16 }
+      { width: 6 }, { width: 13 }, { width: 10 }, { width: 24 }, { width: 34 }, { width: 11 }, { width: 15 }, { width: 15 }, { width: 11 }, { width: 10 },
+      { width: 8 }, { width: 10 }, { width: 11 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 11 }, { width: 11 }, { width: 13 }
     ];
     let totalCny = 0, totalUsd = 0, totalW = 0, hasWeight = false, hasSheetRows = false;
 
     for (const r of results) {
       if (!r.success) {
-        ws.addRow([r.index, '', '', '', '', '', '', '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '', '']);
+        ws.addRow([r.index, '', '', '', '', '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '', '', '', '', '', '']);
         continue;
       }
       const d = r.detail;
@@ -343,14 +343,16 @@ const ExcelParser = (() => {
           d.width,
           d.length,
           edge,
-          d.packingName || d.packing || '',
-          d.inspectFlag ? '全检' : '',
           (d.quantity != null && d.quantity !== '') ? d.quantity : '',
           '',
           Math.round(exPrice),
           usdV == null ? '' : Math.round(usdV * 100) / 100,
           Math.round(exPrice),
-          usdV == null ? '' : Math.round(usdV * 100) / 100
+          usdV == null ? '' : Math.round(usdV * 100) / 100,
+          d.packingName || d.packing || '',
+          '',
+          d.inspectFlag ? '全检' : '',
+          ''
         ]);
         continue;
       }
@@ -374,21 +376,19 @@ const ExcelParser = (() => {
         d.width,
         d.length,
         edge,
-        d.packing || '',
-        d.inspectFlag ? '全检' : '',
         (d.quantity != null && d.quantity !== '') ? d.quantity : '',
         w != null ? w : '',
-        // 单价/总价：存数字值，数字格式显示 ¥/$ 符号（FOB/CIF 同样给人民币）
         Math.round(cny),
         usdV == null ? '' : Math.round(usdV * 100) / 100,
         amtCny != null ? Math.round(amtCny) : '',
-        amtUsd != null ? Math.round(amtUsd * 100) / 100 : ''
+        amtUsd != null ? Math.round(amtUsd * 100) / 100 : '',
+        d.packing || '',
+        '',
+        d.inspectFlag ? '全检' : '',
+        ''
       ]);
     }
-    // 合计总价：术语 EXW/FOB/CIF 只保留在这一行（总价前一格）
-    if (hasWeight) {
-      ws.addRow(['', '', '', '', '合计', '', '', '', '', '', '', '', '', hasSheetRows ? '' : Math.round(totalW * 1000) / 1000, hasSheetRows ? '单张' : ti.term, '', Math.round(totalCny), Math.round(totalUsd * 100) / 100]);
-    }
+    // v1.0.141: 按用户最新模板去掉合计行（数据区后留空）
 
     // 样式：外边框+内框（加粗 medium）、数据居中、表头加粗
     const borderAll = { top: { style: 'medium' }, left: { style: 'medium' }, bottom: { style: 'medium' }, right: { style: 'medium' } };
@@ -402,8 +402,8 @@ const ExcelParser = (() => {
     // 数字格式：人民币 ¥ 整数、美元 $ 两位小数（数据行+合计行）
     for (let R = 2; R <= ws.rowCount; R++) {
       const row = ws.getRow(R);
-      [15, 17].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
-      [16, 18].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
+      [13, 15].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
+      [14, 16].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
     }
 
     // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
@@ -430,6 +430,140 @@ const ExcelParser = (() => {
     document.body.appendChild(a); a.click();
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
   }
+
+
+  // v1.0.141: 导出合同（基于用户合同模板 xlsx：单 sheet Sheet1，填入报价结果 + 合同信息）
+  async function exportContract(results, filename, opts) {
+    const ti = opts || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null, contractNo: '', orderTrack: '', buyer: '', containers: 1, deposit: '' };
+    if (typeof KK_CONTRACT_TEMPLATE_B64 === 'undefined' || !KK_CONTRACT_TEMPLATE_B64) throw new Error('合同模板未加载');
+    let bytes;
+    if (typeof Buffer !== 'undefined' && typeof Buffer.from === 'function') {
+      bytes = Buffer.from(KK_CONTRACT_TEMPLATE_B64, 'base64');
+    } else {
+      const bin = atob(KK_CONTRACT_TEMPLATE_B64);
+      bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    }
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(bytes);
+    const ws = wb.getWorksheet('Sheet1') || wb.getWorksheet(1);
+    if (!ws) throw new Error('合同模板无 Sheet1');
+
+    // 1. 合同号 / 订单跟踪号
+    ws.getCell('P1').value = 'Contract number: ' + (ti.contractNo || '');
+    ws.getCell('P2').value = 'Order track number: ' + (ti.orderTrack || 'Remarks, if any');
+    // 2. 买方（richText）
+    ws.getCell('A4').value = { richText: [{ text: '买方（Buyer）：' + (ti.buyer || '') }] };
+    // 3. 日期（当天）
+    const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const now = new Date();
+    const dateStr = now.getDate() + ' ' + MON[now.getMonth()] + ' ' + now.getFullYear();
+    ws.getCell('R4').value = { richText: [{ text: 'Date:' + dateStr }] };
+
+    // 4. 数据行（20 列，与导出报价单同口径）
+    const okRows = results.filter(r => r.success).length;
+    let extra = 0;
+    if (okRows > 9) {
+      extra = okRows - 9;
+      ws.spliceRows(18, 0, ...new Array(extra).fill(null));
+      const src = ws.getRow(9);
+      for (let rn = 18; rn <= 17 + extra; rn++) {
+        const dst = ws.getRow(rn);
+        dst.height = src.height;
+        for (let c = 1; c <= 20; c++) {
+          const sc = src.getCell(c), dc = dst.getCell(c);
+          dc.style = JSON.parse(JSON.stringify(sc.style));
+          dc.numFmt = sc.numFmt;
+        }
+      }
+    }
+    for (let rn = 9; rn <= 17 + extra; rn++) {
+      const row = ws.getRow(rn);
+      for (let c = 1; c <= 20; c++) row.getCell(c).value = null;
+    }
+    let rn = 9;
+    for (const r of results) {
+      const row = ws.getRow(rn);
+      if (!r.success) {
+        row.getCell(1).value = r.index;
+        row.getCell(13).value = '错误: ' + r.errors.join('; ');
+        rn++;
+        continue;
+      }
+      const d = r.detail;
+      const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
+      const w = (d.weight != null && d.weight > 0) ? d.weight : null;
+      const edge = d.edgeType === 'rough' ? 'Mill Edge' : 'Slit Edge';
+      row.getCell(1).value = r.index;
+      row.getCell(2).value = d.origin || '';
+      row.getCell(3).value = (d.material || '') + (d.isYanYan ? '压延' : '');
+      row.getCell(4).value = d.surface || '';
+      row.getCell(5).value = film;
+      row.getCell(6).value = d.stdThickness || '';
+      row.getCell(7).value = fmtExportThk(d.thickness);
+      row.getCell(8).value = d.width;
+      row.getCell(9).value = d.length;
+      row.getCell(10).value = edge;
+      row.getCell(11).value = (d.quantity != null && d.quantity !== '') ? d.quantity : '';
+      row.getCell(17).value = d.calcMode === 'sheet' ? (d.packingName || d.packing || '') : (d.packing || '');
+      row.getCell(19).value = d.inspectFlag ? '全检' : '';
+      if (d.calcMode === 'sheet') {
+        const usdV = PricingEngine.cnToUsd(d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice, ti.rate);
+        const exPrice = d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice;
+        row.getCell(13).value = Math.round(exPrice);
+        row.getCell(14).value = usdV == null ? null : Math.round(usdV * 100) / 100;
+        row.getCell(15).value = Math.round(exPrice);
+        row.getCell(16).value = usdV == null ? null : Math.round(usdV * 100) / 100;
+      } else {
+        const s = ti.term === 'FOB' ? (ti.fobUsd || 0) : (ti.term === 'CIF' ? (ti.cifUsd || 0) : 0);
+        const tp = PricingEngine.addUsdSurcharge(d.saleNoTax, s, ti.rate);
+        const base = tp ? tp.cny : d.saleNoTax;
+        const ex = PricingEngine.addExtras(base, ti.extras || null);
+        const cny = ex ? ex.cny : base;
+        const usdV = PricingEngine.cnToUsd(cny, ti.rate);
+        const amtCny = (w != null && usdV != null) ? cny * w : null;
+        const amtUsd = (w != null && usdV != null) ? usdV * w : null;
+        row.getCell(12).value = w != null ? w : null;
+        row.getCell(13).value = Math.round(cny);
+        row.getCell(14).value = usdV == null ? null : Math.round(usdV * 100) / 100;
+        row.getCell(15).value = amtCny != null ? Math.round(amtCny) : null;
+        row.getCell(16).value = amtUsd != null ? Math.round(amtUsd * 100) / 100 : null;
+      }
+      rn++;
+    }
+    // 5. 单包重合计公式范围（数据区行数变化时同步）
+    const lastData = 9 + okRows - 1;
+    const weightRow = 18 + extra;
+    if (okRows > 0) {
+      // 清除单包重行 sharedFormula 克隆（spliceRows 后 master 引用失效会导致写入报错）
+      const wRow = ws.getRow(weightRow);
+      wRow.eachCell({ includeEmpty: true }, (cell) => {
+        if (cell.value && typeof cell.value === 'object' && cell.value.sharedFormula) cell.value = null;
+      });
+      ws.getCell('N' + weightRow).value = { formula: 'SUM(N9:N' + Math.max(lastData, 17) + ')' };
+    }
+    // 6. 集装箱数 + 定金（spliceRows 后行号随 extra 下移）
+    const ctn = ti.containers || 1;
+    const ctnRow = 19 + extra;
+    ws.getCell('A' + ctnRow).value = 'Total ' + ctn + ' CONTAINERS / 共' + ctn + '柜';
+    ws.getCell('N' + ctnRow).value = { richText: [{ text: 'Advanced payment 定金：' + (ti.deposit || '') }] };
+
+    // 7. 数字格式（数据区单价/合计）
+    for (let R = 9; R <= lastData; R++) {
+      const row = ws.getRow(R);
+      [13, 15].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
+      [14, 16].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
+    }
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename || 'KK合同.xlsx';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+  }
+
 
   function _buildDetailRows(results, termInfo) {
     const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null };
@@ -505,5 +639,5 @@ const ExcelParser = (() => {
     return rows;
   }
 
-  return { parseExcel, exportToExcel, parseContainerFormat, parseRow };
+  return { parseExcel, exportToExcel, exportContract, parseContainerFormat, parseRow };
 })();

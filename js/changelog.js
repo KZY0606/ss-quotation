@@ -3,6 +3,16 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.141', date: '2026-08-27', title: '导出模板更新为【KK报价】导出模板最终版（20列双语）+ 新增一键导出合同',
+    items: [
+      '导出 Excel：报价单改 20 列双语表头（NO.序号/PRODUCER制造商/GRADE钢种/SURFACE表面/FILM-PAPER保护膜垫纸/THK厚度/THK TOL厚度公差/WIDTH/LENGH/Edge/PCS件数/MT重量/UNIT FOB单价RMB/USD/TOTAL合计RMB/USD/PACKING包装方式/PRINT喷码要求/INSPECTION检测要求/WEIGHT-PACK单包重）'
+      ,'标题按工具栏术语动态显示（EXW/FOB/CIF 价格），去掉合计行'
+      ,'喷码要求、单包重两列导出留空，由人工填写'
+      ,'新增「导出合同」按钮（导出 Excel 旁）：按合同模板生成中英双语销售合同，弹窗填写合同号/订单跟踪号/买方/集装箱数/定金，日期自动当天'
+      ,'合同单 sheet，含 20 列货物明细（取自当前报价结果）+ 固定条款/银行信息，数据超过 9 行自动扩展'
+    ]
+  },
+  {
     v: '1.0.140', date: '2026-08-27', title: '全检费修复：过磅/卷板模式也要计入全检费（检测要求列=全检，1.5元/方 × 每吨面积）',
     items: [
       '修复：过磅计价（weight）模式下 检测要求=全检 时全检费未计入的问题'

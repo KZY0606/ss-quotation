@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.140">
+  <link rel="stylesheet" href="css/style.css?v=1.0.141">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -244,6 +244,7 @@
         <div class="toolbar">
           <button class="btn btn-ghost" id="expandAllBtn">📋 全部明细</button>
           <button class="btn btn-outline" id="exportBtn2">📥 导出 Excel</button>
+          <button class="btn btn-outline" id="contractBtn" title="按合同模板生成销售合同">📄 导出合同</button>
         </div>
       </div>
       <div class="stats-bar" id="statsBar">
@@ -280,12 +281,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.140"></script>
-  <script src="js/changelog.js?v=1.0.140"></script>
-<script src="js/config.js?v=1.0.140"></script>
-  <script src="js/engine.js?v=1.0.140"></script>
-  <script src="js/parser.js?v=1.0.140"></script>
-  <script src="js/app.js?v=1.0.140"></script>
+  <script src="js/auth.js?v=1.0.141"></script>
+  <script src="js/changelog.js?v=1.0.141"></script>
+<script src="js/config.js?v=1.0.141"></script>
+  <script src="js/engine.js?v=1.0.141"></script>
+  <script src="js/parser.js?v=1.0.141"></script>
+    <script src="js/contract-template.js?v=1.0.141"></script>
+  <script src="js/app.js?v=1.0.141"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -323,6 +325,35 @@
     <span id="footerVersion">v2.2</span>
     &nbsp;·&nbsp;
     <span>Built with ❤️</span>
+  </div>
+
+  <!-- 导出合同弹窗 -->
+  <div class="changelog-overlay" id="contractOverlay" style="display:none">
+    <div class="changelog-modal" style="max-width:460px;">
+      <div class="changelog-head">
+        <span class="changelog-title">📄 导出合同</span>
+        <button class="changelog-close" id="contractClose" title="关闭">✕</button>
+      </div>
+      <div class="changelog-body" style="text-align:left;">
+        <div style="margin-bottom:10px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">合同号 Contract number *</label>
+          <input type="text" id="contractNo" placeholder="如 KK-20260827-001" style="width:100%;padding:8px;border:1px solid #d0d5dd;border-radius:6px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:10px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">订单跟踪号 Order track</label>
+          <input type="text" id="contractTrack" placeholder="选填" style="width:100%;padding:8px;border:1px solid #d0d5dd;border-radius:6px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:10px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">买方 Buyer</label>
+          <input type="text" id="contractBuyer" placeholder="选填，如 ABC TRADING CO., LTD." style="width:100%;padding:8px;border:1px solid #d0d5dd;border-radius:6px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:10px;display:flex;gap:10px;">
+          <div style="flex:1;"><label style="display:block;margin-bottom:4px;font-weight:bold;">集装箱数</label>
+            <input type="number" id="contractContainers" value="1" min="1" style="width:100%;padding:8px;border:1px solid #d0d5dd;border-radius:6px;box-sizing:border-box;"></div>
+          <div style="flex:2;"><label style="display:block;margin-bottom:4px;font-weight:bold;">定金 Advanced payment</label>
+            <input type="text" id="contractDeposit" placeholder="如 30%，留空则不填" style="width:100%;padding:8px;border:1px solid #d0d5dd;border-radius:6px;box-sizing:border-box;"></div>
+        </div>
+        <div style="color:#667085;font-size:12px;">日期自动取当天（如 28 AUG 2026），货物明细取自当前报价结果</div>
+      </div>
+      <div class="changelog-foot">
+        <button class="changelog-ok" id="contractCancel" style="background:transparent;color:#667085;border:1px solid #d0d5dd;">取消</button>
+        <button class="changelog-ok" id="contractOk">生成合同</button>
+      </div>
+    </div>
   </div>
 
   <!-- 更新公告弹窗 -->

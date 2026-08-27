@@ -295,7 +295,7 @@ const App = (() => {
   }
 
   function cacheDom() {
-    els.calcBtn = dom('calculateBtn'); els.expBtn = dom('exportBtn'); els.expBtn2 = dom('exportBtn2');
+    els.calcBtn = dom('calculateBtn'); els.expBtn = dom('exportBtn'); els.expBtn2 = dom('exportBtn2'); els.contractBtn = dom('contractBtn');
     els.clearBtn = dom('clearBtn');
     els.fileInput = dom('fileInput'); els.tBody = dom('resultBody');
     els.emptyState = dom('emptyState'); els.resultCard = dom('resultCard');
@@ -327,6 +327,15 @@ const App = (() => {
     els.calcBtn.addEventListener('click', runCalc);
     els.expBtn.addEventListener('click', exportResults);
     els.expBtn2.addEventListener('click', exportResults);
+    els.contractBtn.addEventListener('click', openContractModal);
+    const cOv = dom('contractOverlay');
+    if (cOv) {
+      cOv.addEventListener('click', e => { if (e.target === cOv) closeContractModal(); });
+      const cOk = dom('contractOk'), cCancel = dom('contractCancel'), cClose = dom('contractClose');
+      if (cOk) cOk.addEventListener('click', exportContractResults);
+      if (cCancel) cCancel.addEventListener('click', closeContractModal);
+      if (cClose) cClose.addEventListener('click', closeContractModal);
+    }
     els.clearBtn.addEventListener('click', clearAll);
     // v1.0.122 压花工艺勾选 ↔ 表面输入联动（小珠光 linen / 小方格 square，各 +300元/吨）
     // v1.0.133 新增：6WL（85元/㎡）、喷砂（3元/㎡，需单张高普8K打底）
@@ -2247,21 +2256,64 @@ const App = (() => {
   function clearAll() { dataItems = []; results = []; allExpanded = false; render(); showToast('已清空', 'info'); }
   function removeRow(idx) { dataItems.splice(idx - 1, 1); results = []; render(); }
 
+  function getTermInfo() {
+    return {
+      term: termState.term,
+      fobUsd: termState.fobUsd || 0,
+      cifUsd: termState.cifUsd || 0,
+      rate: effectiveRate(),
+      extras: { opFee: extrasState.opFee, interest: extrasState.interest, profit: extrasState.profit }
+    };
+  }
+
   async function exportResults() {
     if (!results.length) { showToast('请先计算', 'error'); return; }
     const d = new Date(); const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
     try {
-      await ExcelParser.exportToExcel(results, `KK报价_${ds}.xlsx`, {
-        term: termState.term,
-        fobUsd: termState.fobUsd || 0,
-        cifUsd: termState.cifUsd || 0,
-        rate: effectiveRate(),
-        extras: { opFee: extrasState.opFee, interest: extrasState.interest, profit: extrasState.profit }
-      });
+      await ExcelParser.exportToExcel(results, `KK报价_${ds}.xlsx`, getTermInfo());
       showToast('导出成功', 'success');
     } catch (err) {
       console.error(err);
       showToast('导出失败: ' + (err && err.message ? err.message : '未知错误'), 'error');
+    }
+  }
+
+  function openContractModal() {
+    if (!results.length) { showToast('请先计算', 'error'); return; }
+    const ov = dom('contractOverlay');
+    if (!ov) { showToast('合同面板未找到', 'error'); return; }
+    // 默认值：集装箱 1、定金空、日期当天
+    dom('contractNo') && (dom('contractNo').value = '');
+    dom('contractBuyer') && (dom('contractBuyer').value = '');
+    dom('contractTrack') && (dom('contractTrack').value = '');
+    dom('contractContainers') && (dom('contractContainers').value = '1');
+    dom('contractDeposit') && (dom('contractDeposit').value = '');
+    ov.style.display = 'flex';
+  }
+
+  function closeContractModal() {
+    const ov = dom('contractOverlay');
+    if (ov) ov.style.display = 'none';
+  }
+
+  async function exportContractResults() {
+    if (!results.length) { showToast('请先计算', 'error'); return; }
+    const d = new Date(); const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    const opts = Object.assign(getTermInfo(), {
+      contractNo: (dom('contractNo') && dom('contractNo').value || '').trim(),
+      buyer: (dom('contractBuyer') && dom('contractBuyer').value || '').trim(),
+      orderTrack: (dom('contractTrack') && dom('contractTrack').value || '').trim(),
+      containers: parseInt((dom('contractContainers') && dom('contractContainers').value) || '1', 10) || 1,
+      deposit: (dom('contractDeposit') && dom('contractDeposit').value || '').trim()
+    });
+    if (!opts.contractNo) { showToast('请填写合同号', 'error'); return; }
+    closeContractModal();
+    try {
+      await ExcelParser.exportContract(results, `KK合同_${ds}.xlsx`, opts);
+      showToast('合同导出成功', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('合同导出失败: ' + (err && err.message ? err.message : '未知错误'), 'error');
     }
   }
 
