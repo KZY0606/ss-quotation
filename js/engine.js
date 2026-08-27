@@ -679,16 +679,16 @@ const PricingEngine = (() => {
     // ---- 单张计算逻辑（2026-08-24 用户规则）：按张卖，输出 元/张 ----
     // 公式：(基价+厚度加价+边部费用)/1000 × 体积m³ × 密度g/cm³ × 1000 + 面积×单张加工费 + 面积×膜价
     let sheetResult = null;
-    // v1.0.133 非单张模式：喷砂必须与单张高普8K 搭配（否则单张8K 无法按重量计价）
+    // v1.0.133 喷砂打底：表面包含「单张高普8K」即可（v1.0.138 用户规则：彩色系列如 单张高普8K黑钛金 也算打底，过磅/单张模式均允许）
     if (embossFees.some(e => e.key === 'sandblast')) {
-      if (calcMode !== 'sheet' || baseSurface !== '单张高普8K') errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
+      if (!(baseSurface && baseSurface.includes('单张高普8K'))) errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
     }
     if (calcMode === 'sheet') {
       if (boardType !== 'sheet') errors.push('单张计算逻辑仅适用于平板（按张数销售的板材）');
       if (!SHEET_MODE_SURFACES.includes(baseSurface)) errors.push('单张计算逻辑目前仅支持 2B 与五种单张8K（当前表面：' + baseSurface + '）');
       if (typeof surfaceRaw === 'number' && surfaceRaw > 0) errors.push('单张计算逻辑需要按面积计价的表面加工费（当前表面按吨计价）');
-      // v1.0.133 喷砂打底：必须以单张高普8K 打底
-      if (embossFees.some(e => e.key === 'sandblast') && baseSurface !== '单张高普8K') {
+      // v1.0.133 喷砂打底：表面包含「单张高普8K」即可（v1.0.138：彩色系列也算）
+      if (embossFees.some(e => e.key === 'sandblast') && !(baseSurface && baseSurface.includes('单张高普8K'))) {
         errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
       }
       const packingName106 = item.packing != null ? String(item.packing).trim() : '';
@@ -741,9 +741,9 @@ const PricingEngine = (() => {
       return { success: false, errors };
     }
 
-    // v1.0.133 非单张模式：喷砂必须与单张高普8K 搭配（否则单张8K 无法按重量计价）
+    // v1.0.133 喷砂打底：表面包含「单张高普8K」即可（v1.0.138 用户规则：彩色系列如 单张高普8K黑钛金 也算打底，过磅/单张模式均允许）
     if (embossFees.some(e => e.key === 'sandblast')) {
-      if (calcMode !== 'sheet' || baseSurface !== '单张高普8K') errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
+      if (!(baseSurface && baseSurface.includes('单张高普8K'))) errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
     }
     if (calcMode === 'sheet') {
       return {

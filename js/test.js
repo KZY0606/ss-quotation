@@ -832,5 +832,36 @@ test('v1.0.137 旧「材质」列头仍兼容', () => {
   eq(it.material, '304');
 });
 
+// === v1.0.138 喷砂打底包含匹配（彩色系列）===
+test('v1.0.138 喷砂: 单张高普8K黑钛金+喷砂 单张模式 成功（颜色变体算打底）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金+喷砂', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.embossFees.some(e => e.key === 'sandblast'), true, '喷砂计入');
+  eq(Math.abs(r.detail.embossPerSheet - 3 * r.detail.sheetArea) < 0.01, true, '喷砂单张费=3×面积');
+});
+
+test('v1.0.138 喷砂: 单张高普8K黑钛金+喷砂 过磅模式 成功（v1.0.138 放宽 calcMode）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金+喷砂', thickness: '0.80', width: '1219', length: '3000', origin: '上克', basePrice: 15000, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.linenFeePerTon > 0, true, '喷砂按吨折算计入');
+});
+
+test('v1.0.138 表面: 单张普精8K黑钛金 过磅模式 成功（颜色变体表面价）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张普精8K黑钛金', thickness: '0.80', width: '1219', length: '3000', origin: '上克', basePrice: 15000, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeePerTon > 0, true);
+});
+
+test('v1.0.138 表面: 单张超精8K黄钛金 单张模式 成功', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张超精8K黄钛金', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+});
+
+test('v1.0.138 喷砂: 非高普8K 打底（单张精磨8K+喷砂）仍报错', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张精磨8K+喷砂', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
+  eq(r.success, false);
+  eq(r.errors.some(e => /单张高普8K打底/.test(e)), true, JSON.stringify(r.errors));
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
