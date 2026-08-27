@@ -261,6 +261,8 @@ const ExcelParser = (() => {
         else if (h.includes('包装费') || h.includes('packingFee') || h.includes('packing_fee')) item.packingFee = parseFloat(val) > 0 ? parseFloat(val) : 0;
         else if (h.includes('包装') || h.includes('packing')) { const pv = parseFloat(val); item.packing = (val && isNaN(pv)) ? val : ''; if (!isNaN(pv) && val !== '') item.packingFee = pv; }
         else if (h.includes('压延') || h.includes('yan') || h.includes('yanyan')) item.isYanYan = val === '是' || val === 'Y' || val === 'yes';
+        // v1.0.136 检测要求列：写「全检」→ inspectFlag（runCalc 时注入全局全检单价），空/其他不勾
+        else if (h.includes('检测') || h.includes('全检') || h.includes('inspect')) item.inspectFlag = val === '全检' || val === '是' || val === 'Y' || val === 'yes';
       }
       return item;
     }
@@ -483,5 +485,5 @@ const ExcelParser = (() => {
     return rows;
   }
 
-  return { parseExcel, exportToExcel, parseContainerFormat };
+  return { parseExcel, exportToExcel, parseContainerFormat, parseRow };
 })();

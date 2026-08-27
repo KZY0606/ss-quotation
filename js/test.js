@@ -1,6 +1,9 @@
 ﻿const fs = require('fs');
 const code = fs.readFileSync(__dirname + '/config.js', 'utf8') + '\n' + fs.readFileSync(__dirname + '/engine.js', 'utf8') + '\nreturn PricingEngine;';
 const PricingEngine = new Function(code)();
+// v1.0.136：parser.js（Excel 解析）测试支持
+const parserCode = fs.readFileSync(__dirname + '/parser.js', 'utf8') + '\nreturn ExcelParser;';
+const ExcelParser = new Function('PricingEngine', parserCode)(PricingEngine);
 
 let pass = 0, fail = 0;
 function test(n, fn) { try { fn(); console.log(`✅ ${n}`); pass++; } catch(e) { console.log(`❌ ${n}: ${e.message}`); fail++; } }
@@ -743,6 +746,50 @@ test('v1.0.135 无 inspect 字段（批量导入行）：不影响计算', () =>
   eq(r.success, true);
   eq(r.detail.inspectFeeSqm || 0, 0);
   eq(r.detail.inspectPerSheet || 0, 0);
+});
+
+// === v1.0.136 检测要求列（全检自动识别，和包装方式一样） ===
+test('v1.0.136 表头表格 检测要求=全检 → inspectFlag true', () => {
+  const headers = ['产地', '材质', '表面', '厚度', '宽度', '长度', '检测要求'];
+  const it = ExcelParser.parseRow(['宏旺', '304', '2B', '0.80', '1219', '2438', '全检'], headers, {});
+  eq(it.inspectFlag, true);
+  eq(it.material, '304');
+});
+
+test('v1.0.136 表头表格 检测要求=空 → inspectFlag false', () => {
+  const headers = ['产地', '材质', '表面', '厚度', '宽度', '长度', '检测要求'];
+  const it = ExcelParser.parseRow(['宏旺', '304', '2B', '0.80', '1219', '2438', ''], headers, {});
+  eq(it.inspectFlag, false);
+});
+
+test('v1.0.136 无检测要求列 → inspectFlag undefined（不误判）', () => {
+  const headers = ['产地', '材质', '表面', '厚度', '宽度', '长度'];
+  const it = ExcelParser.parseRow(['宏旺', '304', '2B', '0.80', '1219', '2438'], headers, {});
+  eq(it.inspectFlag, undefined);
+});
+
+test('v1.0.136 检测要求列=是/Y → 全检', () => {
+  const headers = ['产地', '材质', '厚度', '检测要求'];
+  eq(ExcelParser.parseRow(['宏旺', '304', '0.80', '是'], headers, {}).inspectFlag, true);
+  eq(ExcelParser.parseRow(['宏旺', '304', '0.80', 'Y'], headers, {}).inspectFlag, true);
+  eq(ExcelParser.parseRow(['宏旺', '304', '0.80', '否'], headers, {}).inspectFlag, false);
+});
+
+test('v1.0.136 列头别名（全检/检测要求/检测标准）都识别', () => {
+  const it = ExcelParser.parseRow(['宏旺', '304', '全检'], ['产地', '材质', '全检'], {});
+  eq(it.inspectFlag, true);
+  const it2 = ExcelParser.parseRow(['宏旺', '304', '全检'], ['产地', '材质', '检测标准'], {});
+  eq(it2.inspectFlag, true);
+});
+
+test('v1.0.136 单张+检测全检：runCalc 注入后 inspect=1.5 → 计费（引擎链路）', () => {
+  const r = PricingEngine.calculate({
+    material: '304', surface: '2B', thickness: '0.80', width: '1219', length: '2438',
+    film1: '', film2: '', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架', inspect: 1.5
+  });
+  eq(r.success, true);
+  eq(r.detail.inspectFeeSqm, 1.5);
+  eq(r.detail.inspectPerSheet > 0, true);
 });
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);

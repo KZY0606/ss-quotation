@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.135">
+  <link rel="stylesheet" href="css/style.css?v=1.0.136">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -203,6 +203,10 @@
             <div class="extra-input-wrap"><input type="number" step="1" min="0" id="profitVal" placeholder="0" disabled><span class="term-unit">元/吨</span></div>
           </div>
         </div>
+          <div class="extra-item">
+            <span class="extra-check" style="cursor:default;"><span>全检费</span></span>
+            <div class="extra-input-wrap"><input type="number" step="0.1" min="0" id="inspectFeeVal" value="1.5" placeholder="1.5" title="全检单价（元/方）：表格「检测要求」列写「全检」的行自动计费，仅平板有效"><span class="term-unit">元/方</span></div>
+          </div>
         <!-- 计算逻辑（2026-08-24 用户规则）：过磅计价（元/吨）默认 / 单张计价（元/张，按张卖的板材） -->
         <div class="term-bar" id="calcModeBar">
           <span class="term-label">🧮 计算逻辑</span>
@@ -212,7 +216,6 @@
         </div>
         <div class="tab-bar">
           <button class="tab-btn active" data-tab="text"><span>📝</span> 粘贴文本</button>
-          <button class="tab-btn" data-tab="manual"><span>✏️</span> 手动添加</button>
         </div>
 
         <div class="tab-panel active" id="tab-text">
@@ -228,111 +231,6 @@
           </div>
         </div>
 
-        <div class="tab-panel" id="tab-manual">
-          <div class="manual-row">
-            <div class="input-group">
-              <label>产地</label>
-              <select id="manualOrigin"></select>
-            </div>
-            <div class="input-group">
-              <label>材质</label>
-              <select id="manualMaterial">
-                <option value="201J2">201J2</option>
-                <option value="201J1">201J1</option>
-                <option value="201J3">201J3</option>
-                <option value="201J4">201J4</option>
-                <option value="201J5">201J5 (自定义)</option>
-              </select>
-            </div>
-            <div class="input-group" style="flex-direction:row;align-items:center;gap:6px;padding-top:22px;">
-              <input type="checkbox" id="manualYanYan" style="width:16px;height:16px;accent-color:var(--primary);">
-              <label for="manualYanYan" style="font-size:12px;font-weight:600;color:var(--warning);cursor:pointer;text-transform:uppercase;letter-spacing:0.3px;">压延料</label>
-            </div>
-            <div class="input-group">
-              <label>表面</label>
-              <input type="text" id="manualSurface" placeholder="NO.4 / 8K..." list="surfaceList">
-              <datalist id="surfaceList">
-                <option value="2B"><option value="NO.4"><option value="HL"><option value="8K">
-                <option value="8K黄钛金"><option value="8K玫瑰金"><option value="8K黑钛金">
-                <option value="8K宝石蓝"><option value="8K紫罗兰"><option value="8K翡翠绿">
-                <option value="8K紫红"><option value="8K中国红"><option value="8K古铜">
-                <option value="拉丝黄钛金"><option value="拉丝玫瑰金"><option value="拉丝黑钛金">
-                <option value="拉丝古铜哑光抗指纹"><option value="拉丝古铜亮光抗指纹">
-                <option value="单面抛光"><option value="双面抛光">
-                <option value="6K"><option value="6K+linen"><option value="8K+linen"><option value="NO.4+linen">
-                <option value="6K+小方格(Square embossed)"><option value="8K+小方格(Square embossed)"><option value="6K+square embossed">
-                <option value="NO.4+6WL"><option value="8K+6WL"><option value="单张高普8K+喷砂">
-              </datalist>
-            </div>
-            <div class="input-group" style="flex-direction:column;align-items:flex-start;gap:6px;padding-top:14px;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                <input type="checkbox" id="manualEmbossLinen" style="width:16px;height:16px;accent-color:var(--primary);">
-                <label for="manualEmbossLinen" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="勾选后自动在表面后追加 +linen，如 6K+linen">压花工艺：小珠光(linen) +300元/吨</label>
-              </div>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <input type="checkbox" id="manualEmbossSquare" style="width:16px;height:16px;accent-color:var(--primary);">
-                <label for="manualEmbossSquare" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="勾选后自动在表面后追加 +square，如 6K+小方格(Square embossed)">压花工艺：小方格(Square embossed) +300元/吨</label>
-              </div>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <input type="checkbox" id="manualEmbossWl6" style="width:16px;height:16px;accent-color:var(--primary);">
-                <label for="manualEmbossWl6" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="勾选后自动在表面后追加 +6WL，如 NO.4+6WL">压花工艺：6WL +85元/㎡</label>
-              </div>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <input type="checkbox" id="manualSandblast" style="width:16px;height:16px;accent-color:var(--primary);">
-                <label for="manualSandblast" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="勾选后自动设为 单张高普8K+喷砂（需单张高普8K打底，单张模式计算）">喷砂工艺：喷砂 +3元/㎡（单张高普8K打底）</label>
-              </div>
-              <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
-                <input type="checkbox" id="manualInspect" style="width:16px;height:16px;accent-color:var(--primary);">
-                <label for="manualInspect" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="全检仅限平板（单张）；报价单中卷板不计算全检费">全检（仅平板）</label>
-                <input type="number" id="manualInspectFee" value="1.5" min="0" step="0.1" style="width:64px;height:26px;font-size:12px;border:1px solid var(--border,#d0d0d0);border-radius:4px;padding:0 6px;">
-                <span style="font-size:12px;color:var(--muted,#888);">元/方</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>厚度 (mm)</label>
-              <input type="text" id="manualThickness" placeholder="0.50">
-            </div>
-            <div class="input-group">
-              <label>宽度 (mm)</label>
-              <input type="text" id="manualWidth" placeholder="1240">
-            </div>
-            <div class="input-group">
-              <label>长度</label>
-              <input type="text" id="manualLength" placeholder="C 或 2500">
-            </div>
-            <div class="input-group">
-              <label>保护膜 1</label>
-              <input type="text" id="manualFilm1" placeholder="5C-FILM" list="filmList">
-              <datalist id="filmList">
-                <option value="垫纸"><option value="5C-FILM"><option value="HW 5C-FILM">
-                <option value="7C-FILM"><option value="HW 7C-FILM"><option value="10C-FILM">
-                <option value="7C-LASER-FILM"><option value="7C-ACHEM-FILM">
-                <option value="7C-POLI-FILM"><option value="7C-NOVACEL-FILM"><option value="6C-NOVACEL-LASER-FILM">
-                <option value="8C-NOVACEL-FILM"><option value="10C-NOVACEL-FILM">
-              </datalist>
-            </div>
-            <div class="input-group">
-              <label>保护膜 2</label>
-              <input type="text" id="manualFilm2" placeholder="选填">
-            </div>
-            <div class="input-group">
-              <label>包装方式 <span class="packing-required" style="color:var(--danger);font-weight:700;">*</span></label>
-              <select id="manualPacking" style="width:100%;">
-                <option value="">请选择（平板必填）</option>
-                <option value="木架">木架（100元/吨）</option>
-                <option value="出口木箱">出口木箱（150元/吨）</option>
-                <option value="密封木箱">密封木箱（250元/吨）</option>
-                <option value="出口铁架">出口铁架（200元/吨）</option>
-                <option value="出口铁箱">出口铁箱（250元/吨）</option>
-              </select>
-              <span style="font-size:11px;color:var(--text-muted);">过磅平板 5 种包装均计入销售加价（出口木箱=木架+50/密封木箱=木架+150/出口铁架=木架+100/出口铁箱=木架+150 元/吨）；单张计价按重量均摊（元/吨→元/kg×重量）</span>
-            </div>
-            <div class="input-group" style="justify-content:end;">
-              <button class="btn btn-primary" id="addManualBtn" style="width:100%;">➕ 添加</button>
-            </div>
-          </div>
-          <div id="manualPriceDisplay" style="margin-top:8px;font-size:12px;"></div>
-        </div>
       </div>
     </div>
 
@@ -382,12 +280,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.135"></script>
-  <script src="js/changelog.js?v=1.0.135"></script>
-<script src="js/config.js?v=1.0.135"></script>
-  <script src="js/engine.js?v=1.0.135"></script>
-  <script src="js/parser.js?v=1.0.135"></script>
-  <script src="js/app.js?v=1.0.135"></script>
+  <script src="js/auth.js?v=1.0.136"></script>
+  <script src="js/changelog.js?v=1.0.136"></script>
+<script src="js/config.js?v=1.0.136"></script>
+  <script src="js/engine.js?v=1.0.136"></script>
+  <script src="js/parser.js?v=1.0.136"></script>
+  <script src="js/app.js?v=1.0.136"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

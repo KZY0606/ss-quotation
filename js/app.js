@@ -296,14 +296,14 @@ const App = (() => {
 
   function cacheDom() {
     els.calcBtn = dom('calculateBtn'); els.expBtn = dom('exportBtn'); els.expBtn2 = dom('exportBtn2');
-    els.clearBtn = dom('clearBtn'); els.addBtn = dom('addManualBtn');
+    els.clearBtn = dom('clearBtn');
     els.fileInput = dom('fileInput'); els.tBody = dom('resultBody');
     els.emptyState = dom('emptyState'); els.resultCard = dom('resultCard');
     els.totalC = dom('totalCount'); els.okC = dom('successCount'); els.errC = dom('errorCount');
     els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
     els.calcModeSheet = dom('calcModeSheet');
-    els.inspect = dom('manualInspect'); els.inspectFee = dom('manualInspectFee');
+    els.inspectFeeVal = dom('inspectFeeVal');
     els.thSaleTax = dom('thSaleTax'); els.thSaleNoTax = dom('thSaleNoTax');
     els.thWeight = dom('thWeight'); els.thCostTax = dom('thCostTax'); els.thCostNoTax = dom('thCostNoTax');
     els.rateBar = dom('rateBar'); els.rateLive = dom('rateLive'); els.rateManual = dom('rateManual'); els.rateReset = dom('rateReset');
@@ -328,7 +328,6 @@ const App = (() => {
     els.expBtn.addEventListener('click', exportResults);
     els.expBtn2.addEventListener('click', exportResults);
     els.clearBtn.addEventListener('click', clearAll);
-    els.addBtn.addEventListener('click', addManual);
     // v1.0.122 压花工艺勾选 ↔ 表面输入联动（小珠光 linen / 小方格 square，各 +300元/吨）
     // v1.0.133 新增：6WL（85元/㎡）、喷砂（3元/㎡，需单张高普8K打底）
     const embossCbs = { linen: dom('manualEmbossLinen'), square: dom('manualEmbossSquare'), wl6: dom('manualEmbossWl6'), sandblast: dom('manualSandblast') };
@@ -453,28 +452,7 @@ const App = (() => {
       });
     });
 
-    dom('manualOrigin')?.addEventListener('change', () => {
-      updateManualDropdown();
-      dom('manualMaterial')?.focus();
-    });
 
-    // 手动添加表单：Enter 跳转下一个字段，最后一个字段 Enter 直接添加
-    const manualFields = ['manualOrigin', 'manualMaterial', 'manualSurface', 'manualThickness', 'manualWidth', 'manualLength', 'manualFilm1', 'manualFilm2'];
-    manualFields.forEach((id, i) => {
-      const el = dom(id);
-      if (!el) return;
-      el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          if (i < manualFields.length - 1) {
-            const next = dom(manualFields[i + 1]);
-            if (next) { next.focus(); if (typeof next.select === 'function') next.select(); }
-          } else {
-            addManual();
-          }
-        }
-      });
-    });
   }
 
   // ========== 产地价格管理 ==========
@@ -575,7 +553,6 @@ const App = (() => {
       });
     }
 
-    updateManualDropdown();
   }
 
   function bindOrigin201Inputs() {
@@ -715,27 +692,6 @@ const App = (() => {
         }
       });
     });
-  }
-
-  function updateManualDropdown() {
-    const sel = dom('manualOrigin');
-    const display = dom('manualPriceDisplay');
-    if (!sel) return;
-    sel.innerHTML = originOrder.map(o => `<option value="${o}">${o}</option>`).join('');
-    if (display) {
-      const o = sel.value;
-      const prices = originPrices[o];
-      let hasAny = false;
-      if (prices) for (const bk of Object.keys(prices)) for (const mk of Object.keys(prices[bk])) if (prices[bk][mk] > 0) { hasAny = true; break; }
-      if (hasAny) {
-        const j2b2 = (prices.b2 && prices.b2['201J2'] > 0) ? prices.b2['201J2'].toLocaleString() : '未填';
-        display.innerHTML = `201 基价按宽度档填写 · 1219/1240档 J2 = <b>${j2b2}</b>`;
-        display.style.color = 'var(--text-secondary)';
-      } else {
-        display.textContent = '⚠️ 该产地未设置 201 基价';
-        display.style.color = 'var(--danger)';
-      }
-    }
   }
 
   function addOrigin() {
@@ -2092,48 +2048,6 @@ const App = (() => {
     e.target.value = '';
   }
 
-  function addManual() {
-    const origin = dom('manualOrigin').value;
-    const mat = dom('manualMaterial').value;
-    const yan = dom('manualYanYan').checked;
-    const thk = dom('manualThickness').value.trim();
-    const wid = dom('manualWidth').value.trim();
-    const len = dom('manualLength').value.trim();
-    const surf = dom('manualSurface').value.trim();
-    const packing = dom('manualPacking') ? dom('manualPacking').value : '';
-    let f1 = dom('manualFilm1').value.trim();
-    let f2 = dom('manualFilm2').value.trim();
-    // "/" 自动拆分：5C膜/5C膜 → film1=5C-FILM, film2=5C-FILM
-    if (f1.includes('/')) {
-      const parts = f1.split('/').map(s => s.trim());
-      f1 = parts[0] || '';
-      if (parts.length > 1 && !f2) f2 = parts[1] || '';
-    }
-    if (f2.includes('/')) {
-      const parts = f2.split('/').map(s => s.trim());
-      f2 = parts[0] || '';
-    }
-    f1 = PricingEngine.normalizeFilm(f1) || f1;
-    f2 = PricingEngine.normalizeFilm(f2) || f2;
-    // v1.0.135 全检（仅平板）：勾选时携带单价（元/方），引擎仅 sheet 行计算
-    const inspect = (dom('manualInspect') && dom('manualInspect').checked) ? (parseFloat(dom('manualInspectFee').value) || 0) : 0;
-    const bp = getMaterialPrice(origin, mat, surf, parseFloat(wid), parseFloat(thk));
-    if (!bp || bp <= 0) {
-      if (/^201/.test(mat) && mat !== '201J5' && PricingEngine.getWidthBand201(parseFloat(wid)) === null) {
-        showToast(`宽度 ${wid}mm 不在 201 基价档位（1219/1240、1250/1280、1500/1530）`, 'error');
-      } else {
-        showToast(`${origin} ${mat} 基价未设置`, 'error');
-      }
-      return;
-    }
-    if (!thk || !wid) { showToast('请填写厚度和宽度', 'error'); return; }
-    dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp, packing, inspect });
-    results = []; showToast('已添加', 'success');
-    render();
-    ['manualThickness','manualWidth','manualLength','manualSurface','manualFilm1','manualFilm2'].forEach(id => dom(id).value = '');
-    dom('manualThickness').focus();
-  }
-
   function parseText() {
     const text = els.freeText.value.trim();
     if (!text) { showToast('请输入数据', 'error'); return; }
@@ -2203,11 +2117,24 @@ const App = (() => {
         }
       }
     } else {
-      // 原始逐行解析
-      for (const line of trimmed) {
-        if (!line) continue;
-        const p = PricingEngine.parseFreeText(line, {});
-        if (p && p.thickness && p.width) items.push(p);
+      // v1.0.136 表头表格识别（Excel 粘贴：tab/逗号分隔，首行含表头如「检测要求」）
+      const firstLine = trimmed[0] || '';
+      const headCells = firstLine.split(/[\t,，;；]+/).map(s => s.trim());
+      const hasHeader = headCells.length >= 3 && headCells.some(h => /检测|材质|厚度|宽度|规格|表面/.test(h));
+      if (hasHeader) {
+        for (let i = 1; i < trimmed.length; i++) {
+          const row = trimmed[i].split(/[\t,，;；]+/).map(s => s.trim());
+          if (!row.join('')) continue;
+          const it = ExcelParser.parseRow(row, headCells, {});
+          if (it && (it.thickness || it.width)) items.push(it);
+        }
+      } else {
+        // 原始逐行解析
+        for (const line of trimmed) {
+          if (!line) continue;
+          const p = PricingEngine.parseFreeText(line, {});
+          if (p && p.thickness && p.width) items.push(p);
+        }
       }
     }
 
@@ -2266,6 +2193,8 @@ const App = (() => {
     });
     dataItems.forEach(it => {
       it.calcMode = isSheetMode() ? 'sheet' : 'weight';
+      // v1.0.136 全检（检测要求列）：写「全检」的行注入全局单价（元/方）；卷板不计算由引擎控制
+      it.inspect = it.inspectFlag ? (parseFloat(els.inspectFeeVal && els.inspectFeeVal.value) || 1.5) : 0;
       // v1.0.106：单张计价注入 汇率(元/美元) + 贸易术语 FOB/CIF 美元价（按当天汇率均摊）
       if (it.calcMode === 'sheet') {
         it.usdRate = effectiveRate() / 100;
@@ -2387,11 +2316,11 @@ const App = (() => {
 
   // v1.0.135 全检费：价格可修改并记忆（默认 1.5 元/方）
   function initInspect() {
-    const feeEl = els.inspectFee;
+    const feeEl = els.inspectFeeVal;
     if (!feeEl) return;
     const saved = localStorage.getItem('kk_inspect_fee');
     if (saved && parseFloat(saved) > 0) feeEl.value = saved;
-    feeEl.addEventListener('change', () => {
+    feeEl.addEventListener('input', () => {
       const v = parseFloat(feeEl.value);
       if (v > 0) localStorage.setItem('kk_inspect_fee', String(v));
     });
