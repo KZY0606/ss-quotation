@@ -16,6 +16,8 @@ async function exec(Sql) {
 
 async function ensureTables() {
   await exec('CREATE TABLE IF NOT EXISTS usage_logs (id SERIAL PRIMARY KEY, username TEXT NOT NULL, material TEXT, spec TEXT, surface TEXT, calc_mode TEXT, unit_price NUMERIC, created_at TIMESTAMP DEFAULT now())');
+  // v1.0.131: 批次号（同一次计算共用）
+  await exec("ALTER TABLE usage_logs ADD COLUMN IF NOT EXISTS batch_id TEXT");
 }
 
 function parseEvt(ev) {
@@ -43,7 +45,8 @@ exports.main = async (event) => {
     const surface = String((item && item.surface) || '').trim();
     const calcMode = String((item && item.calcMode) || '').trim();
     const unitPrice = (item && item.unitPrice !== null && item.unitPrice !== undefined) ? Number(item.unitPrice) : null;
-    await exec('INSERT INTO usage_logs (username, material, spec, surface, calc_mode, unit_price) VALUES (' + q(tk.username) + ', ' + q(material) + ', ' + q(spec) + ', ' + q(surface) + ', ' + q(calcMode) + ', ' + (unitPrice === null ? 'NULL' : unitPrice) + ')');
+    const batchId = String((item && item.batchId) || '').trim();
+    await exec('INSERT INTO usage_logs (username, material, spec, surface, calc_mode, unit_price, batch_id) VALUES (' + q(tk.username) + ', ' + q(material) + ', ' + q(spec) + ', ' + q(surface) + ', ' + q(calcMode) + ', ' + (unitPrice === null ? 'NULL' : unitPrice) + ', ' + q(batchId) + ')');
     return { ok: true };
   } catch (e) {
     return { ok: false, msg: '服务器错误：' + (e.message || e) };
