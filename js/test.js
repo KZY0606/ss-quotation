@@ -7,6 +7,13 @@ function test(n, fn) { try { fn(); console.log(`✅ ${n}`); pass++; } catch(e) {
 function eq(a, b, l) { if (a !== b) throw new Error(`${l}: ${a} !== ${b}`); }
 
 // === 原有测试 ===
+// === v1.0.125 五尺 201J2 厚度档：第一档 0.68-0.88 → 0.78-0.88 === 
+test('五尺 201J2 0.78 命中 t1 档', () => { eq(PricingEngine.getThickBand1500('201J2', 0.78), 't1'); });
+test('五尺 201J2 0.88 命中 t1 档（闭区间）', () => { eq(PricingEngine.getThickBand1500('201J2', 0.88), 't1'); });
+test('五尺 201J2 0.89 命中 t2 档', () => { eq(PricingEngine.getThickBand1500('201J2', 0.89), 't2'); });
+test('五尺 201J2 0.68 档外报错（范围外）', () => { eq(PricingEngine.getThickBand1500('201J2', 0.68), null); });
+test('五尺 201J2 0.77 档外报错（范围外）', () => { eq(PricingEngine.getThickBand1500('201J2', 0.77), null); });
+
 test('用户示例: NO.4 5C-FILM 0.50*1240*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'NO.4',thickness:'0.50',width:'1240',length:'C',film1:'5C-FILM',film2:'',basePrice:7800});
   eq(r.success, true); eq(r.detail.costTax, 8680); eq(r.detail.costNoTax, 7990); eq(r.detail.saleTax, 8880);
