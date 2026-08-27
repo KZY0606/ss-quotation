@@ -457,7 +457,7 @@ const ExcelParser = (() => {
         d.edgeType === 'rough' ? '毛边' : '齐边',
         d.boardType === 'coil' ? '卷板' : '平板',
         d.markupDetail ? (d.markupDetail.group === 'sheet'
-          ? d.markup + '（边部' + d.markupDetail.edgeFee + '+' + (d.markupDetail.rackLabel || '木架') + d.markupDetail.rackFee + '+包装' + d.markupDetail.packFee + '+损耗' + d.markupDetail.lossFee + '）'
+          ? d.markup + '（边部' + d.markupDetail.edgeFee + '+' + (d.markupDetail.rackLabel || '木架') + d.markupDetail.rackFee + '+装柜' + d.markupDetail.packFee + '+损耗' + d.markupDetail.lossFee + '）'
           : d.markup + '（边部' + d.markupDetail.edgeFee + '+包装' + d.markupDetail.packingFee + '+装柜' + d.markupDetail.containerFee + '）') : d.markup,
         fmtCny(termCny(d.saleNoTax, 0)),
         fmtUsd(termUsd(d.saleNoTax, ti.fobUsd || 0)),

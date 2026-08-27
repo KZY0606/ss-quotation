@@ -3,6 +3,13 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.123', date: '2026-08-27', title: '销售加价明细名称修正：包装改装柜',
+    items: [
+      '修正：平板销售加价明细中“包装50”改为“装柜50元/吨”（木架即包装，装柜费 50元/吨），导出表格、报价明细、参考表同步更新'
+      ,'金额不变：边部 + 木架100 + 装柜50 + 损耗50（卷板仍为：边部 + 包装100 + 装柜50）'
+    ]
+  },
+  {
     v: '1.0.122', date: '2026-08-27', title: '压花工艺新增小方格 (Square embossed)',
     items: [
       '压花工艺新增：小方格(Square embossed) 300元/吨，与表面加工用 + 连接，如 6K+小方格(Square embossed)、8K+小方格(Square embossed)'

@@ -1723,7 +1723,7 @@ const App = (() => {
     for (const [m, w, l, key] of sheetRows) {
       const _v = SHEET_MARKUP_DETAIL[key];
       h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
-      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 装柜50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     const narrowRows = [
       ['201/304/410/430', '1030毛边', '1001-2000', 'std_1030_s'],
@@ -1734,7 +1734,7 @@ const App = (() => {
     for (const [m, w, l, key] of narrowRows) {
       const _v = SHEET_MARKUP_DETAIL[key];
       h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
-      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 装柜50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     const wideRows = [
       ['410/430', '1280毛边', '2100-2500', '410430_1280_s'],
@@ -1749,7 +1749,7 @@ const App = (() => {
     for (const [m, w, l, key] of wideRows) {
       const _v = SHEET_MARKUP_DETAIL[key];
       h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
-      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 装柜50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     const wide2Rows = [
       ['201/304/410/430', '1530毛边', '2100-3055', 'std_1530_s'],
@@ -1760,7 +1760,7 @@ const App = (() => {
     for (const [m, w, l, key] of wide2Rows) {
       const _v = SHEET_MARKUP_DETAIL[key];
       h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
-      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 装柜50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     h.push('</table>');
     h.push('<h4 class="ref-subtitle">平板销售加价（316L，出口木架基准）</h4>');
@@ -1786,13 +1786,13 @@ const App = (() => {
     for (const [m, w, l, key] of sheet316Rows) {
       const _v = SHEET_MARKUP_DETAIL[key];
       h.push(`<tr><td>${m}</td><td>${w}</td><td>${l}（出口木架）</td><td class="ref-num">+${_v}</td></tr>`);
-      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
+      h.push(`<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价(${w})${_v - 200}元/吨 + 木架100元/吨 + 装柜50元/吨 + 加工损耗50元/吨 = ${_v}元/吨</td></tr>`);
     }
     h.push('</table>');
     h.push('<tr><td>其他宽度平板 毛边（旧价）</td><td colspan="2"></td><td class="ref-num">+' + SALES_MARKUP.rough_sheet + '</td></tr>');
-    h.push('<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价' + (SALES_MARKUP.rough_sheet - 200) + '元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ' + SALES_MARKUP.rough_sheet + '元/吨</td></tr>');
+    h.push('<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价' + (SALES_MARKUP.rough_sheet - 200) + '元/吨 + 木架100元/吨 + 装柜50元/吨 + 加工损耗50元/吨 = ' + SALES_MARKUP.rough_sheet + '元/吨</td></tr>');
     h.push('<tr><td>其他宽度平板 齐边（旧价）</td><td colspan="2"></td><td class="ref-num">+' + SALES_MARKUP.trim_sheet + '</td></tr>');
-    h.push('<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价' + (SALES_MARKUP.trim_sheet - 200) + '元/吨 + 木架100元/吨 + 包装50元/吨 + 加工损耗50元/吨 = ' + SALES_MARKUP.trim_sheet + '元/吨</td></tr>');
+    h.push('<tr><td colspan="4" style="padding:2px 8px;font-size:11px;color:var(--text-muted);">边部加价' + (SALES_MARKUP.trim_sheet - 200) + '元/吨 + 木架100元/吨 + 装柜50元/吨 + 加工损耗50元/吨 = ' + SALES_MARKUP.trim_sheet + '元/吨</td></tr>');
     h.push('<tr><td colspan="4" style="padding:2px;font-size:11px;color:var(--text-muted);">出口木箱 = 对应木架 +' + PACKING_WOODEN_BOX_SURCHARGE + '元/吨</td></tr>');
     h.push('</table>');
     h.push('<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">201/304/410/430 与 316L 分别定价；1250mm 与 1000mm 同价（201/304/410/430=550、316L=850）；四尺=1219/1240/1250/1280，米尺=1000，五尺=1500/1524/1530</div>');
@@ -2447,7 +2447,7 @@ const App = (() => {
     html += step('+ 表面加工费（含纹路/AFP）', d.surfaceFeePerTon + (d.linenFeePerTon || 0) + (d.afpPerTon || 0), '元/吨', true);
     html += step('+ 膜费', (d.film1PerTon || 0) + (d.film2PerTon || 0), '元/吨', true);
     const mkExtra = d.markupDetail ? (d.markupDetail.group === 'sheet'
-      ? ' = 边部加价(' + d.markupDetail.label + ')' + d.markupDetail.edgeFee + ' + ' + (d.markupDetail.rackLabel || '木架') + d.markupDetail.rackFee + ' + 包装' + d.markupDetail.packFee + ' + 加工损耗' + d.markupDetail.lossFee
+      ? ' = 边部加价(' + d.markupDetail.label + ')' + d.markupDetail.edgeFee + ' + ' + (d.markupDetail.rackLabel || '木架') + d.markupDetail.rackFee + ' + 装柜' + d.markupDetail.packFee + ' + 加工损耗' + d.markupDetail.lossFee
       : ' = ' + d.markupDetail.label + '加价' + d.markupDetail.edgeFee + ' + 包装费用' + d.markupDetail.packingFee + ' + 装柜费用' + d.markupDetail.containerFee) : '';
     html += step('+ 销售加价(' + markupLabel + ')' + mkExtra, d.markup, '元/吨', d.markup > 0);
     html += total('不含税售价（十位取整）', d.saleNoTax, 'sale');
