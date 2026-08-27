@@ -289,9 +289,14 @@ const ExcelParser = (() => {
 
   async function exportToExcel(results, filename, termInfo) {
     const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null };
-    // 给客户看的简洁表头；符号体现在表头与数字格式；术语只保留在合计行(总价前一格)
+    // v1.0.130：表头前加标题行，标注贸易术语（EXW/FOB/CIF 价格）；术语同时保留在合计行(总价前一格)
+    const termLabel = (ti.term === 'FOB' || ti.term === 'CIF') ? ti.term + ' 价格' : 'EXW 价格';
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('报价单');
+    const titleRow = ws.addRow(['不锈钢报价单（' + termLabel + '）']);
+    ws.mergeCells(titleRow.number, 1, titleRow.number, 11);
+    titleRow.getCell(1).font = { bold: true, size: 14 };
+    titleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
     ws.addRow(['产地', '材质', '表面', '保护膜', '规格', 'Edge', '重量(吨)', '单价(¥元/吨)', '单价($美元/吨)', '总价(¥元)', '总价($美元)']);
     ws.columns = [
       { width: 10 }, { width: 10 }, { width: 16 }, { width: 24 }, { width: 22 },
