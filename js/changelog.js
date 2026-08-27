@@ -3,6 +3,14 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.142', date: '2026-08-27', title: '删除单张砂面NO.4/单张拉丝HL 的重复宽度档（1000mm、1500/1524/1530mm）',
+    items: [
+      '管理后台「单张加工」面板：单张砂面NO.4/单张拉丝HL（含各颜色）仅保留 1219/1240/1250 宽度档'
+      ,'删除其 1000mm 与 1500/1524/1530mm 档位（1500-1530 与 1250 同价为重复数据）；超出宽度报价提示无匹配加工费'
+      ,'单张8K 系列（普磨/高普/普精/精磨/超精）的 1000mm、1500/1524/1530 宽度档保持不变'
+    ]
+  },
+  {
     v: '1.0.141', date: '2026-08-27', title: '导出模板更新为【KK报价】导出模板最终版（20列双语）+ 新增一键导出合同',
     items: [
       '导出 Excel：报价单改 20 列双语表头（NO.序号/PRODUCER制造商/GRADE钢种/SURFACE表面/FILM-PAPER保护膜垫纸/THK厚度/THK TOL厚度公差/WIDTH/LENGH/Edge/PCS件数/MT重量/UNIT FOB单价RMB/USD/TOTAL合计RMB/USD/PACKING包装方式/PRINT喷码要求/INSPECTION检测要求/WEIGHT-PACK单包重）'
