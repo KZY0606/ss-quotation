@@ -708,15 +708,14 @@ test('v1.0.135 单张模式不勾全检（inspect=0）：不计费', () => {
   eq(r.detail.inspectPerSheet, 0);
 });
 
-test('v1.0.135 卷板模式勾全检：不计算全检费', () => {
-  const r = PricingEngine.calculate({
-    material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C',
-    film1: '', film2: '', basePrice: 15000, packing: '木架', inspect: 1.5
-  });
-  eq(r.success, true);
-  // weight 分支 detail 无 calcMode 字段（架构如此），验证不产生全检费即可
-  eq(r.detail.inspectFeeSqm || 0, 0);
-  eq(r.detail.inspectPerSheet || 0, 0);
+test('v1.0.140 卷板/过磅模式勾全检：全检费按 1.5元/方 × 每吨面积 计入（v1.0.135 原规则已放宽）', () => {
+const r = PricingEngine.calculate({
+material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C',
+film1: '', film2: '', basePrice: 15000, packing: '木架', inspect: 1.5
+});
+eq(r.success, true);
+eq(r.detail.inspectFeeSqm, 1.5);
+eq(Math.abs(r.detail.inspectPerTon - 1.5 * r.detail.sqmPerTon) < 0.02, true, '全检费元/吨=1.5×每吨面积');
 });
 
 test('v1.0.135 自定义全检价 2.0元/方：按 2.0 × 面积', () => {
@@ -728,14 +727,14 @@ test('v1.0.135 自定义全检价 2.0元/方：按 2.0 × 面积', () => {
   eq(r.detail.inspectFeeSqm, 2.0);
 });
 
-test('v1.0.135 批量混合：卷板行忽略全检（行级 calcMode=weight 但 inspect=1.5）', () => {
-  const r = PricingEngine.calculate({
-    material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C',
-    film1: '', film2: '', basePrice: 15000, packing: '木架', calcMode: 'weight', inspect: 1.5
-  });
-  eq(r.success, true);
-  eq(r.detail.inspectFeeSqm || 0, 0);
-  eq(r.detail.inspectPerSheet || 0, 0);
+test('v1.0.140 批量混合：过磅行全检费照算（v1.0.135 原规则已放宽）', () => {
+const r = PricingEngine.calculate({
+material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C',
+film1: '', film2: '', basePrice: 15000, packing: '木架', calcMode: 'weight', inspect: 1.5
+});
+eq(r.success, true);
+eq(r.detail.inspectFeeSqm, 1.5);
+eq(Math.abs(r.detail.inspectPerTon - 1.5 * r.detail.sqmPerTon) < 0.02, true);
 });
 
 test('v1.0.135 无 inspect 字段（批量导入行）：不影响计算', () => {
@@ -885,6 +884,41 @@ test('v1.0.139 无标厚/检测要求时为空/否', () => {
   eq(r.success, true, JSON.stringify(r.errors));
   eq(r.detail.stdThickness, '');
   eq(r.detail.inspectFlag, false);
+});
+
+// === v1.0.140 过磅模式全检费 ===
+test('v1.0.140 过磅模式 全检费 1.5元/方×每吨面积 计入成本', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金+喷砂', thickness: '1.14-1.15', width: '1219', length: '3000', origin: '上克', basePrice: 15000, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱', inspect: 1.5 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  const expect = Math.round(1.5 * r.detail.sqmPerTon * 100) / 100;
+  eq(r.detail.inspectPerTon, expect, '全检费元/吨 = 1.5×' + r.detail.sqmPerTon);
+  // 成本小计 = 基价+厚度加价+表面+压花+膜+全检
+  const base = r.detail.costRaw - r.detail.inspectPerTon;
+  eq(r.detail.costRaw, Math.round((base + r.detail.inspectPerTon) * 100) / 100, 'costRaw 含全检');
+  eq(r.detail.costRaw > base, true);
+});
+
+test('v1.0.140 过磅模式 无全检时 inspectPerTon=0', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张普精8K黑钛金', thickness: '0.80', width: '1219', length: '3000', origin: '上克', basePrice: 15000, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.inspectPerTon, 0);
+});
+
+test('v1.0.140 单张模式全检费不受影响', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架', inspect: 1.5 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.inspectPerSheet > 0, true);
+  eq(Math.abs(r.detail.inspectPerSheet - 1.5 * r.detail.sheetArea) < 0.01, true);
+});
+
+test('v1.0.140 过磅模式 全检费计入售价 saleNoTax', () => {
+  const r1 = PricingEngine.calculate({ material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C', film1: '', film2: '', basePrice: 15000, packing: '木架', inspect: 1.5 });
+  const r2 = PricingEngine.calculate({ material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C', film1: '', film2: '', basePrice: 15000, packing: '木架', inspect: 0 });
+  eq(r1.success, true);
+  eq(r2.success, true);
+  eq(r1.detail.saleNoTax >= r2.detail.saleNoTax, true, '含全检售价不低于无全检');
+  // 十位取整后差异可能被吞，但成本差必须等于全检费
+  eq(Math.abs((r1.detail.costRaw - r2.detail.costRaw) - r1.detail.inspectPerTon) < 0.02, true, '成本差=全检费');
 });
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);

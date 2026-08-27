@@ -2671,12 +2671,14 @@ const App = (() => {
     else html += step(`⑤ 保护膜1`, 0, '', false);
     if (d.film2PerTon > 0) html += step(`⑥ 保护膜2 (${d.film2}, ${d.film2FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film2PerTon, '元/吨', true);
     else if (d.film2?.trim()) html += step(`⑥ 保护膜2`, 0, '', false);
+    if (d.inspectPerTon > 0) html += step(`⑦ 全检费 (${fmt(d.inspectFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.inspectPerTon, '元/吨', true);
     html += total('含税成本小计', d.costRaw, 'tax');
     html += total('四舍五入 (十位)', d.costTax, 'tax');
     html += '</div><div class="calc-section"><div class="calc-section-title">不含税售价（2026-08-22 规则：(基价+厚度加价)×0.92 + 表面 + 膜 + 加价）</div>';
     html += step(`(基价 ${fmtI(d.basePrice)} + 厚度加价 ${fmtI(d.thickSurcharge)}) × 0.92`, d.materialNoTaxRaw, '元/吨', true);
     html += step('+ 表面加工费（含纹路/AFP）', d.surfaceFeePerTon + (d.linenFeePerTon || 0) + (d.afpPerTon || 0), '元/吨', true);
     html += step('+ 膜费', (d.film1PerTon || 0) + (d.film2PerTon || 0), '元/吨', true);
+    html += step('+ 全检费', d.inspectPerTon || 0, '元/吨', (d.inspectPerTon || 0) > 0);
     const mkExtra = d.markupDetail ? (d.markupDetail.group === 'sheet'
       ? ' = 边部加价(' + d.markupDetail.label + ')' + d.markupDetail.edgeFee + ' + ' + (d.markupDetail.rackLabel || '木架') + d.markupDetail.rackFee + ' + 装柜' + d.markupDetail.packFee + ' + 加工损耗' + d.markupDetail.lossFee
       : ' = ' + d.markupDetail.label + '加价' + d.markupDetail.edgeFee + ' + 包装费用' + d.markupDetail.packingFee + ' + 装柜费用' + d.markupDetail.containerFee) : '';

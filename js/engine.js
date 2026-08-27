@@ -775,7 +775,10 @@ const PricingEngine = (() => {
       };
     }
 
-    const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon);
+    // v1.0.140 全检费（过磅模式）：元/方 × 每吨面积（检测要求列=全检 时 item.inspect>0）
+    const inspectFeeSqmW = (parseFloat(item.inspect) > 0) ? parseFloat(item.inspect) : 0;
+    const inspectPerTonW = round2(inspectFeeSqmW * sqmPerTon + 1e-9);
+    const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon + inspectPerTonW);
     const taxExcluded = round2(subtotal * 0.92);
     const costTax = round10(subtotal);
     const costNoTax = round10(taxExcluded);
@@ -817,7 +820,7 @@ const PricingEngine = (() => {
     }
     const saleTax = round10(costTax + markup);
     const materialNoTaxRaw = round2((basePrice + thickSurcharge) * 0.92);
-    const saleNoTax = round10(materialNoTaxRaw + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon + markup);
+    const saleNoTax = round10(materialNoTaxRaw + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon + inspectPerTonW + markup);
 
     // 重量：只读取导入数据（客户填写的吨数），不自动计算
     const weight = item.weight ? parseFloat(item.weight) : null;
@@ -839,6 +842,7 @@ const PricingEngine = (() => {
         afpFeeSqm: afpSqmFee, afpPerTon,
         film1FeeSqm: film1Fee || 0, film1PerTon,
         film2FeeSqm: film2Fee || 0, film2PerTon,
+    inspectFeeSqm: inspectFeeSqmW, inspectPerTon: inspectPerTonW,
         costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded), materialNoTaxRaw: round2(materialNoTaxRaw),
         costTax, costNoTax,
         edgeType, boardType, markup, widthSurcharge, packing,
