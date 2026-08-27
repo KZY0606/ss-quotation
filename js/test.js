@@ -8,6 +8,9 @@ function eq(a, b, l) { if (a !== b) throw new Error(`${l}: ${a} !== ${b}`); }
 
 // === 原有测试 ===
 // === v1.0.125 五尺 201J2 厚度档：第一档 0.68-0.88 → 0.78-0.88 === 
+// === v1.0.126 保护膜新增 6C-NOVACEL-LASER-FILM 4.7元/方 === 
+test('6C-NOVACEL-LASER-FILM 膜费 = 4.7 元/方', () => { eq(PricingEngine.getFilmFee('6C-NOVACEL-LASER-FILM'), 4.7); });
+
 test('五尺 201J2 0.78 命中 t1 档', () => { eq(PricingEngine.getThickBand1500('201J2', 0.78), 't1'); });
 test('五尺 201J2 0.88 命中 t1 档（闭区间）', () => { eq(PricingEngine.getThickBand1500('201J2', 0.88), 't1'); });
 test('五尺 201J2 0.89 命中 t2 档', () => { eq(PricingEngine.getThickBand1500('201J2', 0.89), 't2'); });

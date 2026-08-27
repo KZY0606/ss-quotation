@@ -3,6 +3,13 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.126', date: '2026-08-27', title: '保护膜新增 6C-NOVACEL-LASER-FILM',
+    items: [
+      '保护膜新增“6C-NOVACEL-LASER-FILM”，单价 4.7 元/方'
+      ,'报价页保护膜输入框下拉提示同步新增；配置板块自动出现该行，可改价/锁定/一键发布'
+    ]
+  },
+  {
     v: '1.0.125', date: '2026-08-27', title: '五尺宏旺 201J2 基价第一档改为 0.78-0.88',
     items: [
       '五尺（1500/1524/1530mm）宏旺 201J2 基价填写格第一个厚度范围由 0.68-0.88 改为 0.78-0.88'
