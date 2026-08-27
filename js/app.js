@@ -1246,6 +1246,16 @@ const App = (() => {
     } catch (e) { /* ignore */ }
   }
 
+  function fallbackCopy(txt, done) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta); done && done();
+    } catch (e) { done && done(); }
+  }
+
   function getFilmOrder() {
     try { const o = JSON.parse(localStorage.getItem('kk_film_order') || '[]'); return Array.isArray(o) ? o : []; } catch (e) { return []; }
   }
@@ -1262,8 +1272,9 @@ const App = (() => {
       const defaultPrice = FILM_FEES[name];
       const val = priceOverrides.filmFees[name] ?? defaultPrice;
       const locked = !!priceOverrides.filmLocked[name];
-      html += `<tr draggable="true" data-film="${name}">
-        <td><span class="film-drag-handle" title="拖动调整顺序">⠿</span><span class="cfg-name">${name}</span></td>
+      html += `<tr data-film="${name}">
+        <td><span class="film-drag-handle" draggable="true" title="按住拖动调整顺序">⠿</span><span class="cfg-name">${name}</span>
+          <button class="film-copy-btn" data-name="${name}" title="复制名称">⧉</button></td>
         <td><input type="number" class="cfg-price-input film-price-inp" data-name="${name}" value="${val}" step="0.1" ${locked ? 'readonly' : ''}></td>
         <td><span class="cfg-default">${defaultPrice}</span></td>
         <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="film">${locked ? '🔒' : '🔓'}</button></td>
@@ -1273,7 +1284,7 @@ const App = (() => {
     wrap.innerHTML = html;
     // v1.0.128 拖拽排序（手柄/行均可拖，拖到目标行上/下半部决定插入位置）
     let dragFilm = null;
-    const rows = wrap.querySelectorAll('tr[draggable="true"]');
+    const rows = wrap.querySelectorAll('tr[data-film]');
     rows.forEach(tr => {
       tr.addEventListener('dragstart', e => {
         dragFilm = tr.dataset.film;
@@ -1313,6 +1324,16 @@ const App = (() => {
         ordered.splice(insertAt, 0, dragFilm);
         saveFilmOrder(ordered);
         renderFilmConfig();
+      });
+    });
+    // v1.0.132: 复制名称按钮
+    wrap.querySelectorAll('.film-copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nm = btn.dataset.name;
+        const done = () => { const old = btn.textContent; btn.textContent = '✓'; setTimeout(() => { btn.textContent = old; }, 1200); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(nm).then(done).catch(() => fallbackCopy(nm, done));
+        } else fallbackCopy(nm, done);
       });
     });
 
