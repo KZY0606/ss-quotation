@@ -199,6 +199,50 @@ test('NO.4 和 HL 价格相同 0.50mm', () => {
   eq(n.sqmPrice, h.sqmPrice);
 });
 
+// === v1.0.122 小方格(Square embossed) 压花测试 ===
+test('6K+小方格(Square embossed) 2.00mm → 6K加工400 + 小方格300', () => {
+  const r = PricingEngine.calculate({
+    material:'201J2', surface:'6K+小方格(Square embossed)', thickness:'2.00', width:'1240', length:'2500',
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
+  });
+  eq(r.success, true);
+  eq(r.detail.surfaceFeePerTon, 400);
+  eq(r.detail.linenFeePerTon, 300);
+  eq(r.detail.embossFees.length, 1);
+  eq(r.detail.embossFees[0].key, 'square');
+  eq(r.detail.costTax, 8700);
+});
+test('8K+square embossed 0.45mm → 8K707.71 + 小方格300（英文带空格识别）', () => {
+  const r = PricingEngine.calculate({
+    material:'201J2', surface:'8K+square embossed', thickness:'0.45', width:'1240', length:'2500',
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
+  });
+  eq(r.success, true);
+  eq(r.detail.surfaceFeePerTon, 707.71);
+  eq(r.detail.linenFeePerTon, 300);
+  eq(r.detail.costTax, 9710);
+});
+test('6K+linen+square 双压花叠加 → 600元/吨', () => {
+  const r = PricingEngine.calculate({
+    material:'201J2', surface:'6K+linen+square', thickness:'2.00', width:'1240', length:'2500',
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
+  });
+  eq(r.success, true);
+  eq(r.detail.surfaceFeePerTon, 400);
+  eq(r.detail.linenFeePerTon, 600);
+  eq(r.detail.embossFees.length, 2);
+  eq(r.detail.costTax, 9000);
+});
+test('纯小方格: surface=小方格(Square embossed) → 表面加工0 + 小方格300', () => {
+  const r = PricingEngine.calculate({
+    material:'201J2', surface:'小方格(square embossed)', thickness:'2.00', width:'1240', length:'2500',
+    film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
+  });
+  eq(r.success, true);
+  eq(r.detail.surfaceFeePerTon, 0);
+  eq(r.detail.linenFeePerTon, 300);
+});
+
 // === v1.0.121 压花覆盖价测试（配置板块改价后生效）===
 test('覆盖价: 6K+linen 设 linen=350 → 压花 350 元/吨', () => {
   PricingEngine.setUserOverrides({ surfaceFees: { linen: 350 }, filmFees: {} });

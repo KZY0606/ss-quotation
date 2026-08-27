@@ -3,6 +3,15 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.122', date: '2026-08-27', title: '压花工艺新增小方格 (Square embossed)',
+    items: [
+      '压花工艺新增：小方格(Square embossed) 300元/吨，与表面加工用 + 连接，如 6K+小方格(Square embossed)、8K+小方格(Square embossed)'
+      ,'中英文都能识别：小方格 / square / square embossed / Square Embossed 均支持，可带空格'
+      ,'表面加工配置板块“压花工艺”分组新增小方格行，与其他表面一样可改价、可锁定'
+      ,'报价页新增“压花工艺：小方格(Square embossed) +300元/吨”勾选，可与小珠光叠加（如 6K+linen+square）'
+    ]
+  },
+  {
     v: '1.0.121', date: '2026-08-26', title: '表面加工板块新增压花工艺（小珠光 linen）',
     items: [
       '表面加工配置板块新增“压花工艺（附加项·元/吨）”分组，小珠光(linen) 300元/吨 与其他表面一样展示、可改价、可锁定'

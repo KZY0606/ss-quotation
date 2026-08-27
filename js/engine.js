@@ -419,11 +419,22 @@ const PricingEngine = (() => {
   function splitEmboss(raw) {
     const src = String(raw || '').trim();
     const segs = src.split('+').map(s => s.trim()).filter(Boolean);
-    if (segs.length < 2) return { surfacePart: src, fees: [] };
+    if (segs.length < 2) {
+      // v1.0.122 单段也可能是纯压花（如 "小方格(square embossed)" / "linen"）
+      const emb0 = matchEmboss(segs[0] || '');
+      if (emb0) return { surfacePart: '', fees: [emb0] };
+      return { surfacePart: src, fees: [] };
+    }
     const fees = [];
     const plain = [];
     for (let i = 1; i < segs.length; i++) {
-      const emb = matchEmboss(segs[i]);
+      // v1.0.122 先试两段合并（如 'square embossed' 带空格会被拆成两段），命中则跳过下一段
+      let emb = null;
+      if (i + 1 < segs.length) {
+        emb = matchEmboss(segs[i] + ' ' + segs[i + 1]);
+        if (emb) i++;
+      }
+      if (!emb) emb = matchEmboss(segs[i]);
       if (emb) fees.push(emb); else plain.push(segs[i]);
     }
     return {

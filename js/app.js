@@ -324,23 +324,38 @@ const App = (() => {
     els.expBtn2.addEventListener('click', exportResults);
     els.clearBtn.addEventListener('click', clearAll);
     els.addBtn.addEventListener('click', addManual);
-    // v1.0.120 压花工艺勾选 ↔ 表面输入联动（小珠光 linen +300元/吨）
-    const embossCb = dom('manualEmbossLinen');
+    // v1.0.122 压花工艺勾选 ↔ 表面输入联动（小珠光 linen / 小方格 square，各 +300元/吨）
+    const embossCbs = { linen: dom('manualEmbossLinen'), square: dom('manualEmbossSquare') };
     const surfInput = dom('manualSurface');
-    if (embossCb && surfInput) {
-      const hasLinenTxt = (v) => /(^|\+)\s*linen\s*($|\+)/i.test(v) || /小珠光/.test(v);
-      const stripLinen = (v) => v.split('+').map(x => x.trim()).filter(x => x && !/^linen$/i.test(x) && !/小珠光/.test(x)).join('+');
-      embossCb.addEventListener('change', () => {
-        let v = (surfInput.value || '').trim();
-        if (embossCb.checked) {
-          const base = stripLinen(v);
-          surfInput.value = base ? base + '+linen' : 'linen';
-        } else {
-          surfInput.value = stripLinen(v);
-        }
+    if (surfInput) {
+      const embossMatch = {
+        linen: (x) => /^linen$/i.test(x) || /小珠光/.test(x),
+        square: (x) => /^square(\s+embossed)?$/i.test(x) || /小方格/.test(x)
+      };
+      const stripSeg = (v, key) => v.split('+').map(x => x.trim()).filter(x => {
+        if (!x) return false;
+        return !embossMatch[key](x);
+      }).join('+');
+      Object.keys(embossCbs).forEach(key => {
+        const cb = embossCbs[key];
+        if (!cb) return;
+        cb.addEventListener('change', () => {
+          let v = (surfInput.value || '').trim();
+          if (cb.checked) {
+            const b = stripSeg(v, key);
+            surfInput.value = b ? b + '+' + key : key;
+          } else {
+            surfInput.value = stripSeg(v, key);
+          }
+        });
       });
       surfInput.addEventListener('input', () => {
-        embossCb.checked = hasLinenTxt(surfInput.value || '');
+        const v = surfInput.value || '';
+        Object.keys(embossCbs).forEach(key => {
+          const cb = embossCbs[key];
+          if (!cb) return;
+          cb.checked = v.split('+').some(x => embossMatch[key](x.trim()));
+        });
       });
     }
     els.fileInput.addEventListener('change', handleFile);
@@ -1204,7 +1219,8 @@ const App = (() => {
       {
         cls: 'sf-emboss', label: '压花工艺（附加项·元/吨）', emboss: true,
         items: [
-          { display: '小珠光(linen)', key: 'linen' }
+          { display: '小珠光(linen)', key: 'linen' },
+          { display: '小方格(Square embossed)', key: 'square' }
         ]
       },
       {
@@ -1651,6 +1667,7 @@ const App = (() => {
     h.push('<tr><td>密度 (304)</td><td class="ref-num">' + DENSITY['304'] + '</td></tr>');
     h.push('<tr><td>不含税系数</td><td class="ref-num">0.92</td></tr>');
     h.push('<tr><td>小珠光压花附加费 (linen)</td><td class="ref-num">' + LINEN_FEE + ' 元/吨</td></tr>');
+    h.push('<tr><td>小方格压花附加费 (square)</td><td class="ref-num">' + EMBOSS_FEES.square.feePerTon + ' 元/吨</td></tr>');
     h.push('<tr><td colspan="2" style="font-size:11px;color:var(--text-muted)">压花格式：表面加工+压花工艺（如 6K+linen / 8K+小珠光），加工费分开计算；也可在报价页勾选"压花工艺：小珠光(linen)"</td></tr>');
     h.push('<tr><td>亮光抗指纹 (AFP Bright)</td><td class="ref-num">' + AFP_BRIGHT_FEE + ' 元/㎡</td></tr>');
     h.push('<tr><td>哑光抗指纹 (AFP Matte)</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
