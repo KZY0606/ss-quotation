@@ -328,12 +328,15 @@ const App = (() => {
     els.clearBtn.addEventListener('click', clearAll);
     els.addBtn.addEventListener('click', addManual);
     // v1.0.122 压花工艺勾选 ↔ 表面输入联动（小珠光 linen / 小方格 square，各 +300元/吨）
-    const embossCbs = { linen: dom('manualEmbossLinen'), square: dom('manualEmbossSquare') };
+    // v1.0.133 新增：6WL（85元/㎡）、喷砂（3元/㎡，需单张高普8K打底）
+    const embossCbs = { linen: dom('manualEmbossLinen'), square: dom('manualEmbossSquare'), wl6: dom('manualEmbossWl6'), sandblast: dom('manualSandblast') };
     const surfInput = dom('manualSurface');
     if (surfInput) {
       const embossMatch = {
         linen: (x) => /^linen$/i.test(x) || /小珠光/.test(x),
-        square: (x) => /^square(\s+embossed)?$/i.test(x) || /小方格/.test(x)
+        square: (x) => /^square(\s+embossed)?$/i.test(x) || /小方格/.test(x),
+        wl6: (x) => /^6wl$/i.test(x) || /^6WL$/.test(x),
+        sandblast: (x) => /^sandblast$/i.test(x) || /喷砂/.test(x)
       };
       const stripSeg = (v, key) => v.split('+').map(x => x.trim()).filter(x => {
         if (!x) return false;
@@ -345,8 +348,15 @@ const App = (() => {
         cb.addEventListener('change', () => {
           let v = (surfInput.value || '').trim();
           if (cb.checked) {
-            const b = stripSeg(v, key);
-            surfInput.value = b ? b + '+' + key : key;
+            if (key === 'sandblast') {
+              // 喷砂需单张高普8K 打底：无打底或打底非单张高普8K 时自动设为单张高普8K
+              const base = v.split('+').map(x => x.trim()).filter(x => x && !embossMatch.sandblast(x)).join('+');
+              if (!/单张高普8K/.test(base)) surfInput.value = '单张高普8K+喷砂';
+              else surfInput.value = (base ? base : '单张高普8K') + '+喷砂';
+            } else {
+              const b = stripSeg(v, key);
+              surfInput.value = b ? b + '+' + key : key;
+            }
           } else {
             surfInput.value = stripSeg(v, key);
           }
@@ -1471,6 +1481,18 @@ const App = (() => {
         ]
       },
       {
+        cls: 'sf-emboss', label: '压花工艺·6WL（附加项·元/㎡）', emboss: true,
+        items: [
+          { display: '6WL', key: 'wl6' }
+        ]
+      },
+      {
+        cls: 'sf-sandblast', label: '喷砂工艺（附加项·元/㎡，需单张高普8K打底）', sandblast: true,
+        items: [
+          { display: '喷砂', key: 'sandblast' }
+        ]
+      },
+      {
         cls: 'sf-coil', label: '卷材彩色表面',
         items: [
           { display: '8K黄钛金(卷)', key: '8K黄钛金(卷)' },
@@ -1501,14 +1523,15 @@ const App = (() => {
       gd.items.forEach(item => {
         const cfgKey = item.key || item.keys[0];
         // v1.0.121 压花工艺行（EMBOSS_FEES 配置，元/吨）
-        if (gd.emboss) {
-          const ecfg = EMBOSS_FEES[item.key];
+        if (gd.emboss || gd.sandblast) {
+          const ecfg = (EMBOSS_FEES[item.key] || SANDBLAST_FEES[item.key]);
           if (!ecfg) return;
-          const ev = priceOverrides.surfaceFees[item.key] ?? ecfg.feePerTon;
+          const isSqm = ecfg.feePerSqm !== undefined;
+          const ev = priceOverrides.surfaceFees[item.key] ?? (isSqm ? ecfg.feePerSqm : ecfg.feePerTon);
           const elock = !!priceOverrides.surfaceLocked[item.key];
           rows.push('<tr class="sf-emboss-row">' +
             '<td><span class="cfg-name">' + item.display + '</span></td>' +
-            '<td class="tier-cells"><div class="tier-cell"><span class="tier-label">附加项</span><span class="tier-width"></span><span class="tier-sub">元/吨</span>' +
+            '<td class="tier-cells"><div class="tier-cell"><span class="tier-label">附加项</span><span class="tier-width"></span><span class="tier-sub">' + (isSqm ? '元/㎡' : '元/吨') + '</span>' +
             '<input type="number" class="cfg-price-input surf-price-inp" data-names="' + item.key + '" value="' + ev + '" step="0.5" ' + (elock ? 'readonly' : '') + '></div></td>' +
             '<td><button class="cfg-lock-btn ' + (elock ? 'locked' : '') + '" data-names="' + item.key + '" data-type="surf">' + (elock ? '🔒' : '🔓') + '</button></td>' +
             '</tr>');
@@ -1540,7 +1563,7 @@ const App = (() => {
           });
         }
       });
-      const unitHead = gd.emboss ? '覆盖价（元/吨）' : '各档位价格（元/平方米，可横拉）';
+      const unitHead = (gd.emboss || gd.sandblast) ? '覆盖价' : '各档位价格（元/平方米，可横拉）';
       html += '<div class="sg-group ' + gd.cls + '"><div class="sg-group-title">' + gd.label + '</div><table><thead><tr><th>表面加工</th><th>' + unitHead + '</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
     wrap.innerHTML = html;
@@ -2616,10 +2639,16 @@ const App = (() => {
     html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
     if (d.linenFeePerTon) {
-      const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', feePerTon: d.linenFeePerTon }];
+      const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', unit: 'ton', feePerTon: d.linenFeePerTon }];
       for (const e of embossList) {
-        const perSheet = Math.round(e.feePerTon / 1000 * (d.sheetWeightKg || 0) * 1000) / 1000;
-        html += `<div class="calc-step"><span class="calc-step-label">③ 压花工艺（${e.name}）：${e.feePerTon}元/吨 ÷ 1000 × ${fmt(d.sheetWeightKg)}kg</span><span class="calc-step-value ${perSheet > 0 ? 'positive' : 'zero'}">${perSheet > 0 ? '+' + fmt(perSheet) : '0'} 元</span></div>`;
+        const isSqm = e.unit === 'sqm';
+        const perSheet = isSqm
+          ? Math.round(e.feePerSqm * (d.sheetArea || 0) * 1000) / 1000
+          : Math.round(e.feePerTon / 1000 * (d.sheetWeightKg || 0) * 1000) / 1000;
+        const labelTxt = isSqm
+          ? `${e.feePerSqm}元/㎡ × ${fmt(d.sheetArea)}㎡`
+          : `${e.feePerTon}元/吨 ÷ 1000 × ${fmt(d.sheetWeightKg)}kg`;
+        html += `<div class="calc-step"><span class="calc-step-label">③ 压花工艺（${e.name}）：${labelTxt}</span><span class="calc-step-value ${perSheet > 0 ? 'positive' : 'zero'}">${perSheet > 0 ? '+' + fmt(perSheet) : '0'} 元</span></div>`;
       }
     }
     html += `<div class="calc-step"><span class="calc-step-label">④ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
@@ -2671,9 +2700,13 @@ const App = (() => {
     else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, d.surfaceFeePerTon, '元/吨', true);
     else html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, 0, '', false);
     // v1.0.120 压花工艺明细（表面加工+压花 分开显示，如 6K+linen → 6K加工费 + 小珠光压花300元/吨）
+    // v1.0.133 6WL/喷砂按元/㎡ 显示
     if (d.linenFeePerTon) {
-      const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', feePerTon: d.linenFeePerTon }];
-      for (const e of embossList) html += step(`④ 压花工艺（${e.name}）`, e.feePerTon, '元/吨', true);
+      const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', unit: 'ton', feePerTon: d.linenFeePerTon }];
+      for (const e of embossList) {
+        const isSqm = e.unit === 'sqm';
+        html += step(`④ 压花工艺（${e.name}）`, isSqm ? e.feePerSqm : e.feePerTon, isSqm ? '元/²' : '元/吨', true);
+      }
     }
     let stepN = d.linenFeePerTon ? 5 : 4;
     if (d.afpPerTon) html += step(`④ 抗指纹${d.afpFeeSqm === 5 ? '(哑光)' : '(亮光)'}`, d.afpPerTon, '元/吨', true);

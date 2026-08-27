@@ -1989,7 +1989,8 @@ const SURFACE_FEES = {
 // 统一输入格式：表面加工+压花工艺（如 6K+linen / 8K+小珠光），engine 拆分后分别计费
 const EMBOSS_FEES = {
   linen: { name: '小珠光(linen)', feePerTon: 300 },
-  square: { name: '小方格(Square embossed)', feePerTon: 300 }
+  square: { name: '小方格(Square embossed)', feePerTon: 300 },
+  wl6: { name: '6WL', feePerSqm: 85 }
 };
 // 压花工艺别名（小写 key）→ EMBOSS_FEES 的 key
 const EMBOSS_ALIASES = {
@@ -2005,7 +2006,21 @@ const EMBOSS_ALIASES = {
   '小方格square': 'square',
   'square embossed': 'square',
   'square emboss': 'square',
-  '方格': 'square'
+  '方格': 'square',
+  '6wl': 'wl6',
+  'wl6': 'wl6'
+};
+
+// v1.0.133 喷砂工艺附加费 (元/㎡) —— 需以单张高普8K打底，格式：单张高普8K+喷砂
+const SANDBLAST_FEES = {
+  sandblast: { name: '喷砂', feePerSqm: 3 }
+};
+const SANDBLAST_ALIASES = {
+  'sandblast': 'sandblast',
+  '喷砂': 'sandblast',
+  '喷砂工艺': 'sandblast',
+  'sand blasting': 'sandblast',
+  'sandblasting': 'sandblast'
 };
 
 // 小珠光压花附加费 (元/吨)

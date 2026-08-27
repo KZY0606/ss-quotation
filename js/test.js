@@ -588,5 +588,50 @@ test('压花: splitEmboss 不动 8K+AFP', () => {
   eq(sp.fees.length, 0);
 });
 
+test('v1.0.133 压花6WL: NO.4+6WL 普通模式 85元/㎡×每吨面积折算', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: 'NO.4+6WL', thickness: '0.80', width: '1240', length: '2500', origin: '宏旺', basePrice: 15000, packing: '木架' });
+  eq(r.success, true);
+  const wl6 = r.detail.embossFees.find(e => e.key === 'wl6');
+  eq(wl6 && wl6.unit, 'sqm');
+  eq(wl6 && wl6.feePerSqm, 85);
+  // 85 × sqmPerTon 计入 linenFeePerTon（0.80mm 304 ≈ 40.5㎡/吨 → 85×40.5≈3442.5）
+  eq(r.detail.linenFeePerTon > 3000, true, '6WL 折算后计入');
+});
+
+test('v1.0.133 压花6WL: 单张模式 2B+6WL 按单张面积计', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '2B+6WL', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
+  eq(r.success, true);
+  const area = r.detail.sheetArea; // ≈2.97㎡
+  eq(r.detail.embossPerSheet !== undefined, true);
+  eq(Math.abs(r.detail.embossPerSheet - 85 * area) < 0.01, true, '6WL单张费=85×面积');
+});
+
+test('v1.0.133 喷砂: 单张高普8K+喷砂 单张模式 3元/㎡×面积', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K+喷砂', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  const sb = r.detail.embossFees.find(e => e.key === 'sandblast');
+  eq(sb && sb.unit, 'sqm');
+  eq(sb && sb.feePerSqm, 3);
+  eq(Math.abs(r.detail.embossPerSheet - 3 * r.detail.sheetArea) < 0.01, true, '喷砂单张费=3×面积');
+});
+
+test('v1.0.133 喷砂: 别名 sandblast 也可识别', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K+sandblast', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.embossFees.some(e => e.key === 'sandblast'), true);
+});
+
+test('v1.0.133 喷砂: 无打底 NO.4+喷砂 报错', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: 'NO.4+喷砂', thickness: '0.80', width: '1240', length: '2500', origin: '宏旺', basePrice: 15000 });
+  eq(r.success, false);
+  eq(r.errors.some(e => /单张高普8K打底/.test(e)), true, JSON.stringify(r.errors));
+});
+
+test('v1.0.133 喷砂: 打底非高普（单张普磨8K+喷砂）报错', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张普磨8K+喷砂', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
+  eq(r.success, false);
+  eq(r.errors.some(e => /单张高普8K打底/.test(e)), true, JSON.stringify(r.errors));
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.132">
+  <link rel="stylesheet" href="css/style.css?v=1.0.133">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -261,6 +261,7 @@
                 <option value="单面抛光"><option value="双面抛光">
                 <option value="6K"><option value="6K+linen"><option value="8K+linen"><option value="NO.4+linen">
                 <option value="6K+小方格(Square embossed)"><option value="8K+小方格(Square embossed)"><option value="6K+square embossed">
+                <option value="NO.4+6WL"><option value="8K+6WL"><option value="单张高普8K+喷砂">
               </datalist>
             </div>
             <div class="input-group" style="flex-direction:column;align-items:flex-start;gap:6px;padding-top:14px;">
@@ -271,6 +272,14 @@
               <div style="display:flex;align-items:center;gap:6px;">
                 <input type="checkbox" id="manualEmbossSquare" style="width:16px;height:16px;accent-color:var(--primary);">
                 <label for="manualEmbossSquare" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="勾选后自动在表面后追加 +square，如 6K+小方格(Square embossed)">压花工艺：小方格(Square embossed) +300元/吨</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="manualEmbossWl6" style="width:16px;height:16px;accent-color:var(--primary);">
+                <label for="manualEmbossWl6" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="勾选后自动在表面后追加 +6WL，如 NO.4+6WL">压花工艺：6WL +85元/㎡</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="manualSandblast" style="width:16px;height:16px;accent-color:var(--primary);">
+                <label for="manualSandblast" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="勾选后自动设为 单张高普8K+喷砂（需单张高普8K打底，单张模式计算）">喷砂工艺：喷砂 +3元/㎡（单张高普8K打底）</label>
               </div>
             </div>
             <div class="input-group">
@@ -367,12 +376,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.132"></script>
-  <script src="js/changelog.js?v=1.0.132"></script>
-<script src="js/config.js?v=1.0.132"></script>
-  <script src="js/engine.js?v=1.0.132"></script>
-  <script src="js/parser.js?v=1.0.132"></script>
-  <script src="js/app.js?v=1.0.132"></script>
+  <script src="js/auth.js?v=1.0.133"></script>
+  <script src="js/changelog.js?v=1.0.133"></script>
+<script src="js/config.js?v=1.0.133"></script>
+  <script src="js/engine.js?v=1.0.133"></script>
+  <script src="js/parser.js?v=1.0.133"></script>
+  <script src="js/app.js?v=1.0.133"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

@@ -409,17 +409,20 @@ const PricingEngine = (() => {
   }
 
   // v1.0.120 压花工艺：匹配单段（linen/小珠光等）→ EMBOSS_FEES 项或 null
+  // v1.0.133 同时识别喷砂（SANDBLAST_ALIASES）；支持 feePerSqm（元/㎡，unit='sqm'）
   function matchEmboss(seg) {
-    const alias = EMBOSS_ALIASES[(seg || '').trim().toLowerCase()];
+    const low = (seg || '').trim().toLowerCase();
+    const alias = EMBOSS_ALIASES[low] || SANDBLAST_ALIASES[low];
     if (!alias) return null;
-    const e = EMBOSS_FEES[alias];
+    const e = EMBOSS_FEES[alias] || SANDBLAST_FEES[alias];
     if (!e) return null;
+    const unit = e.feePerTon !== undefined ? 'ton' : 'sqm';
     // v1.0.121 压花覆盖价：配置板块压花工艺行修改后生效
-    let fee = e.feePerTon;
+    let fee = unit === 'ton' ? e.feePerTon : e.feePerSqm;
     if (userOverrides && userOverrides.surfaceFees && userOverrides.surfaceFees[alias] !== undefined) {
       fee = userOverrides.surfaceFees[alias];
     }
-    return { key: alias, name: e.name, feePerTon: fee };
+    return { key: alias, name: e.name, unit: unit, feePerTon: unit === 'ton' ? fee : 0, feePerSqm: unit === 'sqm' ? fee : 0 };
   }
 
   // v1.0.120 压花拆分：统一格式 "表面加工+压花工艺"（如 6K+linen、8K+小珠光），
@@ -588,7 +591,7 @@ const PricingEngine = (() => {
     const hasLinen = linenSuffix || aliasedName === 'LINEN';
     if (hasLinen && !embossFees.some(e => e.key === 'linen')) {
       // v1.0.121 支持配置板块覆盖压花价
-      const linCfg = { key: 'linen', name: EMBOSS_FEES.linen.name, feePerTon: EMBOSS_FEES.linen.feePerTon };
+      const linCfg = { key: 'linen', name: EMBOSS_FEES.linen.name, unit: 'ton', feePerTon: EMBOSS_FEES.linen.feePerTon, feePerSqm: 0 };
       if (userOverrides && userOverrides.surfaceFees && userOverrides.surfaceFees.linen !== undefined) {
         linCfg.feePerTon = userOverrides.surfaceFees.linen;
       }
@@ -618,7 +621,10 @@ const PricingEngine = (() => {
     }
 
     let surfaceFeePerTon = 0;
-    let linenFeePerTon = embossFees.reduce((s, e) => s + e.feePerTon, 0);
+    // v1.0.133 附加项合计（元/吨）：吨项直接加；平方项 × 每吨面积折算
+    let linenFeePerTon = 0;
+    embossFees.forEach(e => { if (e.unit === 'sqm') linenFeePerTon += (e.feePerSqm || 0) * sqmPerTon; else linenFeePerTon += (e.feePerTon || 0); });
+    linenFeePerTon = round2(linenFeePerTon + 1e-9);
     // 板/卷自动映射：卷材自动使用 (卷) 定价
     baseSurface = autoMapCoilSurface(baseSurface, boardType, rawTrimmed);
     const surfaceRaw = getSurfaceFee(baseSurface, thickness, width, material);
@@ -647,10 +653,18 @@ const PricingEngine = (() => {
     // ---- 单张计算逻辑（2026-08-24 用户规则）：按张卖，输出 元/张 ----
     // 公式：(基价+厚度加价+边部费用)/1000 × 体积m³ × 密度g/cm³ × 1000 + 面积×单张加工费 + 面积×膜价
     let sheetResult = null;
+    // v1.0.133 非单张模式：喷砂必须与单张高普8K 搭配（否则单张8K 无法按重量计价）
+    if (embossFees.some(e => e.key === 'sandblast')) {
+      if (calcMode !== 'sheet' || baseSurface !== '单张高普8K') errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
+    }
     if (calcMode === 'sheet') {
       if (boardType !== 'sheet') errors.push('单张计算逻辑仅适用于平板（按张数销售的板材）');
       if (!SHEET_MODE_SURFACES.includes(baseSurface)) errors.push('单张计算逻辑目前仅支持 2B 与五种单张8K（当前表面：' + baseSurface + '）');
       if (typeof surfaceRaw === 'number' && surfaceRaw > 0) errors.push('单张计算逻辑需要按面积计价的表面加工费（当前表面按吨计价）');
+      // v1.0.133 喷砂打底：必须以单张高普8K 打底
+      if (embossFees.some(e => e.key === 'sandblast') && baseSurface !== '单张高普8K') {
+        errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
+      }
       const packingName106 = item.packing != null ? String(item.packing).trim() : '';
       if (!SHEET_PACKING_FEES[packingName106]) errors.push('单张计价需选择包装方式（木架/出口木箱/密封木箱/出口铁架/出口铁箱）');
       const edgeFee = getEdgeFee(material, edgeType, width);
@@ -667,8 +681,13 @@ const PricingEngine = (() => {
         const filmSqm1 = film1Fee || 0;
         const filmSqm2 = film2Fee || 0;
         const sheetFilmCostRaw = sheetArea * (filmSqm1 + filmSqm2);
-        // v1.0.120 压花工艺（元/吨 → 按单张重量折算）
-        const embossPerSheet = round3(linenFeePerTon / 1000 * sheetWeightKg + 1e-9);
+        // v1.0.120 压花工艺：吨项按单张重量折算；平方项（6WL/喷砂）按单张面积
+        let embossPerSheet = 0;
+        embossFees.forEach(e => {
+          if (e.unit === 'sqm') embossPerSheet += (e.feePerSqm || 0) * sheetArea;
+          else embossPerSheet += (e.feePerTon || 0) / 1000 * sheetWeightKg;
+        });
+        embossPerSheet = round3(embossPerSheet + 1e-9);
         // 先求和再统一四舍五入（+epsilon 抵消浮点误差，2026-08-24：用户例 77.795 → 77.8）
         const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + embossPerSheet + 1e-9);
         const qty = (item.quantity != null && parseFloat(item.quantity) > 0) ? parseFloat(item.quantity) : 1;
@@ -693,6 +712,10 @@ const PricingEngine = (() => {
       return { success: false, errors };
     }
 
+    // v1.0.133 非单张模式：喷砂必须与单张高普8K 搭配（否则单张8K 无法按重量计价）
+    if (embossFees.some(e => e.key === 'sandblast')) {
+      if (calcMode !== 'sheet' || baseSurface !== '单张高普8K') errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
+    }
     if (calcMode === 'sheet') {
       return {
         success: true,
@@ -702,7 +725,7 @@ const PricingEngine = (() => {
           isYanYan, density, sqmPerTon: round2(sqmPerTon),
           thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
           surfaceFeeSqm: surfSqmSafe(surfaceRaw),
-          surfaceFeePerTon: 0, linenFeePerTon, embossFees: embossFees.map(e => ({ key: e.key, name: e.name, feePerTon: e.feePerTon })), afpFeeSqm: 0, afpPerTon: 0,
+          surfaceFeePerTon: 0, linenFeePerTon, embossFees: embossFees.map(e => ({ key: e.key, name: e.name, unit: e.unit || 'ton', feePerTon: e.feePerTon || 0, feePerSqm: e.feePerSqm || 0 })), afpFeeSqm: 0, afpPerTon: 0,
           film1FeeSqm: film1Fee || 0, film1PerTon: 0, film2FeeSqm: film2Fee || 0, film2PerTon: 0,
           costRaw: null, costNoTaxRaw: null, materialNoTaxRaw: null, costTax: null, costNoTax: null,
           edgeType, boardType, markup: 0, widthSurcharge, packing, saleTax: null, saleNoTax: null,
@@ -711,6 +734,7 @@ const PricingEngine = (() => {
           sheetArea: sheetResult.sheetArea, sheetVolume: sheetResult.sheetVolume, sheetWeightKg: sheetResult.sheetWeightKg,
           sheetMaterialCost: sheetResult.sheetMaterialCost, sheetSurfaceCost: sheetResult.sheetSurfaceCost,
           sheetFilmCost: sheetResult.sheetFilmCost, sheetPrice: sheetResult.sheetPrice, sheetPriceTax: sheetResult.sheetPriceTax,
+          embossPerSheet: sheetResult.embossPerSheet,
           packingFee: sheetResult.packingFee, packingName: sheetResult.packingName, packingPerSheet: sheetResult.packingPerSheet,
           containerPerSheet: sheetResult.containerPerSheet, term: sheetResult.term, termUsd: sheetResult.termUsd, usdRate: sheetResult.usdRate, termPerTon: sheetResult.termPerTon, termPerSheet: sheetResult.termPerSheet, extraPerSheet: sheetResult.extraPerSheet,
           sheetSaleNoTax: sheetResult.sheetSaleNoTax, sheetSaleTax: sheetResult.sheetSaleTax,
@@ -778,7 +802,7 @@ const PricingEngine = (() => {
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
         surfaceFeePerTon: round2(surfaceFeePerTon),
         linenFeePerTon,
-        embossFees: embossFees.map(e => ({ key: e.key, name: e.name, feePerTon: e.feePerTon })),
+        embossFees: embossFees.map(e => ({ key: e.key, name: e.name, unit: e.unit || 'ton', feePerTon: e.feePerTon || 0, feePerSqm: e.feePerSqm || 0 })),
         afpFeeSqm: afpSqmFee, afpPerTon,
         film1FeeSqm: film1Fee || 0, film1PerTon,
         film2FeeSqm: film2Fee || 0, film2PerTon,
