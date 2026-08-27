@@ -714,8 +714,11 @@ const PricingEngine = (() => {
           else embossPerSheet += (e.feePerTon || 0) / 1000 * sheetWeightKg;
         });
         embossPerSheet = round3(embossPerSheet + 1e-9);
+        // v1.0.135 全检费（仅平板）：勾选后按 元/方 × 单张面积；卷板(weight)不计算
+        const inspectFeeSqm = (parseFloat(item.inspect) > 0) ? parseFloat(item.inspect) : 0;
+        const inspectPerSheet = round3(inspectFeeSqm * sheetArea + 1e-9);
         // 先求和再统一四舍五入（+epsilon 抵消浮点误差，2026-08-24：用户例 77.795 → 77.8）
-        const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + embossPerSheet + 1e-9);
+        const sheetPrice = round2(sheetMaterialCostRaw + sheetSurfaceCostRaw + sheetFilmCostRaw + embossPerSheet + inspectPerSheet + 1e-9);
         const qty = (item.quantity != null && parseFloat(item.quantity) > 0) ? parseFloat(item.quantity) : 1;
         const sheetPriceTax = round2(sheetPrice / 0.91 + 1e-9);
         // v1.0.106（2026-08-25 用户规则）：单张均摊 = 包装(元/吨÷1000=元/kg×kg) + 装柜(50元/吨) + FOB/CIF(美元×汇率=元/吨)
@@ -730,7 +733,7 @@ const PricingEngine = (() => {
         const extraPerSheet = round2(packingPerSheet + containerPerSheet + termPerSheet + 1e-9);
         const sheetSaleNoTax = round2(sheetPrice + extraPerSheet + 1e-9);
         const sheetSaleTax = round2(sheetSaleNoTax / 0.91 + 1e-9);
-        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), embossPerSheet, sheetPrice, sheetPriceTax, packingFee: packFeePerTon, packingName: packingName106, packingPerSheet, containerPerSheet, term: term106 || '', termUsd: termUsd106, usdRate: usdRate106, termPerTon: termPerTon106, termPerSheet, extraPerSheet, sheetSaleNoTax, sheetSaleTax, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9), sheetTotalTax: round2(sheetPriceTax * qty + 1e-9), sheetTotalSaleNoTax: round2(sheetSaleNoTax * qty + 1e-9), sheetTotalSaleTax: round2(sheetSaleTax * qty + 1e-9) };
+        sheetResult = { edgeFee, sheetArea, sheetVolume, sheetWeightKg, sheetMaterialCost: round2(sheetMaterialCostRaw + 1e-9), sheetSurfaceCost: round2(sheetSurfaceCostRaw + 1e-9), sheetFilmCost: round2(sheetFilmCostRaw + 1e-9), embossPerSheet, inspectFeeSqm, inspectPerSheet, sheetPrice, sheetPriceTax, packingFee: packFeePerTon, packingName: packingName106, packingPerSheet, containerPerSheet, term: term106 || '', termUsd: termUsd106, usdRate: usdRate106, termPerTon: termPerTon106, termPerSheet, extraPerSheet, sheetSaleNoTax, sheetSaleTax, quantity: qty, sheetTotal: round2(sheetPrice * qty + 1e-9), sheetTotalTax: round2(sheetPriceTax * qty + 1e-9), sheetTotalSaleNoTax: round2(sheetSaleNoTax * qty + 1e-9), sheetTotalSaleTax: round2(sheetSaleTax * qty + 1e-9) };
       }
     }
 
@@ -753,6 +756,7 @@ const PricingEngine = (() => {
           surfaceFeeSqm: surfSqmSafe(surfaceRaw),
           surfaceFeePerTon: 0, linenFeePerTon, embossFees: embossFees.map(e => ({ key: e.key, name: e.name, unit: e.unit || 'ton', feePerTon: e.feePerTon || 0, feePerSqm: e.feePerSqm || 0 })), afpFeeSqm: 0, afpPerTon: 0,
           film1FeeSqm: film1Fee || 0, film1PerTon: 0, film2FeeSqm: film2Fee || 0, film2PerTon: 0,
+          inspectFeeSqm: (sheetResult && sheetResult.inspectFeeSqm) || 0, inspectPerSheet: (sheetResult && sheetResult.inspectPerSheet) || 0,
           costRaw: null, costNoTaxRaw: null, materialNoTaxRaw: null, costTax: null, costNoTax: null,
           edgeType, boardType, markup: 0, widthSurcharge, packing, saleTax: null, saleNoTax: null,
           calcMode: 'sheet',

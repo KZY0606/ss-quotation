@@ -682,5 +682,68 @@ test('v1.0.134 小写 normalizeFilm 大小写归一 10c-film → 10C-FILM', () =
   eq(PricingEngine.normalizeFilm('10c-film'), '10C-FILM');
 });
 
+// === v1.0.135 全检费（仅平板，1.5元/方可修改） ===
+test('v1.0.135 单张模式勾全检：1.5元/方 × 面积计入', () => {
+  const r = PricingEngine.calculate({
+    material: '304', surface: '2B', thickness: '0.80', width: '1219', length: '2438',
+    film1: '', film2: '', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架', inspect: 1.5
+  });
+  eq(r.success, true);
+  eq(r.detail.calcMode, 'sheet');
+  eq(r.detail.inspectFeeSqm, 1.5);
+  const area = r.detail.sheetArea; // 1.219×2.438 = 2.9719...
+  eq(r.detail.inspectPerSheet, Math.round(1.5 * area * 1000) / 1000);
+});
+
+test('v1.0.135 单张模式不勾全检（inspect=0）：不计费', () => {
+  const r = PricingEngine.calculate({
+    material: '304', surface: '2B', thickness: '0.80', width: '1219', length: '2438',
+    film1: '', film2: '', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架', inspect: 0
+  });
+  eq(r.success, true);
+  eq(r.detail.inspectFeeSqm, 0);
+  eq(r.detail.inspectPerSheet, 0);
+});
+
+test('v1.0.135 卷板模式勾全检：不计算全检费', () => {
+  const r = PricingEngine.calculate({
+    material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C',
+    film1: '', film2: '', basePrice: 15000, packing: '木架', inspect: 1.5
+  });
+  eq(r.success, true);
+  // weight 分支 detail 无 calcMode 字段（架构如此），验证不产生全检费即可
+  eq(r.detail.inspectFeeSqm || 0, 0);
+  eq(r.detail.inspectPerSheet || 0, 0);
+});
+
+test('v1.0.135 自定义全检价 2.0元/方：按 2.0 × 面积', () => {
+  const r = PricingEngine.calculate({
+    material: '304', surface: '2B', thickness: '1.00', width: '1219', length: '2438',
+    film1: '', film2: '', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架', inspect: 2.0
+  });
+  eq(r.success, true);
+  eq(r.detail.inspectFeeSqm, 2.0);
+});
+
+test('v1.0.135 批量混合：卷板行忽略全检（行级 calcMode=weight 但 inspect=1.5）', () => {
+  const r = PricingEngine.calculate({
+    material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C',
+    film1: '', film2: '', basePrice: 15000, packing: '木架', calcMode: 'weight', inspect: 1.5
+  });
+  eq(r.success, true);
+  eq(r.detail.inspectFeeSqm || 0, 0);
+  eq(r.detail.inspectPerSheet || 0, 0);
+});
+
+test('v1.0.135 无 inspect 字段（批量导入行）：不影响计算', () => {
+  const r = PricingEngine.calculate({
+    material: '304', surface: '2B', thickness: '0.80', width: '1219', length: '2438',
+    film1: '', film2: '', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架'
+  });
+  eq(r.success, true);
+  eq(r.detail.inspectFeeSqm || 0, 0);
+  eq(r.detail.inspectPerSheet || 0, 0);
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

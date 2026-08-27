@@ -2066,6 +2066,9 @@ const FILM_FEES = {
   '7C古铜膜': 1.6,
 };
 
+// 全检费（元/方，仅平板；2026-08-27 用户规则：可修改，卷板不计算）
+const INSPECT_FEE = 1.5;
+
 // 销售加价 (元/吨)
 const SALES_MARKUP = {
   'rough_coil':  200,

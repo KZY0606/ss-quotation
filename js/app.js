@@ -208,6 +208,7 @@ const App = (() => {
     cacheDom();
     initUsdRate();
     initTradeTerm();
+    initInspect(); // v1.0.135 全检费（价格可改，localStorage 记忆）
     initExtras();
     bindEvents();
     renderOriginGrid();
@@ -302,6 +303,7 @@ const App = (() => {
     els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
     els.calcModeSheet = dom('calcModeSheet');
+    els.inspect = dom('manualInspect'); els.inspectFee = dom('manualInspectFee');
     els.thSaleTax = dom('thSaleTax'); els.thSaleNoTax = dom('thSaleNoTax');
     els.thWeight = dom('thWeight'); els.thCostTax = dom('thCostTax'); els.thCostNoTax = dom('thCostNoTax');
     els.rateBar = dom('rateBar'); els.rateLive = dom('rateLive'); els.rateManual = dom('rateManual'); els.rateReset = dom('rateReset');
@@ -2113,6 +2115,8 @@ const App = (() => {
     }
     f1 = PricingEngine.normalizeFilm(f1) || f1;
     f2 = PricingEngine.normalizeFilm(f2) || f2;
+    // v1.0.135 全检（仅平板）：勾选时携带单价（元/方），引擎仅 sheet 行计算
+    const inspect = (dom('manualInspect') && dom('manualInspect').checked) ? (parseFloat(dom('manualInspectFee').value) || 0) : 0;
     const bp = getMaterialPrice(origin, mat, surf, parseFloat(wid), parseFloat(thk));
     if (!bp || bp <= 0) {
       if (/^201/.test(mat) && mat !== '201J5' && PricingEngine.getWidthBand201(parseFloat(wid)) === null) {
@@ -2123,7 +2127,7 @@ const App = (() => {
       return;
     }
     if (!thk || !wid) { showToast('请填写厚度和宽度', 'error'); return; }
-    dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp, packing });
+    dataItems.push({ origin, material: mat, isYanYan: yan, surface: surf, thickness: thk, width: wid, length: len || 'C', film1: f1, film2: f2, basePrice: bp, packing, inspect });
     results = []; showToast('已添加', 'success');
     render();
     ['manualThickness','manualWidth','manualLength','manualSurface','manualFilm1','manualFilm2'].forEach(id => dom(id).value = '');
@@ -2380,6 +2384,18 @@ const App = (() => {
     return v == null ? null : v;
   }
   const fmtUsd = (v) => '$' + (v == null ? '-' : v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+  // v1.0.135 全检费：价格可修改并记忆（默认 1.5 元/方）
+  function initInspect() {
+    const feeEl = els.inspectFee;
+    if (!feeEl) return;
+    const saved = localStorage.getItem('kk_inspect_fee');
+    if (saved && parseFloat(saved) > 0) feeEl.value = saved;
+    feeEl.addEventListener('change', () => {
+      const v = parseFloat(feeEl.value);
+      if (v > 0) localStorage.setItem('kk_inspect_fee', String(v));
+    });
+  }
 
   function initUsdRate() {
     // 恢复手动覆盖
@@ -2652,6 +2668,7 @@ const App = (() => {
       }
     }
     html += `<div class="calc-step"><span class="calc-step-label">④ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
+    if (d.inspectPerSheet > 0) { html += `<div class="calc-step"><span class="calc-step-label">⑤ 全检费：面积 ${fmt(d.sheetArea)}㎡ × ${d.inspectFeeSqm}元/㎡（仅平板）</span><span class="calc-step-value positive">+${fmt(d.inspectPerSheet)} 元</span></div>`; }
     html += `<div class="calc-step"><span class="calc-step-label">单张价格（成本）</span><span class="calc-step-value positive">${fmt(d.sheetPrice)} 元/张</span></div>`;
     // v1.0.106 均摊三项
     html += `<div class="calc-step"><span class="calc-step-label">包装均摊：${packLabel || '?'} ${fmtI(d.packingFee || 0)}元/吨 = ${packPerKg}元/kg × ${fmt(d.sheetWeightKg)}kg</span><span class="calc-step-value ${pp > 0 ? 'positive' : 'zero'}">${pp > 0 ? '+' + fmt(pp) : '0'} 元/张</span></div>`;

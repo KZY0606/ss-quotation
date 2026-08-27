@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.134">
+  <link rel="stylesheet" href="css/style.css?v=1.0.135">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -281,6 +281,12 @@
                 <input type="checkbox" id="manualSandblast" style="width:16px;height:16px;accent-color:var(--primary);">
                 <label for="manualSandblast" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="勾选后自动设为 单张高普8K+喷砂（需单张高普8K打底，单张模式计算）">喷砂工艺：喷砂 +3元/㎡（单张高普8K打底）</label>
               </div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                <input type="checkbox" id="manualInspect" style="width:16px;height:16px;accent-color:var(--primary);">
+                <label for="manualInspect" style="font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;" title="全检仅限平板（单张）；报价单中卷板不计算全检费">全检（仅平板）</label>
+                <input type="number" id="manualInspectFee" value="1.5" min="0" step="0.1" style="width:64px;height:26px;font-size:12px;border:1px solid var(--border,#d0d0d0);border-radius:4px;padding:0 6px;">
+                <span style="font-size:12px;color:var(--muted,#888);">元/方</span>
+              </div>
             </div>
             <div class="input-group">
               <label>厚度 (mm)</label>
@@ -376,12 +382,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.134"></script>
-  <script src="js/changelog.js?v=1.0.134"></script>
-<script src="js/config.js?v=1.0.134"></script>
-  <script src="js/engine.js?v=1.0.134"></script>
-  <script src="js/parser.js?v=1.0.134"></script>
-  <script src="js/app.js?v=1.0.134"></script>
+  <script src="js/auth.js?v=1.0.135"></script>
+  <script src="js/changelog.js?v=1.0.135"></script>
+<script src="js/config.js?v=1.0.135"></script>
+  <script src="js/engine.js?v=1.0.135"></script>
+  <script src="js/parser.js?v=1.0.135"></script>
+  <script src="js/app.js?v=1.0.135"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
