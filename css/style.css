@@ -726,12 +726,19 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .config-table-wrap tr:last-child td { border-bottom:none; }
 
 .cfg-name { font-weight:600; color:var(--text); font-size:13px; }
-.tier-cells { white-space: nowrap; }
-.tier-cell { display: inline-flex; flex-direction: column; align-items: stretch; margin-right: 8px; vertical-align: top; }
-.tier-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; white-space: nowrap; }
-.tier-cell .cfg-price-input { width: 76px; }
-.film-order-btn { border: 1px solid var(--border); background: var(--card); border-radius: 4px; width: 22px; height: 22px; line-height: 1; font-size: 12px; cursor: pointer; margin-left: 3px; }
-.film-order-btn:hover { background: var(--primary-bg); }
+/* v1.0.128 档位格：等宽对齐，上下行输入框列对仗 */
+.tier-cells { display: flex; gap: 8px; align-items: flex-start; }
+.tier-cell { display: flex; flex-direction: column; width: 86px; flex: 0 0 86px; }
+.tier-label { font-size: 11px; color: var(--text-muted); margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tier-sub { font-size: 10px; color: var(--text-muted); opacity: 0.75; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 12px; }
+.tier-cell .cfg-price-input { width: 100%; box-sizing: border-box; }
+/* v1.0.128 保护膜拖拽排序 */
+.film-drag-handle { cursor: grab; color: var(--text-muted); margin-right: 4px; user-select: none; font-size: 13px; letter-spacing: -2px; }
+.film-drag-handle:active { cursor: grabbing; }
+#filmConfigTable tr[draggable="true"] { cursor: default; }
+#filmConfigTable tr.dragging { opacity: 0.35; }
+#filmConfigTable tr.drop-before td { border-top: 2px solid var(--primary, #2563eb) !important; }
+#filmConfigTable tr.drop-after td { border-bottom: 2px solid var(--primary, #2563eb) !important; }
 
 .cfg-price-input {
   width:90px; padding:4px 8px;

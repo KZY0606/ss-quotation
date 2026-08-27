@@ -1262,10 +1262,8 @@ const App = (() => {
       const defaultPrice = FILM_FEES[name];
       const val = priceOverrides.filmFees[name] ?? defaultPrice;
       const locked = !!priceOverrides.filmLocked[name];
-      html += `<tr>
-        <td><span class="cfg-name">${name}</span>
-          <button class="film-order-btn" data-name="${name}" data-action="up" title="上移">↑</button>
-          <button class="film-order-btn" data-name="${name}" data-action="down" title="下移">↓</button></td>
+      html += `<tr draggable="true" data-film="${name}">
+        <td><span class="film-drag-handle" title="拖动调整顺序">⠿</span><span class="cfg-name">${name}</span></td>
         <td><input type="number" class="cfg-price-input film-price-inp" data-name="${name}" value="${val}" step="0.1" ${locked ? 'readonly' : ''}></td>
         <td><span class="cfg-default">${defaultPrice}</span></td>
         <td><button class="cfg-lock-btn ${locked ? 'locked' : ''}" data-name="${name}" data-type="film">${locked ? '🔒' : '🔓'}</button></td>
@@ -1273,18 +1271,46 @@ const App = (() => {
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
-    // 排序按钮事件
-    wrap.querySelectorAll('.film-order-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const nm = btn.dataset.name;
-        const act = btn.dataset.action;
+    // v1.0.128 拖拽排序（手柄/行均可拖，拖到目标行上/下半部决定插入位置）
+    let dragFilm = null;
+    const rows = wrap.querySelectorAll('tr[draggable="true"]');
+    rows.forEach(tr => {
+      tr.addEventListener('dragstart', e => {
+        dragFilm = tr.dataset.film;
+        tr.classList.add('dragging');
+        try { e.dataTransfer.setData('text/plain', dragFilm); e.dataTransfer.effectAllowed = 'move'; } catch (err) {}
+      });
+      tr.addEventListener('dragend', () => {
+        tr.classList.remove('dragging');
+        wrap.querySelectorAll('tr').forEach(r => r.classList.remove('drop-before', 'drop-after'));
+        dragFilm = null;
+      });
+      tr.addEventListener('dragover', e => {
+        if (!dragFilm || dragFilm === tr.dataset.film) return;
+        e.preventDefault();
+        const rect = tr.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height / 2;
+        wrap.querySelectorAll('tr').forEach(r => r.classList.remove('drop-before', 'drop-after'));
+        tr.classList.add(before ? 'drop-before' : 'drop-after');
+      });
+      tr.addEventListener('dragleave', () => { tr.classList.remove('drop-before', 'drop-after'); });
+      tr.addEventListener('drop', e => {
+        if (!dragFilm) return;
+        e.preventDefault();
+        const target = tr.dataset.film;
+        if (!target || target === dragFilm) return;
+        const rect = tr.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height / 2;
         const order2 = getFilmOrder();
         const all = Object.keys(FILM_FEES);
         const ordered = order2.filter(x => all.includes(x)).concat(all.filter(x => !order2.includes(x)));
-        const idx = ordered.indexOf(nm);
-        const tgt = act === 'up' ? idx - 1 : idx + 1;
-        if (tgt < 0 || tgt >= ordered.length) return;
-        const t = ordered[tgt]; ordered[tgt] = ordered[idx]; ordered[idx] = t;
+        const from = ordered.indexOf(dragFilm);
+        const to = ordered.indexOf(target);
+        if (from < 0 || to < 0) return;
+        ordered.splice(from, 1);
+        let insertAt = ordered.indexOf(target);
+        if (!before) insertAt = insertAt + 1;
+        ordered.splice(insertAt, 0, dragFilm);
         saveFilmOrder(ordered);
         renderFilmConfig();
       });
@@ -1337,7 +1363,9 @@ const App = (() => {
       const idx = t._i !== undefined ? t._i : j;
       const ov = priceOverrides.surfaceTiers[main];
       const v = (ov && ov[idx] !== undefined) ? ov[idx] : t.price;
+      const unit = t.unit === 'ton' ? '元/吨' : '元/㎡';
       return '<div class="tier-cell"><span class="tier-label">' + tierLabel(t) + '</span>' +
+        '<span class="tier-sub">' + unit + '</span>' +
         '<input type="number" class="cfg-price-input surf-tier-inp" data-names="' + names + '" data-tier="' + idx + '" value="' + v + '" step="0.5" ' + (locked ? 'readonly' : '') + '></div>';
     }).join('');
   }
@@ -1456,8 +1484,8 @@ const App = (() => {
           const elock = !!priceOverrides.surfaceLocked[item.key];
           rows.push('<tr class="sf-emboss-row">' +
             '<td><span class="cfg-name">' + item.display + '</span></td>' +
-            '<td><input type="number" class="cfg-price-input surf-price-inp" data-names="' + item.key + '" value="' + ev + '" step="0.5" ' + (elock ? 'readonly' : '') + '></td>' +
-            '<td><span class="cfg-default">' + ecfg.feePerTon + ' 元/吨</span></td>' +
+            '<td class="tier-cells"><div class="tier-cell"><span class="tier-label">附加项</span><span class="tier-sub">元/吨</span>' +
+            '<input type="number" class="cfg-price-input surf-price-inp" data-names="' + item.key + '" value="' + ev + '" step="0.5" ' + (elock ? 'readonly' : '') + '></div></td>' +
             '<td><button class="cfg-lock-btn ' + (elock ? 'locked' : '') + '" data-names="' + item.key + '" data-type="surf">' + (elock ? '🔒' : '🔓') + '</button></td>' +
             '</tr>');
           return;
