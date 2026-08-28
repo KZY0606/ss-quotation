@@ -610,8 +610,18 @@ const ExcelParser = (() => {
     // 11. 打印设置：横向 A4、所有列一页宽、窄边距
     ws.pageSetup.orientation = 'landscape';
     ws.pageSetup.paperSize = 9;
-    // 固定缩放（模板 62%）：fitToPage 会让 WPS/Excel 忽略手动分页符
-    ws.pageSetup.scale = 62;
+    // 动态缩放：按第一页（表头+数据+合计）实际高度自适应，让数据完整展开
+    // fitToPage 会让 WPS/Excel 忽略手动分页符（银行区会被自动分页切开），所以手动算 scale
+    try {
+      const PAGE_H = 540; // A4 横向可打印高度 pt（595 - 0.5*72 边距上下）
+      let head = 0;
+      for (let r = 1; r <= 8; r++) head += ws.getRow(r).height || 15; // 表头区 R1-R8
+      const dataRows = 9 + extra;                       // 数据行数（含空行到合计前）
+      const totalH = head + dataRows * 35 + 21 + 2;     // +合计行 21pt
+      let sc = Math.floor((PAGE_H / totalH) * 100);
+      sc = Math.max(40, Math.min(62, sc));              // 40%~62%（62% 列宽一页上限）
+      ws.pageSetup.scale = sc;
+    } catch (e) { ws.pageSetup.scale = 62; }
     ws.pageSetup.fitToPage = false;
     ws.page_setup = ws.pageSetup;
     ws.pageSetup.margins = { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
