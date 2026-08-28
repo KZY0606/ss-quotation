@@ -5,6 +5,17 @@ const ExcelParser = (() => {
 
 
 
+  // 安全设置数字格式：exceljs 加载模板后相同样式的 cell 共享同一 style 对象，
+  // 直接 cell.numFmt= 会污染所有同样式格（如 A 列序号全变 ¥/$）——深拷贝 style 再改
+  function setNumFmt(cell, fmt) {
+    if (!fmt || !cell) return;
+    try {
+      const s = JSON.parse(JSON.stringify(cell.style));
+      s.numFmt = fmt;
+      cell.style = s;
+    } catch (e) { /* 忽略 */ }
+  }
+
   // 集装箱格式解析：装货清单，每行两组数据
   function parseContainerFormat(rows) {
     const items = [];
@@ -402,8 +413,8 @@ const ExcelParser = (() => {
     // 数字格式：人民币 ¥ 整数、美元 $ 两位小数（数据行+合计行）
     for (let R = 2; R <= ws.rowCount; R++) {
       const row = ws.getRow(R);
-      [13, 15].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
-      [14, 16].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
+      [13, 15].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') setNumFmt(c, '"¥"#,##0'); });
+      [14, 16].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') setNumFmt(c, '"$"#,##0.00'); });
     }
 
     // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
@@ -464,7 +475,8 @@ const ExcelParser = (() => {
     // 2. 买方（保留红色提醒字体）
     ws.getCell('A4').value = '买方（Buyer）：' + (ti.buyer || '');
     const a4 = ws.getCell('A4');
-    if (a4.font) a4.font = Object.assign({}, a4.font, { color: { argb: 'FFFF0000' } });
+    // 显式设置完整字体：宋体14粗红（模板原样），避免 Object.assign 兼容问题
+    if (a4.font) a4.font = { name: '宋体', size: 14, bold: true, color: { argb: 'FFFF0000' } };
     // 3. 日期（当天）
     const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
     const now = new Date();
@@ -489,7 +501,6 @@ const ExcelParser = (() => {
         for (let c = 1; c <= 16; c++) {
           const sc = src.getCell(c), dc = dst.getCell(c);
           dc.style = JSON.parse(JSON.stringify(sc.style));
-          dc.numFmt = sc.numFmt;
         }
       }
     }
@@ -555,6 +566,12 @@ const ExcelParser = (() => {
     const termRow = 20 + extra;
     const TERM_CN = { EXW: 'EXW工厂交货', FOB: 'FOB离岸价', CIF: 'CIF到岸价' };
     ws.getCell('J' + termRow).value = (ti.term || 'EXW') + '\n' + (TERM_CN[ti.term] || '');
+    // 8.5 补充要求 S.R. 标题行标红（黑体18红，用户要求）
+    {
+      const srRow = 23 + extra;
+      const sr = ws.getCell('A' + srRow);
+      if (sr.font) sr.font = Object.assign({}, sr.font, { color: { argb: 'FFFF0000' } });
+    }
     // 9. 数据行多时分页：银行信息+签字区整体放第二页（不拆分）
     // 模板原布局：银行信息标题 R36、银行行 R37-47、签字 R49-50；数据每多 1 行整体下移 extra
     if (extra > 0) {
@@ -571,8 +588,8 @@ const ExcelParser = (() => {
     // 10. 数字格式
     for (let R = 9; R <= lastData; R++) {
       const row = ws.getRow(R);
-      const c12 = row.getCell(12); if (typeof c12.value === 'number') c12.numFmt = isRmb ? '"¥"#,##0' : '"$"#,##0.00';
-      const c13 = row.getCell(13); if (c13.value && c13.value.formula) c13.numFmt = isRmb ? '"¥"#,##0' : '"$"#,##0.00';
+      const c12 = row.getCell(12); if (typeof c12.value === 'number') setNumFmt(c12, isRmb ? '"¥"#,##0' : '"$"#,##0.00');
+      const c13 = row.getCell(13); if (c13.value && c13.value.formula) setNumFmt(c13, isRmb ? '"¥"#,##0' : '"$"#,##0.00');
     }
     // 11. 打印设置：横向 A4、所有列一页宽、窄边距
     ws.pageSetup.orientation = 'landscape';
