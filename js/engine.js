@@ -702,6 +702,8 @@ const PricingEngine = (() => {
     // 完整彩色 key：颜色费 = 彩色 key 总额 - 品质白板费（差额，总额不变）；组合名：按 COLOR_FEES 7 段取
     let colorFeeSqm = 0;
     let colorName = '';
+    let colorBaseSqm = null;
+    let colorMult = null;
     if (colorSplit) {
       colorName = colorSplit.colorName;
       if (fullKeyTotalSqm !== null) {
@@ -719,6 +721,12 @@ const PricingEngine = (() => {
         errors.push('颜色 "' + colorName + '" 在 厚度' + thickness + 'mm × 宽度' + width + 'mm 下无匹配工艺费');
       } else {
         surfaceFeePerTon = round2(surfaceFeePerTon + colorFeeSqm * sqmPerTon);
+        // v1.0.149 颜色基础价与系数（1000宽 ×1.25）供 UI 展示计算式（如 31.5*1.25=39.38）；完整彩色 key 与组合名两条路径统一
+        const cIdx = COLOR_FEE_SEGMENTS.findIndex(s => thickness >= s.tMin && thickness <= s.tMax);
+        if (cIdx >= 0 && Array.isArray(COLOR_FEES[colorName]) && COLOR_FEES[colorName][cIdx] != null) {
+          colorBaseSqm = COLOR_FEES[colorName][cIdx];
+          colorMult = width === 1000 ? 1.25 : 1;
+        }
       }
     }
     const film1Fee = getFilmFee(film1);
@@ -813,7 +821,7 @@ const PricingEngine = (() => {
           origin: item.origin || '', material, surface: item.surface || '', normSurface: baseSurface, thickness: thicknessRaw || String(thickness), width, length, film1, film2, basePrice,
           isYanYan, density, sqmPerTon: round2(sqmPerTon),
           thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
-          surfaceFeeSqm: surfSqmSafe(surfaceRaw), colorFeeSqm, colorName,
+          surfaceFeeSqm: surfSqmSafe(surfaceRaw), colorFeeSqm, colorName, colorBaseSqm, colorMult,
           surfaceFeePerTon: 0, linenFeePerTon, embossFees: embossFees.map(e => ({ key: e.key, name: e.name, unit: e.unit || 'ton', feePerTon: e.feePerTon || 0, feePerSqm: e.feePerSqm || 0 })), afpFeeSqm: 0, afpPerTon: 0,
           film1FeeSqm: film1Fee || 0, film1PerTon: 0, film2FeeSqm: film2Fee || 0, film2PerTon: 0,
           inspectFeeSqm: (sheetResult && sheetResult.inspectFeeSqm) || 0, inspectPerSheet: (sheetResult && sheetResult.inspectPerSheet) || 0,
@@ -895,7 +903,7 @@ const PricingEngine = (() => {
         density, sqmPerTon: round2(sqmPerTon),
         thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
-        colorFeeSqm, colorName,
+        colorFeeSqm, colorName, colorBaseSqm, colorMult,
         surfaceFeePerTon: round2(surfaceFeePerTon),
         linenFeePerTon,
         embossFees: embossFees.map(e => ({ key: e.key, name: e.name, unit: e.unit || 'ton', feePerTon: e.feePerTon || 0, feePerSqm: e.feePerSqm || 0 })),

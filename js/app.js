@@ -2677,9 +2677,11 @@ const App = (() => {
     const termLabel = d.term || 'EXW';
     let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（售价 = 成本 + 包装/装柜/FOB均摊，按张计价）</div>`;
     html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
-    html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
+    const sheetSfCost = Math.round(d.sheetArea * d.surfaceFeeSqm * 1000) / 1000;
+    html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${sheetSfCost > 0 ? 'positive' : 'zero'}">${sheetSfCost > 0 ? '+' + fmt(sheetSfCost) : '0'} 元</span></div>`;
     if (d.colorFeeSqm > 0) {
-      html += `<div class="calc-step"><span class="calc-step-label">② 颜色工艺（${d.colorName}）：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.colorFeeSqm)}元/㎡</span><span class="calc-step-value positive">+${fmt(d.colorFeeSqm * d.sheetArea)} 元</span></div>`;
+      const cTxt2 = (d.colorBaseSqm != null && d.colorMult) ? (fmt(d.colorBaseSqm) + '*' + d.colorMult + '=' + fmt(d.colorFeeSqm)) : fmt(d.colorFeeSqm);
+      html += `<div class="calc-step"><span class="calc-step-label">② 颜色工艺（${d.colorName}：${cTxt2}元/㎡）：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.colorFeeSqm)}元/㎡</span><span class="calc-step-value positive">+${fmt(d.colorFeeSqm * d.sheetArea)} 元</span></div>`;
     }
     if (d.linenFeePerTon) {
       const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', unit: 'ton', feePerTon: d.linenFeePerTon }];
@@ -2691,7 +2693,8 @@ const App = (() => {
         const labelTxt = isSqm
           ? `${e.feePerSqm}元/㎡ × ${fmt(d.sheetArea)}㎡`
           : `${e.feePerTon}元/吨 ÷ 1000 × ${fmt(d.sheetWeightKg)}kg`;
-        html += `<div class="calc-step"><span class="calc-step-label">③ 压花工艺（${e.name}）：${labelTxt}</span><span class="calc-step-value ${perSheet > 0 ? 'positive' : 'zero'}">${perSheet > 0 ? '+' + fmt(perSheet) : '0'} 元</span></div>`;
+        const eLabel2 = e.name === '喷砂' ? '③ 喷砂' : `③ 压花工艺（${e.name}）`;
+        html += `<div class="calc-step"><span class="calc-step-label">${eLabel2}：${labelTxt}</span><span class="calc-step-value ${perSheet > 0 ? 'positive' : 'zero'}">${perSheet > 0 ? '+' + fmt(perSheet) : '0'} 元</span></div>`;
       }
     }
     html += `<div class="calc-step"><span class="calc-step-label">④ 膜费：面积 ${fmt(d.sheetArea)}㎡ × ${filmSqm}元/㎡${filmTxt ? '（' + filmTxt + '）' : ''}</span><span class="calc-step-value ${d.sheetFilmCost > 0 ? 'positive' : 'zero'}">${d.sheetFilmCost > 0 ? '+' + fmt(d.sheetFilmCost) : '0'} 元</span></div>`;
@@ -2740,12 +2743,16 @@ const App = (() => {
     if (d.widthSurcharge > 0) {
       html += step(`   宽度加价 (${fmtThk(d.width)}mm × ${fmtThk(d.width)}mm)`, d.widthSurcharge, '元/吨', true);
     }
-    if (d.surfaceFeeSqm > 0) html += step(`③ 表面加工费 (${d.normSurface || d.surface}, ${fmt(d.surfaceFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.surfaceFeePerTon, '元/吨', true);
+    if (d.surfaceFeeSqm > 0) {
+      const sfPerTon = Math.round(d.surfaceFeeSqm * d.sqmPerTon * 100) / 100;
+      html += step(`③ 表面加工费 (${d.normSurface || d.surface}：${fmt(d.surfaceFeeSqm)}*${fmt(d.sqmPerTon)}=${fmt(sfPerTon)}元/吨)`, sfPerTon, '元/吨', true);
+    }
     else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, d.surfaceFeePerTon, '元/吨', true);
     else html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, 0, '', false);
     // v1.0.145 颜色工艺费单独展示（单张彩色工艺）
     if (d.colorFeeSqm > 0) {
-      html += step(`③ 颜色工艺 (${d.colorName}, ${fmt(d.colorFeeSqm)}元/㎡ × ${fmt(d.sqmPerTon)}㎡/吨)`, Math.round(d.colorFeeSqm * d.sqmPerTon * 100) / 100, '元/吨', true);
+      const cTxt = (d.colorBaseSqm != null && d.colorMult) ? (fmt(d.colorBaseSqm) + '*' + d.colorMult + '=' + fmt(d.colorFeeSqm)) : fmt(d.colorFeeSqm);
+      html += step(`③ 颜色工艺 (${d.colorName}：${cTxt}元/㎡ × ${fmt(d.sqmPerTon)}㎡/吨)`, Math.round(d.colorFeeSqm * d.sqmPerTon * 100) / 100, '元/吨', true);
     }
     // v1.0.120 压花工艺明细（表面加工+压花 分开显示，如 6K+linen → 6K加工费 + 小珠光压花300元/吨）
     // v1.0.133 6WL/喷砂按元/㎡ 显示
@@ -2753,16 +2760,17 @@ const App = (() => {
       const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', unit: 'ton', feePerTon: d.linenFeePerTon }];
       for (const e of embossList) {
         const isSqm = e.unit === 'sqm';
-        html += step(`④ 压花工艺（${e.name}）`, isSqm ? e.feePerSqm : e.feePerTon, isSqm ? '元/²' : '元/吨', true);
+        const eLabel = e.name === '喷砂' ? '④ 喷砂' : `④ 压花工艺（${e.name}）`;
+        html += step(eLabel, isSqm ? e.feePerSqm : e.feePerTon, isSqm ? '元/㎡' : '元/吨', true);
       }
     }
     let stepN = d.linenFeePerTon ? 5 : 4;
     if (d.afpPerTon) html += step(`④ 抗指纹${d.afpFeeSqm === 5 ? '(哑光)' : '(亮光)'}`, d.afpPerTon, '元/吨', true);
-    if (d.film1PerTon > 0) html += step(`⑤ 保护膜1 (${d.film1}, ${d.film1FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film1PerTon, '元/吨', true);
+    if (d.film1PerTon > 0) html += step(`⑤ 保护膜1 (${d.film1}, ${d.film1FeeSqm}元/㎡ × ${fmt(d.sqmPerTon)}㎡/吨)`, d.film1PerTon, '元/吨', true);
     else html += step(`⑤ 保护膜1`, 0, '', false);
-    if (d.film2PerTon > 0) html += step(`⑥ 保护膜2 (${d.film2}, ${d.film2FeeSqm}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.film2PerTon, '元/吨', true);
+    if (d.film2PerTon > 0) html += step(`⑥ 保护膜2 (${d.film2}, ${d.film2FeeSqm}元/㎡ × ${fmt(d.sqmPerTon)}㎡/吨)`, d.film2PerTon, '元/吨', true);
     else if (d.film2?.trim()) html += step(`⑥ 保护膜2`, 0, '', false);
-    if (d.inspectPerTon > 0) html += step(`⑦ 全检费 (${fmt(d.inspectFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.inspectPerTon, '元/吨', true);
+    if (d.inspectPerTon > 0) html += step(`⑦ 全检费 (${fmt(d.inspectFeeSqm)}元/㎡ × ${fmt(d.sqmPerTon)}㎡/吨)`, d.inspectPerTon, '元/吨', true);
     html += total('含税成本小计', d.costRaw, 'tax');
     html += total('四舍五入 (十位)', d.costTax, 'tax');
     html += '</div><div class="calc-section"><div class="calc-section-title">不含税售价（2026-08-22 规则：(基价+厚度加价)×0.92 + 表面 + 膜 + 加价）</div>';
