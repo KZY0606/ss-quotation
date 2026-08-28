@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.151">
+  <link rel="stylesheet" href="css/style.css?v=1.0.152">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -288,13 +288,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.151"></script>
-  <script src="js/changelog.js?v=1.0.151"></script>
-<script src="js/config.js?v=1.0.151"></script>
-  <script src="js/engine.js?v=1.0.151"></script>
-  <script src="js/parser.js?v=1.0.151"></script>
-    <script src="js/contract-template.js?v=1.0.151"></script>
-  <script src="js/app.js?v=1.0.151"></script>
+  <script src="js/auth.js?v=1.0.152"></script>
+  <script src="js/changelog.js?v=1.0.152"></script>
+<script src="js/config.js?v=1.0.152"></script>
+  <script src="js/engine.js?v=1.0.152"></script>
+  <script src="js/parser.js?v=1.0.152"></script>
+    <script src="js/contract-template.js?v=1.0.152"></script>
+  <script src="js/app.js?v=1.0.152"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -354,7 +354,22 @@
           <div style="flex:2;"><label style="display:block;margin-bottom:4px;font-weight:bold;">定金 Advanced payment</label>
             <input type="text" id="contractDeposit" placeholder="如 30%，留空则不填" style="width:100%;padding:8px;border:1px solid #d0d5dd;border-radius:6px;box-sizing:border-box;"></div>
         </div>
-        <div style="color:#667085;font-size:12px;">日期自动取当天（如 28 AUG 2026），货物明细取自当前报价结果</div>
+        <div style="margin-bottom:10px;display:flex;gap:10px;">
+          <div style="flex:1;"><label style="display:block;margin-bottom:4px;font-weight:bold;">贸易术语 Trade term</label>
+            <div style="display:flex;gap:10px;">
+              <label style="display:flex;align-items:center;gap:3px;font-size:13px;"><input type="radio" name="contractTerm" value="EXW" checked> EXW</label>
+              <label style="display:flex;align-items:center;gap:3px;font-size:13px;"><input type="radio" name="contractTerm" value="FOB"> FOB</label>
+              <label style="display:flex;align-items:center;gap:3px;font-size:13px;"><input type="radio" name="contractTerm" value="CIF"> CIF</label>
+            </div></div>
+          <div style="flex:1;"><label style="display:block;margin-bottom:4px;font-weight:bold;">报价币种 Currency</label>
+            <div style="display:flex;gap:10px;">
+              <label style="display:flex;align-items:center;gap:3px;font-size:13px;"><input type="radio" name="contractCurrency" value="RMB" checked> 人民币 RMB</label>
+              <label style="display:flex;align-items:center;gap:3px;font-size:13px;"><input type="radio" name="contractCurrency" value="USD"> 美金 USD</label>
+            </div></div>
+        </div>
+        <div style="margin-bottom:10px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">喷码 PRINT（选填）</label>
+          <input type="text" id="contractSpray" placeholder="填写后合同喷码列写「见附件」，留空写「无」" style="width:100%;padding:8px;border:1px solid #d0d5dd;border-radius:6px;box-sizing:border-box;"></div>
+        <div style="color:#667085;font-size:12px;">日期自动取当天（如 28 AUG 2026），货物明细取自当前报价结果；钢种自动带产地（如 甬金304）</div>
       </div>
       <div class="changelog-foot">
         <button class="changelog-ok" id="contractCancel" style="background:transparent;color:#667085;border:1px solid #d0d5dd;">取消</button>

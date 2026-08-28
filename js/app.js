@@ -2328,6 +2328,9 @@ const App = (() => {
     dom('contractTrack') && (dom('contractTrack').value = '');
     dom('contractContainers') && (dom('contractContainers').value = '1');
     dom('contractDeposit') && (dom('contractDeposit').value = '');
+    dom('contractSpray') && (dom('contractSpray').value = '');
+    document.querySelectorAll('input[name="contractTerm"]').forEach(r => { r.checked = (r.value === 'EXW'); });
+    document.querySelectorAll('input[name="contractCurrency"]').forEach(r => { r.checked = (r.value === 'RMB'); });
     ov.style.display = 'flex';
   }
 
@@ -2344,7 +2347,10 @@ const App = (() => {
       buyer: (dom('contractBuyer') && dom('contractBuyer').value || '').trim(),
       orderTrack: (dom('contractTrack') && dom('contractTrack').value || '').trim(),
       containers: parseInt((dom('contractContainers') && dom('contractContainers').value) || '1', 10) || 1,
-      deposit: (dom('contractDeposit') && dom('contractDeposit').value || '').trim()
+      deposit: (dom('contractDeposit') && dom('contractDeposit').value || '').trim(),
+      term: (document.querySelector('input[name="contractTerm"]:checked') || {}).value || 'EXW',
+      currency: (document.querySelector('input[name="contractCurrency"]:checked') || {}).value || 'RMB',
+      sprayCode: (dom('contractSpray') && dom('contractSpray').value || '').trim()
     });
     if (!opts.contractNo) { showToast('请填写合同号', 'error'); return; }
     closeContractModal();
