@@ -1030,17 +1030,27 @@ const App = (() => {
   }
   // ========== 表面加工/单张加工价云端同步 v1.0.127（老板/管理员发布，全员自动同步） ==========
   function collectSurfacePrices() {
-    return { surfaceFees: priceOverrides.surfaceFees || {}, surfaceTiers: priceOverrides.surfaceTiers || {} };
+    // v1.0.148 单张8K 系列只用 tiers/config，剔除 surfaceFees 残留简单单价（避免 单张精磨8K=15 压过 tiers 的 7）
+    const sf = Object.assign({}, priceOverrides.surfaceFees || {});
+    Object.keys(sf).forEach(k => { if (k.startsWith('单张')) delete sf[k]; });
+    return { surfaceFees: sf, surfaceTiers: priceOverrides.surfaceTiers || {} };
   }
   function applySurfacePrices(p) {
     if (!p || typeof p !== 'object') return false;
     let changed = false;
+    // v1.0.147 服务器发布为完整快照：surfaceFees/surfaceTiers 全量替换（清除本地 localStorage 残留的旧覆盖 key，
+    // 避免残留价（如 单张精磨8K=15）压过服务器正确价（7）导致彩色拆分颜色费变 0 / 总额错误）
     if (p.surfaceFees && typeof p.surfaceFees === 'object') {
-      for (const [k, v] of Object.entries(p.surfaceFees)) { priceOverrides.surfaceFees[k] = v; changed = true; }
+      priceOverrides.surfaceFees = JSON.parse(JSON.stringify(p.surfaceFees)); changed = true;
     }
     if (p.surfaceTiers && typeof p.surfaceTiers === 'object') {
-      for (const [k, v] of Object.entries(p.surfaceTiers)) { priceOverrides.surfaceTiers[k] = v; changed = true; }
+      priceOverrides.surfaceTiers = JSON.parse(JSON.stringify(p.surfaceTiers)); changed = true;
     }
+    // v1.0.148 单张8K 系列只认 tiers/config：剔除 surfaceFees 残留（含与 tiers 同名冲突）
+    const stKeys = Object.keys(priceOverrides.surfaceTiers || {});
+    Object.keys(priceOverrides.surfaceFees || {}).forEach(k => {
+      if (k.startsWith('单张') || stKeys.includes(k)) { delete priceOverrides.surfaceFees[k]; changed = true; }
+    });
     if (changed) {
       priceOverrides.surfaceLocked = {};
       savePriceOverrides();

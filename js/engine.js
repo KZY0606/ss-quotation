@@ -707,6 +707,11 @@ const PricingEngine = (() => {
       if (fullKeyTotalSqm !== null) {
         const whiteSqm = (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : 0;
         colorFeeSqm = round2(Math.max(0, fullKeyTotalSqm - whiteSqm) + 1e-9);
+        // v1.0.147 差额为 0（本地白板覆盖价 ≥ 彩色总价，数据异常）时回退公式价，保证颜色行正常展示
+        if (colorFeeSqm <= 0) {
+          const fb = getColorFee(colorSplit.colorName, thickness, width);
+          if (fb !== null) colorFeeSqm = fb;
+        }
       } else {
         colorFeeSqm = getColorFee(colorSplit.colorName, thickness, width);
       }
