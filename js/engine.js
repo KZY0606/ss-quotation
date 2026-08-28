@@ -451,6 +451,32 @@ const PricingEngine = (() => {
     return { key: alias, name: e.name, unit: unit, feePerTon: unit === 'ton' ? fee : 0, feePerSqm: unit === 'sqm' ? fee : 0 };
   }
 
+  // v1.0.145 单张彩色工艺拆分：'单张普磨8K钛铝红铜' → { base:'单张普磨8K', colorName:'钛铝红铜' }
+  // 仅单张 8K 系列（普磨/高普/普精/精磨/超精）；完整彩色 key（如 单张高普8K黄钛金）优先走 SURFACE_FEES
+  function splitSheetColor(raw) {
+    const s = String(raw || '').trim();
+    const m = s.match(/^单张(普磨|高普|普精|精磨|超精)8[kK](.+)$/);
+    if (!m) return null;
+    const ck = COLOR_ALIASES[m[2].trim()] || COLOR_ALIASES[String(m[2] || '').trim().toLowerCase()];
+    if (!ck || !COLOR_FEES[ck]) return null;
+    return { base: '单张' + m[1] + '8K', colorName: ck };
+  }
+  // 颜色工艺费（元/㎡）：厚度 7 段匹配；1000mm 宽 = 窄板 ×1.25；1500+ 与 >2.0mm 无（报错由调用方处理）
+  function getColorFee(name, thickness, width) {
+    const arr = COLOR_FEES[name];
+    if (!Array.isArray(arr)) return null;
+    const idx = COLOR_FEE_SEGMENTS.findIndex(s => thickness >= s.tMin && thickness <= s.tMax);
+    if (idx < 0) return null;
+    if (width >= 1500) return null;
+    let v = arr[idx];
+    if (width === 1000) v = v * 1.25;
+    return round2(v + 1e-9);
+  }
+  // v1.0.145 喷砂打底规则放宽：任意单张 8K 系列即可（不再强制高普8K）
+  function isSheet8kSurface(name) {
+    return ['单张普磨8K', '单张高普8K', '单张普精8K', '单张精磨8K', '单张超精8K'].some(q => String(name || '').indexOf(q) === 0);
+  }
+
   // v1.0.120 压花拆分：统一格式 "表面加工+压花工艺"（如 6K+linen、8K+小珠光），
   // 兼容 "6K+linen+AFP"（非压花段保留回 surfacePart）；无压花段时 surfacePart=原文
   function splitEmboss(raw) {
@@ -487,7 +513,7 @@ const PricingEngine = (() => {
     const rawTrimmed = (item.surface || '').trim();
     const embossSplit = splitEmboss(rawTrimmed);
     const embossFees = embossSplit.fees;         // [{key,name,feePerTon}]
-    const surfacePart = embossSplit.surfacePart; // 去掉压花段后的表面加工部分
+    let surfacePart = embossSplit.surfacePart; // 去掉压花段后的表面加工部分（v1.0.145 颜色拆分可能改写为品质名）
     const surface = normalizeSurface(surfacePart);
     // 厚度支持范围（如 "0.55-0.60"）：保留原始字符串用于显示/导出，计算取下限
     const thicknessRaw = String(item.thickness === null || item.thickness === undefined ? '' : item.thickness).trim();
@@ -608,6 +634,12 @@ const PricingEngine = (() => {
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
 
     // ---- 附加工艺检测 ----
+    // v1.0.145 单张彩色工艺拆分：完整 key 直接命中走原路径；组合名（如 单张普磨8K钛铝红铜）拆为 品质+颜色
+    let colorSplit = null;
+    if (!SURFACE_FEES[surfacePart]) {
+      colorSplit = splitSheetColor(surfacePart);
+      if (colorSplit) surfacePart = colorSplit.base;
+    }
     const rawLower = surfacePart.toLowerCase();
     const aliasedName = normalizeSurface(surfacePart); // 可以有模糊匹配
     const isExactAlias = SURFACE_FEES[surfacePart] || SURFACE_ALIASES[rawLower];
@@ -662,6 +694,18 @@ const PricingEngine = (() => {
       surfaceFeePerTon = round2(surfaceRaw.sqmPrice * sqmPerTon);
     }
 
+    // v1.0.145 颜色工艺费：单张品质费（surfaceRaw）之外单独累加，detail 单独展示
+    let colorFeeSqm = 0;
+    let colorName = '';
+    if (colorSplit) {
+      colorFeeSqm = getColorFee(colorSplit.colorName, thickness, width);
+      colorName = colorSplit.colorName;
+      if (colorFeeSqm === null) {
+        errors.push('颜色 "' + colorSplit.colorName + '" 在 厚度' + thickness + 'mm × 宽度' + width + 'mm 下无匹配工艺费');
+      } else {
+        surfaceFeePerTon = round2(surfaceFeePerTon + colorFeeSqm * sqmPerTon);
+      }
+    }
     const film1Fee = getFilmFee(film1);
     const film2Fee = getFilmFee(film2);
     if (film1 !== null && film1 !== undefined && getFilmFee(film1) === null) {
@@ -679,17 +723,17 @@ const PricingEngine = (() => {
     // ---- 单张计算逻辑（2026-08-24 用户规则）：按张卖，输出 元/张 ----
     // 公式：(基价+厚度加价+边部费用)/1000 × 体积m³ × 密度g/cm³ × 1000 + 面积×单张加工费 + 面积×膜价
     let sheetResult = null;
-    // v1.0.133 喷砂打底：表面包含「单张高普8K」即可（v1.0.138 用户规则：彩色系列如 单张高普8K黑钛金 也算打底，过磅/单张模式均允许）
+    // v1.0.145 喷砂打底规则放宽：任意单张8K系列即可（含颜色组合，如 单张普磨8K钛铝红铜+喷砂）
     if (embossFees.some(e => e.key === 'sandblast')) {
-      if (!(baseSurface && baseSurface.includes('单张高普8K'))) errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
+      if (!isSheet8kSurface(baseSurface)) errors.push('喷砂仅支持单张8K系列打底（如 单张普磨8K+喷砂 / 单张高普8K黑钛金+喷砂，仅限单张加工）');
     }
     if (calcMode === 'sheet') {
       if (boardType !== 'sheet') errors.push('单张计算逻辑仅适用于平板（按张数销售的板材）');
       if (!SHEET_MODE_SURFACES.includes(baseSurface)) errors.push('单张计算逻辑目前仅支持 2B 与五种单张8K（当前表面：' + baseSurface + '）');
       if (typeof surfaceRaw === 'number' && surfaceRaw > 0) errors.push('单张计算逻辑需要按面积计价的表面加工费（当前表面按吨计价）');
-      // v1.0.133 喷砂打底：表面包含「单张高普8K」即可（v1.0.138：彩色系列也算）
-      if (embossFees.some(e => e.key === 'sandblast') && !(baseSurface && baseSurface.includes('单张高普8K'))) {
-        errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
+      // v1.0.145 喷砂打底规则放宽：任意单张8K系列即可
+      if (embossFees.some(e => e.key === 'sandblast') && !isSheet8kSurface(baseSurface)) {
+        errors.push('喷砂仅支持单张8K系列打底（如 单张普磨8K+喷砂 / 单张高普8K黑钛金+喷砂，仅限单张加工）');
       }
       const packingName106 = item.packing != null ? String(item.packing).trim() : '';
       if (!SHEET_PACKING_FEES[packingName106]) errors.push('单张计价需选择包装方式（木架/出口木箱/密封木箱/出口铁架/出口铁箱）');
@@ -703,7 +747,7 @@ const PricingEngine = (() => {
         // v1.0.77（2026-08-24 用户规则）：单张不含税 = 基价×0.93，其余不变
         const sheetMaterialCostRaw = (basePrice * 0.93 + thickSurcharge + edgeFee) / 1000 * sheetVolume * density * 1000;
         const surfSqm = (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : 0;
-        const sheetSurfaceCostRaw = sheetArea * surfSqm;
+        const sheetSurfaceCostRaw = sheetArea * surfSqm + sheetArea * (colorFeeSqm || 0);
         const filmSqm1 = film1Fee || 0;
         const filmSqm2 = film2Fee || 0;
         const sheetFilmCostRaw = sheetArea * (filmSqm1 + filmSqm2);
@@ -741,9 +785,9 @@ const PricingEngine = (() => {
       return { success: false, errors };
     }
 
-    // v1.0.133 喷砂打底：表面包含「单张高普8K」即可（v1.0.138 用户规则：彩色系列如 单张高普8K黑钛金 也算打底，过磅/单张模式均允许）
+    // v1.0.145 喷砂打底规则放宽：任意单张8K系列即可
     if (embossFees.some(e => e.key === 'sandblast')) {
-      if (!(baseSurface && baseSurface.includes('单张高普8K'))) errors.push('喷砂需以单张高普8K打底（表面格式：单张高普8K+喷砂）');
+      if (!isSheet8kSurface(baseSurface)) errors.push('喷砂仅支持单张8K系列打底（如 单张普磨8K+喷砂 / 单张高普8K黑钛金+喷砂，仅限单张加工）');
     }
     if (calcMode === 'sheet') {
       return {
@@ -754,7 +798,7 @@ const PricingEngine = (() => {
           origin: item.origin || '', material, surface: item.surface || '', normSurface: baseSurface, thickness: thicknessRaw || String(thickness), width, length, film1, film2, basePrice,
           isYanYan, density, sqmPerTon: round2(sqmPerTon),
           thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
-          surfaceFeeSqm: surfSqmSafe(surfaceRaw),
+          surfaceFeeSqm: surfSqmSafe(surfaceRaw), colorFeeSqm, colorName,
           surfaceFeePerTon: 0, linenFeePerTon, embossFees: embossFees.map(e => ({ key: e.key, name: e.name, unit: e.unit || 'ton', feePerTon: e.feePerTon || 0, feePerSqm: e.feePerSqm || 0 })), afpFeeSqm: 0, afpPerTon: 0,
           film1FeeSqm: film1Fee || 0, film1PerTon: 0, film2FeeSqm: film2Fee || 0, film2PerTon: 0,
           inspectFeeSqm: (sheetResult && sheetResult.inspectFeeSqm) || 0, inspectPerSheet: (sheetResult && sheetResult.inspectPerSheet) || 0,
@@ -836,6 +880,7 @@ const PricingEngine = (() => {
         density, sqmPerTon: round2(sqmPerTon),
         thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
         surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
+        colorFeeSqm, colorName,
         surfaceFeePerTon: round2(surfaceFeePerTon),
         linenFeePerTon,
         embossFees: embossFees.map(e => ({ key: e.key, name: e.name, unit: e.unit || 'ton', feePerTon: e.feePerTon || 0, feePerSqm: e.feePerSqm || 0 })),

@@ -709,6 +709,12 @@ tr.main-row:hover .delete-btn { opacity:1; }
 
 .config-hint { font-size:12px; color:var(--text-muted); margin-bottom:10px; }
 
+.sheet-config-row { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+.sheet-config-row > .config-table-wrap { flex:1 1 420px; min-width:0; max-width:100%; }
+#sheetColorConfigTable table { min-width:max-content; }
+#sheetColorConfigTable .ref-num { text-align:right; font-variant-numeric:tabular-nums; }
+.sg-color-art table { border-collapse:collapse; width:100%; }
+.sg-color-art th, .sg-color-art td { padding:5px 8px; border-bottom:1px solid var(--border); font-size:12px; }
 .config-table-wrap {
   max-height:400px; overflow:auto;
   border:1px solid var(--border);

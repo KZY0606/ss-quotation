@@ -627,13 +627,13 @@ test('v1.0.133 喷砂: 别名 sandblast 也可识别', () => {
 test('v1.0.133 喷砂: 无打底 NO.4+喷砂 报错', () => {
   const r = PricingEngine.calculate({ material: '304', surface: 'NO.4+喷砂', thickness: '0.80', width: '1240', length: '2500', origin: '宏旺', basePrice: 15000 });
   eq(r.success, false);
-  eq(r.errors.some(e => /单张高普8K打底/.test(e)), true, JSON.stringify(r.errors));
+  eq(r.errors.some(e => /喷砂仅支持单张8K系列打底/.test(e)), true, JSON.stringify(r.errors));
 });
 
-test('v1.0.133 喷砂: 打底非高普（单张普磨8K+喷砂）报错', () => {
+test('v1.0.145 喷砂: 单张普磨8K+喷砂 允许（规则放宽，任意单张8K可打底）', () => {
   const r = PricingEngine.calculate({ material: '304', surface: '单张普磨8K+喷砂', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
-  eq(r.success, false);
-  eq(r.errors.some(e => /单张高普8K打底/.test(e)), true, JSON.stringify(r.errors));
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.embossFees.some(e => e.key === 'sandblast'), true, '喷砂计入');
 });
 
 // === v1.0.134 保护膜组合动态识别（10C-NOVACEL-LASER-FILM+5C-FILM = 8.8+1.0 = 9.8） ===
@@ -856,10 +856,9 @@ test('v1.0.138 表面: 单张超精8K黄钛金 单张模式 成功', () => {
   eq(r.success, true, JSON.stringify(r.errors));
 });
 
-test('v1.0.138 喷砂: 非高普8K 打底（单张精磨8K+喷砂）仍报错', () => {
+test('v1.0.145 喷砂: 单张精磨8K+喷砂 允许（规则放宽）', () => {
   const r = PricingEngine.calculate({ material: '304', surface: '单张精磨8K+喷砂', thickness: '0.80', width: '1219', length: '2438', origin: '宏旺', basePrice: 15000, calcMode: 'sheet', boardType: 'sheet', packing: '木架' });
-  eq(r.success, false);
-  eq(r.errors.some(e => /单张高普8K打底/.test(e)), true, JSON.stringify(r.errors));
+  eq(r.success, true, JSON.stringify(r.errors));
 });
 
 // === v1.0.139 导出字段透传 ===

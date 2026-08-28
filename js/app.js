@@ -215,6 +215,7 @@ const App = (() => {
     renderFilmConfig();
     renderSurfaceConfig();
     renderSheetSurfaceConfig();
+    renderSheetColorConfig();
     renderPriceReference();
     // 更新版本号
     const vb = document.getElementById('versionBadge');
@@ -455,7 +456,7 @@ const App = (() => {
         // 渲染对应面板
         if (btn.dataset.config === 'films') renderFilmConfig();
         if (btn.dataset.config === 'surfaces') renderSurfaceConfig();
-        if (btn.dataset.config === 'sheetSurfaces') renderSheetSurfaceConfig();
+        if (btn.dataset.config === 'sheetSurfaces') { renderSheetSurfaceConfig(); renderSheetColorConfig(); }
         if (btn.dataset.config === 'reference') renderPriceReference();
         if (btn.dataset.config === 'coilMarkup') renderCoilMarkupConfig();
       });
@@ -1045,6 +1046,7 @@ const App = (() => {
       savePriceOverrides();
       renderSurfaceConfig();
       renderSheetSurfaceConfig();
+      renderSheetColorConfig();
       if (typeof render === 'function') render();
     }
     return changed;
@@ -1662,6 +1664,26 @@ const App = (() => {
     });
     wrap.innerHTML = html;
     bindSurfRowEvents(wrap, renderSheetSurfaceConfig);
+  }
+
+  // v1.0.145 单张彩色工艺板块（纯颜色价，元/㎡ × 厚度 7 段）——独立于表面加工板块的宏旺彩色加工费
+  function renderSheetColorConfig() {
+    const wrap = dom('sheetColorConfigTable');
+    if (!wrap) return;
+    if (typeof COLOR_FEES !== 'object' || typeof COLOR_FEE_SEGMENTS !== 'object') { wrap.innerHTML = ''; return; }
+    const segTitles = COLOR_FEE_SEGMENTS.map(s => s.tMin + '-' + s.tMax);
+    let h = '<div class="sg-group sg-color-art"><div class="sg-group-title">单张彩色工艺 · 纯颜色价（元/㎡，按厚度）</div><table><thead><tr><th>颜色</th>' +
+      segTitles.map(t => '<th>' + t + '</th>').join('') + '</tr></thead><tbody>';
+    Object.keys(COLOR_FEES).forEach(nm => {
+      const arr = COLOR_FEES[nm];
+      h += '<tr><td><span class="cfg-name">' + nm + '</span></td>' +
+        arr.map(v => '<td class="ref-num">' + v + '</td>').join('') + '</tr>';
+    });
+    h += '</tbody></table>' +
+      '<div class="sg-group-title" style="border-top:1px dashed var(--border);color:var(--text-muted);font-weight:400;font-size:12px">' +
+      '用法：颜色价 + 单张8K品质加工费 = 彩色板加工价；1000mm 宽 = 窄板 ×1.25；>2.0mm 与 1500+ 宽暂无彩色；' +
+      '可与喷砂自由组合（如 单张普磨8K钛铝红铜+喷砂，三个费用单独计算）</div></div>';
+    wrap.innerHTML = h;
   }
 
   function renderPriceReference() {
@@ -2646,6 +2668,9 @@ const App = (() => {
     let html = `<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">${hd}</div><div class="calc-breakdown"><div class="calc-section"><div class="calc-section-title">单张计算（售价 = 成本 + 包装/装柜/FOB均摊，按张计价）</div>`;
     html += `<div class="calc-step"><span class="calc-step-label">① 材料费：(基价 ${fmtI(d.basePrice)}×0.93 + 厚度加价 ${fmtI(d.thickSurcharge)} + 边部费用 ${fmtI(d.edgeFee)}（${edgeTxt}）/1000 × 体积 ${d.sheetVolume}m³ × 密度 ${d.density}g/cm³</span><span class="calc-step-value positive">+${fmt(d.sheetMaterialCost)} 元</span></div>`;
     html += `<div class="calc-step"><span class="calc-step-label">② 单张加工费：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.surfaceFeeSqm)}元/㎡${d.normSurface === '2B' ? '（2B 无加工费）' : ''}</span><span class="calc-step-value ${d.sheetSurfaceCost > 0 ? 'positive' : 'zero'}">${d.sheetSurfaceCost > 0 ? '+' + fmt(d.sheetSurfaceCost) : '0'} 元</span></div>`;
+    if (d.colorFeeSqm > 0) {
+      html += `<div class="calc-step"><span class="calc-step-label">② 颜色工艺（${d.colorName}）：面积 ${fmt(d.sheetArea)}㎡ × ${fmt(d.colorFeeSqm)}元/㎡</span><span class="calc-step-value positive">+${fmt(d.colorFeeSqm * d.sheetArea)} 元</span></div>`;
+    }
     if (d.linenFeePerTon) {
       const embossList = (d.embossFees && d.embossFees.length) ? d.embossFees : [{ name: '小珠光(linen)', unit: 'ton', feePerTon: d.linenFeePerTon }];
       for (const e of embossList) {
@@ -2708,6 +2733,10 @@ const App = (() => {
     if (d.surfaceFeeSqm > 0) html += step(`③ 表面加工费 (${d.normSurface || d.surface}, ${fmt(d.surfaceFeeSqm)}元/² × ${fmt(d.sqmPerTon)}²/吨)`, d.surfaceFeePerTon, '元/吨', true);
     else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, d.surfaceFeePerTon, '元/吨', true);
     else html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, 0, '', false);
+    // v1.0.145 颜色工艺费单独展示（单张彩色工艺）
+    if (d.colorFeeSqm > 0) {
+      html += step(`③ 颜色工艺 (${d.colorName}, ${fmt(d.colorFeeSqm)}元/㎡ × ${fmt(d.sqmPerTon)}㎡/吨)`, Math.round(d.colorFeeSqm * d.sqmPerTon * 100) / 100, '元/吨', true);
+    }
     // v1.0.120 压花工艺明细（表面加工+压花 分开显示，如 6K+linen → 6K加工费 + 小珠光压花300元/吨）
     // v1.0.133 6WL/喷砂按元/㎡ 显示
     if (d.linenFeePerTon) {
