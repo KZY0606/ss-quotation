@@ -893,6 +893,44 @@ test('v1.0.149 颜色计算式: 1000宽 单张高普8K宝石蓝 → base 31.5 * 
   eq(r.detail.colorBaseSqm, 31.5, '基础色价=' + r.detail.colorBaseSqm);
   eq(r.detail.colorMult, 1.25, '系数=' + r.detail.colorMult);
 });
+// === v1.0.160 五尺(1500/1524/1530) 单张彩色加工 = 四尺纯颜色费 ×1.7 ===
+test('v1.0.160 五尺彩色: 单张砂面NO.4黄钛金 1500 0.24-1.2 → 打包 2.5白板 + 6*1.7=10.2 颜色 = 12.7', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4黄钛金', thickness: '0.80', width: '1500', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  // 砂面/拉丝彩色与四尺/1000 一致：打包单条展示（不拆分），12.7 = 白板2.5 + 颜色6*1.7=10.2
+  eq(r.detail.surfaceFeeSqm, 12.7, '打包加工费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 0, '颜色费=' + r.detail.colorFeeSqm);
+});
+test('v1.0.160 五尺彩色: 单张拉丝HL黄钛金 1524 0.24-1.2 → 同样 12.7（1524 同 1500）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张拉丝HL黄钛金', thickness: '0.80', width: '1524', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 12.7, '打包加工费=' + r.detail.surfaceFeeSqm);
+});
+test('v1.0.160 五尺彩色: 单张高普8K黄钛金 1530 0.6-1.2 → 白板9 + 10.2 = 19.2', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黄钛金', thickness: '0.80', width: '1530', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 9, '品质费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 10.2, '颜色费=' + r.detail.colorFeeSqm);
+});
+test('v1.0.160 五尺彩色: 组合名 单张普磨8K黄钛金 1500 0.24-1.2 → 白板8 + 颜色10.2 = 18.2', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张普磨8K黄钛金', thickness: '0.80', width: '1500', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 8, '品质费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 10.2, '颜色费=' + r.detail.colorFeeSqm);
+});
+test('v1.0.160 五尺彩色: 单张高普8K宝石蓝 1500 1.90-1.95 → base 31.5 * 1.7 = 53.55', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K宝石蓝', thickness: '1.90-1.95', width: '1500', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.colorBaseSqm, 31.5, '基础色价=' + r.detail.colorBaseSqm);
+  eq(r.detail.colorMult, 1.7, '系数=' + r.detail.colorMult);
+  eq(r.detail.colorFeeSqm, 53.55, '颜色费=' + r.detail.colorFeeSqm);
+});
+test('v1.0.160 五尺彩色: 单张高普8K黑钛金 1500 1.60-1.69 → 白板13 + 20*1.7=34 = 47', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金', thickness: '1.65', width: '1500', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 13, '品质费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 34, '颜色费=' + r.detail.colorFeeSqm);
+});
 test('v1.0.149 颜色计算式: 1219宽 单张精磨8K黑钛金 1.14 → base 6（无系数）', () => {
   const r = PricingEngine.calculate({ material: '304', surface: '单张精磨8K黑钛金', thickness: '1.14-1.15', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
   eq(r.success, true, JSON.stringify(r.errors));

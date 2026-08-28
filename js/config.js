@@ -419,6 +419,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 27.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 30.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 34.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 12.7, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 17.1, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 21.5, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 38.5, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 55.5, unit: 'sqm' },
   ],
   '单张砂面NO.4玫瑰金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 7.5, unit: 'sqm' },
@@ -442,6 +450,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 27.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 30.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 34.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 12.7, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 17.1, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 21.5, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 38.5, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 55.5, unit: 'sqm' },
   ],
   '单张砂面NO.4香槟金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 7.5, unit: 'sqm' },
@@ -465,6 +481,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 27.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 30.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 34.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 12.7, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 17.1, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 21.5, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 38.5, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 55.5, unit: 'sqm' },
   ],
   '单张砂面NO.4黑钛金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 7.5, unit: 'sqm' },
@@ -488,6 +512,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 27.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 30.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 34.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 12.7, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 17.1, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 21.5, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 38.5, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 55.5, unit: 'sqm' },
   ],
   '单张砂面NO.4宝石蓝': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 9, unit: 'sqm' },
@@ -511,6 +543,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 29, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 32, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 36, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 15.25, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 19.65, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 24.05, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 41.05, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 46.15, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 51.25, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 58.05, unit: 'sqm' },
   ],
   '单张砂面NO.4钛块古铜': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 9, unit: 'sqm' },
@@ -534,6 +574,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 29, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 32, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 36, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 15.25, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 19.65, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 24.05, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 41.05, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 46.15, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 51.25, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 58.05, unit: 'sqm' },
   ],
   '单张砂面NO.4紫罗兰': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 13, unit: 'sqm' },
@@ -557,6 +605,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 33, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 36, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 40, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 22.05, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 26.45, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 30.85, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 47.85, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 52.95, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 58.05, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 64.85, unit: 'sqm' },
   ],
   '单张砂面NO.4紫红': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 15.5, unit: 'sqm' },
@@ -580,6 +636,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 35.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 38.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 42.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 26.3, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 30.7, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 35.1, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 52.1, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 57.2, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 62.3, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 69.1, unit: 'sqm' },
   ],
   '单张砂面NO.4中国红': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 18, unit: 'sqm' },
@@ -603,6 +667,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 38, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 41, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 45, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 30.55, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 34.95, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 39.35, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 56.35, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 61.45, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 66.55, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 73.35, unit: 'sqm' },
   ],
   '单张砂面NO.4翡翠绿': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 23.5, unit: 'sqm' },
@@ -626,6 +698,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 43.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 46.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 50.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 39.9, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 44.3, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 65.7, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 70.8, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 75.9, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 82.7, unit: 'sqm' },
   ],
   '单张砂面NO.4彩虹色': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 25.5, unit: 'sqm' },
@@ -649,6 +729,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 45.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 48.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 52.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 43.3, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 47.7, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 52.1, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 69.1, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 74.2, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 79.3, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 86.1, unit: 'sqm' },
   ],
   '单张砂面NO.4': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 1.5, unit: 'sqm' },
@@ -694,6 +782,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 27.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 30.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 34.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 12.7, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 17.1, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 21.5, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 38.5, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 55.5, unit: 'sqm' },
   ],
   '单张拉丝HL玫瑰金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 7.5, unit: 'sqm' },
@@ -717,6 +813,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 27.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 30.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 34.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 12.7, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 17.1, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 21.5, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 38.5, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 55.5, unit: 'sqm' },
   ],
   '单张拉丝HL香槟金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 7.5, unit: 'sqm' },
@@ -740,6 +844,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 27.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 30.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 34.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 12.7, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 17.1, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 21.5, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 38.5, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 55.5, unit: 'sqm' },
   ],
   '单张拉丝HL黑钛金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 7.5, unit: 'sqm' },
@@ -763,6 +875,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 27.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 30.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 34.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 12.7, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 17.1, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 21.5, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 38.5, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 55.5, unit: 'sqm' },
   ],
   '单张拉丝HL宝石蓝': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 9, unit: 'sqm' },
@@ -786,6 +906,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 29, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 32, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 36, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 15.25, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 19.65, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 24.05, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 41.05, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 46.15, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 51.25, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 58.05, unit: 'sqm' },
   ],
   '单张拉丝HL钛块古铜': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 9, unit: 'sqm' },
@@ -809,6 +937,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 29, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 32, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 36, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 15.25, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 19.65, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 24.05, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 41.05, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 46.15, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 51.25, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 58.05, unit: 'sqm' },
   ],
   '单张拉丝HL紫罗兰': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 13, unit: 'sqm' },
@@ -832,6 +968,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 33, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 36, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 40, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 22.05, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 26.45, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 30.85, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 47.85, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 52.95, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 58.05, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 64.85, unit: 'sqm' },
   ],
   '单张拉丝HL紫红': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 15.5, unit: 'sqm' },
@@ -855,6 +999,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 35.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 38.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 42.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 26.3, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 30.7, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 35.1, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 52.1, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 57.2, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 62.3, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 69.1, unit: 'sqm' },
   ],
   '单张拉丝HL中国红': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 18, unit: 'sqm' },
@@ -878,6 +1030,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 38, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 41, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 45, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 30.55, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 34.95, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 39.35, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 56.35, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 61.45, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 66.55, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 73.35, unit: 'sqm' },
   ],
   '单张拉丝HL翡翠绿': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 23.5, unit: 'sqm' },
@@ -901,6 +1061,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 43.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 46.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 50.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 39.9, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 44.3, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 48.7, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 65.7, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 70.8, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 75.9, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 82.7, unit: 'sqm' },
   ],
   '单张拉丝HL彩虹色': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 25.5, unit: 'sqm' },
@@ -924,6 +1092,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1250, wMax: 1250, price: 45.5, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1250, wMax: 1250, price: 48.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1250, wMax: 1250, price: 52.5, unit: 'sqm' },
+  
+    { tMin: 0.24, tMax: 1.2, wMin: 1500, wMax: 1530, price: 43.3, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 47.7, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 52.1, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 69.1, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 74.2, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 79.3, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 86.1, unit: 'sqm' },
   ],
   '单张拉丝HL': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1240, price: 1.5, unit: 'sqm' },
@@ -978,6 +1154,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 38.75, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 42.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 47.5, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 19.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 24.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 30, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 47, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 52.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 57.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 64, unit: 'sqm' },
   ],
   '单张高普8K玫瑰金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
@@ -994,6 +1178,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 38.75, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 42.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 47.5, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 19.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 24.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 30, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 47, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 52.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 57.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 64, unit: 'sqm' },
   ],
   '单张高普8K香槟金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
@@ -1010,6 +1202,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 38.75, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 42.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 47.5, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 19.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 24.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 30, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 47, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 52.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 57.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 64, unit: 'sqm' },
   ],
   '单张高普8K黑钛金': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 10, unit: 'sqm' },
@@ -1026,6 +1226,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 38.75, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 42.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 47.5, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 19.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 24.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 30, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 47, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 52.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 57.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 64, unit: 'sqm' },
   ],
   '单张高普8K宝石蓝': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 11.5, unit: 'sqm' },
@@ -1042,6 +1250,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 40.63, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 44.38, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 49.38, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 21.75, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 27.15, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 32.55, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 49.55, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 54.65, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 59.75, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 66.55, unit: 'sqm' },
   ],
   '单张高普8K紫罗兰': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 15.5, unit: 'sqm' },
@@ -1058,6 +1274,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 45.63, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 49.38, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 54.38, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 28.55, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 33.95, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 39.35, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 56.35, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 61.45, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 66.55, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 73.35, unit: 'sqm' },
   ],
   '单张高普8K紫红': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 18, unit: 'sqm' },
@@ -1074,6 +1298,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 48.75, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 52.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 57.5, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 32.8, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 38.2, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 43.6, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 60.6, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 65.7, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 70.8, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 77.6, unit: 'sqm' },
   ],
   '单张高普8K翡翠绿': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 26, unit: 'sqm' },
@@ -1090,6 +1322,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 58.75, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 62.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 67.5, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 46.4, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 51.8, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 57.2, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 74.2, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 79.3, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 84.4, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 91.2, unit: 'sqm' },
   ],
   '单张高普8K彩虹色': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 28, unit: 'sqm' },
@@ -1106,6 +1346,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 61.25, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 65, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 70, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 49.8, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 55.2, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 60.6, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 77.6, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 82.7, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 87.8, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 94.6, unit: 'sqm' },
   ],
   '单张高普8K钛块古铜': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 11.5, unit: 'sqm' },
@@ -1122,6 +1370,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 40.63, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 44.38, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 49.38, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 21.75, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 27.15, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 32.55, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 49.55, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 54.65, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 59.75, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 66.55, unit: 'sqm' },
   ],
   '单张高普8K中国红': [
     { tMin: 0.24, tMax: 1.2, wMin: 1219, wMax: 1250, price: 20.5, unit: 'sqm' },
@@ -1138,6 +1394,14 @@ const SURFACE_FEES = {
     { tMin: 1.7, tMax: 1.79, wMin: 1000, wMax: 1000, price: 51.88, unit: 'sqm' },
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 55.63, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 60.63, unit: 'sqm' },
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 37.05, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 42.45, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 47.85, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 64.85, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 69.95, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 75.05, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 81.85, unit: 'sqm' },
   ],
   '单张高普8K': [
     { tMin: 0.24, tMax: 1.20, wMin: 1219, wMax: 1250, price: 4.0,  unit: 'sqm' },
@@ -1173,6 +1437,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 45, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 50, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 21.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 26.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 32, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 49, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 54.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 59.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 66, unit: 'sqm' },
   ],
   '单张普精8K玫瑰金': [
     
@@ -1191,6 +1463,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 45, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 50, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 21.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 26.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 32, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 49, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 54.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 59.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 66, unit: 'sqm' },
   ],
   '单张普精8K香槟金': [
     
@@ -1209,6 +1489,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 45, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 50, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 21.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 26.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 32, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 49, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 54.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 59.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 66, unit: 'sqm' },
   ],
   '单张普精8K黑钛金': [
     
@@ -1227,6 +1515,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 45, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 50, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 21.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 26.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 32, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 49, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 54.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 59.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 66, unit: 'sqm' },
   ],
   '单张普精8K宝石蓝': [
     
@@ -1245,6 +1541,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 46.875, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 51.875, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 23.75, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 29.15, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 34.55, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 51.55, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 56.65, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 61.75, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 68.55, unit: 'sqm' },
   ],
   '单张普精8K紫罗兰': [
     
@@ -1263,6 +1567,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 51.875, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 56.875, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 30.55, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 35.95, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 41.35, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 58.35, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 63.45, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 68.55, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 75.35, unit: 'sqm' },
   ],
   '单张普精8K紫红': [
     
@@ -1281,6 +1593,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 55, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 60, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 34.8, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 40.2, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 45.6, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 62.6, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 67.7, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 72.8, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 79.6, unit: 'sqm' },
   ],
   '单张普精8K翡翠绿': [
     
@@ -1299,6 +1619,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 65, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 70, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 48.4, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 53.8, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 59.2, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 76.2, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 81.3, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 86.4, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 93.2, unit: 'sqm' },
   ],
   '单张普精8K彩虹色': [
     
@@ -1317,6 +1645,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 67.5, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 72.5, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 51.8, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 57.2, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 62.6, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 79.6, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 84.7, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 89.8, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 96.6, unit: 'sqm' },
   ],
   '单张普精8K钛块古铜': [
     
@@ -1335,6 +1671,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 46.875, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 51.875, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 23.75, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 29.15, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 34.55, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 51.55, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 56.65, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 61.75, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 68.55, unit: 'sqm' },
   ],
   '单张普精8K中国红': [
     
@@ -1353,6 +1697,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 58.125, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 63.125, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 39.05, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 44.45, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 49.85, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 66.85, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 71.95, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 77.05, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 83.85, unit: 'sqm' },
   ],
   '单张普精8K': [
     
@@ -1390,6 +1742,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 46.25, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 51.25, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 22.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 27.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 33, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 50, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 55.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 60.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 67, unit: 'sqm' },
   ],
   '单张精磨8K玫瑰金': [
     
@@ -1408,6 +1768,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 46.25, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 51.25, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 22.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 27.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 33, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 50, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 55.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 60.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 67, unit: 'sqm' },
   ],
   '单张精磨8K香槟金': [
     
@@ -1426,6 +1794,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 46.25, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 51.25, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 22.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 27.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 33, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 50, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 55.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 60.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 67, unit: 'sqm' },
   ],
   '单张精磨8K黑钛金': [
     
@@ -1444,6 +1820,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 46.25, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 51.25, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 22.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 27.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 33, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 50, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 55.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 60.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 67, unit: 'sqm' },
   ],
   '单张精磨8K宝石蓝': [
     
@@ -1462,6 +1846,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 48.125, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 53.125, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 24.75, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 30.15, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 35.55, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 52.55, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 57.65, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 62.75, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 69.55, unit: 'sqm' },
   ],
   '单张精磨8K紫罗兰': [
     
@@ -1480,6 +1872,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 53.125, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 58.125, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 31.55, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 36.95, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 42.35, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 59.35, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 64.45, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 69.55, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 76.35, unit: 'sqm' },
   ],
   '单张精磨8K紫红': [
     
@@ -1498,6 +1898,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 56.25, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 61.25, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 35.8, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 41.2, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 46.6, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 63.6, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 68.7, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 73.8, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 80.6, unit: 'sqm' },
   ],
   '单张精磨8K翡翠绿': [
     
@@ -1516,6 +1924,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 66.25, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 71.25, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 49.4, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 54.8, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 60.2, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 77.2, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 82.3, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 87.4, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 94.2, unit: 'sqm' },
   ],
   '单张精磨8K彩虹色': [
     
@@ -1534,6 +1950,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 68.75, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 73.75, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 52.8, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 58.2, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 63.6, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 80.6, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 85.7, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 90.8, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 97.6, unit: 'sqm' },
   ],
   '单张精磨8K钛块古铜': [
     
@@ -1552,6 +1976,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 48.125, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 53.125, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 24.75, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 30.15, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 35.55, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 52.55, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 57.65, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 62.75, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 69.55, unit: 'sqm' },
   ],
   '单张精磨8K中国红': [
     
@@ -1570,6 +2002,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 59.375, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 64.375, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 40.05, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 45.45, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 50.85, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 67.85, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 72.95, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 78.05, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 84.85, unit: 'sqm' },
   ],
   '单张精磨8K': [
     
@@ -1607,6 +2047,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 58.75, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 63.75, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 32.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 37.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 43, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 60, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 65.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 70.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 77, unit: 'sqm' },
   ],
   '单张超精8K玫瑰金': [
     
@@ -1625,6 +2073,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 58.75, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 63.75, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 32.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 37.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 43, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 60, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 65.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 70.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 77, unit: 'sqm' },
   ],
   '单张超精8K香槟金': [
     
@@ -1643,6 +2099,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 58.75, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 63.75, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 32.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 37.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 43, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 60, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 65.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 70.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 77, unit: 'sqm' },
   ],
   '单张超精8K黑钛金': [
     
@@ -1661,6 +2125,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 58.75, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 63.75, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 32.2, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 37.6, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 43, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 60, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 65.1, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 70.2, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 77, unit: 'sqm' },
   ],
   '单张超精8K宝石蓝': [
     
@@ -1679,6 +2151,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 60.625, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 65.625, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 34.75, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 40.15, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 45.55, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 62.55, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 67.65, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 72.75, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 79.55, unit: 'sqm' },
   ],
   '单张超精8K紫罗兰': [
     
@@ -1697,6 +2177,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 65.625, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 70.625, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 41.55, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 46.95, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 52.35, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 69.35, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 74.45, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 79.55, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 86.35, unit: 'sqm' },
   ],
   '单张超精8K紫红': [
     
@@ -1715,6 +2203,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 68.75, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 73.75, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 45.8, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 51.2, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 56.6, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 73.6, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 78.7, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 83.8, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 90.6, unit: 'sqm' },
   ],
   '单张超精8K翡翠绿': [
     
@@ -1733,6 +2229,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 78.75, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 83.75, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 59.4, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 64.8, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 70.2, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 87.2, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 92.3, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 97.4, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 104.2, unit: 'sqm' },
   ],
   '单张超精8K彩虹色': [
     
@@ -1751,6 +2255,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 81.25, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 86.25, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 62.8, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 68.2, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 73.6, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 90.6, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 95.7, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 100.8, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 107.6, unit: 'sqm' },
   ],
   '单张超精8K钛块古铜': [
     
@@ -1769,6 +2281,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 60.625, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 65.625, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 34.75, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 40.15, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 45.55, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 62.55, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 67.65, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 72.75, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 79.55, unit: 'sqm' },
   ],
   '单张超精8K中国红': [
     
@@ -1787,6 +2307,14 @@ const SURFACE_FEES = {
     { tMin: 1.8, tMax: 1.89, wMin: 1000, wMax: 1000, price: 71.875, unit: 'sqm' },
     { tMin: 1.9, tMax: 2, wMin: 1000, wMax: 1000, price: 76.875, unit: 'sqm' },
 
+  
+    { tMin: 0.6, tMax: 1.2, wMin: 1500, wMax: 1530, price: 50.05, unit: 'sqm' },
+    { tMin: 1.21, tMax: 1.5, wMin: 1500, wMax: 1530, price: 55.45, unit: 'sqm' },
+    { tMin: 1.51, tMax: 1.59, wMin: 1500, wMax: 1530, price: 60.85, unit: 'sqm' },
+    { tMin: 1.6, tMax: 1.69, wMin: 1500, wMax: 1530, price: 77.85, unit: 'sqm' },
+    { tMin: 1.7, tMax: 1.79, wMin: 1500, wMax: 1530, price: 82.95, unit: 'sqm' },
+    { tMin: 1.8, tMax: 1.89, wMin: 1500, wMax: 1530, price: 88.05, unit: 'sqm' },
+    { tMin: 1.9, tMax: 2, wMin: 1500, wMax: 1530, price: 94.85, unit: 'sqm' },
   ],
   '单张超精8K': [
     

@@ -467,9 +467,10 @@ const PricingEngine = (() => {
     if (!Array.isArray(arr)) return null;
     const idx = COLOR_FEE_SEGMENTS.findIndex(s => thickness >= s.tMin && thickness <= s.tMax);
     if (idx < 0) return null;
-    if (width >= 1500) return null;
     let v = arr[idx];
     if (width === 1000) v = v * 1.25;
+    else if (width >= 1500 && width <= 1530) v = v * 1.7; // v1.0.160 五尺彩色 = 四尺纯颜色费 ×1.7
+    else if (width > 1530) return null;
     return round2(v + 1e-9);
   }
   // v1.0.145 喷砂打底规则放宽：任意单张 8K 系列即可（不再强制高普8K）
@@ -725,7 +726,7 @@ const PricingEngine = (() => {
         const cIdx = COLOR_FEE_SEGMENTS.findIndex(s => thickness >= s.tMin && thickness <= s.tMax);
         if (cIdx >= 0 && Array.isArray(COLOR_FEES[colorName]) && COLOR_FEES[colorName][cIdx] != null) {
           colorBaseSqm = COLOR_FEES[colorName][cIdx];
-          colorMult = width === 1000 ? 1.25 : 1;
+          colorMult = width === 1000 ? 1.25 : (width >= 1500 && width <= 1530 ? 1.7 : 1);
         }
       }
     }
