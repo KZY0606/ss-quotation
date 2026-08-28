@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.150">
+  <link rel="stylesheet" href="css/style.css?v=1.0.151">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -55,6 +55,7 @@
           <button class="config-tab" data-config="films">🔖 保护膜</button>
           <button class="config-tab" data-config="surfaces">✨ 表面加工</button>
           <button class="config-tab" data-config="sheetSurfaces">📐 单张加工</button>
+<button class="config-tab" data-config="sheetColors">🎨 单张彩色</button>
           <button class="config-tab" data-config="coilMarkup">📈 销售加价</button>
           <button class="config-tab" data-config="reference">📋 价格参考</button>
         </div>
@@ -124,11 +125,14 @@
             <div class="price-publish-info"><span id="sheetSurfaceStatusText">单张加工同步：加载中…</span></div>
             <button id="publishSheetSurfaceBtn" class="btn btn-sm" style="display:none;">📢 发布当前单张加工价格</button>
           </div>
-          <div class="config-hint">单张加工单价 · 按宽度档分组（蓝=1000 / 绿=1219-1250 / 橙=1500-1530），每个档位都可改写，🔒 锁定整行；右侧为单张彩色工艺板块（纯颜色价，与左侧品质价组合使用）</div>
-          <div class="sheet-config-row">
-            <div id="sheetSurfaceConfigTable" class="config-table-wrap"></div>
-            <div id="sheetColorConfigTable" class="config-table-wrap"></div>
-          </div>
+          <div class="config-hint">单张加工单价 · 按宽度档分组（蓝=1000 / 绿=1219-1250 / 橙=1500-1530），每个档位都可改写，🔒 锁定整行</div>
+          <div id="sheetSurfaceConfigTable" class="config-table-wrap"></div>
+        </div>
+
+        <!-- 单张彩色工艺 v1.0.151：独立板块（纯颜色价，与单张8K品质价组合使用） -->
+        <div class="config-panel" data-config="sheetColors">
+          <div class="config-hint">单张彩色工艺 · 纯颜色价（元/㎡，按厚度 7 段）；颜色价 + 单张8K品质加工费 = 彩色板加工价；1000mm 宽 = 窄板 ×1.25；>2.0mm 与 1500+ 宽暂无彩色；可与喷砂自由组合（如 单张普磨8K钛铝红铜+喷砂，三个费用单独计算）</div>
+          <div id="sheetColorConfigTable" class="config-table-wrap"></div>
         </div>
 
                 <!-- 销售加价 -->
@@ -284,13 +288,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.150"></script>
-  <script src="js/changelog.js?v=1.0.150"></script>
-<script src="js/config.js?v=1.0.150"></script>
-  <script src="js/engine.js?v=1.0.150"></script>
-  <script src="js/parser.js?v=1.0.150"></script>
-    <script src="js/contract-template.js?v=1.0.150"></script>
-  <script src="js/app.js?v=1.0.150"></script>
+  <script src="js/auth.js?v=1.0.151"></script>
+  <script src="js/changelog.js?v=1.0.151"></script>
+<script src="js/config.js?v=1.0.151"></script>
+  <script src="js/engine.js?v=1.0.151"></script>
+  <script src="js/parser.js?v=1.0.151"></script>
+    <script src="js/contract-template.js?v=1.0.151"></script>
+  <script src="js/app.js?v=1.0.151"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

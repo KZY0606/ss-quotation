@@ -456,7 +456,8 @@ const App = (() => {
         // 渲染对应面板
         if (btn.dataset.config === 'films') renderFilmConfig();
         if (btn.dataset.config === 'surfaces') renderSurfaceConfig();
-        if (btn.dataset.config === 'sheetSurfaces') { renderSheetSurfaceConfig(); renderSheetColorConfig(); }
+        if (btn.dataset.config === 'sheetSurfaces') renderSheetSurfaceConfig();
+        if (btn.dataset.config === 'sheetColors') renderSheetColorConfig();
         if (btn.dataset.config === 'reference') renderPriceReference();
         if (btn.dataset.config === 'coilMarkup') renderCoilMarkupConfig();
       });
@@ -1682,11 +1683,18 @@ const App = (() => {
     if (!wrap) return;
     if (typeof COLOR_FEES !== 'object' || typeof COLOR_FEE_SEGMENTS !== 'object') { wrap.innerHTML = ''; return; }
     const segTitles = COLOR_FEE_SEGMENTS.map(s => s.tMin + '-' + s.tMax);
+    // v1.0.151 颜色行辨识度：每行按对应颜色显示（首列色块 + 行淡色背景）
+    const COLOR_HEX = {
+      '黄钛金': '#D9A404', '玫瑰金': '#E3968C', '香槟金': '#E0C98F', '黑钛金': '#4A4A4A',
+      '宝石蓝': '#1E6FD9', '钛块古铜': '#9C6238', '紫罗兰': '#8A5CD8', '紫红': '#C94F8E',
+      '中国红': '#D43A3A', '翡翠绿': '#2E8B57', '彩虹色': '#8B5CF6', '钛铝红铜': '#B06A3A'
+    };
     let h = '<div class="sg-group sg-color-art"><div class="sg-group-title">单张彩色工艺 · 纯颜色价（元/㎡，按厚度）</div><table><thead><tr><th>颜色</th>' +
       segTitles.map(t => '<th>' + t + '</th>').join('') + '</tr></thead><tbody>';
     Object.keys(COLOR_FEES).forEach(nm => {
       const arr = COLOR_FEES[nm];
-      h += '<tr><td><span class="cfg-name">' + nm + '</span></td>' +
+      const hex = COLOR_HEX[nm] || '#888';
+      h += '<tr style="background:' + hex + '1A"><td style="background:' + hex + '"><span class="cfg-name" style="color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);border-radius:3px;padding:1px 6px;display:inline-block">' + nm + '</span></td>' +
         arr.map(v => '<td class="ref-num">' + v + '</td>').join('') + '</tr>';
     });
     h += '</tbody></table>' +
