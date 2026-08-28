@@ -413,8 +413,8 @@ const ExcelParser = (() => {
     // 数字格式：人民币 ¥ 整数、美元 $ 两位小数（数据行+合计行）
     for (let R = 2; R <= ws.rowCount; R++) {
       const row = ws.getRow(R);
-      [13, 15].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') setNumFmt(c, '"¥"#,##0'); });
-      [14, 16].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') setNumFmt(c, '"$"#,##0.00'); });
+      [13, 15].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') setNumFmt(c, '#,##0'); });
+      [14, 16].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') setNumFmt(c, '#,##0.00'); });
     }
 
     // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
@@ -493,7 +493,24 @@ const ExcelParser = (() => {
     let extra = 0;
     if (okRows > 9) {
       extra = okRows - 9;
+      // exceljs spliceRows 会丢失 18 行及以下的合并区——先记录、拆除，插行后按 extra 平移重建
+      // 注意：ws._merges 键=主格地址（如 'A26'），值=Range 对象（.model={top,left,bottom,right}）
+      const keepMerges = [];
+      Object.keys(ws._merges || {}).forEach(addr => {
+        const rng = ws._merges[addr];
+        const m = rng && rng.model ? rng.model : rng;
+        if (m && typeof m.top === 'number') keepMerges.push({ top: m.top, left: m.left, bottom: m.bottom, right: m.right });
+      });
+      keepMerges.forEach(m => {
+        try { ws.unMergeCells(m.top, m.left, m.bottom, m.right); } catch (e) {}
+      });
       ws.spliceRows(18, 0, ...new Array(extra).fill(null));
+      // 重建：合并区按 extra 平移（只有 bottom>=18 的才需要平移；数据行区 9-17 无合并）
+      keepMerges.forEach(m => {
+        const top = m.top >= 18 ? m.top + extra : m.top;
+        const bottom = m.bottom >= 18 ? m.bottom + extra : m.bottom;
+        try { ws.mergeCells(top, m.left, bottom, m.right); } catch (e) {}
+      });
       const src = ws.getRow(9);
       for (let rn = 18; rn <= 17 + extra; rn++) {
         const dst = ws.getRow(rn);
@@ -572,32 +589,32 @@ const ExcelParser = (() => {
       const sr = ws.getCell('A' + srRow);
       if (sr.font) sr.font = Object.assign({}, sr.font, { color: { argb: 'FFFF0000' } });
     }
-    // 9. 数据行多时分页：银行信息+签字区整体放第二页（不拆分）
-    // 模板原布局：银行信息标题 R36、银行行 R37-47、签字 R49-50；数据每多 1 行整体下移 extra
+    // 9. 数据行多时分页：合计行后分页——第一页=表头+数据+合计，第二页=Total+备注+条款+银行+签字（整块不被拆）
+    // 注意：不能用 fitToPage（fit 模式下 WPS/Excel 忽略手动分页符，银行区会被自动分页切开）
     if (extra > 0) {
-      const bankTitleRow = 36 + extra; // 银行信息标题行
-      // 兼容不同 exceljs 版本：rowBreaks 为数组（旧版需手动 push）
+      const brkRow = 18 + extra + 1; // 合计行的下一行（Total 行）
       try {
         if (Array.isArray(ws.rowBreaks)) {
-          ws.rowBreaks.push({ id: bankTitleRow, man: 1, min: 0, max: 16383 });
+          ws.rowBreaks.push({ id: brkRow, man: 1, min: 0, max: 16383 });
         } else if (ws.rowBreaks && typeof ws.rowBreaks.add === 'function') {
-          ws.rowBreaks.add({ id: bankTitleRow, man: 1, min: 0, max: 16383 });
+          ws.rowBreaks.add({ id: brkRow, man: 1, min: 0, max: 16383 });
         }
       } catch (e) { /* 分页失败不影响导出 */ }
     }
     // 10. 数字格式
     for (let R = 9; R <= lastData; R++) {
       const row = ws.getRow(R);
-      const c12 = row.getCell(12); if (typeof c12.value === 'number') setNumFmt(c12, isRmb ? '"¥"#,##0' : '"$"#,##0.00');
-      const c13 = row.getCell(13); if (c13.value && c13.value.formula) setNumFmt(c13, isRmb ? '"¥"#,##0' : '"$"#,##0.00');
+      const c12 = row.getCell(12); if (typeof c12.value === 'number') setNumFmt(c12, isRmb ? '#,##0' : '#,##0.00');
+      const c13 = row.getCell(13); if (c13.value && c13.value.formula) setNumFmt(c13, isRmb ? '#,##0' : '#,##0.00');
     }
     // 11. 打印设置：横向 A4、所有列一页宽、窄边距
     ws.pageSetup.orientation = 'landscape';
     ws.pageSetup.paperSize = 9;
-    ws.pageSetup.fitToPage = true;
-    ws.pageSetup.fitToWidth = 1;
-    ws.pageSetup.fitToHeight = 0;
-    ws.pageSetup.margins = { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
+    // 固定缩放（模板 62%）：fitToPage 会让 WPS/Excel 忽略手动分页符
+    ws.pageSetup.scale = 62;
+    ws.pageSetup.fitToPage = false;
+    ws.page_setup = ws.pageSetup;
+    ws.pageSetup.margins = { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
 
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
