@@ -2691,7 +2691,7 @@ const App = (() => {
           ? Math.round(e.feePerSqm * (d.sheetArea || 0) * 1000) / 1000
           : Math.round(e.feePerTon / 1000 * (d.sheetWeightKg || 0) * 1000) / 1000;
         const labelTxt = isSqm
-          ? `${e.feePerSqm}元/㎡ × ${fmt(d.sheetArea)}㎡`
+          ? `${e.feePerSqm}*${fmt(d.sheetArea)}=${fmt(perSheet)}元`
           : `${e.feePerTon}元/吨 ÷ 1000 × ${fmt(d.sheetWeightKg)}kg`;
         const eLabel2 = e.name === '喷砂' ? '③ 喷砂' : `③ 压花工艺（${e.name}）`;
         html += `<div class="calc-step"><span class="calc-step-label">${eLabel2}：${labelTxt}</span><span class="calc-step-value ${perSheet > 0 ? 'positive' : 'zero'}">${perSheet > 0 ? '+' + fmt(perSheet) : '0'} 元</span></div>`;
@@ -2761,7 +2761,13 @@ const App = (() => {
       for (const e of embossList) {
         const isSqm = e.unit === 'sqm';
         const eLabel = e.name === '喷砂' ? '④ 喷砂' : `④ 压花工艺（${e.name}）`;
-        html += step(eLabel, isSqm ? e.feePerSqm : e.feePerTon, isSqm ? '元/㎡' : '元/吨', true);
+        if (isSqm) {
+          // v1.0.150 平方项显示 单价*面积=金额（与其他费用一致，如 喷砂 3*66.37=199.11元/吨）
+          const perTon = Math.round(e.feePerSqm * d.sqmPerTon * 100) / 100;
+          html += step(`${eLabel}：${e.feePerSqm}*${fmt(d.sqmPerTon)}=${fmt(perTon)}元/吨`, perTon, '元/吨', true);
+        } else {
+          html += step(`${eLabel}：${e.feePerTon}元/吨`, e.feePerTon, '元/吨', true);
+        }
       }
     }
     let stepN = d.linenFeePerTon ? 5 : 4;
