@@ -455,7 +455,7 @@ const PricingEngine = (() => {
   // 仅单张 8K 系列（普磨/高普/普精/精磨/超精）；完整彩色 key（如 单张高普8K黄钛金）优先走 SURFACE_FEES
   function splitSheetColor(raw) {
     const s = String(raw || '').trim();
-    const m = s.match(/^单张(普磨|高普|普精|精磨|超精)8[kK](.+)$/);
+    const m = s.match(/^单张(砂面NO\.4|拉丝HL|普磨8K|高普8K|普精8K|精磨8K|超精8K)(.+)$/);
     if (!m) return null;
     const ck = COLOR_ALIASES[m[2].trim()] || COLOR_ALIASES[String(m[2] || '').trim().toLowerCase()];
     if (!ck || !COLOR_FEES[ck]) return null;

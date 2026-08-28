@@ -897,14 +897,45 @@ test('v1.0.149 颜色计算式: 1000宽 单张高普8K宝石蓝 → base 31.5 * 
 test('v1.0.160 五尺彩色: 单张砂面NO.4黄钛金 1500 0.24-1.2 → 打包 2.5白板 + 6*1.7=10.2 颜色 = 12.7', () => {
   const r = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4黄钛金', thickness: '0.80', width: '1500', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
   eq(r.success, true, JSON.stringify(r.errors));
-  // 砂面/拉丝彩色与四尺/1000 一致：打包单条展示（不拆分），12.7 = 白板2.5 + 颜色6*1.7=10.2
-  eq(r.detail.surfaceFeeSqm, 12.7, '打包加工费=' + r.detail.surfaceFeeSqm);
-  eq(r.detail.colorFeeSqm, 0, '颜色费=' + r.detail.colorFeeSqm);
+  // v1.0.161 拆分展示：基础表面费 2.5 + 颜色费 10.2（6*1.7）
+  eq(r.detail.surfaceFeeSqm, 2.5, '基础表面费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 10.2, '颜色费=' + r.detail.colorFeeSqm);
+  eq(r.detail.colorBaseSqm, 6, '基础色价=' + r.detail.colorBaseSqm);
+  eq(r.detail.colorMult, 1.7, '系数=' + r.detail.colorMult);
 });
 test('v1.0.160 五尺彩色: 单张拉丝HL黄钛金 1524 0.24-1.2 → 同样 12.7（1524 同 1500）', () => {
   const r = PricingEngine.calculate({ material: '304', surface: '单张拉丝HL黄钛金', thickness: '0.80', width: '1524', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
   eq(r.success, true, JSON.stringify(r.errors));
-  eq(r.detail.surfaceFeeSqm, 12.7, '打包加工费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.surfaceFeeSqm, 2.5, '基础表面费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 10.2, '颜色费=' + r.detail.colorFeeSqm);
+});
+// === v1.0.161 所有单张彩色拆分展示（基础表面费 + 颜色费，总额不变）===
+test('v1.0.161 拆分: 单张砂面NO.4黄钛金 1219 0.80 → 白板1.5 + 颜色6 = 7.5', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4黄钛金', thickness: '0.80', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 1.5, '基础表面费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 6, '颜色费=' + r.detail.colorFeeSqm);
+  eq(r.detail.colorName, '黄钛金');
+});
+test('v1.0.161 拆分+1000修正: 单张砂面NO.4黄钛金 1000 0.80 → 白板2 + 颜色6*1.25=7.5 = 9.5', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4黄钛金', thickness: '0.80', width: '1000', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 2, '基础表面费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 7.5, '颜色费=' + r.detail.colorFeeSqm);
+  eq(r.detail.colorBaseSqm, 6, '基础色价=' + r.detail.colorBaseSqm);
+  eq(r.detail.colorMult, 1.25, '系数=' + r.detail.colorMult);
+});
+test('v1.0.161 拆分: 单张拉丝HL宝石蓝 1250 1.65 → 白板4.5(1250按宽板档) + 颜色21.5 = 26', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张拉丝HL宝石蓝', thickness: '1.65', width: '1250', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 4.5, '基础表面费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 21.5, '颜色费=' + r.detail.colorFeeSqm);
+});
+test('v1.0.161 拆分: 单张砂面NO.4彩虹色 1500 1.85 → 白板4.5 + 颜色44*1.7=74.8 = 79.3', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4彩虹色', thickness: '1.85', width: '1500', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 4.5, '基础表面费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 74.8, '颜色费=' + r.detail.colorFeeSqm);
 });
 test('v1.0.160 五尺彩色: 单张高普8K黄钛金 1530 0.6-1.2 → 白板9 + 10.2 = 19.2', () => {
   const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黄钛金', thickness: '0.80', width: '1530', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
@@ -1014,9 +1045,9 @@ test('v1.0.153 单张拉丝HL 1000mm/五尺档恢复', () => {
   eq(PricingEngine.getSurfaceFee('单张拉丝HL', 1.0, 1500, '304').sqmPrice, 2.5, 'HL 五尺');
 });
 test('v1.0.153 单张砂面NO.4彩色 1000mm 档恢复', () => {
-  eq(PricingEngine.getSurfaceFee('单张砂面NO.4黄钛金', 1.0, 1000, '304').sqmPrice, 8, '黄钛金 1000mm');
-  eq(PricingEngine.getSurfaceFee('单张砂面NO.4宝石蓝', 1.0, 1000, '304').sqmPrice, 9.5, '宝石蓝 1000mm');
-  eq(PricingEngine.getSurfaceFee('单张拉丝HL翡翠绿', 1.0, 1000, '304').sqmPrice, 24, '拉丝HL翡翠绿 1000mm');
+  eq(PricingEngine.getSurfaceFee('单张砂面NO.4黄钛金', 1.0, 1000, '304').sqmPrice, 9.5, '黄钛金 1000mm');
+  eq(PricingEngine.getSurfaceFee('单张砂面NO.4宝石蓝', 1.0, 1000, '304').sqmPrice, 11.38, '宝石蓝 1000mm');
+  eq(PricingEngine.getSurfaceFee('单张拉丝HL翡翠绿', 1.0, 1000, '304').sqmPrice, 29.5, '拉丝HL翡翠绿 1000mm');
 });
 
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
