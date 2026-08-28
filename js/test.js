@@ -959,5 +959,28 @@ test('v1.0.140 过磅模式 全检费计入售价 saleNoTax', () => {
   eq(Math.abs((r1.detail.costRaw - r2.detail.costRaw) - r1.detail.inspectPerTon) < 0.02, true, '成本差=全检费');
 });
 
+// === v1.0.153 恢复单张砂面NO.4/单张拉丝HL 1000mm+五尺(1500/1524/1530)档（v1.0.142 误删回滚） ===
+test('v1.0.153 单张砂面NO.4 1000mm 档恢复', () => {
+  const a = PricingEngine.getSurfaceFee('单张砂面NO.4', 1.0, 1000, '304');
+  eq(a.sqmPrice, 2, '1000mm 0.24-1.2 段');
+  const b = PricingEngine.getSurfaceFee('单张砂面NO.4', 1.8, 1000, '304');
+  eq(b.sqmPrice, 4, '1000mm 1.51-2 段');
+});
+test('v1.0.153 单张砂面NO.4 五尺档恢复', () => {
+  eq(PricingEngine.getSurfaceFee('单张砂面NO.4', 1.0, 1500, '304').sqmPrice, 2.5, '1500 五尺');
+  eq(PricingEngine.getSurfaceFee('单张砂面NO.4', 1.0, 1524, '304').sqmPrice, 2.5, '1524');
+  eq(PricingEngine.getSurfaceFee('单张砂面NO.4', 1.0, 1530, '304').sqmPrice, 2.5, '1530');
+});
+test('v1.0.153 单张拉丝HL 1000mm/五尺档恢复', () => {
+  eq(PricingEngine.getSurfaceFee('单张拉丝HL', 1.0, 1000, '304').sqmPrice, 2, 'HL 1000mm');
+  eq(PricingEngine.getSurfaceFee('单张拉丝HL', 1.0, 1500, '304').sqmPrice, 2.5, 'HL 五尺');
+});
+test('v1.0.153 单张砂面NO.4彩色 1000mm 档恢复', () => {
+  eq(PricingEngine.getSurfaceFee('单张砂面NO.4黄钛金', 1.0, 1000, '304').sqmPrice, 8, '黄钛金 1000mm');
+  eq(PricingEngine.getSurfaceFee('单张砂面NO.4宝石蓝', 1.0, 1000, '304').sqmPrice, 9.5, '宝石蓝 1000mm');
+  eq(PricingEngine.getSurfaceFee('单张拉丝HL翡翠绿', 1.0, 1000, '304').sqmPrice, 24, '拉丝HL翡翠绿 1000mm');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
+
