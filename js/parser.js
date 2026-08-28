@@ -422,6 +422,14 @@ const ExcelParser = (() => {
       ds.getRow(1).eachCell((c) => { c.font = { bold: true }; });
     }
 
+    // 8. 打印设置 v1.0.143：横向 A4、所有列一页宽、窄边距（2026-08-28 用户：打印预览要像图三）
+    ws.pageSetup.orientation = 'landscape';
+    ws.pageSetup.paperSize = 9; // A4
+    ws.pageSetup.fitToPage = true;
+    ws.pageSetup.fitToWidth = 1;
+    ws.pageSetup.fitToHeight = 0;
+    ws.pageSetup.margins = { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
+
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
@@ -554,6 +562,14 @@ const ExcelParser = (() => {
       [13, 15].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"¥"#,##0'; });
       [14, 16].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') c.numFmt = '"$"#,##0.00'; });
     }
+
+    // 8. 打印设置 v1.0.143：横向 A4、所有列一页宽、窄边距（2026-08-28 用户：打印预览要像图三）
+    ws.pageSetup.orientation = 'landscape';
+    ws.pageSetup.paperSize = 9; // A4
+    ws.pageSetup.fitToPage = true;
+    ws.pageSetup.fitToWidth = 1;
+    ws.pageSetup.fitToHeight = 0;
+    ws.pageSetup.margins = { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
 
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
