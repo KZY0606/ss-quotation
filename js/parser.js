@@ -306,77 +306,70 @@ const ExcelParser = (() => {
     return isNaN(n) ? s : n.toFixed(2);
   }
 
-  async function exportToExcel(results, filename, termInfo) {
+    async function exportToExcel(results, filename, termInfo) {
     const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null };
-    // v1.0.130：表头前加标题行，标注贸易术语（EXW/FOB/CIF 价格）；术语同时保留在合计行(总价前一格)
-    const termLabel = (ti.term === 'FOB' || ti.term === 'CIF') ? ti.term + ' 价格' : 'EXW 价格';
+    if (typeof KK_QUOTE_TEMPLATE_B64 === 'undefined' || !KK_QUOTE_TEMPLATE_B64) throw new Error('报价模板未加载');
+    const term = (ti.term === 'FOB' || ti.term === 'CIF') ? ti.term : 'EXW';
+    const termLabel = term + ' 价格';
+    let tplBytes;
+    if (typeof Buffer !== 'undefined' && typeof Buffer.from === 'function') {
+      tplBytes = Buffer.from(KK_QUOTE_TEMPLATE_B64, 'base64');
+    } else {
+      const bin = atob(KK_QUOTE_TEMPLATE_B64);
+      tplBytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) tplBytes[i] = bin.charCodeAt(i);
+    }
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet('报价单');
-    const titleRow = ws.addRow(['不锈钢报价单（' + termLabel + '）']);
-    ws.mergeCells(titleRow.number, 1, titleRow.number, 20);
-    titleRow.getCell(1).font = { bold: true, size: 14 };
-    titleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.addRow(['NO.序号', 'PRODUCER制造商', 'GRADE钢种', 'SURFACE表面', 'FILM/PAPER保护膜/垫纸', 'THK厚度/MM', 'THK TOL厚度公差/MM', 'WIDTH宽度/MM', 'LENGH长度/MM', 'Edge边', 'PCS件数', 'MT重量(吨)', 'UNIT FOB单价(RMB)', 'UNIT FOB单价(USD)', 'TOTAL合计(RMB)', 'TOTAL合计(USD)', 'PACKING包装方式', 'PRINT喷码要求', 'INSPECTION检测要求', 'WEIGHT/PACK单包重']);
-    ws.columns = [
-      { width: 6 }, { width: 13 }, { width: 10 }, { width: 24 }, { width: 34 }, { width: 11 }, { width: 15 }, { width: 15 }, { width: 11 }, { width: 10 },
-      { width: 8 }, { width: 10 }, { width: 11 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 11 }, { width: 11 }, { width: 13 }
-    ];
-    let totalCny = 0, totalUsd = 0, totalW = 0, hasWeight = false, hasSheetRows = false;
+    await wb.xlsx.load(tplBytes);
+    const ws = wb.getWorksheet('报价单');
+    const ds = wb.getWorksheet('价格明细');
+    if (!ws || !ds) throw new Error('报价模板结构异常（缺 报价单/价格明细 sheet）');
 
+    ws.getCell('A1').value = '不锈钢报价单（' + termLabel + '）';
+    ws.getCell('M2').value = 'UNIT ' + term + '单价(RMB)';
+    ws.getCell('N2').value = 'UNIT ' + term + '单价(USD)';
+    ds.getCell('S1').value = term + '售价(元/吨)';
+
+    const QUOTE_ROWS = 15;
+    const okList = results.filter(r => r.success);
+    for (let rn = 3; rn < 3 + QUOTE_ROWS; rn++) {
+      const row = ws.getRow(rn);
+      for (let c = 1; c <= 17; c++) row.getCell(c).value = null;
+    }
+    if (okList.length > QUOTE_ROWS) {
+      const extra = okList.length - QUOTE_ROWS;
+      ws.spliceRows(3 + QUOTE_ROWS, 0, ...new Array(extra).fill(null));
+      const src = ws.getRow(3);
+      for (let rn = 3 + QUOTE_ROWS; rn < 3 + QUOTE_ROWS + extra; rn++) {
+        const dst = ws.getRow(rn);
+        dst.height = src.height;
+        for (let c = 1; c <= 17; c++) {
+          const sc = src.getCell(c), dc = dst.getCell(c);
+          dc.style = JSON.parse(JSON.stringify(sc.style));
+        }
+      }
+    }
+    let rn = 3;
     for (const r of results) {
-      if (!r.success) {
-        ws.addRow([r.index, '', '', '', '', '', '', '', '', '', '', '', `错误: ${r.errors.join('; ')}`, '', '', '', '', '', '', '']);
-        continue;
-      }
+      if (!r.success) continue;
       const d = r.detail;
-      // 规格: 厚度*宽度*长度（厚度支持范围如 0.55-0.60，原样保留；单值保留2位小数）
-      const spec = `${fmtExportThk(d.thickness)}*${d.width}*${d.length}`;
-      // 保护膜: 合并膜1+膜2
+      const row = ws.getRow(rn);
       const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
-      // 重量（吨）：来自导入的表格，无则不填
       const w = (d.weight != null && d.weight > 0) ? d.weight : null;
-      // 边：毛边 Mill Edge / 齐边 Slit Edge（只用英文）
       const edge = d.edgeType === 'rough' ? 'Mill Edge' : 'Slit Edge';
-      // 术语加价（FOB/CIF = EXW + 美元加价）+ 附加费用（人民币/吨）→ 不含税最终单价
-      if (d && d.calcMode === 'sheet') {
-        hasSheetRows = true;
-        const usdV = PricingEngine.cnToUsd(d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice, ti.rate);
-        const exPrice = d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice;
-        totalCny += exPrice; totalUsd += (usdV || 0); totalW += 1; hasWeight = true;
-        ws.addRow([
-          r.index,
-          d.origin || '',
-          (d.material || '') + (d.isYanYan ? '压延' : ''),
-          d.surface || '',
-          film,
-          d.stdThickness || '',
-          fmtExportThk(d.thickness),
-          d.width,
-          d.length,
-          edge,
-          (d.quantity != null && d.quantity !== '') ? d.quantity : '',
-          '',
-          Math.round(exPrice),
-          usdV == null ? '' : Math.round(usdV * 100) / 100,
-          Math.round(exPrice),
-          usdV == null ? '' : Math.round(usdV * 100) / 100,
-          d.packingName || d.packing || '',
-          '',
-          d.inspectFlag ? '全检' : '',
-          ''
-        ]);
-        continue;
+      let cny, usdV;
+      if (d.calcMode === 'sheet') {
+        cny = d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice;
+        usdV = PricingEngine.cnToUsd(cny, ti.rate);
+      } else {
+        const sur = term === 'FOB' ? (ti.fobUsd || 0) : (term === 'CIF' ? (ti.cifUsd || 0) : 0);
+        const tp = PricingEngine.addUsdSurcharge(d.saleNoTax, sur, ti.rate);
+        const base = tp ? tp.cny : d.saleNoTax;
+        const ex = PricingEngine.addExtras(base, ti.extras || null);
+        cny = ex ? ex.cny : base;
+        usdV = PricingEngine.cnToUsd(cny, ti.rate);
       }
-      const s = ti.term === 'FOB' ? (ti.fobUsd || 0) : (ti.term === 'CIF' ? (ti.cifUsd || 0) : 0);
-      const tp = PricingEngine.addUsdSurcharge(d.saleNoTax, s, ti.rate);
-      const base = tp ? tp.cny : d.saleNoTax;
-      const ex = PricingEngine.addExtras(base, ti.extras || null);
-      const cny = ex ? ex.cny : base;
-      const usdV = PricingEngine.cnToUsd(cny, ti.rate);
-      const amtCny = (w != null && usdV != null) ? cny * w : null;
-      const amtUsd = (w != null && usdV != null) ? usdV * w : null;
-      if (amtCny != null) { totalCny += cny * w; totalUsd += usdV * w; totalW += w; hasWeight = true; }
-      ws.addRow([
+      const vals = [
         r.index,
         d.origin || '',
         (d.material || '') + (d.isYanYan ? '压延' : ''),
@@ -389,57 +382,96 @@ const ExcelParser = (() => {
         edge,
         (d.quantity != null && d.quantity !== '') ? d.quantity : '',
         w != null ? w : '',
-        Math.round(cny),
+        cny != null ? Math.round(cny) : '',
         usdV == null ? '' : Math.round(usdV * 100) / 100,
-        amtCny != null ? Math.round(amtCny) : '',
-        amtUsd != null ? Math.round(amtUsd * 100) / 100 : '',
-        d.packing || '',
+        d.packingName || d.packing || '',
         '',
-        d.inspectFlag ? '全检' : '',
-        ''
-      ]);
+        d.inspectFlag ? '全检' : ''
+      ];
+      for (let c = 1; c <= 17; c++) row.getCell(c).value = vals[c - 1];
+      rn++;
     }
-    // v1.0.141: 按用户最新模板去掉合计行（数据区后留空）
 
-    // 样式：外边框+内框（加粗 medium）、数据居中、表头加粗
-    const borderAll = { top: { style: 'medium' }, left: { style: 'medium' }, bottom: { style: 'medium' }, right: { style: 'medium' } };
-    ws.eachRow((row) => {
-      row.eachCell((cell) => {
-        cell.border = borderAll;
-        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-      });
+    for (let rn2 = 2; rn2 < 2 + QUOTE_ROWS; rn2++) {
+      const row = ds.getRow(rn2);
+      for (let c = 1; c <= 27; c++) row.getCell(c).value = null;
+    }
+    if (okList.length > QUOTE_ROWS) {
+      const extra = okList.length - QUOTE_ROWS;
+      ds.spliceRows(2 + QUOTE_ROWS, 0, ...new Array(extra).fill(null));
+      const src = ds.getRow(2);
+      for (let rn2 = 2 + QUOTE_ROWS; rn2 < 2 + QUOTE_ROWS + extra; rn2++) {
+        const dst = ds.getRow(rn2);
+        dst.height = src.height;
+        for (let c = 1; c <= 27; c++) {
+          const sc = src.getCell(c), dc = dst.getCell(c);
+          dc.style = JSON.parse(JSON.stringify(sc.style));
+        }
+      }
+    }
+    const exVal = k => { const it = (ti.extras || {})[k]; return (it && it.on && it.val > 0) ? it.val : 0; };
+    const exTotal = () => exVal('opFee') + exVal('interest') + exVal('profit');
+    const fmtCny = v => '¥' + Math.round(v).toLocaleString();
+    const fmtUsd = v => '$' + (Math.round(v * 100) / 100).toLocaleString();
+    let rn2 = 2;
+    for (const r of results) {
+      if (!r.success) continue;
+      const d = r.detail;
+      const row = ds.getRow(rn2);
+      const film = [d.film1, d.film2].filter(Boolean).join(' + ') || '-';
+      const w = (d.weight != null && d.weight > 0) ? d.weight : null;
+      const sur = term === 'FOB' ? (ti.fobUsd || 0) : (term === 'CIF' ? (ti.cifUsd || 0) : 0);
+      let basePrice, thickSurcharge, surfaceFeePerTon, linenFeePerTon, afpPerTon, film1PerTon, film2PerTon, costTax, costNoTax, saleNoTax, markup;
+      if (d.calcMode === 'sheet') {
+        basePrice = d.basePrice; thickSurcharge = d.thickSurcharge;
+        surfaceFeePerTon = 0; linenFeePerTon = d.linenFeePerTon || 0;
+        afpPerTon = 0; film1PerTon = 0; film2PerTon = 0;
+        costTax = d.costTax; costNoTax = d.costNoTax;
+        saleNoTax = d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice;
+        markup = null;
+      } else {
+        basePrice = d.basePrice; thickSurcharge = d.thickSurcharge;
+        surfaceFeePerTon = d.surfaceFeePerTon; linenFeePerTon = d.linenFeePerTon;
+        afpPerTon = d.afpPerTon; film1PerTon = d.film1PerTon; film2PerTon = d.film2PerTon;
+        costTax = d.costTax; costNoTax = d.costNoTax;
+        saleNoTax = d.saleNoTax;
+        markup = d.markupDetail ? (d.markupDetail.group === 'sheet'
+          ? d.markup + '（边部' + d.markupDetail.edgeFee + '+' + (d.markupDetail.rackLabel || '木架') + d.markupDetail.rackFee + '+装柜' + d.markupDetail.packFee + '+损耗' + d.markupDetail.lossFee + '）'
+          : d.markup + '（边部' + d.markupDetail.edgeFee + '+包装' + d.markupDetail.packingFee + '+装柜' + d.markupDetail.containerFee + '）') : d.markup;
+      }
+      const tp2 = PricingEngine.addUsdSurcharge(saleNoTax, sur, ti.rate);
+      const termCny = tp2 ? Math.round(tp2.cny) : Math.round(saleNoTax);
+      const finalCny = termCny + exTotal();
+      const finalUsd = Math.round(finalCny * 100 / ti.rate * 100) / 100;
+      const amtCny = w != null ? finalCny * w : null;
+      const amtUsd = w != null ? finalUsd * w : null;
+      const vals2 = [
+        r.index, d.origin || '', d.material || '', d.surface || '',
+        fmtExportThk(d.thickness), d.width, d.length, film,
+        basePrice, thickSurcharge, surfaceFeePerTon, linenFeePerTon, afpPerTon,
+        (film1PerTon || 0) + (film2PerTon || 0),
+        costTax != null ? costTax : '', costNoTax != null ? costNoTax : '',
+        d.edgeType === 'rough' ? '毛边' : '齐边',
+        markup != null ? markup : '',
+        fmtCny(termCny),
+        exVal('opFee'), exVal('interest'), exVal('profit'), exTotal(),
+        fmtCny(finalCny),
+        w != null ? w : '',
+        amtCny != null ? fmtCny(amtCny) : '',
+        amtUsd != null ? fmtUsd(amtUsd) : ''
+      ];
+      for (let c = 1; c <= 27; c++) row.getCell(c).value = vals2[c - 1];
+      rn2++;
+    }
+
+    [ws, ds].forEach(sh => {
+      sh.pageSetup.orientation = 'landscape';
+      sh.pageSetup.paperSize = 9;
+      sh.pageSetup.fitToPage = true;
+      sh.pageSetup.fitToWidth = 1;
+      sh.pageSetup.fitToHeight = 0;
+      sh.pageSetup.margins = { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
     });
-    ws.getRow(1).eachCell((c) => { c.font = { bold: true }; });
-    // 数字格式：人民币 ¥ 整数、美元 $ 两位小数（数据行+合计行）
-    for (let R = 2; R <= ws.rowCount; R++) {
-      const row = ws.getRow(R);
-      [13, 15].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') setNumFmt(c, '#,##0'); });
-      [14, 16].forEach((C) => { const c = row.getCell(C); if (typeof c.value === 'number') setNumFmt(c, '#,##0.00'); });
-    }
-
-    // 隐藏工作表：保存完整明细，必要时可手动取消隐藏
-    const detailRows = _buildDetailRows(results, ti);
-    if (detailRows.length > 0) {
-      const ds = wb.addWorksheet('价格明细');
-      detailRows.forEach(arr => ds.addRow(arr));
-      const widths = [5, 10, 10, 20, 10, 10, 10, 16, 16, 12, 14, 14, 12, 12, 12, 16, 16, 10, 10, 12, 24, 16, 16, 14, 14, 12, 14, 16, 10, 14, 16];
-      widths.forEach((w2, i) => { ds.getColumn(i + 1).width = w2; });
-      ds.eachRow((row) => {
-        row.eachCell((cell) => {
-          cell.border = borderAll;
-          cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        });
-      });
-      ds.getRow(1).eachCell((c) => { c.font = { bold: true }; });
-    }
-
-    // 8. 打印设置 v1.0.143：横向 A4、所有列一页宽、窄边距（2026-08-28 用户：打印预览要像图三）
-    ws.pageSetup.orientation = 'landscape';
-    ws.pageSetup.paperSize = 9; // A4
-    ws.pageSetup.fitToPage = true;
-    ws.pageSetup.fitToWidth = 1;
-    ws.pageSetup.fitToHeight = 0;
-    ws.pageSetup.margins = { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
 
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -449,8 +481,6 @@ const ExcelParser = (() => {
     document.body.appendChild(a); a.click();
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
   }
-
-
   // v1.0.141: 导出合同（基于用户合同模板 xlsx：单 sheet Sheet1，填入报价结果 + 合同信息）
   async function exportContract(results, filename, opts) {
     const ti = opts || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null, contractNo: '', orderTrack: '', buyer: '', containers: 1, deposit: '', currency: 'RMB', sprayCode: '' };
