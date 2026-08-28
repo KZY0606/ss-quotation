@@ -555,13 +555,26 @@ const ExcelParser = (() => {
     const termRow = 20 + extra;
     const TERM_CN = { EXW: 'EXW工厂交货', FOB: 'FOB离岸价', CIF: 'CIF到岸价' };
     ws.getCell('J' + termRow).value = (ti.term || 'EXW') + '\n' + (TERM_CN[ti.term] || '');
-    // 9. 数字格式
+    // 9. 数据行多时分页：银行信息+签字区整体放第二页（不拆分）
+    // 模板原布局：银行信息标题 R36、银行行 R37-47、签字 R49-50；数据每多 1 行整体下移 extra
+    if (extra > 0) {
+      const bankTitleRow = 36 + extra; // 银行信息标题行
+      // 兼容不同 exceljs 版本：rowBreaks 为数组（旧版需手动 push）
+      try {
+        if (Array.isArray(ws.rowBreaks)) {
+          ws.rowBreaks.push({ id: bankTitleRow, man: 1, min: 0, max: 16383 });
+        } else if (ws.rowBreaks && typeof ws.rowBreaks.add === 'function') {
+          ws.rowBreaks.add({ id: bankTitleRow, man: 1, min: 0, max: 16383 });
+        }
+      } catch (e) { /* 分页失败不影响导出 */ }
+    }
+    // 10. 数字格式
     for (let R = 9; R <= lastData; R++) {
       const row = ws.getRow(R);
       const c12 = row.getCell(12); if (typeof c12.value === 'number') c12.numFmt = isRmb ? '"¥"#,##0' : '"$"#,##0.00';
       const c13 = row.getCell(13); if (c13.value && c13.value.formula) c13.numFmt = isRmb ? '"¥"#,##0' : '"$"#,##0.00';
     }
-    // 10. 打印设置：横向 A4、所有列一页宽、窄边距
+    // 11. 打印设置：横向 A4、所有列一页宽、窄边距
     ws.pageSetup.orientation = 'landscape';
     ws.pageSetup.paperSize = 9;
     ws.pageSetup.fitToPage = true;
