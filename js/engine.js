@@ -634,12 +634,16 @@ const PricingEngine = (() => {
     const sqmPerTon = getSquareMetersPerTon(density, thickness);
 
     // ---- 附加工艺检测 ----
-    // v1.0.145 单张彩色工艺拆分：完整 key 直接命中走原路径；组合名（如 单张普磨8K钛铝红铜）拆为 品质+颜色
+    // v1.0.145 单张彩色工艺拆分：完整彩色 key（如 单张高普8K黑钛金）也拆为 品质+颜色 分别展示，总额不变；
+    // 组合名（如 单张普磨8K钛铝红铜）拆为 品质+颜色
     let colorSplit = null;
-    if (!SURFACE_FEES[surfacePart]) {
-      colorSplit = splitSheetColor(surfacePart);
-      if (colorSplit) surfacePart = colorSplit.base;
+    let fullKeyTotalSqm = null;
+    if (SURFACE_FEES[surfacePart]) {
+      const fk = getSurfaceFee(surfacePart, thickness, width, material);
+      if (fk && fk.needConvert) fullKeyTotalSqm = fk.sqmPrice;
     }
+    colorSplit = splitSheetColor(surfacePart);
+    if (colorSplit) surfacePart = colorSplit.base;
     const rawLower = surfacePart.toLowerCase();
     const aliasedName = normalizeSurface(surfacePart); // 可以有模糊匹配
     const isExactAlias = SURFACE_FEES[surfacePart] || SURFACE_ALIASES[rawLower];
@@ -695,13 +699,19 @@ const PricingEngine = (() => {
     }
 
     // v1.0.145 颜色工艺费：单张品质费（surfaceRaw）之外单独累加，detail 单独展示
+    // 完整彩色 key：颜色费 = 彩色 key 总额 - 品质白板费（差额，总额不变）；组合名：按 COLOR_FEES 7 段取
     let colorFeeSqm = 0;
     let colorName = '';
     if (colorSplit) {
-      colorFeeSqm = getColorFee(colorSplit.colorName, thickness, width);
       colorName = colorSplit.colorName;
+      if (fullKeyTotalSqm !== null) {
+        const whiteSqm = (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : 0;
+        colorFeeSqm = round2(Math.max(0, fullKeyTotalSqm - whiteSqm) + 1e-9);
+      } else {
+        colorFeeSqm = getColorFee(colorSplit.colorName, thickness, width);
+      }
       if (colorFeeSqm === null) {
-        errors.push('颜色 "' + colorSplit.colorName + '" 在 厚度' + thickness + 'mm × 宽度' + width + 'mm 下无匹配工艺费');
+        errors.push('颜色 "' + colorName + '" 在 厚度' + thickness + 'mm × 宽度' + width + 'mm 下无匹配工艺费');
       } else {
         surfaceFeePerTon = round2(surfaceFeePerTon + colorFeeSqm * sqmPerTon);
       }

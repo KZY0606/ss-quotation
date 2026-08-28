@@ -861,6 +861,29 @@ test('v1.0.145 喷砂: 单张精磨8K+喷砂 允许（规则放宽）', () => {
   eq(r.success, true, JSON.stringify(r.errors));
 });
 
+// === v1.0.146 完整彩色 key 拆分展示（品质费 + 颜色费，总额不变）===
+test('v1.0.146 彩色拆分: 单张高普8K黑钛金 → 品质4 + 颜色6', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金', thickness: '1.14-1.15', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 4, '品质费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 6, '颜色费=' + r.detail.colorFeeSqm);
+  eq(r.detail.colorName, '黑钛金');
+  eq(r.detail.normSurface, '单张高普8K');
+});
+test('v1.0.146 彩色拆分: +喷砂 三费用（8K 4 + 黑钛金 6 + 喷砂 3）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金+喷砂', thickness: '1.14-1.15', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 4);
+  eq(r.detail.colorFeeSqm, 6);
+  eq(r.detail.embossFees.some(e => e.key === 'sandblast'), true);
+});
+test('v1.0.146 彩色拆分: sheet 模式 单张普精8K黄钛金 1.65 → 品质10 + 颜色20', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张普精8K黄钛金', thickness: '1.65', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'sheet', boardType: 'sheet', quantity: '1', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 10, '品质费=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 20, '颜色费=' + r.detail.colorFeeSqm);
+});
+
 // === v1.0.139 导出字段透传 ===
 test('v1.0.139 过磅模式 detail 透传 标厚/检测要求/件数', () => {
   const r = PricingEngine.calculate({ material: '304', surface: '单张高普8K黑钛金+喷砂', thickness: '0.80', width: '1219', length: '3000', origin: '上克', basePrice: 15000, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱', stdThickness: '1.2', inspectFlag: true, quantity: '25' });
