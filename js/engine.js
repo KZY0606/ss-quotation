@@ -429,11 +429,15 @@ const PricingEngine = (() => {
 
     // 格式3: "表面哑光抗指纹" / "表面哑光无指纹"
     m = s.match(/^(.+?)(?:哑光抗指纹|哑光无指纹|哑油)(?:\(卷\)|\(板\))?$/);
-    if (m) return { baseName: m[1].trim(), isMatte: true };
+    if (m) return { baseName: m[1].trim().replace(/[+\s]+$/, ''), isMatte: true };
 
     // 格式4: "表面亮光抗指纹" / "表面亮光无指纹"
     m = s.match(/^(.+?)(?:亮光抗指纹|亮光无指纹|亮油)(?:\(卷\)|\(板\))?$/);
-    if (m) return { baseName: m[1].trim(), isMatte: false };
+    if (m) return { baseName: m[1].trim().replace(/[+\s]+$/, ''), isMatte: false };
+
+    // 格式5: "表面 + 亮油/哑油/亮光无指纹/哑光无指纹/亮光抗指纹/哑光抗指纹"（v1.0.166 用户常用写法）
+    m = s.match(/^(.+?)\s*[+]\s*(亮油|哑油|亮光无指纹|哑光无指纹|亮光抗指纹|哑光抗指纹)(?:\(卷\)|\(板\))?$/);
+    if (m) return { baseName: m[1].trim(), isMatte: m[2].indexOf('哑') === 0 };
 
     return null;
   }
@@ -459,11 +463,13 @@ const PricingEngine = (() => {
   // 仅单张 8K 系列（普磨/高普/普精/精磨/超精）；完整彩色 key（如 单张高普8K黄钛金）优先走 SURFACE_FEES
   function splitSheetColor(raw) {
     const s = String(raw || '').trim();
-    const m = s.match(/^单张(砂面NO\.4|拉丝HL|普磨8K|高普8K|普精8K|精磨8K|超精8K)(.+)$/);
+    const m = s.match(/^单张(砂面NO\.4|砂面|拉丝HL|拉丝|普磨8K|高普8K|普精8K|精磨8K|超精8K)(.+)$/);
     if (!m) return null;
     const ck = COLOR_ALIASES[m[2].trim()] || COLOR_ALIASES[String(m[2] || '').trim().toLowerCase()];
     if (!ck || !COLOR_FEES[ck]) return null;
-    return { base: '单张' + m[1] + '8K', colorName: ck };
+    // v1.0.166 baseMap 精确映射（原 '单张'+m[1]+'8K' 对 砂面NO.4/拉丝HL/普磨8K 会拼出怪名，靠 fuzzy 兜底）
+    const bm = { '砂面NO.4': '单张砂面NO.4', '砂面': '单张砂面NO.4', '拉丝HL': '单张拉丝HL', '拉丝': '单张拉丝HL' };
+    return { base: bm[m[1]] || ('单张' + m[1]), colorName: ck };
   }
   // 颜色工艺费（元/㎡）：厚度 7 段匹配；1000mm 宽 = 窄板 ×1.25；1500+ 与 >2.0mm 无（报错由调用方处理）
   function getColorFee(name, thickness, width) {
@@ -472,6 +478,9 @@ const PricingEngine = (() => {
     const idx = COLOR_FEE_SEGMENTS.findIndex(s => thickness >= s.tMin && thickness <= s.tMax);
     if (idx < 0) return null;
     let v = arr[idx];
+    // v1.0.166 颜色费覆盖（老板面板调整后随单张加工价一起发布）
+    const cov = userOverrides && userOverrides.colorFees && userOverrides.colorFees[name];
+    if (cov && Array.isArray(cov) && cov[idx] !== undefined && cov[idx] !== null && !isNaN(parseFloat(cov[idx]))) v = parseFloat(cov[idx]);
     if (width === 1000) v = v * 1.25;
     else if (width >= 1500 && width <= 1530) v = v * 1.7; // v1.0.160 五尺彩色 = 四尺纯颜色费 ×1.7
     else if (width > 1530) return null;
@@ -680,7 +689,15 @@ const PricingEngine = (() => {
       const afpInfo = detectAFP(surfacePart);
       if (afpInfo) {
         const afpBase = normalizeSurface(afpInfo.baseName);
-        if (afpBase && SURFACE_FEES[afpBase]) {
+        // v1.0.166 单张彩色 + 油：afpBase 为单张彩色组合（如 单张砂面黄钛金）时继续拆 品质+颜色，三个费用分开
+        const afpColor = (afpBase && !SURFACE_FEES[afpBase]) ? splitSheetColor(afpBase) : null;
+        if (afpColor && COLOR_FEES[afpColor.colorName]) {
+          if (!colorSplit) colorSplit = afpColor;
+          baseSurface = afpColor.base;
+          afpSqmFee = afpInfo.isMatte
+          ? (boardType === 'sheet' ? AFP_MATTE_FEE_SHEET : AFP_MATTE_FEE)
+          : (boardType === 'sheet' ? AFP_BRIGHT_FEE_SHEET : AFP_BRIGHT_FEE);
+        } else if (afpBase && SURFACE_FEES[afpBase]) {
           baseSurface = afpBase;
           afpSqmFee = afpInfo.isMatte
           ? (boardType === 'sheet' ? AFP_MATTE_FEE_SHEET : AFP_MATTE_FEE)

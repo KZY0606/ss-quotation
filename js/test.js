@@ -1046,10 +1046,43 @@ test('v1.0.153 单张拉丝HL 1000mm/五尺档恢复', () => {
   eq(PricingEngine.getSurfaceFee('单张拉丝HL', 1.0, 1000, '304').sqmPrice, 2, 'HL 1000mm');
   eq(PricingEngine.getSurfaceFee('单张拉丝HL', 1.0, 1500, '304').sqmPrice, 2.5, 'HL 五尺');
 });
-test('v1.0.153 单张砂面NO.4彩色 1000mm 档恢复', () => {
-  eq(PricingEngine.getSurfaceFee('单张砂面NO.4黄钛金', 1.0, 1000, '304').sqmPrice, 9.5, '黄钛金 1000mm');
-  eq(PricingEngine.getSurfaceFee('单张砂面NO.4宝石蓝', 1.0, 1000, '304').sqmPrice, 11.38, '宝石蓝 1000mm');
-  eq(PricingEngine.getSurfaceFee('单张拉丝HL翡翠绿', 1.0, 1000, '304').sqmPrice, 29.5, '拉丝HL翡翠绿 1000mm');
+test('v1.0.153/166 单张彩色 1000mm 档（拆开计算：白板 + 颜色×1.25）', () => {
+  const mk = s => PricingEngine.calculate({ material: '304', surface: s, thickness: '1.0', width: '1000', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  const r1 = mk('单张砂面NO.4黄钛金');
+  eq(r1.success, true, JSON.stringify(r1.errors));
+  eq(r1.detail.surfaceFeeSqm, 2, '白板=' + r1.detail.surfaceFeeSqm);
+  eq(r1.detail.colorFeeSqm, 7.5, '黄钛金1000(6×1.25)=' + r1.detail.colorFeeSqm);
+  eq(Math.round((r1.detail.surfaceFeeSqm + r1.detail.colorFeeSqm) * 100) / 100, 9.5, '总额');
+  const r2 = mk('单张砂面NO.4宝石蓝');
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r2.detail.colorFeeSqm, 9.38, '宝石蓝1000(7.5×1.25)=' + r2.detail.colorFeeSqm);
+  eq(Math.round((r2.detail.surfaceFeeSqm + r2.detail.colorFeeSqm) * 100) / 100, 11.38, '总额');
+  const r3 = mk('单张拉丝HL翡翠绿');
+  eq(r3.success, true, JSON.stringify(r3.errors));
+  eq(r3.detail.colorFeeSqm, 27.5, '翡翠绿1000(22×1.25)=' + r3.detail.colorFeeSqm);
+  eq(Math.round((r3.detail.surfaceFeeSqm + r3.detail.colorFeeSqm) * 100) / 100, 29.5, '总额');
+});
+test('v1.0.166 单张砂面黄钛金+亮油 全拆开: 白板2 + 颜色6 + 亮油3.5 = 11.5（1219 平板）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张砂面黄钛金+亮油', thickness: '1.0', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 1.5, '白板=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 6, '颜色=' + r.detail.colorFeeSqm);
+  eq(r.detail.afpFeeSqm, 3.5, '亮油=' + r.detail.afpFeeSqm);
+  eq(r.detail.colorName, '黄钛金');
+});
+test('v1.0.166 单张拉丝黄钛金哑油 全拆开: 白板 + 颜色 + 哑油', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张拉丝黄钛金哑油', thickness: '1.0', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 1.5, '白板=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 6, '颜色=' + r.detail.colorFeeSqm);
+  eq(r.detail.afpFeeSqm, 5, '哑油=' + r.detail.afpFeeSqm);
+});
+test('v1.0.166 颜色费覆盖生效: 黄钛金第1档覆盖为 8', () => {
+  PricingEngine.setUserOverrides({ colorFees: { '黄钛金': [8] }, colorLocked: {} });
+  const r = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4黄钛金', thickness: '1.0', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.colorFeeSqm, 8, '覆盖后=' + r.detail.colorFeeSqm);
+  PricingEngine.setUserOverrides(null);
 });
 
 // === v1.0.163 特殊组合板块：单张拉丝青古铜哑光(镀铜) 30元/㎡ 组合价不可拆分 ===

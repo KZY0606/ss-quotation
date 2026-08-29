@@ -115,7 +115,7 @@ const App = (() => {
   }
 
   // 用户自定义价格覆盖（保护膜、表面加工费等）
-  let priceOverrides = { filmFees: {}, surfaceFees: {}, surfaceTiers: {}, filmLocked: {}, surfaceLocked: {} };
+  let priceOverrides = { filmFees: {}, surfaceFees: {}, surfaceTiers: {}, filmLocked: {}, surfaceLocked: {}, colorFees: {}, colorLocked: {} };
 
   // ========== 基价计算 ==========
   function isFiveFootWidth(width) {
@@ -1034,7 +1034,20 @@ const App = (() => {
     // v1.0.148 单张8K 系列只用 tiers/config，剔除 surfaceFees 残留简单单价（避免 单张精磨8K=15 压过 tiers 的 7）
     const sf = Object.assign({}, priceOverrides.surfaceFees || {});
     Object.keys(sf).forEach(k => { if (k.startsWith('单张')) delete sf[k]; });
-    return { surfaceFees: sf, surfaceTiers: priceOverrides.surfaceTiers || {} };
+    // v1.0.166 颜色费覆盖收集：只收集与默认不同的档位
+    const cf = {}, cl = {};
+    const cwrap = dom('sheetColorConfigTable');
+    if (cwrap) {
+      cwrap.querySelectorAll('.color-price-inp').forEach(inp => {
+        const nm = inp.dataset.color;
+        const idx = parseInt(inp.dataset.idx, 10);
+        const v = parseFloat(inp.value) || 0;
+        const def = (COLOR_FEES[nm] && COLOR_FEES[nm][idx]);
+        if (v !== def) { cf[nm] = cf[nm] || []; cf[nm][idx] = v; }
+      });
+      cwrap.querySelectorAll('.color-lock-btn.locked').forEach(btn => { cl[btn.dataset.color] = true; });
+    }
+    return { surfaceFees: sf, surfaceTiers: priceOverrides.surfaceTiers || {}, colorFees: cf, colorLocked: cl };
   }
   function applySurfacePrices(p) {
     if (!p || typeof p !== 'object') return false;
@@ -1046,6 +1059,13 @@ const App = (() => {
     }
     if (p.surfaceTiers && typeof p.surfaceTiers === 'object') {
       priceOverrides.surfaceTiers = JSON.parse(JSON.stringify(p.surfaceTiers)); changed = true;
+    }
+    // v1.0.166 颜色费覆盖（单张彩色纯颜色价）
+    if (p.colorFees && typeof p.colorFees === 'object') {
+      priceOverrides.colorFees = JSON.parse(JSON.stringify(p.colorFees)); changed = true;
+    }
+    if (p.colorLocked && typeof p.colorLocked === 'object') {
+      priceOverrides.colorLocked = JSON.parse(JSON.stringify(p.colorLocked)); changed = true;
     }
     // v1.0.148 单张8K 系列只认 tiers/config：剔除 surfaceFees 残留（含与 tiers 同名冲突）
     const stKeys = Object.keys(priceOverrides.surfaceTiers || {});
@@ -1076,7 +1096,7 @@ const App = (() => {
       btn._bound = true;
       btn.addEventListener('click', () => {
         const prices = collectSurfacePrices();
-        const n = Object.keys(prices.surfaceFees).length + Object.keys(prices.surfaceTiers).length;
+        const n = Object.keys(prices.surfaceFees).length + Object.keys(prices.surfaceTiers).length + Object.keys(prices.colorFees || {}).length;
         if (!confirm('确认将当前页面价格发布给全体员工？\n（共 ' + n + ' 项价格设置，发布后所有员工打开页面自动生效）')) return;
         btn.disabled = true;
         btn.textContent = '发布中…';
@@ -1233,6 +1253,8 @@ const App = (() => {
       priceOverrides.surfaceTiers = data.surfaceTiers || {};
       priceOverrides.filmLocked = data.filmLocked || {};
       priceOverrides.surfaceLocked = data.surfaceLocked || {};
+      priceOverrides.colorFees = data.colorFees || {};
+      priceOverrides.colorLocked = data.colorLocked || {};
     } catch (e) { /* ignore */ }
   }
 
@@ -1710,19 +1732,51 @@ const App = (() => {
       '宝石蓝': '#1E6FD9', '钛块古铜': '#9C6238', '紫罗兰': '#8A5CD8', '紫红': '#C94F8E',
       '中国红': '#D43A3A', '翡翠绿': '#2E8B57', '彩虹色': '#8B5CF6', '钛铝红铜': '#B06A3A', '钛铝古铜': '#8B5E3C'
     };
-    let h = '<div class="sg-group sg-color-art"><div class="sg-group-title">单张彩色工艺 · 纯颜色价（元/㎡，按厚度）</div><table><thead><tr><th>颜色</th>' +
-      segTitles.map(t => '<th>' + t + '</th>').join('') + '</tr></thead><tbody>';
+    // v1.0.166 颜色费可调：每个档位输入框 + 行锁定，随「发布当前单张加工价格」一起发布
+    let h = '<div class="sg-group sg-color-art"><div class="sg-group-title">单张彩色工艺 · 纯颜色价（元/㎡，按厚度，每个档位可改，?? 锁定整行）</div><table><thead><tr><th>颜色</th>' +
+      segTitles.map(t => '<th>' + t + '</th>').join('') + '<th></th></tr></thead><tbody>';
     Object.keys(COLOR_FEES).forEach(nm => {
       const arr = COLOR_FEES[nm];
+      const ov = (priceOverrides.colorFees && priceOverrides.colorFees[nm]) || null;
+      const locked = !!(priceOverrides.colorLocked && priceOverrides.colorLocked[nm]);
       const hex = COLOR_HEX[nm] || '#888';
       h += '<tr style="background:' + hex + '1A"><td style="background:' + hex + '"><span class="cfg-name" style="color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);border-radius:3px;padding:1px 6px;display:inline-block">' + nm + '</span></td>' +
-        arr.map(v => '<td class="ref-num">' + v + '</td>').join('') + '</tr>';
+        arr.map((v, idx) => {
+          const val = (ov && ov[idx] !== undefined && ov[idx] !== null) ? ov[idx] : v;
+          return '<td><input type="number" class="cfg-price-input color-price-inp" data-color="' + nm + '" data-idx="' + idx + '" value="' + val + '" step="0.5" ' + (locked ? 'readonly' : '') + '></td>';
+        }).join('') +
+        '<td><button class="cfg-lock-btn color-lock-btn ' + (locked ? 'locked' : '') + '" data-color="' + nm + '" data-type="color">' + (locked ? '🔒' : '🔓') + '</button></td>' +
+        '</tr>';
     });
     h += '</tbody></table>' +
       '<div class="sg-group-title" style="border-top:1px dashed var(--border);color:var(--text-muted);font-weight:400;font-size:12px">' +
       '用法：颜色价 + 单张8K品质加工费 = 彩色板加工价；1000mm 宽 = 窄板 ×1.25；>2.0mm 与 1500+ 宽暂无彩色；' +
-      '可与喷砂自由组合（如 单张普磨8K钛铝红铜+喷砂，三个费用单独计算）</div></div>';
+      '可与喷砂自由组合（如 单张普磨8K钛铝红铜+喷砂，三个费用单独计算）；颜色价随「发布当前单张加工价格」一起发布</div></div>';
     wrap.innerHTML = h;
+    bindColorRowEvents(wrap);
+  }
+  // v1.0.166 颜色费输入绑定
+  function bindColorRowEvents(wrap) {
+    wrap.querySelectorAll('.color-price-inp').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const nm = inp.dataset.color;
+        const idx = parseInt(inp.dataset.idx, 10);
+        const v = parseFloat(inp.value) || 0;
+        priceOverrides.colorFees = priceOverrides.colorFees || {};
+        priceOverrides.colorFees[nm] = priceOverrides.colorFees[nm] || [];
+        priceOverrides.colorFees[nm][idx] = v;
+        savePriceOverrides();
+      });
+    });
+    wrap.querySelectorAll('.color-lock-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nm = btn.dataset.color;
+        priceOverrides.colorLocked = priceOverrides.colorLocked || {};
+        priceOverrides.colorLocked[nm] = !priceOverrides.colorLocked[nm];
+        savePriceOverrides();
+        renderSheetColorConfig();
+      });
+    });
   }
 
   function renderPriceReference() {
