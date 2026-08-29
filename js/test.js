@@ -378,7 +378,9 @@ test('AFP: 拉丝古铜哑光抗指纹 = 组合价 15元/sqm 0.45mm', () => {
     film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.success, true);
-  eq(r.detail.surfaceFeePerTon, Math.round(15 * (1000/7.85/0.45) * 100) / 100);
+  // v1.0.165 拆开计算：base 拉丝古铜 10 + 哑油 5（总额仍 15）
+  eq(r.detail.surfaceFeePerTon, Math.round(10 * (1000/7.85/0.45) * 100) / 100);
+  eq(r.detail.afpFeeSqm, 5); // 哑油
 });
 
 test('AFP: 青古铜 alias → 8K古铜', () => {
@@ -1119,10 +1121,39 @@ test('v1.0.164 哑油: 卷板 5 / 平板 5', () => {
   eq(r1.detail.afpFeeSqm, 5, '卷板afp=' + r1.detail.afpFeeSqm);
   eq(r2.detail.afpFeeSqm, 5, '平板afp=' + r2.detail.afpFeeSqm);
 });
-test('v1.0.164 旧名兼容: 拉丝黄钛金亮光无指纹 卷板 → 打包 key (卷) 6.5（不改名不破坏）', () => {
+test('v1.0.165 拆开计算: 拉丝黄钛金亮光无指纹 卷板 → base(卷)4.5 + 亮油2 = 6.5（总额不变）', () => {
   const r = PricingEngine.calculate({ material: '304', surface: '拉丝黄钛金亮光无指纹', thickness: '0.98', width: '1219', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架' });
   eq(r.success, true, JSON.stringify(r.errors));
-  eq(r.detail.surfaceFeeSqm, 6.5, '打包价=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.surfaceFeeSqm, 4.5, 'base=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.afpFeeSqm, 2, 'afp=' + r.detail.afpFeeSqm);
+  eq(Math.round((r.detail.surfaceFeeSqm + r.detail.afpFeeSqm) * 10) / 10, 6.5, '总额');
+});
+test('v1.0.165 拆开计算: 拉丝黄钛金亮光无指纹(卷) 带后缀输入 → 同样拆开', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '拉丝黄钛金亮光无指纹(卷)', thickness: '0.98', width: '1219', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.afpFeeSqm, 2, 'afp=' + r.detail.afpFeeSqm);
+});
+test('v1.0.165 拆开计算: 拉丝黄钛金亮光无指纹 平板 → 5 + 3.5 = 8.5', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '拉丝黄钛金亮光无指纹', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 5, 'base=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.afpFeeSqm, 3.5, 'afp=' + r.detail.afpFeeSqm);
+});
+test('v1.0.165 钛铝古铜 与 钛块古铜 严格区分（不模糊）', () => {
+  eq(PricingEngine.normalizeSurface('单张砂面NO.4钛铝古铜'), '单张砂面NO.4钛铝古铜');
+  eq(PricingEngine.normalizeSurface('单张砂面NO.4钛块古铜'), '单张砂面NO.4钛块古铜');
+  const r1 = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4钛铝古铜', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  const r2 = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4钛块古铜', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r1.success, true, JSON.stringify(r1.errors));
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r1.detail.colorName, '钛铝古铜');
+  eq(r2.detail.colorName, '钛块古铜');
+  eq(r1.detail.colorFeeSqm, 13, '钛铝古铜=' + r1.detail.colorFeeSqm);
+  eq(r2.detail.colorFeeSqm, 7.5, '钛块古铜=' + r2.detail.colorFeeSqm);
+});
+test('v1.0.165 normalize 保护: 拉丝黄钛金亮光无指纹 不模糊成 (卷) base', () => {
+  eq(PricingEngine.normalizeSurface('拉丝黄钛金亮光无指纹'), '拉丝黄钛金亮光无指纹');
+  eq(PricingEngine.normalizeSurface('拉丝黄钛金亮油'), '拉丝黄钛金亮油');
 });
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

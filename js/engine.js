@@ -319,7 +319,11 @@ const PricingEngine = (() => {
     if (SURFACE_FEES[base]) norm = base;
     else {
       const lower = base.toLowerCase();
-      norm = SURFACE_ALIASES[lower] || fuzzyMatchSurface(lower) || base;
+      // v1.0.165 组合名保护：单张彩色（钛铝古铜 vs 钛块古铜）与 AFP 组合（亮油/哑油）不模糊匹配，保持原样交给后续拆分
+      const _sc = splitSheetColor(base);
+      const _afp = detectAFP(base);
+      if ((_sc && COLOR_FEES[_sc.colorName]) || _afp) norm = base;
+      else norm = SURFACE_ALIASES[lower] || fuzzyMatchSurface(lower) || base;
     }
     if (suffix) {
       const key = norm + '/' + suffix;
@@ -424,11 +428,11 @@ const PricingEngine = (() => {
     }
 
     // 格式3: "表面哑光抗指纹" / "表面哑光无指纹"
-    m = s.match(/^(.+?)(?:哑光抗指纹|哑光无指纹|哑油)$/);
+    m = s.match(/^(.+?)(?:哑光抗指纹|哑光无指纹|哑油)(?:\(卷\)|\(板\))?$/);
     if (m) return { baseName: m[1].trim(), isMatte: true };
 
     // 格式4: "表面亮光抗指纹" / "表面亮光无指纹"
-    m = s.match(/^(.+?)(?:亮光抗指纹|亮光无指纹|亮油)$/);
+    m = s.match(/^(.+?)(?:亮光抗指纹|亮光无指纹|亮油)(?:\(卷\)|\(板\))?$/);
     if (m) return { baseName: m[1].trim(), isMatte: false };
 
     return null;

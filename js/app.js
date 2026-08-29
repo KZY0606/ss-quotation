@@ -1543,6 +1543,7 @@ const App = (() => {
           });
         }
       });
+      if (rows.length === 0) return; // v1.0.165 空组不渲染（无指纹打包 key 已拆分为动态附加项）
       const unitHead = (gd.emboss || gd.sandblast) ? '覆盖价' : '各档位价格（元/平方米，可横拉）';
       html += '<div class="sg-group ' + gd.cls + '"><div class="sg-group-title">' + gd.label + '</div><table><thead><tr><th>表面加工</th><th>' + unitHead + '</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
