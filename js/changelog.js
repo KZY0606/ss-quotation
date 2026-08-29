@@ -3,6 +3,13 @@
 // 弹窗规则：localStorage kk_last_seen_version != CHANGELOG[0].v 时自动弹出。
 const CHANGELOG = [
   {
+    v: '1.0.162', date: '2026-08-29', title: '导出合同恢复页眉（形式发票 PROFORMA INVOICE 中英文分行）',
+    items: [
+      '合同导出页眉 = 形式发票 / PROFORMA INVOICE（中英文分行，居中，宋体14 + Times New Roman 11）'
+      ,'页眉随每页打印显示（含数据分页后每页都带）'
+    ]
+  },
+  {
     v: '1.0.161', date: '2026-08-28', title: '单张彩色加工全面拆分展示（基础表面费+颜色费+喷砂+压花）',
     items: [
       '所有单张彩色表面（砂面NO.4/拉丝HL/普磨/高普/普精/精磨/超精8K × 11色）拆分为 基础表面费 + 颜色费 独立展示，总额不变'

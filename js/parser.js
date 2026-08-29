@@ -655,6 +655,11 @@ const ExcelParser = (() => {
     ws.pageSetup.fitToPage = false;
     ws.page_setup = ws.pageSetup;
     ws.pageSetup.margins = { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
+    // v1.0.162 合同页眉：形式发票（中英文分行，居中；与用户模板页眉一致）
+    ws.headerFooter = {
+      oddHeader: '&C&"宋体"&14形式发票\n&C&"Times New Roman"&11PROFORMA INVOICE',
+      oddFooter: ''
+    };
 
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
