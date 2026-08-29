@@ -1006,6 +1006,11 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .sg-special .sg-group-title { background: #9c27b0; color: #fff; border-radius: 6px 6px 0 0; }
 .sg-special-tag { display: inline-block; background: #9c27b0; color: #fff; font-size: 11px; border-radius: 3px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
 .sg-special-row { background: #fdf9ff; }
+/* v1.0.164 上油工艺附加项板块 */
+.sg-oil { border: 2px solid #2e7d32; border-radius: 8px; margin-top: 12px; background: #f2faf3; }
+.sg-oil .sg-group-title { background: #2e7d32; color: #fff; border-radius: 6px 6px 0 0; }
+.sg-oil td:nth-child(2) { font-weight: 600; color: #2e7d32; }
+
 .sg-group { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
 .sg-group table { min-width: max-content; }
 .sg-group-title { padding: 6px 10px; font-size: 13px; font-weight: 600; }

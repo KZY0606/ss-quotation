@@ -1546,6 +1546,14 @@ const App = (() => {
       const unitHead = (gd.emboss || gd.sandblast) ? '覆盖价' : '各档位价格（元/平方米，可横拉）';
       html += '<div class="sg-group ' + gd.cls + '"><div class="sg-group-title">' + gd.label + '</div><table><thead><tr><th>表面加工</th><th>' + unitHead + '</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
+    // v1.0.164 上油工艺附加项（亮油/哑油，卷板/平板分价；原 AFP 抗指纹 改名）
+    html += '<div class="sg-group sg-oil"><div class="sg-group-title">上油工艺（附加项）</div><table><thead><tr><th>工艺</th><th>价格（元/平方米）</th><th></th></tr></thead><tbody>' +
+      '<tr><td><span class="cfg-name">亮油(卷板)</span></td><td>' + AFP_BRIGHT_FEE + '</td><td></td></tr>' +
+      '<tr><td><span class="cfg-name">哑油(卷板)</span></td><td>' + AFP_MATTE_FEE + '</td><td></td></tr>' +
+      '<tr><td><span class="cfg-name">亮油(平板)</span></td><td>' + AFP_BRIGHT_FEE_SHEET + '</td><td></td></tr>' +
+      '<tr><td><span class="cfg-name">哑油(平板)</span></td><td>' + AFP_MATTE_FEE_SHEET + '</td><td></td></tr>' +
+      '<tr><td colspan="3" style="font-size:11px;color:var(--text-muted)">上油为附加项：表面名后加 亮油/哑油（或 亮光无指纹/哑光无指纹/亮光抗指纹/哑光抗指纹）触发，按卷板/平板分别计价</td></tr>' +
+      '</tbody></table></div>';
     wrap.innerHTML = html;
     bindSurfRowEvents(wrap, renderSurfaceConfig);
   }
@@ -1699,7 +1707,7 @@ const App = (() => {
     const COLOR_HEX = {
       '黄钛金': '#D9A404', '玫瑰金': '#E3968C', '香槟金': '#E0C98F', '黑钛金': '#4A4A4A',
       '宝石蓝': '#1E6FD9', '钛块古铜': '#9C6238', '紫罗兰': '#8A5CD8', '紫红': '#C94F8E',
-      '中国红': '#D43A3A', '翡翠绿': '#2E8B57', '彩虹色': '#8B5CF6', '钛铝红铜': '#B06A3A'
+      '中国红': '#D43A3A', '翡翠绿': '#2E8B57', '彩虹色': '#8B5CF6', '钛铝红铜': '#B06A3A', '钛铝古铜': '#8B5E3C'
     };
     let h = '<div class="sg-group sg-color-art"><div class="sg-group-title">单张彩色工艺 · 纯颜色价（元/㎡，按厚度）</div><table><thead><tr><th>颜色</th>' +
       segTitles.map(t => '<th>' + t + '</th>').join('') + '</tr></thead><tbody>';
@@ -1950,8 +1958,10 @@ const App = (() => {
     h.push('<tr><td>小珠光压花附加费 (linen)</td><td class="ref-num">' + LINEN_FEE + ' 元/吨</td></tr>');
     h.push('<tr><td>小方格压花附加费 (square)</td><td class="ref-num">' + EMBOSS_FEES.square.feePerTon + ' 元/吨</td></tr>');
     h.push('<tr><td colspan="2" style="font-size:11px;color:var(--text-muted)">压花格式：表面加工+压花工艺（如 6K+linen / 8K+小珠光），加工费分开计算；也可在报价页勾选"压花工艺：小珠光(linen)"</td></tr>');
-    h.push('<tr><td>亮光抗指纹 (AFP Bright)</td><td class="ref-num">' + AFP_BRIGHT_FEE + ' 元/㎡</td></tr>');
-    h.push('<tr><td>哑光抗指纹 (AFP Matte)</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
+    h.push('<tr><td>亮油(卷板)（原 亮光无指纹）</td><td class="ref-num">' + AFP_BRIGHT_FEE + ' 元/㎡</td></tr>');
+    h.push('<tr><td>哑油(卷板)（原 哑光无指纹）</td><td class="ref-num">' + AFP_MATTE_FEE + ' 元/㎡</td></tr>');
+    h.push('<tr><td>亮油(平板)</td><td class="ref-num">' + AFP_BRIGHT_FEE_SHEET + ' 元/㎡</td></tr>');
+    h.push('<tr><td>哑油(平板)</td><td class="ref-num">' + AFP_MATTE_FEE_SHEET + ' 元/㎡</td></tr>');
     h.push('<tr><td colspan="2" style="padding:4px"></td></tr>');
     h.push('</table></div>');
 

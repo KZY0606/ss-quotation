@@ -366,10 +366,10 @@ test('AFP: Gold No4 + AFP = 拉丝黄钛金+亮光抗指纹 0.45mm', () => {
     film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.success, true);
-  eq(r.detail.afpFeeSqm, 2); // 亮光(默认)
+  eq(r.detail.afpFeeSqm, 3.5); // 亮油·平板 (v1.0.164 起卷板/平板分价)
   eq(r.detail.surfaceFeePerTon, 1415.43); // 5 * 283.09
-  eq(r.detail.afpPerTon, 566.17); // 2 * 283.09
-  eq(r.detail.costTax, 10680);
+  eq(r.detail.afpPerTon, 990.8); // 3.5 * 283.09
+  eq(r.detail.costTax, 11110);
 });
 
 test('AFP: 拉丝古铜哑光抗指纹 = 组合价 15元/sqm 0.45mm', () => {
@@ -1083,6 +1083,47 @@ test('v1.0.163 特殊组合: 卷板自动降级 8K（单张系列规则）', () 
   eq(r.success, true, JSON.stringify(r.errors));
 });
 
+// === v1.0.164 单张彩色新增 钛铝古铜 13元/㎡ + 亮油/哑油 改名与卷板/平板分价 + 上油工艺 ===
+test('v1.0.164 钛铝古铜: 单张砂面NO.4钛铝古铜 1219 0.98 → 白板1.5 + 颜色13', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4钛铝古铜', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.colorName, '钛铝古铜', '颜色名=' + r.detail.colorName);
+  eq(r.detail.colorFeeSqm, 13, '颜色费=' + r.detail.colorFeeSqm);
+  eq(r.detail.surfaceFeeSqm, 1.5, '白板费=' + r.detail.surfaceFeeSqm);
+});
+test('v1.0.164 钛铝古铜: 单张拉丝HL钛铝古铜 1500 0.98 → 白板2.5 + 13×1.7', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张拉丝HL钛铝古铜', thickness: '0.98', width: '1500', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.colorFeeSqm, 22.1, '颜色费=' + r.detail.colorFeeSqm);
+});
+test('v1.0.164 钛铝古铜: 1000mm 颜色×1.25', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张砂面NO.4钛铝古铜', thickness: '0.98', width: '1000', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.colorFeeSqm, 16.25, '颜色费=' + r.detail.colorFeeSqm);
+});
+test('v1.0.164 亮油: 拉丝黄钛金亮油 卷板 → afpFeeSqm 2', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '拉丝黄钛金亮油', thickness: '0.98', width: '1219', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.afpFeeSqm, 2, 'afp=' + r.detail.afpFeeSqm);
+});
+test('v1.0.164 亮油: 拉丝黄钛金亮油 平板 → afpFeeSqm 3.5', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '拉丝黄钛金亮油', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.afpFeeSqm, 3.5, 'afp=' + r.detail.afpFeeSqm);
+});
+test('v1.0.164 哑油: 卷板 5 / 平板 5', () => {
+  const r1 = PricingEngine.calculate({ material: '304', surface: '拉丝黄钛金哑油', thickness: '0.98', width: '1219', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架' });
+  const r2 = PricingEngine.calculate({ material: '304', surface: '拉丝黄钛金哑油', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r1.success, true, JSON.stringify(r1.errors));
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r1.detail.afpFeeSqm, 5, '卷板afp=' + r1.detail.afpFeeSqm);
+  eq(r2.detail.afpFeeSqm, 5, '平板afp=' + r2.detail.afpFeeSqm);
+});
+test('v1.0.164 旧名兼容: 拉丝黄钛金亮光无指纹 卷板 → 打包 key (卷) 6.5（不改名不破坏）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '拉丝黄钛金亮光无指纹', thickness: '0.98', width: '1219', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 6.5, '打包价=' + r.detail.surfaceFeeSqm);
+});
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
 

@@ -424,11 +424,11 @@ const PricingEngine = (() => {
     }
 
     // 格式3: "表面哑光抗指纹" / "表面哑光无指纹"
-    m = s.match(/^(.+?)(?:哑光抗指纹|哑光无指纹)$/);
+    m = s.match(/^(.+?)(?:哑光抗指纹|哑光无指纹|哑油)$/);
     if (m) return { baseName: m[1].trim(), isMatte: true };
 
     // 格式4: "表面亮光抗指纹" / "表面亮光无指纹"
-    m = s.match(/^(.+?)(?:亮光抗指纹|亮光无指纹)$/);
+    m = s.match(/^(.+?)(?:亮光抗指纹|亮光无指纹|亮油)$/);
     if (m) return { baseName: m[1].trim(), isMatte: false };
 
     return null;
@@ -678,7 +678,9 @@ const PricingEngine = (() => {
         const afpBase = normalizeSurface(afpInfo.baseName);
         if (afpBase && SURFACE_FEES[afpBase]) {
           baseSurface = afpBase;
-          afpSqmFee = afpInfo.isMatte ? AFP_MATTE_FEE : AFP_BRIGHT_FEE;
+          afpSqmFee = afpInfo.isMatte
+          ? (boardType === 'sheet' ? AFP_MATTE_FEE_SHEET : AFP_MATTE_FEE)
+          : (boardType === 'sheet' ? AFP_BRIGHT_FEE_SHEET : AFP_BRIGHT_FEE);
         }
       }
     }
