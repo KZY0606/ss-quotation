@@ -1673,6 +1673,18 @@ const App = (() => {
       });
       html += '<div class="sg-group ' + g.cls + '"><div class="sg-group-title">' + g.label + '</div><table><thead><tr><th>单张加工</th><th>各档位价格（元/平方米，可横拉）</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
     });
+    // v1.0.163 特殊组合板块：单张拉丝青古铜哑光(镀铜) 组合价 30 元/㎡，不可拆分
+    const spKey = '单张拉丝青古铜哑光(镀铜)';
+    const spCfg = SURFACE_FEES[spKey];
+    if (Array.isArray(spCfg) && spCfg.length) {
+      const spLocked = !!priceOverrides.surfaceLocked[spKey];
+      html += '<div class="sg-group sg-special"><div class="sg-group-title">特殊组合板块（组合价，不可拆分）</div><table><thead><tr><th>单张加工</th><th>价格（元/平方米）</th><th></th></tr></thead><tbody>' +
+        '<tr class="sg-special-row">' +
+        '<td><span class="cfg-name">' + spKey + '</span> <span class="sg-special-tag">组合价</span></td>' +
+        '<td class="tier-cells">' + tierCellsHtml(spCfg.map((t, idx2) => Object.assign({}, t, { _i: idx2 })), spKey, spLocked) + '</td>' +
+        '<td><button class="cfg-lock-btn ' + (spLocked ? 'locked' : '') + '" data-names="' + spKey + '" data-type="surf">' + (spLocked ? '🔒' : '🔓') + '</button></td>' +
+        '</tr></tbody></table></div>';
+    }
     wrap.innerHTML = html;
     bindSurfRowEvents(wrap, renderSheetSurfaceConfig);
   }

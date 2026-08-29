@@ -1050,6 +1050,39 @@ test('v1.0.153 单张砂面NO.4彩色 1000mm 档恢复', () => {
   eq(PricingEngine.getSurfaceFee('单张拉丝HL翡翠绿', 1.0, 1000, '304').sqmPrice, 29.5, '拉丝HL翡翠绿 1000mm');
 });
 
+// === v1.0.163 特殊组合板块：单张拉丝青古铜哑光(镀铜) 30元/㎡ 组合价不可拆分 ===
+test('v1.0.163 特殊组合: 304 1219 0.98 → 加工费 30 元/㎡ 不可拆分', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张拉丝青古铜哑光(镀铜)', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 30, '组合价=' + r.detail.surfaceFeeSqm);
+  eq(r.detail.colorFeeSqm, 0, '不可拆分=' + r.detail.colorFeeSqm);
+  eq(r.detail.colorName, '', '无颜色名');
+});
+test('v1.0.163 特殊组合: 1000/1500 宽度同为 30', () => {
+  const r1 = PricingEngine.calculate({ material: '304', surface: '单张拉丝青古铜哑光(镀铜)', thickness: '1.2', width: '1000', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  const r2 = PricingEngine.calculate({ material: '304', surface: '单张拉丝青古铜哑光(镀铜)', thickness: '1.2', width: '1500', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r1.success, true, JSON.stringify(r1.errors));
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r1.detail.surfaceFeeSqm, 30);
+  eq(r2.detail.surfaceFeeSqm, 30);
+});
+test('v1.0.163 特殊组合: 别名 镀铜/青古铜哑光 归一', () => {
+  eq(PricingEngine.normalizeSurface('单张拉丝青古铜哑光镀铜'), '单张拉丝青古铜哑光(镀铜)');
+  eq(PricingEngine.normalizeSurface('青古铜哑光'), '单张拉丝青古铜哑光(镀铜)');
+  const r = PricingEngine.calculate({ material: '304', surface: '青古铜哑光', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '密封木箱' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 30);
+});
+test('v1.0.163 特殊组合: sheet 模式 30 元/㎡', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张拉丝青古铜哑光(镀铜)', thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'sheet', boardType: 'sheet', packing: '密封木箱', quantity: 10 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.surfaceFeeSqm, 30);
+});
+test('v1.0.163 特殊组合: 卷板自动降级 8K（单张系列规则）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '单张拉丝青古铜哑光(镀铜)', thickness: '0.98', width: '1219', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
 

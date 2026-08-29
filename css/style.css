@@ -1001,6 +1001,11 @@ tr.main-row:hover .delete-btn { opacity:1; }
 
 
 /* 单张加工板块：宽度档分组颜色（2026-08-24 v1.0.82） */
+/* v1.0.163 特殊组合板块 */
+.sg-special { border: 2px solid #9c27b0; border-radius: 8px; margin-top: 12px; background: #faf5ff; }
+.sg-special .sg-group-title { background: #9c27b0; color: #fff; border-radius: 6px 6px 0 0; }
+.sg-special-tag { display: inline-block; background: #9c27b0; color: #fff; font-size: 11px; border-radius: 3px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
+.sg-special-row { background: #fdf9ff; }
 .sg-group { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
 .sg-group table { min-width: max-content; }
 .sg-group-title { padding: 6px 10px; font-size: 13px; font-weight: 600; }
