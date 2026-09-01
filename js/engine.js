@@ -869,9 +869,14 @@ const PricingEngine = (() => {
     // v1.0.140 全检费（过磅模式）：元/方 × 每吨面积（检测要求列=全检 时 item.inspect>0）
     const inspectFeeSqmW = (parseFloat(item.inspect) > 0) ? parseFloat(item.inspect) : 0;
     const inspectPerTonW = round2(inspectFeeSqmW * sqmPerTon + 1e-9);
-    const subtotal = round2(basePrice + thickSurcharge + surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon + inspectPerTonW);
-    const taxExcluded = round2(subtotal * 0.92);
-    const costTax = round10(subtotal);
+    // 2026-09-01 用户规则：基价+厚度加价本身即含税价；其他费用（表面/压花/抗指纹/膜/全检）不含税
+    // 含税成本 = (基价+厚度加价) + 其他费用÷0.92；不含税成本 = (基价+厚度加价)×0.92 + 其他费用
+    const materialTaxRaw = basePrice + thickSurcharge;
+    const otherFeesRaw = round2(surfaceFeePerTon + linenFeePerTon + afpPerTon + film1PerTon + film2PerTon + inspectPerTonW);
+    const subtotal = round2(materialTaxRaw + otherFeesRaw);           // 全加（原口径，保留）
+    const taxExcluded = round2(materialTaxRaw * 0.92 + otherFeesRaw); // 不含税成本小计
+    const costTaxRaw = round2(materialTaxRaw + otherFeesRaw / 0.92);  // 含税成本小计
+    const costTax = round10(costTaxRaw);
     const costNoTax = round10(taxExcluded);
     const markupKey = `${edgeType}_${boardType}`;
     let markup = SALES_MARKUP[markupKey];
@@ -935,7 +940,7 @@ const PricingEngine = (() => {
         film1FeeSqm: film1Fee || 0, film1PerTon,
         film2FeeSqm: film2Fee || 0, film2PerTon,
     inspectFeeSqm: inspectFeeSqmW, inspectPerTon: inspectPerTonW,
-        costRaw: round2(subtotal), costNoTaxRaw: round2(taxExcluded), materialNoTaxRaw: round2(materialNoTaxRaw),
+        costRaw: round2(costTaxRaw), costNoTaxRaw: round2(taxExcluded), materialNoTaxRaw: round2(materialNoTaxRaw),
         costTax, costNoTax,
         edgeType, boardType, markup, widthSurcharge, packing,
         markupDetail: markupDetail ? { group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee, packingFee: markupDetail.packingFee, containerFee: markupDetail.containerFee, rackFee: markupDetail.rackFee, packFee: markupDetail.packFee, lossFee: markupDetail.lossFee, total: markupDetail.total, rackLabel: markupDetail.rackLabel } : null,

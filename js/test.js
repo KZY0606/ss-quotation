@@ -44,7 +44,7 @@ test('五尺 201J2 0.77 档外报错（范围外）', () => { eq(PricingEngine.g
 
 test('用户示例: NO.4 5C-FILM 0.50*1240*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'NO.4',thickness:'0.50',width:'1240',length:'C',film1:'5C-FILM',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8680); eq(r.detail.costNoTax, 7990); eq(r.detail.saleTax, 8880);
+  eq(r.success, true); eq(r.detail.costTax, 8720); eq(r.detail.costNoTax, 8020); eq(r.detail.saleTax, 8920);
 });
 
 test('2B 无膜 1.00*1240*C', () => {
@@ -54,22 +54,22 @@ test('2B 无膜 1.00*1240*C', () => {
 
 test('8K 镜面 0.50*1219*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K',thickness:'0.50',width:'1219',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8940);
+  eq(r.success, true); eq(r.detail.costTax, 8990);
 });
 
 test('8K黄钛金 7C+垫纸 0.50*1219*2500', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K黄钛金',thickness:'0.50',width:'1219',length:'2500',film1:'7C-FILM',film2:'垫纸',basePrice:7800,packing:'木架'});
-  eq(r.success, true); eq(r.detail.costTax, 10080); eq(r.detail.saleTax, 10480);
+  eq(r.success, true); eq(r.detail.costTax, 10240); eq(r.detail.saleTax, 10640);
 });
 
 test('双面抛光 0.50*1000*2000', () => {
   const r = PricingEngine.calculate({material:'201',surface:'双面抛光',thickness:'0.50',width:'1000',length:'2000',film1:'',film2:'',basePrice:7800,packing:'木架'});
-  eq(r.success, true); eq(r.detail.costTax, 8600); eq(r.detail.saleTax, 9200);
+  eq(r.success, true); eq(r.detail.costTax, 8630); eq(r.detail.saleTax, 9230);
 });
 
 test('拉丝黑钛金 0.60*1219*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'拉丝黑钛金',thickness:'0.60',width:'1219',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8730);
+  eq(r.success, true); eq(r.detail.costTax, 8780);
 });
 
 test('错误处理: 无效厚度', () => {
@@ -79,12 +79,12 @@ test('错误处理: 无效厚度', () => {
 
 test('8K 宽板 1.00*1500*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'8K',thickness:'1.00',width:'1500',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 9020); eq(r.detail.saleTax, 9420);
+  eq(r.success, true); eq(r.detail.costTax, 9110); eq(r.detail.saleTax, 9510);
 });
 
 test('NO.4 宽板 1.50*1500*C', () => {
   const r = PricingEngine.calculate({material:'201',surface:'NO.4',thickness:'1.50',width:'1500',length:'C',film1:'',film2:'',basePrice:7800});
-  eq(r.success, true); eq(r.detail.costTax, 8200);
+  eq(r.success, true); eq(r.detail.costTax, 8220);
 });
 
 // === 新增：压延料测试 ===
@@ -93,7 +93,7 @@ test('压延料 NO.4 0.50*1240*C (压延0.50-0.59=+500)', () => {
   eq(r.success, true); eq(r.detail.thickSurcharge, 500);
   eq(r.detail.thickTable, '压延料');
   // 7800+500+127.39 = 8427.39 -> round10 = 8430
-  eq(r.detail.costTax, 8430);
+  eq(r.detail.costTax, 8440);
 });
 
 test('压延料 0.25*1240*C (压延0.24-0.26=+1500)', () => {
@@ -132,7 +132,7 @@ test('201J1压延 0.50*1240*C', () => {
   const r = PricingEngine.calculate({material:'201J1',surface:'NO.4',thickness:'0.50',width:'1240',length:'C',film1:'',film2:'',basePrice:8700,isYanYan:true});
   eq(r.success, true);
   // 8700+500(压延0.50-0.59)+127.39 = 9327.39 -> 9330
-  eq(r.detail.costTax, 9330);
+  eq(r.detail.costTax, 9340);
 });
 
 // === 自由文本解析测试 ===
@@ -245,7 +245,7 @@ test('6K+小方格(Square embossed) 2.00mm → 6K加工400 + 小方格300', () =
   eq(r.detail.linenFeePerTon, 300);
   eq(r.detail.embossFees.length, 1);
   eq(r.detail.embossFees[0].key, 'square');
-  eq(r.detail.costTax, 8700);
+  eq(r.detail.costTax, 8760);
 });
 test('8K+square embossed 0.45mm → 8K707.71 + 小方格300（英文带空格识别）', () => {
   const r = PricingEngine.calculate({
@@ -255,7 +255,7 @@ test('8K+square embossed 0.45mm → 8K707.71 + 小方格300（英文带空格识
   eq(r.success, true);
   eq(r.detail.surfaceFeePerTon, 707.71);
   eq(r.detail.linenFeePerTon, 300);
-  eq(r.detail.costTax, 9710);
+  eq(r.detail.costTax, 9800);
 });
 test('6K+linen+square 双压花叠加 → 600元/吨', () => {
   const r = PricingEngine.calculate({
@@ -266,7 +266,7 @@ test('6K+linen+square 双压花叠加 → 600元/吨', () => {
   eq(r.detail.surfaceFeePerTon, 400);
   eq(r.detail.linenFeePerTon, 600);
   eq(r.detail.embossFees.length, 2);
-  eq(r.detail.costTax, 9000);
+  eq(r.detail.costTax, 9090);
 });
 test('纯小方格: surface=小方格(Square embossed) → 表面加工0 + 小方格300', () => {
   const r = PricingEngine.calculate({
@@ -288,7 +288,7 @@ test('覆盖价: 6K+linen 设 linen=350 → 压花 350 元/吨', () => {
   eq(r.success, true);
   eq(r.detail.surfaceFeePerTon, 400);
   eq(r.detail.linenFeePerTon, 350);
-  eq(r.detail.costTax, 8750);
+  eq(r.detail.costTax, 8820);
 });
 test('覆盖价: 旧格式 8k linen 也走覆盖价 350', () => {
   const r = PricingEngine.calculate({
@@ -305,7 +305,7 @@ test('恢复默认: 清除覆盖后 linen 回 300', () => {
     film1:'', film2:'', basePrice:7800, isYanYan:false, packing: '木架'
   });
   eq(r.detail.linenFeePerTon, 300);
-  eq(r.detail.costTax, 8700);
+  eq(r.detail.costTax, 8760);
 });
 
 // === 小珠光(LINEN)测试 ===
@@ -317,7 +317,7 @@ test('BA linen 0.45mm → 450元/吨 (单面抛光150+小珠光300)', () => {
   eq(r.success, true);
   eq(r.detail.linenFeePerTon, 300);
   eq(r.detail.surfaceFeePerTon, 150);
-  eq(r.detail.costTax, 9150);
+  eq(r.detail.costTax, 9190);
 });
 
 test('8K linen 0.45mm → 707.71+300=1007.71元/吨', () => {
@@ -329,7 +329,7 @@ test('8K linen 0.45mm → 707.71+300=1007.71元/吨', () => {
   eq(r.detail.hasLinen, true);
   eq(r.detail.surfaceFeePerTon, 707.71);
   eq(r.detail.linenFeePerTon, 300);
-  eq(r.detail.costTax, 9710);
+  eq(r.detail.costTax, 9800);
 });
 
 test('小珠光 alias: 镜面8k黄钛金小珠光 0.50mm', () => {
@@ -369,7 +369,7 @@ test('AFP: Gold No4 + AFP = 拉丝黄钛金+亮光抗指纹 0.45mm', () => {
   eq(r.detail.afpFeeSqm, 3.5); // 亮油·平板 (v1.0.164 起卷板/平板分价)
   eq(r.detail.surfaceFeePerTon, 1415.43); // 5 * 283.09
   eq(r.detail.afpPerTon, 990.8); // 3.5 * 283.09
-  eq(r.detail.costTax, 11110);
+  eq(r.detail.costTax, 11320);
 });
 
 test('AFP: 拉丝古铜哑光抗指纹 = 组合价 15元/sqm 0.45mm', () => {
@@ -539,7 +539,7 @@ test('压花: 6K+linen 2.00*1240 → 6K按吨计价400 + linen压花300', () => 
   eq(r.detail.linenFeePerTon, 300, 'linen 压花 300 元/吨');
   eq(r.detail.embossFees.length, 1, 'embossFees 1 项');
   eq(r.detail.embossFees[0].name, '小珠光(linen)');
-  eq(r.detail.costRaw, 8700, '小计 7800+200+400+300');
+  eq(r.detail.costRaw, 8760.87, '含税小计 = 材料8000 + 其他700÷0.92');
 });
 
 test('压花: 6K+小珠光 中文别名 → 同上', () => {
@@ -1027,7 +1027,7 @@ test('v1.0.140 过磅模式 全检费计入售价 saleNoTax', () => {
   eq(r2.success, true);
   eq(r1.detail.saleNoTax >= r2.detail.saleNoTax, true, '含全检售价不低于无全检');
   // 十位取整后差异可能被吞，但成本差必须等于全检费
-  eq(Math.abs((r1.detail.costRaw - r2.detail.costRaw) - r1.detail.inspectPerTon) < 0.02, true, '成本差=全检费');
+  eq(Math.abs((r1.detail.costNoTaxRaw - r2.detail.costNoTaxRaw) - r1.detail.inspectPerTon) < 0.02, true, '不含税成本差=全检费');
 });
 
 // === v1.0.153 恢复单张砂面NO.4/单张拉丝HL 1000mm+五尺(1500/1524/1530)档（v1.0.142 误删回滚） ===
@@ -1191,3 +1191,32 @@ test('v1.0.165 normalize 保护: 拉丝黄钛金亮光无指纹 不模糊成 (�
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
 
+
+// === v1.0.167 新增保护膜 4.5C-FILM (0.65元/㎡) + 含税/不含税成本新公式（2026-09-01 用户规则） ===
+test('v1.0.167 保护膜 4.5C-FILM = 0.65 元/㎡', () => {
+  eq(PricingEngine.getFilmFee('4.5C-FILM'), 0.65);
+});
+test('v1.0.167 4.5C-FILM 计入成本（304 1.00*1219*C 平板 木架）', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '2B', thickness: '1.00', width: '1219', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架', film1: '4.5C-FILM', film2: '' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.film1FeeSqm, 0.65);
+  // 膜费元/吨 = 0.65 × 每吨面积
+  const f1 = Math.round(0.65 * r.detail.sqmPerTon * 100) / 100;
+  eq(r.detail.film1PerTon, f1);
+});
+test('v1.0.167 含税成本 = 材料(基价+厚度加价) + 其他费用÷0.92', () => {
+  // 2B 无膜无加工：其他费用=0 → 含税成本 = 材料原值
+  const r1 = PricingEngine.calculate({ material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架', film1: '', film2: '' });
+  eq(r1.success, true);
+  eq(r1.detail.costTax, 14300 + (r1.detail.thickSurcharge || 0), '无其他费用时含税成本=材料');
+  eq(r1.detail.costNoTax, Math.round((14300 + (r1.detail.thickSurcharge || 0)) * 0.92 / 10) * 10, '不含税=材料×0.92');
+  // 带膜费：含税 = 材料 + 膜÷0.92
+  const r2 = PricingEngine.calculate({ material: '304', surface: '2B', thickness: '1.00', width: '1240', length: 'C', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'coil', packing: '木架', film1: '4.5C-FILM', film2: '' });
+  eq(r2.success, true);
+  const mat2 = 14300 + (r2.detail.thickSurcharge || 0);
+  const other2 = r2.detail.film1PerTon;
+  const expectTax2 = Math.round((mat2 + other2 / 0.92) / 10) * 10;
+  eq(r2.detail.costTax, expectTax2, '含税成本 = 材料 + 膜费÷0.92 取十位');
+  const expectNoTax2 = Math.round((mat2 * 0.92 + other2) / 10) * 10;
+  eq(r2.detail.costNoTax, expectNoTax2, '不含税成本 = 材料×0.92 + 膜费');
+});

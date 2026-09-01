@@ -900,6 +900,7 @@ const AFP_MATTE_FEE_SHEET = 5;     // 哑油·平板
 // 保护膜 (元/平米)
 const FILM_FEES = {
   '垫纸':           0.3,
+  '4.5C-FILM':     0.65,
   '5C-FILM':        1.0,
   'BLUE-5C-FILM':  0.7,
   'BLUE+KBE-5C-FILM': 1.0,

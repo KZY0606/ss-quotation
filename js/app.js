@@ -2868,6 +2868,9 @@ const App = (() => {
     if (d.film2PerTon > 0) html += step(`⑥ 保护膜2 (${d.film2}, ${d.film2FeeSqm}元/㎡ × ${fmt(d.sqmPerTon)}㎡/吨)`, d.film2PerTon, '元/吨', true);
     else if (d.film2?.trim()) html += step(`⑥ 保护膜2`, 0, '', false);
     if (d.inspectPerTon > 0) html += step(`⑦ 全检费 (${fmt(d.inspectFeeSqm)}元/㎡ × ${fmt(d.sqmPerTon)}㎡/吨)`, d.inspectPerTon, '元/吨', true);
+    // 2026-09-01 用户规则：其他费用不含税，折算成含税需 ÷0.92；基价+厚度加价本身含税
+    const otherFeesSum = Math.round(((d.surfaceFeePerTon || 0) + (d.linenFeePerTon || 0) + (d.afpPerTon || 0) + (d.film1PerTon || 0) + (d.film2PerTon || 0) + (d.inspectPerTon || 0)) * 100) / 100;
+    if (otherFeesSum > 0) html += step(`其他费用合计 (不含税) ÷ 0.92`, Math.round(otherFeesSum / 0.92 * 100) / 100, '元/吨', true);
     html += total('含税成本小计', d.costRaw, 'tax');
     html += total('四舍五入 (十位)', d.costTax, 'tax');
     html += '</div><div class="calc-section"><div class="calc-section-title">不含税售价（2026-08-22 规则：(基价+厚度加价)×0.92 + 表面 + 膜 + 加价）</div>';
