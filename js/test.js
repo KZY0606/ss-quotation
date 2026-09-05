@@ -1292,5 +1292,59 @@ test('v1.0.169 201J5 北港既有逻辑不受影响', () => {
   eq(r.success, true, JSON.stringify(r.errors));
 });
 
+
+// === v1.0.170 定制化计价（2026-09-05 用户规则：平板+件数+包装总额手填均摊+费用覆盖+新公式）===
+test('v1.0.170 定制化 304 平板 1.00*1219*2438 100张 包装总额3000：平摊+成本+双口径', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', packing: '定制木架' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  const c = r.detail.custom;
+  eq(r.calcMode, 'custom');
+  eq(c.quantity, 100);
+  eq(Math.round(c.sheetWeightKg * 100) / 100, 23.57, '单张kg');
+  eq(c.totalTon, 2.3568, '总吨');
+  eq(Math.round(c.packingPerTon * 100) / 100, 1272.91, '包装平摊元/吨');
+  eq(c.packingPerSheet, 30, '包装平摊元/张=30');
+  eq(c.containerPerTon, 50, '装柜默认50元/吨');
+  eq(c.edgePerTon, 200, '边部自动200(1219切边)');
+  eq(c.surfacePerTon, 0);
+  eq(r.detail.costTax, 16260, '含税成本十位整');
+  eq(r.detail.costNoTax, 14950);
+  eq(c.sheetCostTax, 383.22, '每张含税');
+  eq(c.sheetCostNoTax, 352.34, '每张不含税');
+  eq(c.totalCostTax, 38321.57, '整批含税总额');
+  eq(r.detail.saleTax, 16260, '兼容saleTax=costTax');
+  eq(r.detail.weight, 2.3568, '兼容weight=总吨');
+});
+test('v1.0.170 定制化覆盖项生效（表面500/装柜100/边部0/包装100元吨）', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceTon: '500', customContainerTon: '100', customEdgeTon: '0', customPackingTon: '100' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.costTax, 15360);
+  eq(r.detail.custom.surfacePerTon, 500);
+  eq(r.detail.custom.containerPerTon, 100);
+  eq(r.detail.custom.edgePerTon, 0);
+  eq(r.detail.custom.packingPerTon, 100);
+});
+test('v1.0.170 定制化 NO.4 表面自动带出（不限单张表面白名单）', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: 'NO.4', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.custom.surfaceAutoPerTon > 0, true, 'NO.4自动费>0');
+});
+test('v1.0.170 定制化卷板报错', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: 'C', basePrice: 14300, calcMode: 'custom', quantity: '100' });
+  eq(r.success, false, JSON.stringify(r.errors));
+});
+test('v1.0.170 定制化缺件数报错', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom' });
+  eq(r.success, false, JSON.stringify(r.errors));
+});
+test('v1.0.170 定制化件数翻倍每张成本不变（固定元/吨费用）', () => {
+  const base = { material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', customPackingTon: '100' };
+  const a = PricingEngine.calculate(Object.assign({}, base, { quantity: '100' }));
+  const b = PricingEngine.calculate(Object.assign({}, base, { quantity: '200' }));
+  eq(a.success && b.success, true);
+  eq(a.detail.custom.sheetCostTax, b.detail.custom.sheetCostTax, '每张一致');
+  eq(Math.abs(b.detail.custom.totalCostTax - a.detail.custom.totalCostTax * 2) < 0.011, true, '总额约翻倍(容忍单批round2 0.01误差)');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.169">
+  <link rel="stylesheet" href="css/style.css?v=1.0.170">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -217,9 +217,16 @@
         <!-- 计算逻辑（2026-08-24 用户规则）：过磅计价（元/吨）默认 / 单张计价（元/张，按张卖的板材） -->
         <div class="term-bar" id="calcModeBar">
           <span class="term-label">🧮 计算逻辑</span>
-          <label class="term-radio"><input type="radio" name="calcMode" value="weight" checked><span>过磅计价（元/吨）</span></label>
-          <label class="term-radio"><input type="radio" name="calcMode" value="sheet" id="calcModeSheet"><span>单张计价（元/张）</span></label>
+          <label class="term-radio"><input type="radio" name="calcMode" value="weight" checked onchange="App.onCalcModeChange()"><span>过磅计价（元/吨）</span></label>
+          <label class="term-radio"><input type="radio" name="calcMode" value="sheet" id="calcModeSheet" onchange="App.onCalcModeChange()"><span>单张计价（元/张）</span></label>
+          <label class="term-radio"><input type="radio" name="calcMode" value="custom" id="calcModeCustom" onchange="App.onCalcModeChange()"><span>定制化计价</span></label>
           <span style="margin-left:8px;font-size:12px;color:var(--text-muted)">单张逻辑限平板：2B 与五种单张8K</span>
+        </div>
+        <div class="term-bar" id="customUnitBar" style="display:none;margin-top:6px;">
+          <span class="term-label">📐 计价单位</span>
+          <label class="term-radio"><input type="radio" name="customUnit" value="ton" checked onchange="App.onCustomUnitChange()"><span>按吨（元/吨）</span></label>
+          <label class="term-radio"><input type="radio" name="customUnit" value="sheet" onchange="App.onCustomUnitChange()"><span>按张（元/张）</span></label>
+          <span style="margin-left:8px;font-size:12px;color:var(--text-muted)">定制化：限平板；包装费总额手动填写按件数均摊；装柜/边部/表面/膜费可展开修改（仅当次有效）</span>
         </div>
         <div class="tab-bar">
           <button class="tab-btn active" data-tab="text"><span>📝</span> 粘贴文本</button>
@@ -288,14 +295,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.169"></script>
-  <script src="js/changelog.js?v=1.0.169"></script>
-<script src="js/config.js?v=1.0.169"></script>
-  <script src="js/engine.js?v=1.0.169"></script>
-  <script src="js/parser.js?v=1.0.169"></script>
-    <script src="js/contract-template.js?v=1.0.169"></script>
-    <script src="js/quote-template.js?v=1.0.169"></script>
-  <script src="js/app.js?v=1.0.169"></script>
+  <script src="js/auth.js?v=1.0.170"></script>
+  <script src="js/changelog.js?v=1.0.170"></script>
+<script src="js/config.js?v=1.0.170"></script>
+  <script src="js/engine.js?v=1.0.170"></script>
+  <script src="js/parser.js?v=1.0.170"></script>
+    <script src="js/contract-template.js?v=1.0.170"></script>
+    <script src="js/quote-template.js?v=1.0.170"></script>
+  <script src="js/app.js?v=1.0.170"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

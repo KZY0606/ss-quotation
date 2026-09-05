@@ -311,6 +311,8 @@ const App = (() => {
     els.minP = dom('minSaleTax'); els.maxP = dom('maxSaleTax');
     els.freeText = dom('freeText'); els.parseTextBtn = dom('parseTextBtn');
     els.calcModeSheet = dom('calcModeSheet');
+    els.calcModeCustom = dom('calcModeCustom');
+    els.customUnitBar = dom('customUnitBar');
     els.inspectFeeVal = dom('inspectFeeVal');
     els.thSaleTax = dom('thSaleTax'); els.thSaleNoTax = dom('thSaleNoTax');
     els.thWeight = dom('thWeight'); els.thCostTax = dom('thCostTax'); els.thCostNoTax = dom('thCostNoTax');
@@ -2322,15 +2324,97 @@ const App = (() => {
   }
 
   function isSheetMode() { return !!(els.calcModeSheet && els.calcModeSheet.checked); }
-  function updateSheetHeaders() {
-    // v1.0.137：件数/重量/成本列固定显示（单张行成本列填空），不再按模式隐藏/改名
-    if (els.thSaleTax) els.thSaleTax.innerHTML = '含税售价<sup class="usd-sup">（$）</sup>';
-    if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = '不含税售价<sup class="usd-sup">（$）</sup>';
-    if (els.thWeight) els.thWeight.textContent = '重量(吨)';
-    if (els.thCostTax) els.thCostTax.style.display = '';
-    if (els.thCostNoTax) els.thCostNoTax.style.display = '';
+  // ===== v1.0.170 定制化计价 UI 支持 =====
+  function isCustomMode() { return !!(els.calcModeCustom && els.calcModeCustom.checked); }
+  function getCalcMode() { return isSheetMode() ? 'sheet' : (isCustomMode() ? 'custom' : 'weight'); }
+  function getCustomUnit() {
+    const r = document.querySelector('input[name="customUnit"]:checked');
+    return (r && r.value === 'sheet') ? 'sheet' : 'ton';
   }
-
+  function onCalcModeChange() {
+    if (els.customUnitBar) els.customUnitBar.style.display = isCustomMode() ? '' : 'none';
+    updateSheetHeaders();
+    if (dataItems.length) runCalc(); else render();
+  }
+  function onCustomUnitChange() {
+    updateSheetHeaders();
+    if (dataItems.length) renderResults();
+  }
+  function setQty(idx, val) {
+    const i = idx - 1;
+    if (!dataItems[i]) return;
+    dataItems[i].quantity = val;
+    runCalc();
+  }
+  function setCustomPackingTotal(idx, val) {
+    const i = idx - 1;
+    if (!dataItems[i]) return;
+    const n = parseFloat(val);
+    dataItems[i].packingFee = (val !== '' && !isNaN(n) && n > 0) ? n : '';
+    runCalc();
+  }
+  function setCustomOv(idx, field, val) {
+    const i = idx - 1;
+    if (!dataItems[i] || !field) return;
+    const n = parseFloat(val);
+    dataItems[i][field] = (val !== '' && !isNaN(n) && n >= 0) ? n : null;
+    runCalc();
+  }
+  function escAttr(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  const stepR = (l, v, p) => '<div class="calc-step"><span class="calc-step-label">' + l + '</span><span class="calc-step-value ' + (p ? 'positive' : 'zero') + '">' + v + '</span></div>';
+  const totR = (l, v) => '<div class="calc-total"><span class="calc-total-label">' + l + '</span><span class="calc-total-value sale">' + v + '</span></div>';
+  function renderCustomBreakdown(d, item, idx) {
+    const cx = d.custom || {};
+    const qty = cx.quantity || 0;
+    const spec = fmtThk(d.thickness) + ' × ' + d.width + ' × ' + d.length;
+    const hd = '规格：' + spec + '　｜　产地：' + (item.origin || '') + '　｜　材质：' + d.material + '　｜　表面：' + (d.surface || '2B') + '　｜　类型：平板 · 定制化计价（v1.0.167 成本口径）';
+    const ovInp = (field, w) => '<input type="number" min="0" step="0.01" value="' + (item[field] != null && item[field] !== '' ? item[field] : '') + '" placeholder="留空=自动" title="留空按系统自动计算；填写后仅当次有效，不保存" onchange="App.setCustomOv(' + idx + ',\'' + field + '\',this.value)" style="width:' + (w || 90) + 'px;padding:2px 4px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);">';
+    let h = '<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">' + hd + '</div>';
+    h += '<div class="calc-breakdown">';
+    h += '<div class="calc-section"><div class="calc-section-title">① 几何与包装（件数必填；包装费总额手动填写后自动均摊）</div>';
+    h += stepR('单张面积 / 单张重量', fmt(cx.sheetArea || 0) + ' ㎡ / ' + fmt(cx.sheetWeightKg || 0) + ' kg', true);
+    h += stepR('件数 × 单张 = 总重', qty + ' 张 × ' + fmt(cx.sheetWeightKg || 0) + ' kg = ' + fmt(cx.totalTon || 0) + ' 吨', true);
+    h += stepR('包装方式（识别自表格）', (cx.packingName || '未填写'), true);
+    h += stepR('包装费总额（手动填写）', cx.packingTotal > 0 ? fmtI(cx.packingTotal) + ' 元' : '0 元', cx.packingTotal > 0);
+    h += stepR('包装费均摊', (cx.packingTotal > 0 ? fmt(cx.packingPerTon || 0) + ' 元/吨（' + fmt(cx.packingPerSheet || 0) + ' 元/张）' : '0 元/吨'), cx.packingTotal > 0);
+    h += stepR('装柜费（固定默认 50 元/吨）', fmt(cx.containerPerTon || 0) + ' 元/吨（' + fmt(cx.containerPerSheet || 0) + ' 元/张）', (cx.containerPerTon || 0) > 0);
+    h += '</div>';
+    h += '<div class="calc-section"><div class="calc-section-title">② 定制化费用覆盖（元/吨 · 留空=自动 · 修改仅当次有效）</div>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:12px 16px;margin-bottom:8px;">';
+    h += '<span style="font-size:12px;color:var(--text-secondary)">装柜费 ' + ovInp('customContainerTon', 80) + ' <span style="color:var(--text-muted)">当前 ' + fmt(cx.containerPerTon || 0) + '</span></span>';
+    h += '<span style="font-size:12px;color:var(--text-secondary)">边部费(' + (d.edgeType === 'rough' ? '毛边' : '切边') + ') ' + ovInp('customEdgeTon', 80) + ' <span style="color:var(--text-muted)">当前 ' + fmt(cx.edgePerTon || 0) + '</span></span>';
+    h += '<span style="font-size:12px;color:var(--text-secondary)">表面加工费 ' + ovInp('customSurfaceTon', 80) + ' <span style="color:var(--text-muted)">自动 ' + fmt(cx.surfaceAutoPerTon || 0) + ' / 当前 ' + fmt(cx.surfacePerTon || 0) + '</span></span>';
+    h += '<span style="font-size:12px;color:var(--text-secondary)">保护膜费 ' + ovInp('customFilmTon', 80) + ' <span style="color:var(--text-muted)">自动 ' + fmt(cx.filmAutoPerTon || 0) + ' / 当前 ' + fmt(cx.filmPerTon || 0) + '</span></span>';
+    h += '</div></div>';
+    h += '<div class="calc-section"><div class="calc-section-title">③ 成本（v1.0.167：材料含税 + 其他费用(不含税)÷0.92）</div>';
+    h += stepR('材料费（基价 ' + fmtI(d.basePrice) + ' + 厚度加价 ' + fmtI(d.thickSurcharge) + '，含税）', fmt(Math.round((d.basePrice + d.thickSurcharge) * 100) / 100) + ' 元/吨', true);
+    h += stepR('其他费用合计（包装+装柜+边部+表面+膜，不含税）', fmt(cx.otherPerTon || 0) + ' 元/吨', (cx.otherPerTon || 0) > 0);
+    h += totR('含税成本', fmt(d.costTax) + ' 元/吨　≈　' + fmt(cx.sheetCostTax || 0) + ' 元/张');
+    h += totR('不含税成本', fmt(d.costNoTax) + ' 元/吨　≈　' + fmt(cx.sheetCostNoTax || 0) + ' 元/张');
+    h += totR('整批总额（' + qty + ' 张 = ' + fmt(cx.totalTon || 0) + ' 吨）', '含税 ' + fmt(cx.totalCostTax || 0) + ' 元　/　不含税 ' + fmt(cx.totalCostNoTax || 0) + ' 元');
+    h += totR('汇率折算', fmtUsd(usd(d.costTax)) + '/吨　≈　' + fmtUsd(usd(cx.sheetCostTax || 0)) + '/张');
+    h += '</div></div>';
+    return h;
+  }
+  function updateSheetHeaders() {
+    // v1.0.170：定制化模式表头切换为成本/整批口径
+    if (isCustomMode()) {
+      const u = getCustomUnit() === 'sheet';
+      if (els.thSaleTax) els.thSaleTax.innerHTML = '整批含税<sup class="usd-sup">(USD)</sup>';
+      if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = '整批不含税<sup class="usd-sup">(USD)</sup>';
+      if (els.thWeight) els.thWeight.textContent = '总重(吨)';
+      if (els.thCostTax) els.thCostTax.textContent = u ? '单张含税成本(元/张)' : '含税成本(元/吨)';
+      if (els.thCostNoTax) els.thCostNoTax.textContent = u ? '单张不含税成本(元/张)' : '不含税成本(元/吨)';
+      return;
+    }
+    if (els.thSaleTax) els.thSaleTax.innerHTML = '含税售价<sup class="usd-sup">(USD)</sup>';
+    if (els.thSaleNoTax) els.thSaleNoTax.innerHTML = '不含税售价<sup class="usd-sup">(USD)</sup>';
+    if (els.thWeight) els.thWeight.textContent = '重量(吨)';
+    if (els.thCostTax) { els.thCostTax.textContent = '含税成本'; els.thCostTax.style.display = ''; }
+    if (els.thCostNoTax) { els.thCostNoTax.textContent = '不含税成本'; els.thCostNoTax.style.display = ''; }
+  }
   function runCalc() {
     if (!dataItems.length) { showToast('请先添加数据', 'error'); return; }
     // Sync 北港 J1/J5
@@ -2358,7 +2442,8 @@ const App = (() => {
       }
     });
     dataItems.forEach(it => {
-      it.calcMode = isSheetMode() ? 'sheet' : 'weight';
+      it.calcMode = isSheetMode() ? 'sheet' : (isCustomMode() ? 'custom' : 'weight');
+      if (it.calcMode === 'custom') it.customUnit = getCustomUnit();
       // v1.0.136 全检（检测要求列）：写「全检」的行注入全局单价（元/方）；卷板不计算由引擎控制
       it.inspect = it.inspectFlag ? (parseFloat(els.inspectFeeVal && els.inspectFeeVal.value) || 1.5) : 0;
       // v1.0.106：单张计价注入 汇率(元/美元) + 贸易术语 FOB/CIF 美元价（按当天汇率均摊）
@@ -2489,6 +2574,7 @@ const App = (() => {
     const i = idx - 1;
     if (!dataItems[i]) return;
     dataItems[i].packing = val;
+    if (isCustomMode()) { runCalc(); return; } // v1.0.170 定制化即时重算
     results = [];
     render();
   }
@@ -2640,7 +2726,12 @@ const App = (() => {
     els.okC.textContent = sr.length;
     els.errC.textContent = results.filter(r => !r.success).length;
     if (sr.length > 0) {
-      const sp = sr.map(r => (r.detail && r.detail.calcMode === 'sheet') ? ((r.detail.sheetTotalSaleNoTax != null ? r.detail.sheetTotalSaleNoTax : r.detail.sheetTotal) || 0) : finalPrice(r.detail.saleTax));
+      const sp = sr.map(r => {
+        const dt = r.detail;
+        if (dt && dt.calcMode === 'sheet') return (dt.sheetTotalSaleNoTax != null ? dt.sheetTotalSaleNoTax : dt.sheetTotal) || 0;
+        if (dt && dt.calcMode === 'custom') return dt.costTax || 0;
+        return finalPrice(dt.saleTax);
+      });
       const mn = Math.min(...sp), mx = Math.max(...sp);
       if (termState.term === 'EXW') {
         els.minP.textContent = mn.toLocaleString() + '  /  ' + fmtUsd(usd(mn));
@@ -2690,6 +2781,11 @@ const App = (() => {
   }
 
   function renderTable() {
+    const opened = new Set();
+    document.querySelectorAll('.detail-row.open').forEach(el => {
+      const m = /^detail-(\d+)$/.exec(el.id || '');
+      if (m) opened.add(Number(m[1]));
+    });
     const h = [];
     dataItems.forEach((item, i) => {
       const idx = i + 1, r = results[i];
@@ -2712,34 +2808,54 @@ const App = (() => {
       h.push(`<td>${(item.length||'C') === 'C' ? '<span style="color:#5b21b6;font-weight:600">C</span>' : item.length}</td>`);
       const isCoil = String(item.length || 'C').trim().toUpperCase() === 'C';
       const pk = item.packing || '';
-      h.push(isSheetMode()
-        ? `<td><select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
+      if (isCustomMode()) {
+        // v1.0.170 定制化：包装方式文本（识别自表格）+ 包装费总额(元) 手动填写
+        h.push(`<td><div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;min-width:210px;">
+          <input class="packing-select" style="width:88px" value="${escAttr(pk)}" placeholder="包装方式" title="可识别表格「包装」列（仅展示名称，价格自行填写）" onchange="App.setPacking(${idx},this.value)">
+          <input class="packing-select" style="width:120px" type="number" min="0" step="0.01" value="${item.packingFee != null && item.packingFee !== '' ? escAttr(item.packingFee) : ''}" placeholder="包装费总额(元)" title="包装费用总额需手动填写，按件数自动均摊到每吨/每张" onchange="App.setCustomPackingTotal(${idx},this.value)">
+        </div></td>`);
+      } else if (isSheetMode()) {
+        h.push(`<td><select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
             <option value="" ${!pk ? 'selected' : ''}>请选择</option>
-            ${['木架','出口木箱','密封木箱','出口铁架','出口铁箱'].map(o => `<option value="${o}" ${pk === o ? 'selected' : ''}>${o}</option>`).join('')}
-          </select></td>`
-        : `<td>${isCoil
+            ${['木架', '出口木箱', '密封木箱', '出口铁架', '出口铁箱'].map(o => `<option value="${o}" ${pk === o ? 'selected' : ''}>${o}</option>`).join('')}
+          </select></td>`);
+      } else {
+        h.push(`<td>${isCoil
           ? '<span style="color:var(--text-muted)">-</span>'
-          : `<select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);">
+          : `<select class="packing-select" onchange="App.setPacking(${idx}, this.value)" style="font-size:12px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
               <option value="" ${!pk ? 'selected' : ''}>请选择</option>
-              <option value="木架" ${pk === '木架' ? 'selected' : ''}>木架</option>
-              <option value="出口木箱" ${pk === '出口木箱' ? 'selected' : ''}>出口木箱</option>
-              <option value="密封木箱" ${pk === '密封木箱' ? 'selected' : ''}>密封木箱</option>
-              <option value="出口铁架" ${pk === '出口铁架' ? 'selected' : ''}>出口铁架</option>
-              <option value="出口铁箱" ${pk === '出口铁箱' ? 'selected' : ''}>出口铁箱</option>
+              ${['木架', '出口木箱', '密封木箱', '出口铁架', '出口铁箱'].map(o => `<option value="${o}" ${pk === o ? 'selected' : ''}>${o}</option>`).join('')}
             </select>`}</td>`);
-      // v1.0.137：检测要求 + 件数 + 重量（分列显示，有就填没有留空）
+      }
       h.push(item.inspectFlag
         ? `<td><span class="tag tag-sheet" style="font-weight:600;">全检</span></td>`
         : `<td><span style="color:var(--text-muted)">-</span></td>`);
-      h.push(d && d.calcMode === 'sheet'
-        ? `<td><span style="color:var(--accent);font-weight:600">${d.quantity || 1}</span></td>`
-        : `<td>${item.quantity != null && item.quantity !== '' ? item.quantity : '<span style="color:var(--text-muted)">-</span>'}</td>`);
+      h.push((item.calcMode === 'custom' || (d && d.calcMode === 'custom'))
+        ? `<td><input type="number" min="1" step="1" value="${item.quantity != null && item.quantity !== '' ? escAttr(item.quantity) : ''}" placeholder="件数" title="定制化需填写件数（张）" onchange="App.setQty(${idx},this.value)" style="width:64px;padding:2px 4px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;"></td>`
+        : (d && d.calcMode === 'sheet'
+          ? `<td><span style="color:var(--accent);font-weight:600">${d.quantity || 1}</span></td>`
+          : `<td>${item.quantity != null && item.quantity !== '' ? escAttr(item.quantity) : '<span style="color:var(--text-muted)">-</span>'}</td>`));
       const wgt = d && d.weight != null ? d.weight : (item.weight || null);
       h.push(d && d.calcMode === 'sheet'
         ? `<td><span style="color:var(--text-muted)">-</span></td>`
         : `<td>${wgt != null ? wgt : '<span style="color:var(--text-muted)">-</span>'}</td>`);
       if (isOk) {
-        if (d && d.calcMode === 'sheet') {
+        if (d && d.calcMode === 'custom') {
+          // v1.0.170 定制化主价格列：按计价单位（吨/张）显示成本，整批总额并列
+          const cC = d.custom || {};
+          const uSheet = getCustomUnit() === 'sheet';
+          const perTax = uSheet ? (cC.sheetCostTax != null ? cC.sheetCostTax : 0) : d.costTax;
+          const perNoTax = uSheet ? (cC.sheetCostNoTax != null ? cC.sheetCostNoTax : 0) : d.costNoTax;
+          const refTax = uSheet ? d.costTax : (cC.sheetCostTax != null ? cC.sheetCostTax : 0);
+          const refNoTax = uSheet ? d.costNoTax : (cC.sheetCostNoTax != null ? cC.sheetCostNoTax : 0);
+          const uSubTax = usd(perTax), uSubNoTax = usd(perNoTax);
+          const uSubTT = usd(cC.totalCostTax || 0), uSubTNT = usd(cC.totalCostNoTax || 0);
+          h.push(`<td><span class="tag tag-sheet">平板</span> <span class="tag tag-sheet">定制</span></td>`);
+          h.push(`<td class="price-cell price-cost">${fmt(perTax)}<div class="usd-sub">${fmtUsd(uSubTax)}</div><div class="exw-sub">≈ ${fmt(refTax)} 元/${uSheet ? '吨' : '张'}</div></td>`);
+          h.push(`<td class="price-cell price-subtle">${fmt(perNoTax)}<div class="usd-sub">${fmtUsd(uSubNoTax)}</div><div class="exw-sub">≈ ${fmt(refNoTax)} 元/${uSheet ? '吨' : '张'}</div></td>`);
+          h.push(`<td class="price-cell price-sale"><span class="term-tag">整批含税</span>${fmt(cC.totalCostTax || 0)}<div class="usd-sub">${fmtUsd(uSubTT)}</div></td>`);
+          h.push(`<td class="price-cell price-subtle"><span class="term-tag">整批不含税</span>${fmt(cC.totalCostNoTax || 0)}<div class="usd-sub">${fmtUsd(uSubTNT)}</div></td>`);
+        } else if (d && d.calcMode === 'sheet') {
           const uSheet = usd(d.sheetSaleNoTax != null ? d.sheetSaleNoTax : d.sheetPrice);
           const uTax = usd(d.sheetSaleTax != null ? d.sheetSaleTax : d.sheetPriceTax);
           const uTotal = usd(d.sheetTotalSaleNoTax != null ? d.sheetTotalSaleNoTax : d.sheetTotal);
@@ -2778,11 +2894,12 @@ const App = (() => {
 
       if (isOk) {
         h.push(`<tr class="detail-row" id="detail-${idx}"><td colspan="19"><div class="detail-content">`);
-        h.push(renderBreakdown(d, item));
+        h.push(renderBreakdown(d, item, idx));
         h.push('</div></td></tr>');
       }
     });
     els.tBody.innerHTML = h.join('');
+    opened.forEach(idx => { const el = dom('detail-' + idx); if (el) el.classList.add('open'); const b = dom('expand-btn-' + idx); if (b) b.classList.add('open'); });
   }
 
   const fmt = (v) => v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -2846,7 +2963,8 @@ const App = (() => {
     return html;
   }
 
-  function renderBreakdown(d, item) {
+  function renderBreakdown(d, item, idx) {
+    if (d && d.calcMode === 'custom') return renderCustomBreakdown(d, item, idx);
     if (d && d.calcMode === 'sheet') return renderSheetBreakdown(d, item);
     const spec = `${fmtThk(d.thickness)} × ${d.width} × ${d.length}`;
     const mat = d.material + (d.isYanYan ? ' 压延料' : '');
@@ -2972,7 +3090,7 @@ const App = (() => {
     setTimeout(() => { t.style.animation = 'toastIn 0.3s ease reverse'; setTimeout(() => t.remove(), 300); }, 3500);
   }
 
-  return { init, removeRow, toggleExpand, setPacking, setPackingFee };
+  return { init, removeRow, toggleExpand, setPacking, setPackingFee, setQty, setCustomPackingTotal, setCustomOv, onCalcModeChange, onCustomUnitChange };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);

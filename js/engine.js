@@ -641,7 +641,7 @@ const PricingEngine = (() => {
     else if (/出口木箱|木箱/.test(packingRaw)) packing = '出口木箱';
     else if (/木架/.test(packingRaw)) packing = '木架';
     // v1.0.83：单张计价曾用包装费用（packingFee）不再要求包装方式；v1.0.106 改回：单张按包装方式×重量均摊，过磅平板仍要求木架/木箱
-    if (boardType === 'sheet' && item.calcMode !== 'sheet') {
+    if (boardType === 'sheet' && item.calcMode !== 'sheet' && item.calcMode !== 'custom') {
       if (!packing) errors.push('平板必须填写包装方式（木架/出口木箱/密封木箱/出口铁架/出口铁箱）');
     }
 
@@ -765,7 +765,103 @@ const PricingEngine = (() => {
     const film2PerTon = film2Fee ? round2(film2Fee * sqmPerTon) : 0;
     const afpPerTon = round2(afpSqmFee * sqmPerTon);
 
-    const calcMode = item.calcMode === 'sheet' ? 'sheet' : 'weight';
+    const calcMode = item.calcMode === 'sheet' ? 'sheet' : (item.calcMode === 'custom' ? 'custom' : 'weight');
+
+    // ---- 定制化计价逻辑（v1.0.170 用户规则 2026-09-05）：平板为主，包装费总额手动输入按件数均摊，各费用可覆盖 ----
+    if (calcMode === 'custom') {
+      if (boardType !== 'sheet') errors.push('定制化计价仅适用于平板（长度需填固定尺寸，如 2438/3000，不能是 C 卷）');
+      const qtyNum = (item.quantity != null && item.quantity !== '' && parseFloat(item.quantity) > 0) ? parseFloat(item.quantity) : 0;
+      if (!(qtyNum > 0)) errors.push('定制化计价需填写件数（张数，须大于 0）');
+      const packingTotalRmb = (item.packingFee != null && parseFloat(item.packingFee) > 0) ? parseFloat(item.packingFee) : 0;
+      const packingNameTxt = packing || packingRaw || '';
+      if (errors.length === 0) {
+        const Lc = parseFloat(length);
+        const sheetAreaC = round4(width * Lc / 1e6);
+        const sheetVolumeC = round6(width * Lc * thickness / 1e9);
+        const sheetWeightKgC = round3(sheetVolumeC * density * 1000);
+        const totalTonC = round4(sheetWeightKgC * qtyNum / 1000);
+        if (!(totalTonC > 0)) errors.push('定制化计价：单张重量或件数计算总重为 0');
+        if (errors.length === 0) {
+          // 包装费平摊（元/吨）：总额 ÷ 总吨；customPackingTon 可直接按元/吨填写覆盖
+          const packingPerTonC = (item.customPackingTon != null && item.customPackingTon !== '' && parseFloat(item.customPackingTon) >= 0)
+            ? (parseFloat(item.customPackingTon) || 0)
+            : (packingTotalRmb > 0 ? round4(packingTotalRmb / totalTonC + 1e-9) : 0);
+          // 装柜费：customContainerTon 覆盖（>=0），否则默认固定值
+          const containerTonC = (item.customContainerTon != null && item.customContainerTon !== '' && parseFloat(item.customContainerTon) >= 0)
+            ? (parseFloat(item.customContainerTon) || 0) : SHEET_CONTAINER_FEE;
+          // 边部费：按规格自动（getEdgeFee），可覆盖
+          let edgeTonC = getEdgeFee(material, edgeType, width);
+          if (edgeTonC === null) { edgeTonC = 0; errors.push('材质/边部类型无匹配边部费用（定制化计价）'); }
+          if (errors.length === 0 && item.customEdgeTon != null && item.customEdgeTon !== '' && parseFloat(item.customEdgeTon) >= 0) {
+            edgeTonC = parseFloat(item.customEdgeTon) || 0;
+          }
+          if (errors.length === 0) {
+            // 表面加工费：自动(表面+拉丝/压花+afp 元/吨) 可整体覆盖；膜费自动(film1+film2) 可整体覆盖
+            const autoSurfTonC = round2(surfaceFeePerTon + linenFeePerTon + afpPerTon + 1e-9);
+            const surfTonC = (item.customSurfaceTon != null && item.customSurfaceTon !== '' && parseFloat(item.customSurfaceTon) >= 0)
+              ? (parseFloat(item.customSurfaceTon) || 0) : autoSurfTonC;
+            const autoFilmTonC = round2(film1PerTon + film2PerTon + 1e-9);
+            const filmTonC = (item.customFilmTon != null && item.customFilmTon !== '' && parseFloat(item.customFilmTon) >= 0)
+              ? (parseFloat(item.customFilmTon) || 0) : autoFilmTonC;
+            const inspectTonC = round2((parseFloat(item.inspect) > 0 ? parseFloat(item.inspect) : 0) * sqmPerTon + 1e-9);
+            // v1.0.167 新公式：材料(含税)=基价+厚度加价；其他费用(不含税)÷0.92 折算
+            const materialTaxRawC = basePrice + thickSurcharge;
+            const otherTonC = round4(packingPerTonC + containerTonC + edgeTonC + surfTonC + filmTonC + inspectTonC + 1e-9);
+            const costTaxRawC = round2(materialTaxRawC + otherTonC / 0.92 + 1e-9);
+            const costNoTaxRawC = round2((basePrice + thickSurcharge) * 0.92 + otherTonC + 1e-9);
+            const costTaxC = round10(costTaxRawC);
+            const costNoTaxC = round10(costNoTaxRawC);
+            // 每张折算（按单张重量 kg /1000 × 每吨价）
+            const perKgC = sheetWeightKgC / 1000;
+            const sheetCostTax = round2(costTaxC * perKgC + 1e-9);
+            const sheetCostNoTax = round2(costNoTaxC * perKgC + 1e-9);
+            const packingPerSheetC = round4(packingPerTonC / 1000 * sheetWeightKgC + 1e-9);
+            const containerPerSheetC = round4(containerTonC / 1000 * sheetWeightKgC + 1e-9);
+            const totalCostTax = round2(costTaxC * totalTonC + 1e-9);
+            const totalCostNoTax = round2(costNoTaxC * totalTonC + 1e-9);
+            return {
+              success: true,
+              calcMode: 'custom',
+              detail: {
+                calcMode: 'custom',
+                origin: item.origin || '',
+                stdThickness: item.stdThickness || '', inspectFlag: !!item.inspectFlag, quantity: qtyNum,
+                material: material, surface: item.surface || '', normSurface: baseSurface, thickness: thicknessRaw || String(thickness), width: width, length: String(length),
+                weight: totalTonC, film1: film1, film2: film2, basePrice: basePrice,
+                isYanYan: isYanYan, hasLinen: !!hasLinen,
+                density: density, sqmPerTon: round2(sqmPerTon),
+                thickSurcharge: thickSurcharge, thickTable: getThickTableName(isYanYan, material, item.origin, baseSurface),
+                surfaceFeeSqm: (typeof surfaceRaw === 'object' && surfaceRaw.needConvert) ? surfaceRaw.sqmPrice : (typeof surfaceRaw === 'number' ? null : 0),
+                colorFeeSqm: colorFeeSqm, colorName: colorName, colorBaseSqm: colorBaseSqm, colorMult: colorMult,
+                surfaceFeePerTon: round2(surfTonC),
+                linenFeePerTon: linenFeePerTon,
+                embossFees: embossFees.map(function (e) { return { key: e.key, name: e.name, unit: e.unit || 'ton', feePerTon: e.feePerTon || 0, feePerSqm: e.feePerSqm || 0 }; }),
+                afpFeeSqm: afpSqmFee, afpPerTon: afpPerTon,
+                film1FeeSqm: film1Fee || 0, film1PerTon: film1PerTon,
+                film2FeeSqm: film2Fee || 0, film2PerTon: film2PerTon,
+                inspectFeeSqm: (parseFloat(item.inspect) > 0 ? parseFloat(item.inspect) : 0), inspectPerTon: inspectTonC,
+                costRaw: round2(costTaxRawC), costNoTaxRaw: round2(costNoTaxRawC), materialNoTaxRaw: round2((basePrice + thickSurcharge) * 0.92),
+                costTax: costTaxC, costNoTax: costNoTaxC,
+                edgeType: edgeType, boardType: 'sheet', markup: 0, widthSurcharge: widthSurcharge, packing: packingNameTxt,
+                markupDetail: null,
+                saleTax: costTaxC, saleNoTax: costNoTaxC,
+                custom: {
+                  quantity: qtyNum, totalTon: totalTonC, sheetArea: sheetAreaC, sheetWeightKg: sheetWeightKgC,
+                  packingTotal: packingTotalRmb, packingName: packingNameTxt,
+                  packingPerTon: packingPerTonC, packingPerSheet: packingPerSheetC,
+                  containerPerTon: containerTonC, containerPerSheet: containerPerSheetC,
+                  edgePerTon: edgeTonC, surfacePerTon: surfTonC, surfaceAutoPerTon: autoSurfTonC,
+                  filmPerTon: filmTonC, filmAutoPerTon: autoFilmTonC, otherPerTon: otherTonC,
+                  sheetCostTax: sheetCostTax, sheetCostNoTax: sheetCostNoTax,
+                  totalCostTax: totalCostTax, totalCostNoTax: totalCostNoTax
+                }
+              }
+            };
+          }
+        }
+      }
+    }
+
 
     // ---- 单张计算逻辑（2026-08-24 用户规则）：按张卖，输出 元/张 ----
     // 公式：(基价+厚度加价+边部费用)/1000 × 体积m³ × 密度g/cm³ × 1000 + 面积×单张加工费 + 面积×膜价
