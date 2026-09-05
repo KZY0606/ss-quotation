@@ -1346,5 +1346,44 @@ test('v1.0.170 定制化件数翻倍每张成本不变（固定元/吨费用）'
   eq(Math.abs(b.detail.custom.totalCostTax - a.detail.custom.totalCostTax * 2) < 0.011, true, '总额约翻倍(容忍单批round2 0.01误差)');
 });
 
+// === v1.0.171 定制化口径纯净 + 覆盖输入单位（2026-09-05 用户规则）===
+test('v1.0.171 表面覆盖按 元/㎡ 输入：自动 ×每吨面积 折元/吨', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceSqm: '10' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  const c = r.detail.custom;
+  eq(c.surfaceOvSqm, 10, '回显㎡原值');
+  eq(c.sqmPerTon > 0, true, '每吨面积>0');
+  eq(Math.abs(c.surfacePerTon - 10 * c.sqmPerTon) < 0.2, true, 'surfacePerTon≈10×每吨面积(实际 ' + c.surfacePerTon + ', sqmPerTon ' + c.sqmPerTon + ')');
+});
+test('v1.0.171 膜覆盖按 元/㎡ 输入：折算正确', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customFilmSqm: '1' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  const c = r.detail.custom;
+  eq(c.filmOvSqm, 1);
+  eq(Math.abs(c.filmPerTon - c.sqmPerTon) < 0.02, true, 'filmPerTon≈每吨面积(实际 ' + c.filmPerTon + ')');
+});
+test('v1.0.171 装柜整体费用总额平摊（1000元 ÷ 总吨）', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', customContainerTotal: '1000' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  const c = r.detail.custom;
+  eq(c.containerTotal, 1000, '总额回显');
+  eq(Math.abs(c.containerPerTon - 1000 / 2.3568) < 0.02, true, '装柜平摊≈424.3(实际 ' + c.containerPerTon + ')');
+});
+test('v1.0.171 单张口径全套字段与吨口径一致（edge/surface/film/inspect ÷1000×kg）', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: 'NO.4', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', film1: '7C-FILM' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  const c = r.detail.custom;
+  const kg = c.sheetWeightKg;
+  ['edgePerSheet', 'surfacePerSheet', 'filmPerSheet', 'inspectPerSheet'].forEach(f => {
+    const tonF = f.replace('PerSheet', 'PerTon');
+    if (c[tonF] != null && c[f] != null) eq(Math.abs(c[f] - c[tonF] / 1000 * kg) < 0.02, true, f + ' 口径一致');
+  });
+});
+test('v1.0.171 覆盖按 元/吨 输入仍兼容（旧字段不破坏）', () => {
+  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceTon: '500', customContainerTon: '100', customEdgeTon: '0', customPackingTon: '100' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.costTax, 15360, '与v1.0.170 T2 同值(覆盖均按元/吨)');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

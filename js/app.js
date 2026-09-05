@@ -2360,6 +2360,18 @@ const App = (() => {
     dataItems[i][field] = (val !== '' && !isNaN(n) && n >= 0) ? n : null;
     runCalc();
   }
+  // v1.0.171：表面/膜覆盖带单位输入（sqm=元/㎡ 自动×每吨面积折算；ton=元/吨）；换单位时迁移同值
+  function setOvUnit(idx, kind, unit, val) {
+    const i = idx - 1;
+    if (!dataItems[i]) return;
+    const k = (kind === 'film') ? 'customFilm' : 'customSurface';
+    dataItems[i][k + 'Sqm'] = null;
+    dataItems[i][k + 'Ton'] = null;
+    if (kind === 'film') dataItems[i].filmOvUnit = unit; else dataItems[i].surfaceOvUnit = unit;
+    const n = parseFloat(val);
+    if (val !== '' && !isNaN(n) && n >= 0) dataItems[i][k + (unit === 'sqm' ? 'Sqm' : 'Ton')] = n;
+    runCalc();
+  }
   function escAttr(v) {
     return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
@@ -2368,9 +2380,23 @@ const App = (() => {
   function renderCustomBreakdown(d, item, idx) {
     const cx = d.custom || {};
     const qty = cx.quantity || 0;
+    const uSheet = (item.customUnit || 'ton') === 'sheet';
     const spec = fmtThk(d.thickness) + ' × ' + d.width + ' × ' + d.length;
-    const hd = '规格：' + spec + '　｜　产地：' + (item.origin || '') + '　｜　材质：' + d.material + '　｜　表面：' + (d.surface || '2B') + '　｜　类型：平板 · 定制化计价（v1.0.167 成本口径）';
-    const ovInp = (field, w) => '<input type="number" min="0" step="0.01" value="' + (item[field] != null && item[field] !== '' ? item[field] : '') + '" placeholder="留空=自动" title="留空按系统自动计算；填写后仅当次有效，不保存" onchange="App.setCustomOv(' + idx + ',\'' + field + '\',this.value)" style="width:' + (w || 90) + 'px;padding:2px 4px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);">';
+    const hd = '规格：' + spec + '　｜　产地：' + (item.origin || '') + '　｜　材质：' + d.material + '　｜　表面：' + (d.surface || '2B') + '　｜　类型：平板 · 定制化计价（v1.0.167 成本口径 · ' + (uSheet ? '按张' : '按吨') + '）';
+    const perKg = (cx.sheetWeightKg || 0) / 1000;
+    const sfx = uSheet ? '元/张' : '元/吨';
+    const ton2sheet = v => Math.round((v || 0) * perKg * 100) / 100;
+    const pick = (tonV, sheetV) => uSheet ? (sheetV != null ? sheetV : ton2sheet(tonV)) : tonV;
+    const ovInp = (field, w, ph) => '<input type="number" min="0" step="0.01" value="' + (item[field] != null && item[field] !== '' ? item[field] : '') + '" placeholder="' + (ph || '留空=自动') + '" title="留空按系统自动计算；填写后仅当次有效，不保存" onchange="App.setCustomOv(' + idx + ',\'' + field + '\',this.value)" style="width:' + (w || 90) + 'px;padding:2px 4px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);">';
+    const unitSel = (kind, cur) => '<select id="' + kind + 'Unit-' + idx + '" onchange="App.setOvUnit(' + idx + ',\'' + kind + '\',this.value,((document.getElementById(\'' + kind + 'Inp-' + idx + '\')||{}).value)||\'\')" style="padding:2px 2px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);">'
+      + '<option value="sqm"' + (cur === 'sqm' ? ' selected' : '') + '>元/㎡</option>'
+      + '<option value="ton"' + (cur === 'ton' ? ' selected' : '') + '>元/吨</option></select>';
+    const ovSqmInp = (kind, unit, val, w) => '<input id="' + kind + 'Inp-' + idx + '" type="number" min="0" step="0.01" value="' + (val != null && val !== '' ? val : '') + '" placeholder="留空=自动" title="按所选单位填写，自动折算参与计算；仅当次有效" onchange="App.setOvUnit(' + idx + ',\'' + kind + '\',((document.getElementById(\'' + kind + 'Unit-' + idx + '\')||{}).value)||\'sqm\',this.value)" style="width:' + (w || 90) + 'px;padding:2px 4px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);">';
+    const surfUnit = (item.surfaceOvUnit === 'ton' ? 'ton' : (item.customSurfaceSqm == null && item.customSurfaceTon != null ? 'ton' : 'sqm'));
+    const surfVal = surfUnit === 'sqm' ? (item.customSurfaceSqm != null ? item.customSurfaceSqm : '') : (item.customSurfaceTon != null ? item.customSurfaceTon : '');
+    const filmUnit = (item.filmOvUnit === 'ton' ? 'ton' : (item.customFilmSqm == null && item.customFilmTon != null ? 'ton' : 'sqm'));
+    const filmVal = filmUnit === 'sqm' ? (item.customFilmSqm != null ? item.customFilmSqm : '') : (item.customFilmTon != null ? item.customFilmTon : '');
+    const matRaw = (d.basePrice || 0) + (d.thickSurcharge || 0);
     let h = '<div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);font-weight:500;">' + hd + '</div>';
     h += '<div class="calc-breakdown">';
     h += '<div class="calc-section"><div class="calc-section-title">① 几何与包装（件数必填；包装费总额手动填写后自动均摊）</div>';
@@ -2378,23 +2404,23 @@ const App = (() => {
     h += stepR('件数 × 单张 = 总重', qty + ' 张 × ' + fmt(cx.sheetWeightKg || 0) + ' kg = ' + fmt(cx.totalTon || 0) + ' 吨', true);
     h += stepR('包装方式（识别自表格）', (cx.packingName || '未填写'), true);
     h += stepR('包装费总额（手动填写）', cx.packingTotal > 0 ? fmtI(cx.packingTotal) + ' 元' : '0 元', cx.packingTotal > 0);
-    h += stepR('包装费均摊', (cx.packingTotal > 0 ? fmt(cx.packingPerTon || 0) + ' 元/吨（' + fmt(cx.packingPerSheet || 0) + ' 元/张）' : '0 元/吨'), cx.packingTotal > 0);
-    h += stepR('装柜费（固定默认 50 元/吨）', fmt(cx.containerPerTon || 0) + ' 元/吨（' + fmt(cx.containerPerSheet || 0) + ' 元/张）', (cx.containerPerTon || 0) > 0);
+    h += stepR('包装费均摊', (cx.packingTotal > 0 ? fmt(pick(cx.packingPerTon, cx.packingPerSheet)) + ' ' + sfx : '0 ' + sfx), cx.packingTotal > 0);
+    h += stepR('装柜费' + (cx.containerTotal != null ? '（整体费用 ' + fmtI(cx.containerTotal) + ' 元平摊）' : '（默认 50 元/吨平摊）'), fmt(pick(cx.containerPerTon, cx.containerPerSheet)) + ' ' + sfx, (cx.containerPerTon || 0) > 0);
     h += '</div>';
-    h += '<div class="calc-section"><div class="calc-section-title">② 定制化费用覆盖（元/吨 · 留空=自动 · 修改仅当次有效）</div>';
-    h += '<div style="display:flex;flex-wrap:wrap;gap:12px 16px;margin-bottom:8px;">';
-    h += '<span style="font-size:12px;color:var(--text-secondary)">装柜费 ' + ovInp('customContainerTon', 80) + ' <span style="color:var(--text-muted)">当前 ' + fmt(cx.containerPerTon || 0) + '</span></span>';
-    h += '<span style="font-size:12px;color:var(--text-secondary)">边部费(' + (d.edgeType === 'rough' ? '毛边' : '切边') + ') ' + ovInp('customEdgeTon', 80) + ' <span style="color:var(--text-muted)">当前 ' + fmt(cx.edgePerTon || 0) + '</span></span>';
-    h += '<span style="font-size:12px;color:var(--text-secondary)">表面加工费 ' + ovInp('customSurfaceTon', 80) + ' <span style="color:var(--text-muted)">自动 ' + fmt(cx.surfaceAutoPerTon || 0) + ' / 当前 ' + fmt(cx.surfacePerTon || 0) + '</span></span>';
-    h += '<span style="font-size:12px;color:var(--text-secondary)">保护膜费 ' + ovInp('customFilmTon', 80) + ' <span style="color:var(--text-muted)">自动 ' + fmt(cx.filmAutoPerTon || 0) + ' / 当前 ' + fmt(cx.filmPerTon || 0) + '</span></span>';
+    h += '<div class="calc-section"><div class="calc-section-title">② 定制化费用覆盖（表面/膜可按 元/㎡ 或 元/吨；留空=自动 · 仅当次有效）</div>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-bottom:8px;align-items:center;">';
+    h += '<span style="font-size:12px;color:var(--text-secondary);white-space:nowrap">装柜 <span style="color:var(--text-muted)">整体费用(元)留空=默认50元/吨</span> ' + ovInp('customContainerTotal', 84, '整体费用(元)') + ' <span style="color:var(--text-muted)">当前 ' + fmt(pick(cx.containerPerTon, cx.containerPerSheet)) + ' ' + sfx + '</span></span>';
+    h += '<span style="font-size:12px;color:var(--text-secondary);white-space:nowrap">边部(' + (d.edgeType === 'rough' ? '毛边' : '切边') + ',元/吨) ' + ovInp('customEdgeTon', 66) + ' <span style="color:var(--text-muted)">当前 ' + fmt(pick(cx.edgePerTon, cx.edgePerSheet)) + ' ' + sfx + '</span></span>';
+    h += '<span style="font-size:12px;color:var(--text-secondary);white-space:nowrap">表面 ' + unitSel('surface', surfUnit) + ovSqmInp('surface', surfUnit, surfVal) + ' <span style="color:var(--text-muted)">自动 ' + fmt(pick(cx.surfaceAutoPerTon, cx.surfaceAutoPerSheet)) + ' / 当前 ' + fmt(pick(cx.surfacePerTon, cx.surfacePerSheet)) + ' ' + sfx + '</span></span>';
+    h += '<span style="font-size:12px;color:var(--text-secondary);white-space:nowrap">膜 ' + unitSel('film', filmUnit) + ovSqmInp('film', filmUnit, filmVal) + ' <span style="color:var(--text-muted)">自动 ' + fmt(pick(cx.filmAutoPerTon, cx.filmAutoPerSheet)) + ' / 当前 ' + fmt(pick(cx.filmPerTon, cx.filmPerSheet)) + ' ' + sfx + '</span></span>';
     h += '</div></div>';
-    h += '<div class="calc-section"><div class="calc-section-title">③ 成本（v1.0.167：材料含税 + 其他费用(不含税)÷0.92）</div>';
-    h += stepR('材料费（基价 ' + fmtI(d.basePrice) + ' + 厚度加价 ' + fmtI(d.thickSurcharge) + '，含税）', fmt(Math.round((d.basePrice + d.thickSurcharge) * 100) / 100) + ' 元/吨', true);
-    h += stepR('其他费用合计（包装+装柜+边部+表面+膜，不含税）', fmt(cx.otherPerTon || 0) + ' 元/吨', (cx.otherPerTon || 0) > 0);
-    h += totR('含税成本', fmt(d.costTax) + ' 元/吨　≈　' + fmt(cx.sheetCostTax || 0) + ' 元/张');
-    h += totR('不含税成本', fmt(d.costNoTax) + ' 元/吨　≈　' + fmt(cx.sheetCostNoTax || 0) + ' 元/张');
+    h += '<div class="calc-section"><div class="calc-section-title">③ 成本（v1.0.167：材料含税 + 其他费用(不含税)÷0.92，' + (uSheet ? '按单张' : '按吨') + '）</div>';
+    h += stepR('材料费（基价 ' + fmtI(d.basePrice) + ' + 厚度加价 ' + fmtI(d.thickSurcharge) + '，含税）', fmt(uSheet ? ton2sheet(matRaw) : matRaw) + ' ' + sfx, true);
+    h += stepR('其他费用合计（包装+装柜+边部+表面+膜，不含税）', fmt(uSheet ? ton2sheet(cx.otherPerTon) : cx.otherPerTon) + ' ' + sfx, (cx.otherPerTon || 0) > 0);
+    h += totR(uSheet ? '单张含税成本' : '含税成本(元/吨)', fmt(uSheet ? (cx.sheetCostTax || 0) : d.costTax) + ' ' + sfx);
+    h += totR(uSheet ? '单张不含税成本' : '不含税成本(元/吨)', fmt(uSheet ? (cx.sheetCostNoTax || 0) : d.costNoTax) + ' ' + sfx);
     h += totR('整批总额（' + qty + ' 张 = ' + fmt(cx.totalTon || 0) + ' 吨）', '含税 ' + fmt(cx.totalCostTax || 0) + ' 元　/　不含税 ' + fmt(cx.totalCostNoTax || 0) + ' 元');
-    h += totR('汇率折算', fmtUsd(usd(d.costTax)) + '/吨　≈　' + fmtUsd(usd(cx.sheetCostTax || 0)) + '/张');
+    h += totR('汇率折算', fmtUsd(usd(uSheet ? (cx.sheetCostTax || 0) : d.costTax)) + '/' + (uSheet ? '张' : '吨'));
     h += '</div></div>';
     return h;
   }
@@ -2846,13 +2872,11 @@ const App = (() => {
           const uSheet = getCustomUnit() === 'sheet';
           const perTax = uSheet ? (cC.sheetCostTax != null ? cC.sheetCostTax : 0) : d.costTax;
           const perNoTax = uSheet ? (cC.sheetCostNoTax != null ? cC.sheetCostNoTax : 0) : d.costNoTax;
-          const refTax = uSheet ? d.costTax : (cC.sheetCostTax != null ? cC.sheetCostTax : 0);
-          const refNoTax = uSheet ? d.costNoTax : (cC.sheetCostNoTax != null ? cC.sheetCostNoTax : 0);
           const uSubTax = usd(perTax), uSubNoTax = usd(perNoTax);
           const uSubTT = usd(cC.totalCostTax || 0), uSubTNT = usd(cC.totalCostNoTax || 0);
           h.push(`<td><span class="tag tag-sheet">平板</span> <span class="tag tag-sheet">定制</span></td>`);
-          h.push(`<td class="price-cell price-cost">${fmt(perTax)}<div class="usd-sub">${fmtUsd(uSubTax)}</div><div class="exw-sub">≈ ${fmt(refTax)} 元/${uSheet ? '吨' : '张'}</div></td>`);
-          h.push(`<td class="price-cell price-subtle">${fmt(perNoTax)}<div class="usd-sub">${fmtUsd(uSubNoTax)}</div><div class="exw-sub">≈ ${fmt(refNoTax)} 元/${uSheet ? '吨' : '张'}</div></td>`);
+          h.push(`<td class="price-cell price-cost">${fmt(perTax)}<div class="usd-sub">${fmtUsd(uSubTax)}</div></td>`);
+          h.push(`<td class="price-cell price-subtle">${fmt(perNoTax)}<div class="usd-sub">${fmtUsd(uSubNoTax)}</div></td>`);
           h.push(`<td class="price-cell price-sale"><span class="term-tag">整批含税</span>${fmt(cC.totalCostTax || 0)}<div class="usd-sub">${fmtUsd(uSubTT)}</div></td>`);
           h.push(`<td class="price-cell price-subtle"><span class="term-tag">整批不含税</span>${fmt(cC.totalCostNoTax || 0)}<div class="usd-sub">${fmtUsd(uSubTNT)}</div></td>`);
         } else if (d && d.calcMode === 'sheet') {
@@ -3090,7 +3114,7 @@ const App = (() => {
     setTimeout(() => { t.style.animation = 'toastIn 0.3s ease reverse'; setTimeout(() => t.remove(), 300); }, 3500);
   }
 
-  return { init, removeRow, toggleExpand, setPacking, setPackingFee, setQty, setCustomPackingTotal, setCustomOv, onCalcModeChange, onCustomUnitChange };
+  return { init, removeRow, toggleExpand, setPacking, setPackingFee, setQty, setCustomPackingTotal, setCustomOv, setOvUnit, onCalcModeChange, onCustomUnitChange };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);

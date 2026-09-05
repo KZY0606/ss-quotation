@@ -786,9 +786,12 @@ const PricingEngine = (() => {
           const packingPerTonC = (item.customPackingTon != null && item.customPackingTon !== '' && parseFloat(item.customPackingTon) >= 0)
             ? (parseFloat(item.customPackingTon) || 0)
             : (packingTotalRmb > 0 ? round4(packingTotalRmb / totalTonC + 1e-9) : 0);
-          // 装柜费：customContainerTon 覆盖（>=0），否则默认固定值
-          const containerTonC = (item.customContainerTon != null && item.customContainerTon !== '' && parseFloat(item.customContainerTon) >= 0)
-            ? (parseFloat(item.customContainerTon) || 0) : SHEET_CONTAINER_FEE;
+          // v1.0.171 装柜费：customContainerTotal（整体费用总额元）÷总吨平摊 优先；其次 customContainerTon 按元/吨覆盖；留空=默认 50 元/吨
+          const containerTotalOvC = (item.customContainerTotal != null && item.customContainerTotal !== '' && parseFloat(item.customContainerTotal) >= 0) ? parseFloat(item.customContainerTotal) : null;
+          const containerTonC = (containerTotalOvC != null && totalTonC > 0)
+            ? round4(containerTotalOvC / totalTonC + 1e-9)
+            : ((item.customContainerTon != null && item.customContainerTon !== '' && parseFloat(item.customContainerTon) >= 0)
+              ? (parseFloat(item.customContainerTon) || 0) : SHEET_CONTAINER_FEE);
           // 边部费：按规格自动（getEdgeFee），可覆盖
           let edgeTonC = getEdgeFee(material, edgeType, width);
           if (edgeTonC === null) { edgeTonC = 0; errors.push('材质/边部类型无匹配边部费用（定制化计价）'); }
@@ -796,13 +799,19 @@ const PricingEngine = (() => {
             edgeTonC = parseFloat(item.customEdgeTon) || 0;
           }
           if (errors.length === 0) {
-            // 表面加工费：自动(表面+拉丝/压花+afp 元/吨) 可整体覆盖；膜费自动(film1+film2) 可整体覆盖
+            // v1.0.171 表面/膜费覆盖：customSurfaceSqm/customFilmSqm 按 元/㎡（自动 × 每吨面积折 元/吨）；customSurfaceTon/customFilmTon 按 元/吨；留空=自动
             const autoSurfTonC = round2(surfaceFeePerTon + linenFeePerTon + afpPerTon + 1e-9);
-            const surfTonC = (item.customSurfaceTon != null && item.customSurfaceTon !== '' && parseFloat(item.customSurfaceTon) >= 0)
-              ? (parseFloat(item.customSurfaceTon) || 0) : autoSurfTonC;
+            const surfOvSqmC = (item.customSurfaceSqm != null && item.customSurfaceSqm !== '' && parseFloat(item.customSurfaceSqm) >= 0) ? parseFloat(item.customSurfaceSqm) : null;
+            const surfTonC = (surfOvSqmC != null)
+              ? round2(surfOvSqmC * sqmPerTon + 1e-9)
+              : ((item.customSurfaceTon != null && item.customSurfaceTon !== '' && parseFloat(item.customSurfaceTon) >= 0)
+                ? (parseFloat(item.customSurfaceTon) || 0) : autoSurfTonC);
             const autoFilmTonC = round2(film1PerTon + film2PerTon + 1e-9);
-            const filmTonC = (item.customFilmTon != null && item.customFilmTon !== '' && parseFloat(item.customFilmTon) >= 0)
-              ? (parseFloat(item.customFilmTon) || 0) : autoFilmTonC;
+            const filmOvSqmC = (item.customFilmSqm != null && item.customFilmSqm !== '' && parseFloat(item.customFilmSqm) >= 0) ? parseFloat(item.customFilmSqm) : null;
+            const filmTonC = (filmOvSqmC != null)
+              ? round2(filmOvSqmC * sqmPerTon + 1e-9)
+              : ((item.customFilmTon != null && item.customFilmTon !== '' && parseFloat(item.customFilmTon) >= 0)
+                ? (parseFloat(item.customFilmTon) || 0) : autoFilmTonC);
             const inspectTonC = round2((parseFloat(item.inspect) > 0 ? parseFloat(item.inspect) : 0) * sqmPerTon + 1e-9);
             // v1.0.167 新公式：材料(含税)=基价+厚度加价；其他费用(不含税)÷0.92 折算
             const materialTaxRawC = basePrice + thickSurcharge;
@@ -817,6 +826,13 @@ const PricingEngine = (() => {
             const sheetCostNoTax = round2(costNoTaxC * perKgC + 1e-9);
             const packingPerSheetC = round4(packingPerTonC / 1000 * sheetWeightKgC + 1e-9);
             const containerPerSheetC = round4(containerTonC / 1000 * sheetWeightKgC + 1e-9);
+            // v1.0.171 单张口径全套（口径纯净显示用：edge/surface/film/inspect 元/张）
+            const edgePerSheetC = round4(edgeTonC / 1000 * sheetWeightKgC + 1e-9);
+            const surfPerSheetC = round4(surfTonC / 1000 * sheetWeightKgC + 1e-9);
+            const autoSurfPerSheetC = round4(autoSurfTonC / 1000 * sheetWeightKgC + 1e-9);
+            const filmPerSheetC = round4(filmTonC / 1000 * sheetWeightKgC + 1e-9);
+            const autoFilmPerSheetC = round4(autoFilmTonC / 1000 * sheetWeightKgC + 1e-9);
+            const inspectPerSheetC = round4(inspectTonC / 1000 * sheetWeightKgC + 1e-9);
             const totalCostTax = round2(costTaxC * totalTonC + 1e-9);
             const totalCostNoTax = round2(costNoTaxC * totalTonC + 1e-9);
             return {
@@ -847,11 +863,15 @@ const PricingEngine = (() => {
                 saleTax: costTaxC, saleNoTax: costNoTaxC,
                 custom: {
                   quantity: qtyNum, totalTon: totalTonC, sheetArea: sheetAreaC, sheetWeightKg: sheetWeightKgC,
+                  sqmPerTon: round2(sqmPerTon),
                   packingTotal: packingTotalRmb, packingName: packingNameTxt,
                   packingPerTon: packingPerTonC, packingPerSheet: packingPerSheetC,
-                  containerPerTon: containerTonC, containerPerSheet: containerPerSheetC,
-                  edgePerTon: edgeTonC, surfacePerTon: surfTonC, surfaceAutoPerTon: autoSurfTonC,
-                  filmPerTon: filmTonC, filmAutoPerTon: autoFilmTonC, otherPerTon: otherTonC,
+                  containerTotal: containerTotalOvC, containerPerTon: containerTonC, containerPerSheet: containerPerSheetC,
+                  edgePerTon: edgeTonC, edgePerSheet: edgePerSheetC,
+                  surfacePerTon: surfTonC, surfacePerSheet: surfPerSheetC, surfaceAutoPerTon: autoSurfTonC, surfaceAutoPerSheet: autoSurfPerSheetC, surfaceOvSqm: surfOvSqmC,
+                  filmPerTon: filmTonC, filmPerSheet: filmPerSheetC, filmAutoPerTon: autoFilmTonC, filmAutoPerSheet: autoFilmPerSheetC, filmOvSqm: filmOvSqmC,
+                  inspectPerTon: inspectTonC, inspectPerSheet: inspectPerSheetC,
+                  otherPerTon: otherTonC,
                   sheetCostTax: sheetCostTax, sheetCostNoTax: sheetCostNoTax,
                   totalCostTax: totalCostTax, totalCostNoTax: totalCostNoTax
                 }
