@@ -1188,8 +1188,7 @@ test('v1.0.165 normalize 保护: 拉丝黄钛金亮光无指纹 不模糊成 (�
   eq(PricingEngine.normalizeSurface('拉丝黄钛金亮光无指纹'), '拉丝黄钛金亮光无指纹');
   eq(PricingEngine.normalizeSurface('拉丝黄钛金亮油'), '拉丝黄钛金亮油');
 });
-console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
-process.exit(fail > 0 ? 1 : 0);
+
 
 
 // === v1.0.167 新增保护膜 4.5C-FILM (0.65元/㎡) + 含税/不含税成本新公式（2026-09-01 用户规则） ===
@@ -1220,3 +1219,47 @@ test('v1.0.167 含税成本 = 材料(基价+厚度加价) + 其他费用÷0.92',
   const expectNoTax2 = Math.round((mat2 * 0.92 + other2) / 10) * 10;
   eq(r2.detail.costNoTax, expectNoTax2, '不含税成本 = 材料×0.92 + 膜费');
 });
+
+// === v1.0.168 双面砂面NO.4 / 双面HL拉丝（价 = 单面 NO.4/HL ×2，2026-09-05 用户规则）===
+test('v1.0.168 双面砂面NO.4 = NO.4×2 (窄板 sqm档)', () => {
+  eq(JSON.stringify(PricingEngine.getSurfaceFee('双面砂面NO.4', 0.5, 1240, '201')), JSON.stringify({ sqmPrice: 1, needConvert: true }));
+  eq(PricingEngine.getSurfaceFee('NO.4', 0.5, 1240, '201').sqmPrice * 2, PricingEngine.getSurfaceFee('双面砂面NO.4', 0.5, 1240, '201').sqmPrice);
+});
+test('v1.0.168 双面砂面NO.4 = NO.4×2 (窄板 ton档)', () => {
+  eq(PricingEngine.getSurfaceFee('双面砂面NO.4', 2.0, 1240, '201'), 200);
+  eq(PricingEngine.getSurfaceFee('NO.4', 2.0, 1240, '201') * 2, 200);
+});
+test('v1.0.168 双面HL拉丝 = HL×2 (宽板 1500)', () => {
+  eq(JSON.stringify(PricingEngine.getSurfaceFee('双面HL拉丝', 1.0, 1500, '201')), JSON.stringify({ sqmPrice: 2, needConvert: true }));
+  eq(PricingEngine.getSurfaceFee('双面HL拉丝', 2.0, 1500, '201'), 400);
+  eq(PricingEngine.getSurfaceFee('HL', 1.0, 1500, '201').sqmPrice * 2, 2);
+});
+test('v1.0.168 双面别名归一', () => {
+  eq(PricingEngine.normalizeSurface('双面砂面NO.4'), '双面砂面NO.4');
+  eq(PricingEngine.normalizeSurface('双面NO.4'), '双面砂面NO.4');
+  eq(PricingEngine.normalizeSurface('双面no.4'), '双面砂面NO.4');
+  eq(PricingEngine.normalizeSurface('双面砂面'), '双面砂面NO.4');
+  eq(PricingEngine.normalizeSurface('双面磨砂NO.4'), '双面砂面NO.4');
+  eq(PricingEngine.normalizeSurface('双面HL拉丝'), '双面HL拉丝');
+  eq(PricingEngine.normalizeSurface('双面拉丝'), '双面HL拉丝');
+  eq(PricingEngine.normalizeSurface('双面HL'), '双面HL拉丝');
+});
+test('v1.0.168 201 卷 1.00*1240*C 双面砂面NO.4 计入成本', () => {
+  const r = PricingEngine.calculate({ material: '201', surface: '双面砂面NO.4', thickness: '1.00', width: '1240', length: 'C', film1: '', film2: '', basePrice: 7800 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  const sqm = Math.round(1000 / 7.85 / 1.00 * 100) / 100;
+  eq(r.detail.surfaceFeeSqm, 1);
+  eq(r.detail.surfaceFeePerTon, Math.round(sqm * 100) / 100);
+  eq(r.detail.normSurface, '双面砂面NO.4');
+});
+test('v1.0.168 双面成本比单面高一个单面费（同规格 窄板 ton档 2.0mm）', () => {
+  const a = PricingEngine.calculate({ material: '201', surface: 'NO.4', thickness: '2.00', width: '1240', length: 'C', film1: '', film2: '', basePrice: 7800 });
+  const b = PricingEngine.calculate({ material: '201', surface: '双面砂面NO.4', thickness: '2.00', width: '1240', length: 'C', film1: '', film2: '', basePrice: 7800 });
+  eq(a.success, true); eq(b.success, true);
+  eq(a.detail.surfaceFeePerTon, 100);
+  eq(b.detail.surfaceFeePerTon, 200);
+  eq(b.detail.costNoTaxRaw - a.detail.costNoTaxRaw, 100, '双面比单面多 100 元/吨');
+});
+
+console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
+process.exit(fail > 0 ? 1 : 0);

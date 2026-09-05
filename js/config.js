@@ -380,6 +380,20 @@ const SURFACE_FEES = {
     { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 1.0, unit: 'sqm' },
     { tMin: 1.21, tMax: 3.00, wMin: 1500, wMax: 1530, price: 200, unit: 'ton' }
   ],
+  // 2026-09-05 用户规则：双面砂面NO.4 = 单面NO.4加工费 × 2（双面都磨）
+  '双面砂面NO.4': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 1.0, unit: 'sqm' },
+    { tMin: 1.21, tMax: 3.00, wMin: 1000, wMax: 1280, price: 200, unit: 'ton' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 2.0, unit: 'sqm' },
+    { tMin: 1.21, tMax: 3.00, wMin: 1500, wMax: 1530, price: 400, unit: 'ton' }
+  ],
+  // 2026-09-05 用户规则：双面HL拉丝 = 单面HL加工费 × 2
+  '双面HL拉丝': [
+    { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 1.0, unit: 'sqm' },
+    { tMin: 1.21, tMax: 3.00, wMin: 1000, wMax: 1280, price: 200, unit: 'ton' },
+    { tMin: 0.60, tMax: 1.20, wMin: 1500, wMax: 1530, price: 2.0, unit: 'sqm' },
+    { tMin: 1.21, tMax: 3.00, wMin: 1500, wMax: 1530, price: 400, unit: 'ton' }
+  ],
 
   '8K': [
     { tMin: 0.24, tMax: 1.20, wMin: 1000, wMax: 1280, price: 2.5,  unit: 'sqm' },
@@ -1022,6 +1036,10 @@ const ORIGIN_KEYWORDS = ['宏旺', '青山', '联众', '甬金', '太钢', '德�
 
 const SURFACE_ALIASES = {
   'no.4': 'NO.4', 'no4': 'NO.4', 'no 4': 'NO.4', 'hl': 'HL',
+  // 2026-09-05 双面别名
+  '双面no.4': '双面砂面NO.4', '双面no4': '双面砂面NO.4', '双面no 4': '双面砂面NO.4', '双面NO.4': '双面砂面NO.4',
+  '双面砂面no.4': '双面砂面NO.4', '双面砂面no4': '双面砂面NO.4', '双面砂面': '双面砂面NO.4', '双面磨砂no.4': '双面砂面NO.4',
+  '双面hl': '双面HL拉丝', '双面hl拉丝': '双面HL拉丝', '双面拉丝hl': '双面HL拉丝', '双面拉丝': '双面HL拉丝', '双面HL': '双面HL拉丝', '双面hl丝': '双面HL拉丝',
   '2b': '2B', '2ba': '2BA', '2ba(非标)': '2BA(非标)', '2BA': '2BA', '8k': '8K', '单张普磨8k': '单张普磨8K', 
   '单张砂面no.4': '单张砂面NO.4', '单张砂面': '单张砂面NO.4', '单张no.4': '单张砂面NO.4',
   '单张拉丝hl': '单张拉丝HL',
