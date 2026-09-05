@@ -41,7 +41,9 @@ const App = (() => {
   let lockedFiveFoot304 = {};
   let lockedFiveFoot316L = {};
   let lockedFiveFoot400 = {};
-  // 北港 J5 基价（北港只卖 J5，单独一行填写，不分宽度）
+  // 北港 201J1/J5 基价（2026-09-05：北港供 J1 与 J5，均单独一行填写、不分宽度）
+  let beigangJ1Price = 0;
+  let beigangJ1Locked = false;
   let beigangJ5Price = 0;
   let beigangJ5Locked = false;
 
@@ -168,6 +170,11 @@ const App = (() => {
       if (material === '201J5') {
         return (beigangJ5Price > 0) ? beigangJ5Price : null;
       }
+      // 2026-09-05 用户规则：北港产地供 201J1，单独一行填基价、不分宽度；宏旺等其他产地仍走宽度矩阵
+      if (material === '201J1' && origin === '北港') {
+        return (beigangJ1Price > 0) ? beigangJ1Price : null;
+      }
+      if (origin === '北港') return null; // 北港目前仅 201J1/J5
       const w = parseFloat(width);
       const band = WIDTH_TO_BAND_201[w];
       if (band === undefined || band === null) return null; // 宽度不在档
@@ -540,11 +547,22 @@ const App = (() => {
     bg.className = 'origin-row';
     bg.innerHTML = `
       <span class="oname">北港</span>
+      <div class="oj2"><label>J1</label><input type="number" id="beigangJ1Price" class="origin-j2-input" value="${beigangJ1Price > 0 ? beigangJ1Price : ''}" step="10" placeholder="未填" ${beigangJ1Locked ? 'readonly' : ''}></div>
+      <button id="beigangJ1Lock" class="o-lock ${beigangJ1Locked ? 'locked' : ''}" title="${beigangJ1Locked ? '点击解锁' : '点击锁定'}">${beigangJ1Locked ? '🔒' : '🔓'}</button>
       <div class="oj2"><label>J5</label><input type="number" id="beigangJ5Price" class="origin-j2-input" value="${beigangJ5Price > 0 ? beigangJ5Price : ''}" step="10" placeholder="未填" ${beigangJ5Locked ? 'readonly' : ''}></div>
       <button id="beigangJ5Lock" class="o-lock ${beigangJ5Locked ? 'locked' : ''}" title="${beigangJ5Locked ? '点击解锁' : '点击锁定'}">${beigangJ5Locked ? '🔒' : '🔓'}</button>
-      <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">北港只售 J5，不分宽度</span>
+      <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">北港供 201J1/J5，不分宽度</span>
     `;
     els.originRows201.appendChild(bg);
+    const j1Inp = bg.querySelector('#beigangJ1Price');
+    const j1Lock = bg.querySelector('#beigangJ1Lock');
+    if (j1Inp) {
+      j1Inp.addEventListener('input', () => { beigangJ1Price = parseFloat(j1Inp.value) || 0; });
+      j1Inp.addEventListener('blur', () => { beigangJ1Price = parseFloat(j1Inp.value) || 0; saveBeigangJ1(); });
+    }
+    if (j1Lock) {
+      j1Lock.addEventListener('click', () => { beigangJ1Locked = !beigangJ1Locked; saveBeigangJ1(); renderOriginGrid201(); });
+    }
     const bgInp = bg.querySelector('#beigangJ5Price');
     const bgLock = bg.querySelector('#beigangJ5Lock');
     if (bgInp) {
@@ -755,6 +773,10 @@ const App = (() => {
     } catch (e) { /* ignore */ }
   }
 
+  function saveBeigangJ1() {
+    try { localStorage.setItem('kk_beigang_j1', JSON.stringify({ price: beigangJ1Price, locked: beigangJ1Locked })); } catch (e) { /* ignore */ }
+  }
+
   function saveBeigangJ5() {
     try { localStorage.setItem('kk_beigang_j5', JSON.stringify({ price: beigangJ5Price, locked: beigangJ5Locked })); } catch (e) { /* ignore */ }
   }
@@ -785,6 +807,16 @@ const App = (() => {
             }
             lockedOrigins[o] = true;
           }
+        }
+      }
+    } catch (e) { /* ignore */ }
+    try {
+      const j1raw = localStorage.getItem('kk_beigang_j1');
+      if (j1raw) {
+        const j1 = JSON.parse(j1raw);
+        if (j1 && typeof j1.price === 'number') {
+          beigangJ1Price = j1.price;
+          beigangJ1Locked = !!j1.locked;
         }
       }
     } catch (e) { /* ignore */ }
@@ -846,6 +878,7 @@ const App = (() => {
       fiveFootPrices304: fiveFootPrices304,
       fiveFootPrices316L: fiveFootPrices316L,
       fiveFootPrices400: fiveFootPrices400,
+      beigangJ1Price: beigangJ1Price,
       beigangJ5Price: beigangJ5Price,
       prices400: prices400
     };
@@ -864,12 +897,13 @@ const App = (() => {
     cnt(originPrices); cnt(originPrices304); cnt(originPrices316L);
     cnt(fiveFootPrices304); cnt(fiveFootPrices316L); cnt(fiveFootPrices400);
     cnt(prices400);
+    if (beigangJ1Price > 0) n++;
     if (beigangJ5Price > 0) n++;
     return n;
   }
   function clearLocalLocked() {
     try {
-      ['kk_locked_prices','kk_locked_prices_304','kk_locked_prices_316L','kk_locked_prices_304_ff','kk_locked_prices_316L_ff','kk_beigang_j5','kk_prices_400','kk_prices_400_ff']
+      ['kk_locked_prices','kk_locked_prices_304','kk_locked_prices_316L','kk_locked_prices_304_ff','kk_locked_prices_316L_ff','kk_beigang_j1','kk_beigang_j5','kk_prices_400','kk_prices_400_ff']
         .forEach(k => localStorage.removeItem(k));
     } catch (e) { /* ignore */ }
   }
@@ -897,6 +931,7 @@ const App = (() => {
     if (p.fiveFootPrices316L && typeof p.fiveFootPrices316L === 'object') { for (const [o, v] of Object.entries(p.fiveFootPrices316L)) { fiveFootPrices316L[o] = v; lockedFiveFoot316L[o] = false; changed = true; } }
     if (p.fiveFootPrices400 && typeof p.fiveFootPrices400 === 'object') { for (const [k, v] of Object.entries(p.fiveFootPrices400)) { fiveFootPrices400[k] = v; lockedFiveFoot400[k] = false; changed = true; } }
     if (p.prices400 && typeof p.prices400 === 'object') { for (const [k, v] of Object.entries(p.prices400)) { prices400[k] = v; lockedPrices400[k] = false; changed = true; } }
+    if (typeof p.beigangJ1Price === 'number') { beigangJ1Price = p.beigangJ1Price; beigangJ1Locked = false; changed = true; }
     if (typeof p.beigangJ5Price === 'number') { beigangJ5Price = p.beigangJ5Price; beigangJ5Locked = false; changed = true; }
     return changed;
   }
@@ -1802,8 +1837,8 @@ const App = (() => {
       h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
     });
     h.push('</table>');
-    // 2026-08-25: 北港 J5：厚度加价与宏旺 201 正材一致
-    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">北港 J5：厚度加价与宏旺 201 正材一致');
+    // 2026-08-25: 北港 201J1/J5：厚度加价与宏旺 201 正材一致
+    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">北港 201J1/J5：厚度加价与宏旺 201 正材一致');
 
     // 压延料表
     h.push('<h4 class="ref-subtitle">本地201(压延）</h4>');
@@ -2298,7 +2333,9 @@ const App = (() => {
 
   function runCalc() {
     if (!dataItems.length) { showToast('请先添加数据', 'error'); return; }
-    // Sync 北港 J5
+    // Sync 北港 J1/J5
+    const j1Inp = dom('beigangJ1Price');
+    if (j1Inp) beigangJ1Price = parseFloat(j1Inp.value) || 0;
     const j5Inp = dom('beigangJ5Price');
     if (j5Inp) beigangJ5Price = parseFloat(j5Inp.value) || 0;
     // Inject user price overrides

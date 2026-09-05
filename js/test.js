@@ -1261,5 +1261,36 @@ test('v1.0.168 双面成本比单面高一个单面费（同规格 窄板 ton档
   eq(b.detail.costNoTaxRaw - a.detail.costNoTaxRaw, 100, '双面比单面多 100 元/吨');
 });
 
+// === v1.0.169 宏旺400系厚度加价上限 2.00→3.00 + 北港201J1（2026-09-05 用户规则）===
+test('v1.0.169 430W/2BA 宏旺 2.50mm 可算且加价0（原上限2.00会报错）', () => {
+  const r = PricingEngine.calculate({ material: '430W/2BA', origin: '宏旺', surface: '', thickness: '2.50', width: '1219', length: 'C', basePrice: 9000 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.costTax, 9000, '2.50mm 应在 0.52-3.00 档加价0，成本=基价9000');
+});
+test('v1.0.169 430W/2BA 宏旺 3.00mm 边界可算', () => {
+  const r = PricingEngine.calculate({ material: '430W/2BA', origin: '宏旺', surface: '', thickness: '3.00', width: '1219', length: 'C', basePrice: 9000 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.costTax, 9000);
+});
+test('v1.0.169 430W/2BB 引用同表 2.50mm 可算', () => {
+  const r = PricingEngine.calculate({ material: '430W/2BB', origin: '宏旺', surface: '', thickness: '2.50', width: '1219', length: 'C', basePrice: 9000 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.costTax, 9000);
+});
+test('v1.0.169 410S/2BA 宏旺 2.50mm 引用宏旺400系同表', () => {
+  const r = PricingEngine.calculate({ material: '410S/2BA', origin: '宏旺', surface: '', thickness: '2.50', width: '1219', length: 'C', basePrice: 9000 });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.costTax, 9000);
+});
+test('v1.0.169 北港 201J1 可正常计算（不分宽度，引擎走标准201加价）', () => {
+  const r = PricingEngine.calculate({ material: '201J1', origin: '北港', surface: '2B', thickness: '0.98', width: '1524', length: 'C', basePrice: 8500, film1: '', film2: '' });
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.normSurface, '2B');
+});
+test('v1.0.169 201J5 北港既有逻辑不受影响', () => {
+  const r = PricingEngine.calculate({ material: '201J5', origin: '北港', surface: '2B', thickness: '0.98', width: '1219', length: 'C', basePrice: 8600, film1: '', film2: '' });
+  eq(r.success, true, JSON.stringify(r.errors));
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);
