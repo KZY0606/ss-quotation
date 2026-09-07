@@ -1385,5 +1385,45 @@ test('v1.0.171 覆盖按 元/吨 输入仍兼容（旧字段不破坏）', () =>
   eq(r.detail.costTax, 15360, '与v1.0.170 T2 同值(覆盖均按元/吨)');
 });
 
+// === v1.0.172 钛铝古铜 vs 钛块古铜 严格区分：小写/无点/空格/表头直传 不再被吞（2026-09-07 用户反馈）===
+function calcSheetColor(surface) {
+  return PricingEngine.calculate({ material: '304', surface, thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '木架', film1: '', film2: '' });
+}
+test('v1.0.172 小写变体不再吞成钛块：单张砂面no.4钛铝古铜 → 颜色13', () => {
+  const norm = PricingEngine.normalizeSurface('单张砂面no.4钛铝古铜');
+  eq(norm.includes('钛块'), false, 'norm不含钛块: ' + norm);
+  const r = calcSheetColor('单张砂面no.4钛铝古铜');
+  eq(r.success, true, JSON.stringify(r.errors));
+  eq(r.detail.colorName, '钛铝古铜', 'colorName=' + r.detail.colorName);
+  eq(r.detail.colorFeeSqm, 13, 'colorFee=' + r.detail.colorFeeSqm);
+});
+test('v1.0.172 全品质小写变体(普磨/高普/普精/精磨/超精8k + no4无点 + 空格)均正确 13', () => {
+  const ins = ['单张普磨8k钛铝古铜', '单张高普8k钛铝古铜', '单张普精8k钛铝古铜', '单张精磨8k钛铝古铜', '单张超精8k钛铝古铜', '单张砂面no4钛铝古铜', '单张砂面no.4 钛铝古铜', '单张拉丝hl 钛铝古铜', '单张砂面no.4钛铝古铜(板)'];
+  ins.forEach(s => {
+    const norm = PricingEngine.normalizeSurface(s);
+    eq(norm.includes('钛块'), false, '[' + s + '] 未被吞成钛块: ' + norm);
+    const r = calcSheetColor(s);
+    eq(r.success, true, '[' + s + '] ' + JSON.stringify(r.errors));
+    eq(r.detail.colorName, '钛铝古铜', '[' + s + '] colorName=' + r.detail.colorName);
+    eq(r.detail.colorFeeSqm, 13, '[' + s + '] colorFee=' + r.detail.colorFeeSqm);
+  });
+});
+test('v1.0.172 钛铝红铜 小写同样正确；钛块古铜 小写仍按 7.5 不串色', () => {
+  const r1 = calcSheetColor('单张高普8k钛铝红铜');
+  eq(r1.success, true, JSON.stringify(r1.errors));
+  eq(r1.detail.colorName, '钛铝红铜');
+  eq(r1.detail.colorFeeSqm, 13);
+  const r2 = calcSheetColor('单张砂面no.4钛块古铜');
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r2.detail.colorName, '钛块古铜');
+  eq(r2.detail.colorFeeSqm, 7.5, '钛块古铜 7.5 不受影响');
+});
+test('v1.0.172 含色名但无宿主前缀(如 8K钛铝古铜) 不静默吞成 8K古铜：宁可报错', () => {
+  const norm = PricingEngine.normalizeSurface('8K钛铝古铜');
+  eq(norm, '8K钛铝古铜', '保留原样不再 fuzzy 吞并: ' + norm);
+  const r = calcSheetColor('8K钛铝古铜');
+  eq(r.success, false, '卷磨8K+钛铝古铜 无价目 → 应报错而非按8K古铜');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

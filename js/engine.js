@@ -322,8 +322,18 @@ const PricingEngine = (() => {
       // v1.0.165 组合名保护：单张彩色（钛铝古铜 vs 钛块古铜）与 AFP 组合（亮油/哑油）不模糊匹配，保持原样交给后续拆分
       const _sc = splitSheetColor(base);
       const _afp = detectAFP(base);
+      // v1.0.172 兜底保险：文本含任一 COLOR_FEES 颜色名（钛块古铜/钛铝古铜/黄钛金…）→ 一律不 fuzzy。
+      // 近拼色（如 钛铝古铜 vs 钛块古铜 仅 1 字差）被 levenshtein 吞并是误算根因；宁原样报错也不静默错价。
+      let _hasColor = false;
+      for (const _cn of Object.keys(COLOR_FEES)) { if (base.indexOf(_cn) >= 0) { _hasColor = true; break; } }
       if ((_sc && COLOR_FEES[_sc.colorName]) || _afp) norm = base;
-      else norm = SURFACE_ALIASES[lower] || fuzzyMatchSurface(lower) || base;
+      else {
+        const _aliased = SURFACE_ALIASES[lower];
+        if (_aliased) norm = _aliased;
+        // v1.0.172 保险仅拦截 fuzzy：含 COLOR_FEES 色名但别名/白板都未命中 → 原样（宁报错不吞近拼色）
+        else if (_hasColor) norm = base;
+        else norm = fuzzyMatchSurface(lower) || base;
+      }
     }
     if (suffix) {
       const key = norm + '/' + suffix;
@@ -460,16 +470,24 @@ const PricingEngine = (() => {
   }
 
   // v1.0.145 单张彩色工艺拆分：'单张普磨8K钛铝红铜' → { base:'单张普磨8K', colorName:'钛铝红铜' }
-  // 仅单张 8K 系列（普磨/高普/普精/精磨/超精）；完整彩色 key（如 单张高普8K黄钛金）优先走 SURFACE_FEES
+  // v1.0.172 大小写不敏感 + no4(无点) + 空格 + (板) 后缀：'单张砂面no.4钛铝古铜'/'单张普磨8k 钛铝古铜(板)'
+  //   都能正确拆分 → 杜绝落 fuzzy 被近拼色吞并（钛铝古铜 vs 钛块古铜 仅 1 字之差 = 线上误算根因）
   function splitSheetColor(raw) {
     const s = String(raw || '').trim();
-    const m = s.match(/^单张(砂面NO\.4|砂面|拉丝HL|拉丝|普磨8K|高普8K|普精8K|精磨8K|超精8K)(.+)$/);
+    const m = s.match(/^单张(砂面no\.4|砂面no4|砂面|拉丝hl|拉丝|普磨8k|高普8k|普精8k|精磨8k|超精8k)(.+)$/i);
     if (!m) return null;
-    const ck = COLOR_ALIASES[m[2].trim()] || COLOR_ALIASES[String(m[2] || '').trim().toLowerCase()];
+    const p = m[1].toUpperCase(); // 中文不受影响；no.4→NO.4 no4→NO4 hl→HL 8k→8K
+    const bm = {
+      '砂面NO.4': '单张砂面NO.4', '砂面NO4': '单张砂面NO.4', '砂面': '单张砂面NO.4',
+      '拉丝HL': '单张拉丝HL', '拉丝': '单张拉丝HL',
+      '普磨8K': '单张普磨8K', '高普8K': '单张高普8K', '普精8K': '单张普精8K', '精磨8K': '单张精磨8K', '超精8K': '单张超精8K'
+    };
+    const base = bm[p];
+    if (!base) return null;
+    const colorTxt = m[2].trim().replace(/\(板\)$/i, '');
+    const ck = COLOR_ALIASES[colorTxt] || COLOR_ALIASES[colorTxt.toLowerCase()];
     if (!ck || !COLOR_FEES[ck]) return null;
-    // v1.0.166 baseMap 精确映射（原 '单张'+m[1]+'8K' 对 砂面NO.4/拉丝HL/普磨8K 会拼出怪名，靠 fuzzy 兜底）
-    const bm = { '砂面NO.4': '单张砂面NO.4', '砂面': '单张砂面NO.4', '拉丝HL': '单张拉丝HL', '拉丝': '单张拉丝HL' };
-    return { base: bm[m[1]] || ('单张' + m[1]), colorName: ck };
+    return { base, colorName: ck };
   }
   // 颜色工艺费（元/㎡）：厚度 7 段匹配；1000mm 宽 = 窄板 ×1.25；1500+ 与 >2.0mm 无（报错由调用方处理）
   function getColorFee(name, thickness, width) {
