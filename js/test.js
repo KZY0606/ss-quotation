@@ -1481,5 +1481,31 @@ test('v1.0.175b 真膜括号仍正常提取（(7C-FILM+5C-FILM)）', () => {
   eq(r.film2, '5C-FILM', 'film2: ' + r.film2);
 });
 
+// === v1.0.176 产地括注通用剥除：8K黄钛金(宏旺) 这种（不只宏旺，任何 ORIGIN_KEYWORDS 厂家都行）===
+test('v1.0.176 normalizeSurface 任意厂家括注剥除', () => {
+  eq(PricingEngine.normalizeSurface('8K黄钛金(宏旺)'), '8K黄钛金', '半角宏旺: ' + PricingEngine.normalizeSurface('8K黄钛金(宏旺)'));
+  eq(PricingEngine.normalizeSurface('8K黄钛金（宏旺）'), '8K黄钛金', '全角宏旺');
+  eq(PricingEngine.normalizeSurface('8K黄钛金(上克)'), '8K黄钛金', '上克: ' + PricingEngine.normalizeSurface('8K黄钛金(上克)'));
+  eq(PricingEngine.normalizeSurface('8K黄钛金(板)(德龙)'), '8K黄钛金', '(板)(德龙) 双括注');
+  eq(PricingEngine.normalizeSurface('NO.4(上克)'), 'NO.4', 'NO.4 不再错配: ' + PricingEngine.normalizeSurface('NO.4(上克)'));
+  eq(PricingEngine.normalizeSurface('拉丝黄钛金(甬金)'), '拉丝黄钛金', '甬金');
+});
+test('v1.0.176 calculate 产地括注写法与常规名同价', () => {
+  const base = { material: '201J1', thickness: '0.98', width: '1219', length: '2438', origin: '宏旺', basePrice: 8000, boardType: 'sheet', packing: '木架' };
+  const a = PricingEngine.calculate({ ...base, surface: '8K黄钛金(上克)' });
+  const b = PricingEngine.calculate({ ...base, surface: '8K黄钛金' });
+  eq(a.detail.surfaceFeeSqm > 0, true, '括注写法能算');
+  eq(a.detail.surfaceFeeSqm, b.detail.surfaceFeeSqm, '同价: ' + a.detail.surfaceFeeSqm);
+});
+test('v1.0.176 parseFreeText 括注厂家不再误抽为行首产地', () => {
+  const r = PricingEngine.parseFreeText('德龙304 8K黄钛金(宏旺) 0.98*1219*2438', {});
+  eq(r.origin, '德龙', 'origin 应为德龙: ' + r.origin);
+  eq(r.surface, '8K黄钛金', 'surface: ' + r.surface);
+  eq(r.film1, '', 'film1 空');
+  const r2 = PricingEngine.parseFreeText('宏旺201J1 NO.4(上克) 0.98*1219*2438', {});
+  eq(r2.origin, '宏旺', 'origin 宏旺');
+  eq(r2.surface, 'NO.4', 'surface NO.4: ' + r2.surface);
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

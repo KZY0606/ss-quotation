@@ -4,6 +4,9 @@
 
 const PricingEngine = (() => {
 
+  // v1.0.176：产地名备料（括注剥除用，任何厂家都要能识别；全中文名无需正则转义）
+  const _ORIGIN_ALT = ORIGIN_KEYWORDS.join('|');
+
   function round2(v) { return Math.round(v * 100) / 100; }
   function round3(v) { return Math.round(v * 1000) / 1000; }
   function round10(v) { return Math.round(v / 10) * 10; }
@@ -302,8 +305,8 @@ const PricingEngine = (() => {
   function normalizeSurface(raw) {
     if (!raw) return null;
     let s = raw.trim();
-    // v1.0.175：支持尾部产地注记（宏旺）/（宏旺价）——发布面板新增的标注只是价格来源说明，不参与匹配，剥除后再走正常识别
-    s = s.replace(/(?:（\s*宏旺价?\s*）|\(\s*宏旺价?\s*\)|宏旺价?\s*)$/i, '').trim();
+    // v1.0.175/176：剥除产地括注（(宏旺)/（上克）…全/半角括号任意位置，可带 价/加工 字样）——产地标注只是来源说明不参与表面匹配
+    s = s.replace(new RegExp('(?:[（(]\\s*(?:' + _ORIGIN_ALT + ')\\s*(?:加工|价)?\\s*[）)]|(?:' + _ORIGIN_ALT + ')价?)', 'g'), '').trim();
     // 2026-08-21：小炉/大炉后缀 S/L（带不带 / 都识别，如 '8K黄钛金(板)/S'、'8K黄钛金(板)S'）
     // 剥掉后缀后基础名必须能精确匹配（SURFACE_FEES 键或别名），避免误伤 'HL' 等字母结尾表面
     let suffix = null;
@@ -1247,6 +1250,8 @@ const PricingEngine = (() => {
     }
 
     // 提取产地 (使用 ORIGIN_KEYWORDS)
+    // v1.0.176：先整体摘走「括注产地」（(宏旺)/（上克）…），避免行内括注厂家名被裸词匹配误删（残留空括号 ()）
+    remaining = remaining.replace(new RegExp('[（(]\\s*(?:' + _ORIGIN_ALT + ')\\s*(?:加工|价)?\\s*[）)]', 'g'), ' ').replace(/[（(]\s*[）)]/g, ' ').trim();
     const originPatterns = ORIGIN_KEYWORDS;
     let origin = '';
     for (const op of originPatterns) {
