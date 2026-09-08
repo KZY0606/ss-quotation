@@ -1,3 +1,18 @@
+## 2026-09-08 v1.0.174
+
+### 全部带单价加工行支持复制名称（2026-09-08 用户）
+- 需求：与保护膜一样，凡有单价（有费用）的加工都要能一键复制名称
+- 实现：新增通用 `bindCopyButtons` + `COPY_BTN`（app.js，clipboard + execCommand 双通道），名称单元格旁渲染「⧉」钮（样式与保护膜 film-copy-btn 相同：.copy-name-btn）
+- 覆盖渲染点（12 处 COPY_BTN）：
+  - surfaceConfigTable（表面加工板块）：emboss/sandblast 行、单档对象行、数组档位行、上油工艺 4 行
+  - sheetSurfaceConfigTable（单张加工板块）：品质主行（复制 rd.names[0] 如 单张砂面NO.4/普磨8K）、展开彩色子行（复制完整名 如 单张砂面NO.4黄钛金）、特殊组合行（单张拉丝青古铜哑光(镀铜)）
+  - sheetColorConfigTable（单张彩色工艺板块）：每色行复制色名（黄钛金/钛铝古铜…，title 提示需拼品质名后）
+  - 保护膜原 film-copy-btn 保留不动
+- 复制内容选择规则：单键行复制 key；「普磨8K（卷磨）」特判复制「普磨8K」；含半角括号的 display（linen/square 附注名）复制底层 key（linen/square）；合并行（拉丝/磨砂同价）复制首个 key；上油 4 行统一复制「亮油/哑油」token
+- 绑定：bindSurfRowEvents / bindColorRowEvents 尾部追加 bindCopyButtons(wrap)
+- CSS：style.css 增加 .copy-name-btn（同 film-copy-btn 外观）
+- 验证：语法 OK + 线上 e2e DOM 断言
+
 ## 2026-09-08 v1.0.173
 
 ### 表面加工与 430 五尺调整（2026-09-08 用户三规则）

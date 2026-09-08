@@ -1310,6 +1310,24 @@ const App = (() => {
     } catch (e) { done && done(); }
   }
 
+  // v1.0.174 通用「复制名称」：保护膜同款交互，铺到全部带单价加工行
+  function bindCopyButtons(wrap) {
+    if (!wrap) return;
+    wrap.querySelectorAll('.copy-name-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const txt = btn.dataset.copy || '';
+        const old = btn.textContent;
+        const done = () => { btn.textContent = '✓'; setTimeout(() => { btn.textContent = old; }, 1200); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(txt).then(done).catch(() => fallbackCopy(txt, done));
+        } else fallbackCopy(txt, done);
+      });
+    });
+  }
+  function COPY_BTN(txt, title) {
+    return '<button class="copy-name-btn" data-copy="' + String(txt).replace(/"/g, '&quot;').replace(/</g, '&lt;') + '" title="' + (title || '复制名称') + '">⧉</button>';
+  }
+
   function getFilmOrder() {
     try { const o = JSON.parse(localStorage.getItem('kk_film_order') || '[]'); return Array.isArray(o) ? o : []; } catch (e) { return []; }
   }
@@ -1576,8 +1594,9 @@ const App = (() => {
           const isSqm = ecfg.feePerSqm !== undefined;
           const ev = priceOverrides.surfaceFees[item.key] ?? (isSqm ? ecfg.feePerSqm : ecfg.feePerTon);
           const elock = !!priceOverrides.surfaceLocked[item.key];
+          const embCopy = item.display.indexOf('(') >= 0 ? item.key : item.display;
           rows.push('<tr class="sf-emboss-row">' +
-            '<td><span class="cfg-name">' + item.display + '</span></td>' +
+            '<td><span class="cfg-name">' + item.display + '</span>' + COPY_BTN(embCopy, '复制名称：' + embCopy) + '</td>' +
             '<td class="tier-cells"><div class="tier-cell"><span class="tier-label">附加项</span><span class="tier-width"></span><span class="tier-sub">' + (isSqm ? '元/㎡' : '元/吨') + '</span>' +
             '<input type="number" class="cfg-price-input surf-price-inp" data-names="' + item.key + '" value="' + ev + '" step="0.5" ' + (elock ? 'readonly' : '') + '></div></td>' +
             '<td><button class="cfg-lock-btn ' + (elock ? 'locked' : '') + '" data-names="' + item.key + '" data-type="surf">' + (elock ? '🔒' : '🔓') + '</button></td>' +
@@ -1591,8 +1610,9 @@ const App = (() => {
         const rowCls = ' class="' + gd.cls + '-row"';
         if (typeof cfg === 'object' && cfg.price !== undefined && !Array.isArray(cfg)) {
           const locked = !!priceOverrides.surfaceLocked[cfgKey];
+          const copyKey = (item.key || display);
           rows.push('<tr' + rowCls + '>' +
-            '<td><span class="cfg-name">' + display + '</span></td>' +
+            '<td><span class="cfg-name">' + display + '</span>' + COPY_BTN(copyKey, '复制名称：' + copyKey) + '</td>' +
             '<td class="tier-cells">' + tierCellsHtml([{ tMin: cfg.tMin, tMax: cfg.tMax, wMin: cfg.wMin, wMax: cfg.wMax, price: cfg.price, _i: 0 }], names, locked) + '</td>' +
             '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + names + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
             '</tr>');
@@ -1602,8 +1622,9 @@ const App = (() => {
             const tiers = g.tiers;
             if (!tiers || tiers.length === 0) return;
             const locked = !!priceOverrides.surfaceLocked[cfgKey];
+            const arrCopy = item.display === '普磨8K（卷磨）' ? '普磨8K' : (item.keys ? item.keys[0] : (item.key || g.label));
             rows.push('<tr' + rowCls + '>' +
-              '<td><span class="cfg-name">' + g.label + '</span></td>' +
+              '<td><span class="cfg-name">' + g.label + '</span>' + COPY_BTN(arrCopy, '复制名称：' + arrCopy) + '</td>' +
               '<td class="tier-cells">' + tierCellsHtml(tiers, names, locked) + '</td>' +
               '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + names + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
               '</tr>');
@@ -1616,10 +1637,10 @@ const App = (() => {
     });
     // v1.0.164 上油工艺附加项（亮油/哑油，卷板/平板分价；原 AFP 抗指纹 改名）
     html += '<div class="sg-group sg-oil"><div class="sg-group-title">上油工艺（附加项）</div><table><thead><tr><th>工艺</th><th>价格（元/平方米）</th><th></th></tr></thead><tbody>' +
-      '<tr><td><span class="cfg-name">亮油(卷板)</span></td><td>' + AFP_BRIGHT_FEE + '</td><td></td></tr>' +
-      '<tr><td><span class="cfg-name">哑油(卷板)</span></td><td>' + AFP_MATTE_FEE + '</td><td></td></tr>' +
-      '<tr><td><span class="cfg-name">亮油(平板)</span></td><td>' + AFP_BRIGHT_FEE_SHEET + '</td><td></td></tr>' +
-      '<tr><td><span class="cfg-name">哑油(平板)</span></td><td>' + AFP_MATTE_FEE_SHEET + '</td><td></td></tr>' +
+      '<tr><td><span class="cfg-name">亮油(卷板)</span>' + COPY_BTN('亮油', '复制名称：亮油') + '</td><td>' + AFP_BRIGHT_FEE + '</td><td></td></tr>' +
+      '<tr><td><span class="cfg-name">哑油(卷板)</span>' + COPY_BTN('哑油', '复制名称：哑油') + '</td><td>' + AFP_MATTE_FEE + '</td><td></td></tr>' +
+      '<tr><td><span class="cfg-name">亮油(平板)</span>' + COPY_BTN('亮油', '复制名称：亮油') + '</td><td>' + AFP_BRIGHT_FEE_SHEET + '</td><td></td></tr>' +
+      '<tr><td><span class="cfg-name">哑油(平板)</span>' + COPY_BTN('哑油', '复制名称：哑油') + '</td><td>' + AFP_MATTE_FEE_SHEET + '</td><td></td></tr>' +
       '<tr><td colspan="3" style="font-size:11px;color:var(--text-muted)">上油为附加项：表面名后加 亮油/哑油（或 亮光无指纹/哑光无指纹/亮光抗指纹/哑光抗指纹）触发，按卷板/平板分别计价</td></tr>' +
       '</tbody></table></div>';
     wrap.innerHTML = html;
@@ -1666,6 +1687,7 @@ const App = (() => {
         btn.textContent = open ? '▶' : '▼';
       });
     });
+    bindCopyButtons(wrap);
   }
 
   // 2026-08-24 用户规则：单张加工单价独立板块，按宽度档分组，三组颜色区分
@@ -1734,14 +1756,14 @@ const App = (() => {
               hasColor = true;
               const cLocked = !!priceOverrides.surfaceLocked[keys[0]];
               colorRows += '<tr class="sg-color-row" data-owner="' + rd.owner + '" data-group="' + g.cls + '" style="display:none">' +
-                '<td><span class="cfg-name sg-color-name">' + cn2 + '</span></td>' +
+                '<td><span class="cfg-name sg-color-name">' + cn2 + '</span>' + COPY_BTN(keys[0], '复制名称：' + keys[0]) + '</td>' +
                 '<td class="tier-cells">' + tierCellsHtml(ct, keys.join(','), cLocked) + '</td>' +
                 '<td><button class="cfg-lock-btn ' + (cLocked ? 'locked' : '') + '" data-names="' + keys.join(',') + '" data-type="surf">' + (cLocked ? '🔒' : '🔓') + '</button></td>' +
                 '</tr>';
             });
           }
           rows.push('<tr class="' + g.cls + '-row' + (hasColor ? ' has-color' : '') + '">' +
-            '<td>' + (hasColor ? '<span class="cfg-expand" data-group="' + g.cls + '" data-owner="' + rd.owner + '">▶</span> ' : '') + '<span class="cfg-name">' + rd.name + '</span></td>' +
+            '<td>' + (hasColor ? '<span class="cfg-expand" data-group="' + g.cls + '" data-owner="' + rd.owner + '">▶</span> ' : '') + '<span class="cfg-name">' + rd.name + '</span>' + COPY_BTN(rd.names[0], '复制名称：' + rd.names[0]) + '</td>' +
             '<td class="tier-cells">' + tierCellsHtml(tiers, rd.names.join(','), locked) + '</td>' +
             '<td><button class="cfg-lock-btn ' + (locked ? 'locked' : '') + '" data-names="' + rd.names.join(',') + '" data-type="surf">' + (locked ? '🔒' : '🔓') + '</button></td>' +
             '</tr>' + colorRows);
@@ -1756,7 +1778,7 @@ const App = (() => {
       const spLocked = !!priceOverrides.surfaceLocked[spKey];
       html += '<div class="sg-group sg-special"><div class="sg-group-title">特殊组合板块（组合价，不可拆分）</div><table><thead><tr><th>单张加工</th><th>价格（元/平方米）</th><th></th></tr></thead><tbody>' +
         '<tr class="sg-special-row">' +
-        '<td><span class="cfg-name">' + spKey + '</span> <span class="sg-special-tag">组合价</span></td>' +
+        '<td><span class="cfg-name">' + spKey + '</span>' + COPY_BTN(spKey, '复制名称：' + spKey) + ' <span class="sg-special-tag">组合价</span></td>' +
         '<td class="tier-cells">' + tierCellsHtml(spCfg.map((t, idx2) => Object.assign({}, t, { _i: idx2 })), spKey, spLocked) + '</td>' +
         '<td><button class="cfg-lock-btn ' + (spLocked ? 'locked' : '') + '" data-names="' + spKey + '" data-type="surf">' + (spLocked ? '🔒' : '🔓') + '</button></td>' +
         '</tr></tbody></table></div>';
@@ -1785,7 +1807,7 @@ const App = (() => {
       const ov = (priceOverrides.colorFees && priceOverrides.colorFees[nm]) || null;
       const locked = !!(priceOverrides.colorLocked && priceOverrides.colorLocked[nm]);
       const hex = COLOR_HEX[nm] || '#888';
-      h += '<tr style="background:' + hex + '1A"><td style="background:' + hex + '"><span class="cfg-name" style="color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);border-radius:3px;padding:1px 6px;display:inline-block">' + nm + '</span></td>' +
+      h += '<tr style="background:' + hex + '1A"><td style="background:' + hex + '"><span class="cfg-name" style="color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);border-radius:3px;padding:1px 6px;display:inline-block">' + nm + '</span>' + COPY_BTN(nm, '复制颜色名：' + nm + '（拼在 单张砂面NO.4/单张高普8K 等品质名后面使用）') + '</td>' +
         arr.map((v, idx) => {
           const val = (ov && ov[idx] !== undefined && ov[idx] !== null) ? ov[idx] : v;
           return '<td><input type="number" class="cfg-price-input color-price-inp" data-color="' + nm + '" data-idx="' + idx + '" value="' + val + '" step="0.5" ' + (locked ? 'readonly' : '') + '></td>';
@@ -1822,6 +1844,7 @@ const App = (() => {
         renderSheetColorConfig();
       });
     });
+    bindCopyButtons(wrap);
   }
 
   function renderPriceReference() {
