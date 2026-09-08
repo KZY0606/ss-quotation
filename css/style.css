@@ -526,7 +526,7 @@ tbody tr.error-row td { color:var(--danger); font-size:12px; }
 /* Detail row */
 tbody tr.detail-row td { padding:0; background:#fafbfc; border-bottom:1px solid var(--border); }
 .detail-content { padding:0; max-height:0; overflow:hidden; transition:max-height 0.3s ease, padding 0.3s ease; }
-.detail-row.open .detail-content { max-height:600px; padding:16px 24px; }
+.detail-row.open .detail-content { max-height:1100px; padding:16px 24px; overflow-y:auto; }
 
 .calc-breakdown { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:900px; }
 .calc-section { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; }

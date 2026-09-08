@@ -3046,10 +3046,10 @@ const App = (() => {
     }
     if (d.surfaceFeeSqm > 0) {
       const sfPerTon = Math.round(d.surfaceFeeSqm * d.sqmPerTon * 100) / 100;
-      html += step(`③ 表面加工费 (${d.normSurface || d.surface}：${fmt(d.surfaceFeeSqm)}*${fmt(d.sqmPerTon)}=${fmt(sfPerTon)}元/吨)`, sfPerTon, '元/吨', true);
+      html += step(`③ 表面加工费（宏旺）(${d.normSurface || d.surface}：${fmt(d.surfaceFeeSqm)}*${fmt(d.sqmPerTon)}=${fmt(sfPerTon)}元/吨)`, sfPerTon, '元/吨', true);
     }
-    else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, d.surfaceFeePerTon, '元/吨', true);
-    else html += step(`③ 表面加工费 (${d.normSurface || d.surface})`, 0, '', false);
+    else if (d.surfaceFeePerTon > 0) html += step(`③ 表面加工费（宏旺）(${d.normSurface || d.surface})`, d.surfaceFeePerTon, '元/吨', true);
+    else html += step(`③ 表面加工费（宏旺）(${d.normSurface || d.surface})`, 0, '', false);
     // v1.0.145 颜色工艺费单独展示（单张彩色工艺）
     if (d.colorFeeSqm > 0) {
       const cTxt = (d.colorBaseSqm != null && d.colorMult) ? (fmt(d.colorBaseSqm) + '*' + d.colorMult + '=' + fmt(d.colorFeeSqm)) : fmt(d.colorFeeSqm);
@@ -3085,7 +3085,7 @@ const App = (() => {
     html += total('四舍五入 (十位)', d.costTax, 'tax');
     html += '</div><div class="calc-section"><div class="calc-section-title">不含税售价（2026-08-22 规则：(基价+厚度加价)×0.92 + 表面 + 膜 + 加价）</div>';
     html += step(`(基价 ${fmtI(d.basePrice)} + 厚度加价 ${fmtI(d.thickSurcharge)}) × 0.92`, d.materialNoTaxRaw, '元/吨', true);
-    html += step('+ 表面加工费（含纹路/AFP）', d.surfaceFeePerTon + (d.linenFeePerTon || 0) + (d.afpPerTon || 0), '元/吨', true);
+    html += step('+ 表面加工费（宏旺，含纹路/AFP）', d.surfaceFeePerTon + (d.linenFeePerTon || 0) + (d.afpPerTon || 0), '元/吨', true);
     html += step('+ 膜费', (d.film1PerTon || 0) + (d.film2PerTon || 0), '元/吨', true);
     html += step('+ 全检费', d.inspectPerTon || 0, '元/吨', (d.inspectPerTon || 0) > 0);
     const mkExtra = d.markupDetail ? (d.markupDetail.group === 'sheet'
