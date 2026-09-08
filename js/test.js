@@ -1425,5 +1425,26 @@ test('v1.0.172 含色名但无宿主前缀(如 8K钛铝古铜) 不静默吞成 8
   eq(r.success, false, '卷磨8K+钛铝古铜 无价目 → 应报错而非按8K古铜');
 });
 
+// === v1.0.173 表面加工去大小炉区分：/L /S 键删除，旧写法回落无后缀价（2026-09-08 用户）===
+function calcSurf173(surface) {
+  return PricingEngine.calculate({ material: '304', surface, thickness: '0.98', width: '1219', length: '3000', origin: '上克', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '木架', film1: '', film2: '' });
+}
+test('v1.0.173 旧写法 8K黄钛金/L 与 /S 回落无后缀键（不再区分大小炉）', () => {
+  eq(PricingEngine.normalizeSurface('8K黄钛金/L'), '8K黄钛金', 'norm /L');
+  eq(PricingEngine.normalizeSurface('8K黄钛金/S'), '8K黄钛金', 'norm /S');
+  eq(PricingEngine.normalizeSurface('拉丝黄钛金(板)/L'), '拉丝黄钛金', 'norm 拉丝/L'); // (板) 别名剥除后回落
+});
+test('v1.0.173 同价验证：/L、/S 旧输入与无后缀价完全一致', () => {
+  const r0 = calcSurf173('8K黄钛金');
+  const rL = calcSurf173('8K黄钛金/L');
+  const rS = calcSurf173('8K黄钛金/S');
+  eq(r0.success, true, JSON.stringify(r0.errors));
+  eq(rL.success, true, JSON.stringify(rL.errors));
+  eq(rS.success, true, JSON.stringify(rS.errors));
+  eq(rL.detail.surfPerTon, r0.detail.surfPerTon, 'L 与 base 同价: ' + rL.detail.surfPerTon);
+  eq(rS.detail.surfPerTon, r0.detail.surfPerTon, 'S 与 base 同价: ' + rS.detail.surfPerTon);
+  eq(rL.detail.totalCostTax, r0.detail.totalCostTax, '整批一致');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

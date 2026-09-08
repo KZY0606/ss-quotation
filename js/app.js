@@ -1182,6 +1182,11 @@ const App = (() => {
         const dataFF = JSON.parse(rawFF);
         fiveFootPrices400 = {};
         for (const [k, v] of Object.entries(dataFF)) { if (v > 0) fiveFootPrices400[k] = v; }
+        // v1.0.173: 430 五尺资格 430W/2BA → 430W/2BB（2026-09-08 用户：2BB 有五尺、2BA 取消）；旧 2BA 值迁移到 2BB
+        if (fiveFootPrices400['宏旺-430W/2BB'] == null && fiveFootPrices400['宏旺-430W/2BA'] > 0) {
+          fiveFootPrices400['宏旺-430W/2BB'] = fiveFootPrices400['宏旺-430W/2BA'];
+          try { localStorage.setItem('kk_prices_400_ff', JSON.stringify(fiveFootPrices400)); } catch (e) {}
+        }
       } else { fiveFootPrices400 = {}; }
     } catch (e) { fiveFootPrices400 = {}; }
     const raw = localStorage.getItem('kk_prices_400');
@@ -1447,7 +1452,7 @@ const App = (() => {
     if (!wrap) return;
     const groupDefs = [
       {
-        cls: 'sf-base', label: '基础表面',
+        cls: 'sf-base', label: '基础表面（宏旺）', // v1.0.173: 宏旺
         items: [
           { display: '2B', key: '2B' },
           { display: 'NO.4', key: 'NO.4' },
@@ -1464,7 +1469,7 @@ const App = (() => {
         ]
       },
       {
-        cls: 'sf-color8k', label: '8K 彩色（板）',
+        cls: 'sf-color8k', label: '8K 彩色（板）（宏旺）', // v1.0.173: 宏旺
         items: [
           { display: '8K黄钛金(板)', key: '8K黄钛金' },
           { display: '8K黄钛金(板)/L', key: '8K黄钛金/L' },
@@ -1485,7 +1490,7 @@ const App = (() => {
         ]
       },
       {
-        cls: 'sf-hairline', label: '砂面/拉丝（板）',
+        cls: 'sf-hairline', label: '砂面/拉丝（板）（宏旺）', // v1.0.173: 宏旺
         items: [
           { display: '砂面/拉丝(NO.4/HL)黄钛金(板)', keys: ['拉丝黄钛金','磨砂黄钛金'] },
           { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/L', keys: ['拉丝黄钛金/L','磨砂黄钛金/L'] },
