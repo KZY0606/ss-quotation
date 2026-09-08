@@ -1446,5 +1446,40 @@ test('v1.0.173 同价验证：/L、/S 旧输入与无后缀价完全一致', () 
   eq(rL.detail.totalCostTax, r0.detail.totalCostTax, '整批一致');
 });
 
+// === v1.0.175 表面名支持尾部（宏旺）注记（2026-09-08 用户：输入 8K黄钛金(板)（宏旺）也要能算）===
+test('v1.0.175 normalize 剥除尾部（宏旺）/宏旺 注记后正常识别', () => {
+  eq(PricingEngine.normalizeSurface('8K黄钛金(板)（宏旺）'), '8K黄钛金', '全角(宏旺)');
+  eq(PricingEngine.normalizeSurface('8K黄钛金(板)(宏旺)'), '8K黄钛金', '半角(宏旺)');
+  eq(PricingEngine.normalizeSurface('8K黄钛金（宏旺价）'), '8K黄钛金', '宏旺价注记');
+  eq(PricingEngine.normalizeSurface('NO.4（宏旺）'), 'NO.4', '基础表面');
+  eq(PricingEngine.normalizeSurface('8K黄钛金'), '8K黄钛金', '不带注记不受影响');
+  eq(PricingEngine.normalizeSurface('砂面/拉丝(NO.4/HL)黄钛金(板)（宏旺）'), '拉丝黄钛金', '砂面拉丝合并名+注记');
+});
+test('v1.0.175 calculate：带（宏旺）注记与不带同价且成功', () => {
+  const base = { material: '304', thickness: '0.98', width: '1219', length: '3000', origin: '宏旺', basePrice: 14300, calcMode: 'weight', boardType: 'sheet', packing: '木架', film1: '', film2: '' };
+  const r1 = PricingEngine.calculate(Object.assign({}, base, { surface: '8K黄钛金(板)' }));
+  const r2 = PricingEngine.calculate(Object.assign({}, base, { surface: '8K黄钛金(板)（宏旺）' }));
+  eq(r1.success, true, JSON.stringify(r1.errors));
+  eq(r2.success, true, JSON.stringify(r2.errors));
+  eq(r2.detail.surfPerTon, r1.detail.surfPerTon, '注记写法与常规写法同价: ' + r1.detail.surfPerTon);
+});
+
+// === v1.0.175b parseFreeText：半角括号膜提取白名单（(板)/(卷)/（宏旺）不再误当膜「板」）===
+test('v1.0.175b 带 (板) 表面不会被括号膜逻辑误吞', () => {
+  const r1 = PricingEngine.parseFreeText('宏旺201J1 8K黄钛金(板) 0.98*1219*2438', {});
+  eq(r1.surface, '8K黄钛金', 'surface 正确: ' + r1.surface);
+  eq(r1.film1, '', 'film1 不得为板: ' + r1.film1);
+  eq(r1.film2, '', 'film2 空');
+  const r2 = PricingEngine.parseFreeText('宏旺201J1 8K黄钛金(板)（宏旺） 0.98*1219*2438', {});
+  eq(r2.surface, '8K黄钛金', '带宏旺注记 surface 正确: ' + r2.surface);
+  eq(r2.film1, '', '带宏旺注记 film1 不得为板: ' + r2.film1);
+});
+test('v1.0.175b 真膜括号仍正常提取（(7C-FILM+5C-FILM)）', () => {
+  const r = PricingEngine.parseFreeText('宏旺304 2B (7C-FILM+5C-FILM) 0.98*1219*2438', {});
+  eq(r.surface, '2B', 'surface: ' + r.surface);
+  eq(r.film1, '7C-FILM', 'film1: ' + r.film1);
+  eq(r.film2, '5C-FILM', 'film2: ' + r.film2);
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

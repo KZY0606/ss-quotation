@@ -301,7 +301,9 @@ const PricingEngine = (() => {
 
   function normalizeSurface(raw) {
     if (!raw) return null;
-    const s = raw.trim();
+    let s = raw.trim();
+    // v1.0.175：支持尾部产地注记（宏旺）/（宏旺价）——发布面板新增的标注只是价格来源说明，不参与匹配，剥除后再走正常识别
+    s = s.replace(/(?:（\s*宏旺价?\s*）|\(\s*宏旺价?\s*\)|宏旺价?\s*)$/i, '').trim();
     // 2026-08-21：小炉/大炉后缀 S/L（带不带 / 都识别，如 '8K黄钛金(板)/S'、'8K黄钛金(板)S'）
     // 剥掉后缀后基础名必须能精确匹配（SURFACE_FEES 键或别名），避免误伤 'HL' 等字母结尾表面
     let suffix = null;
@@ -1208,19 +1210,22 @@ const PricingEngine = (() => {
       }
     }
 
-    // 提取括号里的膜信息: "GOLD MIRROR(7C-FILM+5C-FILM)"
+    // 提取括号里的膜信息 "GOLD MIRROR(7C-FILM+5C-FILM)"
     let film1 = '', film2 = '';
     const parenFilm = remaining.match(/\(([^)]+)\)/);
     if (parenFilm) {
       const parts = parenFilm[1].split('+').map(s => s.trim());
-      for (const p of parts) {
-        const norm = normalizeFilm(p);
-        if (norm) {
+      const norms = parts.map(p => normalizeFilm(p));
+      // v1.0.175：仅当括号内容确为膜型号（归一后落在 FILM_FEES 价表）才按膜拆；结构性括注如 (板)/(卷)/（宏旺）/(非标) 原样保留
+      const isRealFilm = norms.length > 0 && norms.every(n => n && FILM_FEES[n] !== undefined);
+      if (isRealFilm) {
+        for (let fi = 0; fi < parts.length; fi++) {
+          const norm = norms[fi];
           if (!film1) film1 = norm;
           else if (!film2 && norm !== film1) film2 = norm;
         }
+        remaining = remaining.replace(parenFilm[0], ' ').trim();
       }
-      remaining = remaining.replace(parenFilm[0], ' ').trim();
     }
 
     // 检测压延
