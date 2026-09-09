@@ -85,6 +85,7 @@ const App = (() => {
     { origin: '宏旺', material: '430W/2BA' },
     { origin: '宏旺', material: '430W/2BB' },
     { origin: '瑞钢', material: '430B/2BA' },
+    { origin: '硕阳', material: '430/BA' },
   ];
   // 400系面板分组渲染（2026-08-20 用户指定：410/430 分板块；产地顺序 甬金→上克→宏旺→瑞钢）
   const PRODUCTS_400_GROUPS = [
@@ -108,6 +109,7 @@ const App = (() => {
         { origin: '宏旺', material: '430W/2BA' },
         { origin: '宏旺', material: '430W/2BB' },
         { origin: '瑞钢', material: '430B/2BA' },
+        { origin: '硕阳', material: '430/BA' },
       ]
     }
   ];

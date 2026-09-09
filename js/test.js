@@ -1507,5 +1507,47 @@ test('v1.0.176 parseFreeText 括注厂家不再误抽为行首产地', () => {
   eq(r2.surface, 'NO.4', 'surface NO.4: ' + r2.surface);
 });
 
+// === v1.0.179 硕阳 430/BA：新增产地 + 专属 8 档厚度加价 + 表面加工正常 ===
+test('v1.0.179 硕阳430/BA 0.50mm → 加价+100 且用硕阳专属表', () => {
+  const r = PricingEngine.calculate({ material: '430/BA', origin: '硕阳', surface: '无', thickness: '0.50', width: '1219', length: 'C', basePrice: 8000, calcMode: 'weight' });
+  eq(r.success, true, '硕阳430/BA 应可算: ' + (r.errors || []).join(';'));
+  eq(r.detail.thickSurcharge, 100, '0.50mm(0.42-0.51档) +100: ' + r.detail.thickSurcharge);
+  eq(r.detail.thickTable, '400系(430-BA-硕阳)', '厚度表=硕阳专属: ' + r.detail.thickTable);
+});
+test('v1.0.179 硕阳430/BA 8档边界逐一验证', () => {
+  const cases = [[0.28,500],[0.33,400],[0.36,300],[0.42,100],[0.52,100],[0.62,0],[1.51,0],[1.52,100],[2.02,200],[2.50,200]];
+  for (const [thk, want] of cases) {
+    const r = PricingEngine.calculate({ material: '430/BA', origin: '硕阳', surface: '无', thickness: String(thk), width: '1219', length: 'C', basePrice: 8000, calcMode: 'weight' });
+    eq(r.success, true, thk + 'mm 可算');
+    eq(r.detail.thickSurcharge, want, thk + 'mm 加价=' + want + ': ' + r.detail.thickSurcharge);
+  }
+});
+test('v1.0.179 硕阳430/BA 超上限 2.51mm 报错', () => {
+  const r = PricingEngine.calculate({ material: '430/BA', origin: '硕阳', surface: '无', thickness: '2.51', width: '1219', length: 'C', basePrice: 8000, calcMode: 'weight' });
+  eq(r.success, false, '2.51mm 超档应报错');
+});
+test('v1.0.179 硕阳430/BA 表面加工正常（8K黑钛金 卷）', () => {
+  const r = PricingEngine.calculate({ material: '430/BA', origin: '硕阳', surface: '8K黑钛金', thickness: '0.50', width: '1219', length: 'C', basePrice: 8000, calcMode: 'weight' });
+  eq(r.success, true, '带表面可算: ' + (r.errors || []).join(';'));
+  eq(r.detail.surface, '8K黑钛金', '表面识别: ' + r.detail.surface);
+  eq((r.detail.surfaceFeePerTon || 0) > 0 || (r.detail.surfaceFeeSqm || 0) > 0, true, '有表面加工费');
+});
+test('v1.0.179 甬金430/BA 仍用通用 430-BA 表（不受硕阳影响）', () => {
+  const r = PricingEngine.calculate({ material: '430/BA', origin: '甬金', surface: '无', thickness: '0.30', width: '1219', length: 'C', basePrice: 8000, calcMode: 'weight' });
+  eq(r.success, true, '甬金430/BA 可算');
+  eq(r.detail.thickSurcharge, 600, '0.30mm(0.30-0.35档 430B-BA表) +600: ' + r.detail.thickSurcharge);
+  eq(r.detail.thickTable, '400系(430-BA)', '甬金=通用表: ' + r.detail.thickTable);
+});
+
+// v1.0.179b 硕阳 产地识别（自由文本 / normalize 括注剥除）
+test('v1.0.179b parseFreeText 识别硕阳产地', () => {
+  const r = PricingEngine.parseFreeText('硕阳430/BA 8K黑钛金 0.98*1219*C', {});
+  eq(r.origin, '硕阳', 'origin 应为硕阳: ' + r.origin);
+  eq(r.material, '430/BA', 'material: ' + r.material);
+});
+test('v1.0.179b normalizeSurface 剥除硕阳括注', () => {
+  eq(PricingEngine.normalizeSurface('8K黄钛金(硕阳)'), '8K黄钛金', '硕阳括注剥离');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

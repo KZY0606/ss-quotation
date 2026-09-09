@@ -1131,12 +1131,13 @@ const PricingEngine = (() => {
       if ((embeddedSurface || surface) === '单面抛光') surfaceKeys.push('BA');
       for (const s of surfaceKeys) {
         if (!s) continue;
-        const key = baseMaterial + '-' + s;
-        if (THICKNESS_SURCHARGE_400[key]) return '400系(' + key + ')';
+        // v1.0.179：产地专属键优先（硕阳 430/BA 有独立表；甬金/上克 430/BA 仍走通用 430-BA）
         if (origin) {
           const originKey = baseMaterial + '-' + s + '-' + origin;
           if (THICKNESS_SURCHARGE_400[originKey]) return '400系(' + originKey + ')';
         }
+        const key = baseMaterial + '-' + s;
+        if (THICKNESS_SURCHARGE_400[key]) return '400系(' + key + ')';
       }
     }
     if (material === '316L') {
