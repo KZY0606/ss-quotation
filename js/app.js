@@ -1352,7 +1352,7 @@ const App = (() => {
             '<input type="number" class="hot201-input" data-key="' + key + '" value="' + (val || '') + '" step="10" placeholder="—"' + (oLocked ? ' disabled' : '') + '>' +
             '</div>';
         } else {
-          h += '<div class="hot201-cell hot201-empty">—</div>';
+          h += '<div class="hot201-cell hot201-empty"></div>';
         }
       });
       h += '<button class="o-lock ' + (oLocked ? 'locked' : '') + '" data-key="' + o + '" title="' + (oLocked ? '解锁' : '锁定整行') + '">' + (oLocked ? '🔒' : '🔓') + '</button>' +

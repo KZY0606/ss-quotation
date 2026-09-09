@@ -1144,14 +1144,15 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .hot201-row .oj2 { min-width:150px; }
 @media (max-width:1280px){ .basis-panels { grid-template-columns:1fr; } }
 
-/* ===== v1.0.182 热轧：产地一行 + J1-J5 槽位网格 ===== */
-.hot201-rows { display:flex; flex-direction:column; gap:6px; }
-.hot201-row { display:grid; grid-template-columns: 64px repeat(5, minmax(88px, 1fr)) 34px; gap:6px; align-items:center; padding:6px 8px; background:#fffdf6; border:1px solid #fde68a; border-radius:8px; }
-.hot201-row .oname { font-weight:700; color:#92400e; white-space:nowrap; }
-.hot201-cell { display:flex; flex-direction:column; gap:2px; }
-.hot201-jlabel { font-size:11px; color:#b45309; font-weight:700; }
-.hot201-cell .hot201-input { width:100%; min-width:0; padding:4px 6px; font-size:13px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box; }
-.hot201-cell.hot201-empty { color:#d1d5db; font-size:12px; text-align:center; align-self:center; }
+/* ===== v1.0.182/183 热轧：产地一行 + J1-J5 槽位网格（紧凑定宽，上下严格对齐） ===== */
+.hot201-rows { display:flex; flex-direction:column; gap:8px; width:max-content; min-width:560px; }
+.hot201-row { display:grid; grid-template-columns: 56px repeat(5, 96px) 30px; gap:8px; align-items:center; padding:8px 10px; background:#fffdf6; border:1px solid #fde68a; border-radius:8px; }
+.hot201-row .oname { font-weight:700; color:#92400e; white-space:nowrap; font-size:13px; }
+.hot201-cell { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.hot201-jlabel { font-size:11px; color:#b45309; font-weight:700; line-height:1; }
+.hot201-cell .hot201-input { width:100%; min-width:0; padding:3px 6px; font-size:12.5px; height:26px; border:1px solid var(--border); border-radius:5px; box-sizing:border-box; text-align:center; }
+.hot201-cell.hot201-empty { align-self:center; height:26px; }
 .hot201-row.row-locked .hot201-input { background:#f3f4f6; color:#9ca3af; }
-.hot201-row .o-lock { justify-self:end; }
-@media (max-width:1100px){ .hot201-row { grid-template-columns: 56px repeat(5, minmax(76px, 1fr)) 34px; } }
+.hot201-row .o-lock { justify-self:center; }
+.hot201-rows + .hot201-footnote { margin-top:10px; }
+@media (max-width:900px){ .hot201-rows { width:100%; } .hot201-row { grid-template-columns: 48px repeat(5, minmax(0,1fr)) 28px; } }
