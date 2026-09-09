@@ -1610,5 +1610,45 @@ test('v1.0.180 parseFreeText 识别热轧（三种写法）与 normalizeSurface 
   eq(PricingEngine.normalizeSurface('no1'), 'NO.1', 'no1 变体');
 });
 
+// === v1.0.184 热轧窄带（金海/鑫峰 201J3/NO.1，630-810mm 一个基价，无边部费，售价=基价×0.92+100）===
+test('v1.0.184 金海 窄带 630 C 基价6800 → 6356（无边部，固定加价100）', () => {
+  const r = PricingEngine.calculate({ material: '201J3', surface: 'NO.1', thickness: '3.0', width: '630', length: 'C', origin: '金海', basePrice: 6800 });
+  eq(r.success, true, 'success: ' + JSON.stringify(r.errors));
+  eq(r.detail.isNarrow, true, '窄带标记');
+  eq(r.detail.hotType, '窄带201/NO.1', 'hotType');
+  eq(r.detail.saleNoTax, 6356, '售价未税 6800×0.92+100: ' + r.detail.saleNoTax);
+  eq(r.detail.saleTax, 6900, '售价含税 6800+100');
+  eq(r.detail.markup, 100, '加价固定 100');
+  eq(r.detail.edgeType, '窄带', '无边部概念');
+});
+test('v1.0.184 窄带宽度 650/730/780/810 均可算（同一基价），鑫峰 810 基价7000 → 6540', () => {
+  for (const wd of [650, 730, 780, 810]) {
+    const r = PricingEngine.calculate({ material: '201J3', surface: 'NO.1', thickness: '5.0', width: String(wd), length: 'C', origin: '金海', basePrice: 6800 });
+    eq(r.success, true, '金海 ' + wd + ' 可算: ' + JSON.stringify(r.errors));
+    eq(r.detail.saleNoTax, 6356, wd + ' 同价 6356');
+  }
+  const x = PricingEngine.calculate({ material: '201J3', surface: 'NO.1', thickness: '5.0', width: '810', length: 'C', origin: '鑫峰', basePrice: 7000 });
+  eq(x.success, true, '鑫峰: ' + JSON.stringify(x.errors));
+  eq(x.detail.saleNoTax, 6540, '鑫峰 6540');
+});
+test('v1.0.184 窄带边界报错：金海 1219/1240 宽报错；金海仅 201J3；北港(非窄带) 730 报错', () => {
+  const a = PricingEngine.calculate({ material: '201J3', surface: 'NO.1', thickness: '5.0', width: '1219', length: 'C', origin: '金海', basePrice: 6800 });
+  eq(a.success, false, '金海1219 报错');
+  eq((a.errors || []).join('').indexOf('窄带') >= 0, true, '提示窄带白名单');
+  const b = PricingEngine.calculate({ material: '201J1', surface: 'NO.1', thickness: '5.0', width: '630', length: 'C', origin: '金海', basePrice: 6800 });
+  eq(b.success, false, '金海无201J1 报错');
+  const c = PricingEngine.calculate({ material: '201J3', surface: 'NO.1', thickness: '5.0', width: '730', length: 'C', origin: '北港', basePrice: 6800 });
+  eq(c.success, false, '北港730 报错（非窄带）');
+});
+test('v1.0.184 parseFreeText 识别窄带产地 金海/鑫峰', () => {
+  const r1 = PricingEngine.parseFreeText('金海201J3/NO.1 3.0*630*C', {});
+  eq(r1.origin, '金海', '金海 origin: ' + r1.origin);
+  eq(r1.material, '201J3', 'material');
+  eq(r1.surface, 'NO.1', 'surface: ' + r1.surface);
+  eq(r1.width, 630, 'width 630');
+  const r2 = PricingEngine.parseFreeText('鑫峰201J3 NO.1 5.0*730*C', {});
+  eq(r2.origin, '鑫峰', '鑫峰 origin');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

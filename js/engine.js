@@ -13,9 +13,17 @@ const PricingEngine = (() => {
   const HOT201_MATRIX = {
     '鼎信': ['201J1', '201J2', '201J3', '201J4'],
     '北港': ['201J1', '201J4', '201J5'],
-    '永达': ['201J3']
+    '永达': ['201J3'],
+    '金海': ['201J3'], '鑫峰': ['201J3'] // v1.0.184 窄带热轧（630-810mm）
   };
+  // v1.0.184 宽度分段：四尺(1219/1240) / 五尺(1500/1524/1530) / 窄带(金海·鑫峰)
+  const HOT201_WIDTHS_FOOT4 = [1219, 1240];
+  const HOT201_WIDTHS_FOOT5 = [1500, 1524, 1530];
   const HOT201_WIDTHS = [1219, 1240, 1500, 1524, 1530];
+  const HOT201_WIDTHS_NARROW = [630, 650, 690, 730, 780, 810];
+  const HOT201_NARROW_ORIGINS = ['金海', '鑫峰'];
+  // 窄带热轧固定销售加价：木架包装 50 + 装柜 50（无边部费，买来即窄带）
+  const HOT201_NARROW_MARKUP = 100;
   const HOT201_THICK_MIN = 2.0;
   const HOT201_THICK_MAX = 12.0;
 
@@ -206,20 +214,31 @@ const PricingEngine = (() => {
     const errors = [];
     const t = f.thickness, w = f.width;
     const origin = (item.origin || '').trim();
+    // v1.0.184：窄带产地（金海/鑫峰）走窄带通道（宽度 630-810、无边部费、销售加价固定 100）
+    const isNarrow = (HOT201_NARROW_ORIGINS || []).indexOf(origin) !== -1;
+    const allowedW = isNarrow ? HOT201_WIDTHS_NARROW : HOT201_WIDTHS;
     const density = getDensity(f.material);
     if (!density) errors.push('材质 "' + f.material + '" 无匹配密度');
     if (!isNaN(t) && (t < HOT201_THICK_MIN || t > HOT201_THICK_MAX)) errors.push('热轧厚度 ' + t + 'mm 不在 2.00-12.00mm 范围');
-    if (!isNaN(w) && HOT201_WIDTHS.indexOf(w) === -1) errors.push('热轧宽度 ' + (item.width || w) + 'mm 仅支持 1219/1240/1500/1524/1530mm');
+    if (!isNaN(w) && allowedW.indexOf(w) === -1) {
+      errors.push('热轧宽度 ' + (item.width || w) + 'mm 仅支持 ' + (isNarrow ? '窄带 630/650/690/730/780/810mm（' + origin + '）' : '1219/1240/1500/1524/1530mm'));
+    }
     const allowed = HOT201_MATRIX[origin];
-    if (!allowed) errors.push('201 热轧暂不提供产地 "' + origin + '"（仅 鼎信/北港/永达）');
-    else if (allowed.indexOf(f.material) === -1) errors.push(origin + ' 201 热轧暂无 ' + f.material + '（该产地仅提供 ' + allowed.join('/') + '）');
+    if (!allowed) errors.push('201 热轧暂不提供产地 "' + origin + '"（仅 ' + Object.keys(HOT201_MATRIX).join('/') + '）');
+    else if (allowed.indexOf(f.material) === -1) errors.push(origin + ' 201 热轧暂无 ' + f.material + '（该产地仅提供' + allowed.join('/') + '）');
     const basePrice = parseFloat(item.basePrice);
     if (isNaN(basePrice) || basePrice <= 0) errors.push('基价无效');
     if (isNaN(t) || t <= 0) errors.push('厚度无效');
     if (isNaN(w) || w <= 0) errors.push('宽度无效');
     const boardType = getBoardType(f.length);
-    const edgeType = getEdgeType(w);
-    if (edgeType === null) errors.push('宽度 ' + w + 'mm 无法判定毛边/齐边');
+    // 窄带无边部概念，不判定毛边/齐边
+    let edgeType = null;
+    if (!isNarrow) {
+      edgeType = getEdgeType(w);
+      if (edgeType === null) errors.push('宽度 ' + w + 'mm 无法判定毛边/齐边');
+    } else {
+      edgeType = 'narrow';
+    }
     const packingRaw = item.packing != null ? String(item.packing).trim() : '';
     let packing = null;
     if (/密封木箱/.test(packingRaw)) packing = '密封木箱';
@@ -229,19 +248,25 @@ const PricingEngine = (() => {
     else if (/木架/.test(packingRaw)) packing = '木架';
     if (boardType === 'sheet') {
       const L = parseFloat(f.length);
-      const bands = (w === 1500 || w === 1530 || w === 1524) ? SHEET_LENGTH_BANDS_WIDE : SHEET_LENGTH_BANDS;
+      const bands = (!isNarrow && (w === 1500 || w === 1530 || w === 1524)) ? SHEET_LENGTH_BANDS_WIDE : SHEET_LENGTH_BANDS;
       if (!(L >= 0) || !bands.some(b => L >= b.min && L <= b.max)) {
-        const rangeTxt = (w === 1500 || w === 1530 || w === 1524) ? '2100-3055 或 3056-4000' : '2100-2500 或 3000-4000';
-        errors.push('热轧平板长度 ' + f.length + 'mm 不在可计算长度区间（' + rangeTxt + '）');
+        const rangeTxt = (!isNarrow && (w === 1500 || w === 1530 || w === 1524)) ? '2100-3055 或 3056-4000' : '2100-2500 或 3000-4000';
+        errors.push('热轧平板长度 ' + f.length + 'mm 不在可算长度区间（' + rangeTxt + '）');
       }
       if (!packing) errors.push('热轧平板必须填写包装方式（木架/出口木箱/密封木箱/出口铁架/出口铁箱）');
     }
     if (errors.length > 0) return { success: false, errors };
     const sqmPerTon = getSquareMetersPerTon(density, t);
-    // 销售加价（与冷轧一致）
-    let markup = SALES_MARKUP[edgeType + '_' + boardType];
+    // 销售加价：窄带固定 100（木架包装50+装柜50，无边部）；四尺/五尺复用冷轧同套
+    let markup = isNarrow ? HOT201_NARROW_MARKUP : (SALES_MARKUP[edgeType + '_' + boardType] || 0);
     let markupDetail = null;
-    if (boardType === 'coil') {
+    if (isNarrow) {
+      markupDetail = {
+        group: 'narrow', label: '窄带(无边部)：木架包装50 + 装柜50',
+        edgeFee: 0, packFee: 50, containerFee: 50, total: HOT201_NARROW_MARKUP,
+        rackLabel: '窄带'
+      };
+    } else if (boardType === 'coil') {
       const coilInfo = getCoilMarkupInfo('201', w);
       if (coilInfo) { markup = coilInfo.total; markupDetail = coilInfo; }
     } else {
@@ -259,18 +284,20 @@ const PricingEngine = (() => {
       }
       if (packing && SHEET_PACKING_FEES[packing] && SHEET_PACKING_FEES[packing] !== 100) markup += SHEET_PACKING_FEES[packing] - 100;
     }
-    // 热轧售价：基价×0.92 + 销售加价（无表面加工/厚度加价）；金额按用户示例精确到元（round2）
+    // 热轧售价：基价×0.92 + 销售加价（无表面加工/厚度加价）；金额精确到元（round2）
     const materialNoTaxRaw = round2(basePrice * 0.92 + 1e-9);
     const saleNoTax = round2(materialNoTaxRaw + markup + 1e-9);
     const saleTax = round2(basePrice + markup + 1e-9);
     const costNoTaxRaw = materialNoTaxRaw;
     const weight = item.weight ? parseFloat(item.weight) : null;
     const thicknessDisp = (f.thicknessRaw != null && f.thicknessRaw !== '') ? String(f.thicknessRaw) : String(t);
+    const hotType = isNarrow ? '窄带201/NO.1' : '201/NO.1';
+    const edgeDisp = isNarrow ? '窄带' : (edgeType === 'trim' ? '切边' : '毛边');
     return {
       success: true,
       hot: true,
       detail: {
-        hot: true, hotType: '201/NO.1',
+        hot: true, hotType: hotType, isNarrow: !!isNarrow,
         origin: origin, material: f.material, surface: 'NO.1', normSurface: 'NO.1', thickness: thicknessDisp, width: w,
         length: String(item.length || '').trim(), weight: weight, film1: '', film2: '', basePrice: basePrice,
         isYanYan: false, hasLinen: false,
@@ -280,17 +307,11 @@ const PricingEngine = (() => {
         linenFeePerTon: 0, embossFees: [], afpFeeSqm: 0, afpPerTon: 0,
         film1FeeSqm: 0, film1PerTon: 0, film2FeeSqm: 0, film2PerTon: 0,
         inspectFeeSqm: 0, inspectPerTon: 0,
-        costRaw: round2(basePrice), costNoTaxRaw: costNoTaxRaw, materialNoTaxRaw: materialNoTaxRaw,
-        costTax: round2(basePrice), costNoTax: round2(costNoTaxRaw),
-        edgeType: edgeType, boardType: boardType, markup: markup, widthSurcharge: 0, packing: packing,
-        markupDetail: markupDetail ? {
-          group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee,
-          packingFee: markupDetail.packingFee != null ? markupDetail.packingFee : (markupDetail.rackFee || 100),
-          rackFee: markupDetail.rackFee != null ? markupDetail.rackFee : markupDetail.packingFee,
-          containerFee: markupDetail.containerFee, total: markupDetail.total, rackLabel: markupDetail.rackLabel
-        } : null,
-        saleTax: saleTax, saleNoTax: saleNoTax,
-        calcMode: item.calcMode || 'weight'
+        costRaw: round2(basePrice + 1e-9), costNoTaxRaw: costNoTaxRaw, materialNoTaxRaw: costNoTaxRaw,
+        costTax: round2(basePrice + 1e-9), costNoTax: costNoTaxRaw,
+        edgeType: edgeDisp, boardType: boardType, markup: markup, widthSurcharge: 0, packing: packing,
+        markupDetail: markupDetail ? { group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee || 0, packingFee: markupDetail.packFee || 0, containerFee: markupDetail.containerFee || 0, total: markupDetail.total || markup } : null,
+        saleTax: saleTax, saleNoTax: saleNoTax
       }
     };
   }
@@ -1547,6 +1568,7 @@ const PricingEngine = (() => {
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
     THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500,
     EDGE_FEES, SHEET_MODE_SURFACES,
-    HOT201_MATRIX, HOT201_WIDTHS, HOT201_THICK_MIN, HOT201_THICK_MAX
+    HOT201_MATRIX, HOT201_WIDTHS, HOT201_WIDTHS_FOOT4, HOT201_WIDTHS_FOOT5, HOT201_WIDTHS_NARROW, HOT201_NARROW_ORIGINS, HOT201_NARROW_MARKUP,
+    HOT201_THICK_MIN, HOT201_THICK_MAX
   };
 })();
