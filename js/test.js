@@ -1549,5 +1549,66 @@ test('v1.0.179b normalizeSurface 剥除硕阳括注', () => {
   eq(PricingEngine.normalizeSurface('8K黄钛金(硕阳)'), '8K黄钛金', '硕阳括注剥离');
 });
 
+// === v1.0.180 热轧（NO.1）201：产地矩阵 + 产地一行基价 + 公式 基价×0.92+销售加价（无表面/无厚度加价）===
+test('v1.0.180 用户示例 鼎信201J2/NO.1 5.00*1240*2500 木架 基价6800 → 售价6556', () => {
+  const r = PricingEngine.calculate({ material: '201J2', surface: 'NO.1', thickness: '5.00', width: '1240', length: '2500', origin: '鼎信', basePrice: 6800, packing: '木架', calcMode: 'weight' });
+  eq(r.success, true, 'success: ' + JSON.stringify(r.errors));
+  eq(r.detail.saleNoTax, 6556, '售价(未税)=6800×0.92+300=6556: ' + r.detail.saleNoTax);
+  eq(r.detail.saleTax, 7100, '售价(含税)=6800+300');
+  eq(r.detail.markup, 300, '销售加价300（边部100+木架100+装柜50+损耗50）');
+  eq(r.detail.thickSurcharge, 0, '无厚度加价');
+  eq(r.detail.hot, true, 'hot 标记');
+  eq(r.detail.material, '201J2', '材质归一');
+  eq(r.detail.surface, 'NO.1', '表面 NO.1');
+  eq(r.detail.boardType, 'sheet', '平板');
+});
+test('v1.0.180 热轧 C 卷 1240 毛边 → 销售加价 200（与冷轧卷一致）', () => {
+  const r = PricingEngine.calculate({ material: '201J2', surface: 'NO.1', thickness: '5.0', width: '1240', length: 'C', origin: '鼎信', basePrice: 6800, calcMode: 'weight' });
+  eq(r.success, true, 'success: ' + JSON.stringify(r.errors));
+  eq(r.detail.boardType, 'coil', 'coil');
+  eq(r.detail.markup, 200, '卷板加价200');
+});
+test('v1.0.180 产地×牌号矩阵：北港 J5 可算 / 北港 J2 报错 / 金海报错 / 无产地报错', () => {
+  const ok = PricingEngine.calculate({ material: '201J5', surface: 'NO.1', thickness: '8.0', width: '1530', length: 'C', origin: '北港', basePrice: 6800 });
+  eq(ok.success, true, '北港J5: ' + JSON.stringify(ok.errors));
+  const bad = PricingEngine.calculate({ material: '201J2', surface: 'NO.1', thickness: '5.0', width: '1240', length: 'C', origin: '北港', basePrice: 6800 });
+  eq(bad.success, false, '北港无J2 应报错');
+  eq((bad.errors || []).join('').indexOf('北港') >= 0, true, '错误提示含产地');
+  const jh = PricingEngine.calculate({ material: '201J1', surface: 'NO.1', thickness: '5.0', width: '1240', length: 'C', origin: '金海', basePrice: 6800 });
+  eq(jh.success, false, '金海未开放报错');
+});
+test('v1.0.180 热轧厚度/宽度边界：2.00-12.00 可算，1.5/12.5 报错；宽 1250 报错', () => {
+  const t2 = PricingEngine.calculate({ material: '201J2', surface: 'NO.1', thickness: '2.00', width: '1240', length: 'C', origin: '鼎信', basePrice: 6800 });
+  eq(t2.success, true, '2.00 可算: ' + JSON.stringify(t2.errors));
+  const t12 = PricingEngine.calculate({ material: '201J2', surface: 'NO.1', thickness: '12.00', width: '1240', length: 'C', origin: '鼎信', basePrice: 6800 });
+  eq(t12.success, true, '12.00 可算: ' + JSON.stringify(t12.errors));
+  const t15 = PricingEngine.calculate({ material: '201J2', surface: 'NO.1', thickness: '1.50', width: '1240', length: 'C', origin: '鼎信', basePrice: 6800 });
+  eq(t15.success, false, '1.50 低于 2.00 报错');
+  const t125 = PricingEngine.calculate({ material: '201J2', surface: 'NO.1', thickness: '12.50', width: '1240', length: 'C', origin: '鼎信', basePrice: 6800 });
+  eq(t125.success, false, '12.50 超上限报错');
+  const w1250 = PricingEngine.calculate({ material: '201J2', surface: 'NO.1', thickness: '5.0', width: '1250', length: 'C', origin: '鼎信', basePrice: 6800 });
+  eq(w1250.success, false, '1250 不在热轧宽度报错');
+});
+test('v1.0.180 材质带 /NO.1 写法与独立表面 NO.1 等价', () => {
+  const a = PricingEngine.calculate({ material: '201J2/NO.1', surface: '', thickness: '5.00', width: '1240', length: '2500', origin: '鼎信', basePrice: 6800, packing: '木架' });
+  eq(a.success, true, '/NO.1 写法: ' + JSON.stringify(a.errors));
+  eq(a.detail.saleNoTax, 6556, '/NO.1 写法价一致');
+});
+test('v1.0.180 parseFreeText 识别热轧（三种写法）与 normalizeSurface NO.1', () => {
+  const r1 = PricingEngine.parseFreeText('鼎信201J2/NO.1 5.00*1240*2500 木架', {});
+  eq(r1.origin, '鼎信', '鼎信 origin');
+  eq(r1.surface, 'NO.1', 'surface: ' + r1.surface);
+  eq(r1.material, '201J2', 'material');
+  eq(r1.packing, '木架', 'packing');
+  const r2 = PricingEngine.parseFreeText('北港201J5/NO.1 8.0*1530*C', {});
+  eq(r2.origin, '北港', '北港 origin');
+  eq(r2.surface, 'NO.1', '北港 surface: ' + r2.surface);
+  const r3 = PricingEngine.parseFreeText('永达201J3 NO.1 5.0*1240*C', {});
+  eq(r3.origin, '永达', '永达 origin');
+  eq(r3.surface, 'NO.1', '永达 surface: ' + r3.surface);
+  eq(PricingEngine.normalizeSurface('NO.1'), 'NO.1', 'normalizeSurface(NO.1) 不再误伤成 NO.4');
+  eq(PricingEngine.normalizeSurface('no1'), 'NO.1', 'no1 变体');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

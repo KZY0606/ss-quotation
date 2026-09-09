@@ -7,6 +7,18 @@ const PricingEngine = (() => {
   // v1.0.176：产地名备料（括注剥除用，任何厂家都要能识别；全中文名无需正则转义）
   const _ORIGIN_ALT = ORIGIN_KEYWORDS.join('|');
 
+  // ===== v1.0.180 热轧（NO.1）201 产地/牌号矩阵 =====
+  // 产地→牌号：鼎信 J1-J4 / 北港 J1,J4,J5 / 永达 J3（金海/鑫峰待定未开放）
+  // 毛边宽度 1240/1530；切边宽度 1219/1524/1500；厚度范围 2.00-12.00mm
+  const HOT201_MATRIX = {
+    '鼎信': ['201J1', '201J2', '201J3', '201J4'],
+    '北港': ['201J1', '201J4', '201J5'],
+    '永达': ['201J3']
+  };
+  const HOT201_WIDTHS = [1219, 1240, 1500, 1524, 1530];
+  const HOT201_THICK_MIN = 2.0;
+  const HOT201_THICK_MAX = 12.0;
+
   function round2(v) { return Math.round(v * 100) / 100; }
   function round3(v) { return Math.round(v * 1000) / 1000; }
   function round10(v) { return Math.round(v / 10) * 10; }
@@ -187,6 +199,102 @@ const PricingEngine = (() => {
     return findInTable(THICKNESS_SURCHARGE, t);
   }
 
+  // ===== v1.0.180 热轧（NO.1）201 计算通道 =====
+  // 公式：售价(未税) = 基价×0.92 + 销售加价（与冷轧同一套：卷=边部+包装+装柜；板=边部+木架+装柜+损耗细分）
+  // 热轧无表面加工、无厚度加价；基价为产地一行（不分宽度档）
+  function calcHot201(item, f) {
+    const errors = [];
+    const t = f.thickness, w = f.width;
+    const origin = (item.origin || '').trim();
+    const density = getDensity(f.material);
+    if (!density) errors.push('材质 "' + f.material + '" 无匹配密度');
+    if (!isNaN(t) && (t < HOT201_THICK_MIN || t > HOT201_THICK_MAX)) errors.push('热轧厚度 ' + t + 'mm 不在 2.00-12.00mm 范围');
+    if (!isNaN(w) && HOT201_WIDTHS.indexOf(w) === -1) errors.push('热轧宽度 ' + (item.width || w) + 'mm 仅支持 1219/1240/1500/1524/1530mm');
+    const allowed = HOT201_MATRIX[origin];
+    if (!allowed) errors.push('201 热轧暂不提供产地 "' + origin + '"（仅 鼎信/北港/永达）');
+    else if (allowed.indexOf(f.material) === -1) errors.push(origin + ' 201 热轧暂无 ' + f.material + '（该产地仅提供 ' + allowed.join('/') + '）');
+    const basePrice = parseFloat(item.basePrice);
+    if (isNaN(basePrice) || basePrice <= 0) errors.push('基价无效');
+    if (isNaN(t) || t <= 0) errors.push('厚度无效');
+    if (isNaN(w) || w <= 0) errors.push('宽度无效');
+    const boardType = getBoardType(f.length);
+    const edgeType = getEdgeType(w);
+    if (edgeType === null) errors.push('宽度 ' + w + 'mm 无法判定毛边/齐边');
+    const packingRaw = item.packing != null ? String(item.packing).trim() : '';
+    let packing = null;
+    if (/密封木箱/.test(packingRaw)) packing = '密封木箱';
+    else if (/出口铁架/.test(packingRaw)) packing = '出口铁架';
+    else if (/出口铁箱/.test(packingRaw)) packing = '出口铁箱';
+    else if (/出口木箱|木箱/.test(packingRaw)) packing = '出口木箱';
+    else if (/木架/.test(packingRaw)) packing = '木架';
+    if (boardType === 'sheet') {
+      const L = parseFloat(f.length);
+      const bands = (w === 1500 || w === 1530 || w === 1524) ? SHEET_LENGTH_BANDS_WIDE : SHEET_LENGTH_BANDS;
+      if (!(L >= 0) || !bands.some(b => L >= b.min && L <= b.max)) {
+        const rangeTxt = (w === 1500 || w === 1530 || w === 1524) ? '2100-3055 或 3056-4000' : '2100-2500 或 3000-4000';
+        errors.push('热轧平板长度 ' + f.length + 'mm 不在可计算长度区间（' + rangeTxt + '）');
+      }
+      if (!packing) errors.push('热轧平板必须填写包装方式（木架/出口木箱/密封木箱/出口铁架/出口铁箱）');
+    }
+    if (errors.length > 0) return { success: false, errors };
+    const sqmPerTon = getSquareMetersPerTon(density, t);
+    // 销售加价（与冷轧一致）
+    let markup = SALES_MARKUP[edgeType + '_' + boardType];
+    let markupDetail = null;
+    if (boardType === 'coil') {
+      const coilInfo = getCoilMarkupInfo('201', w);
+      if (coilInfo) { markup = coilInfo.total; markupDetail = coilInfo; }
+    } else {
+      const detailKey = getSheetMarkupKey(f.material, w, f.length);
+      if (detailKey && SHEET_MARKUP_DETAIL[detailKey] != null) {
+        markup = SHEET_MARKUP_DETAIL[detailKey];
+        const rackFee = (packing && SHEET_PACKING_FEES[packing]) ? SHEET_PACKING_FEES[packing] : 100;
+        markupDetail = {
+          group: 'sheet', label: sheetMarkupLabel(detailKey),
+          edgeFee: markup - 200,
+          rackFee: rackFee, packFee: 50, lossFee: 50,
+          total: (markup - 200) + rackFee + 100,
+          rackLabel: packing || '木架'
+        };
+      }
+      if (packing && SHEET_PACKING_FEES[packing] && SHEET_PACKING_FEES[packing] !== 100) markup += SHEET_PACKING_FEES[packing] - 100;
+    }
+    // 热轧售价：基价×0.92 + 销售加价（无表面加工/厚度加价）；金额按用户示例精确到元（round2）
+    const materialNoTaxRaw = round2(basePrice * 0.92 + 1e-9);
+    const saleNoTax = round2(materialNoTaxRaw + markup + 1e-9);
+    const saleTax = round2(basePrice + markup + 1e-9);
+    const costNoTaxRaw = materialNoTaxRaw;
+    const weight = item.weight ? parseFloat(item.weight) : null;
+    const thicknessDisp = (f.thicknessRaw != null && f.thicknessRaw !== '') ? String(f.thicknessRaw) : String(t);
+    return {
+      success: true,
+      hot: true,
+      detail: {
+        hot: true, hotType: '201/NO.1',
+        origin: origin, material: f.material, surface: 'NO.1', normSurface: 'NO.1', thickness: thicknessDisp, width: w,
+        length: String(item.length || '').trim(), weight: weight, film1: '', film2: '', basePrice: basePrice,
+        isYanYan: false, hasLinen: false,
+        density: density, sqmPerTon: round2(sqmPerTon),
+        thickSurcharge: 0, thickTable: '热轧：无厚度加价',
+        surfaceFeeSqm: null, surfaceFeePerTon: 0, colorFeeSqm: 0, colorName: '', colorBaseSqm: null, colorMult: null,
+        linenFeePerTon: 0, embossFees: [], afpFeeSqm: 0, afpPerTon: 0,
+        film1FeeSqm: 0, film1PerTon: 0, film2FeeSqm: 0, film2PerTon: 0,
+        inspectFeeSqm: 0, inspectPerTon: 0,
+        costRaw: round2(basePrice), costNoTaxRaw: costNoTaxRaw, materialNoTaxRaw: materialNoTaxRaw,
+        costTax: round2(basePrice), costNoTax: round2(costNoTaxRaw),
+        edgeType: edgeType, boardType: boardType, markup: markup, widthSurcharge: 0, packing: packing,
+        markupDetail: markupDetail ? {
+          group: markupDetail.group, label: markupDetail.label, edgeFee: markupDetail.edgeFee,
+          packingFee: markupDetail.packingFee != null ? markupDetail.packingFee : (markupDetail.rackFee || 100),
+          rackFee: markupDetail.rackFee != null ? markupDetail.rackFee : markupDetail.packingFee,
+          containerFee: markupDetail.containerFee, total: markupDetail.total, rackLabel: markupDetail.rackLabel
+        } : null,
+        saleTax: saleTax, saleNoTax: saleNoTax,
+        calcMode: item.calcMode || 'weight'
+      }
+    };
+  }
+
   // 用户价格覆盖（由 App 注入，存于 localStorage）
   let userOverrides = null;
   function setUserOverrides(overrides) { userOverrides = overrides; }
@@ -305,6 +413,9 @@ const PricingEngine = (() => {
   function normalizeSurface(raw) {
     if (!raw) return null;
     let s = raw.trim();
+    // v1.0.180 热轧：NO.1（及 no1/no.1/no 1 变体）为热轧表面标记，必须原样保留（模糊匹配会误伤成 NO.4）
+    const _no1u = s.replace(/\s+/g, '').replace(/^\/+/, '').toUpperCase();
+    if (_no1u === 'NO.1' || _no1u === 'NO1') return 'NO.1';
     // v1.0.175/176：剥除产地括注（(宏旺)/（上克）…全/半角括号任意位置，可带 价/加工 字样）——产地标注只是来源说明不参与表面匹配
     s = s.replace(new RegExp('(?:[（(]\\s*(?:' + _ORIGIN_ALT + ')\\s*(?:加工|价)?\\s*[）)]|(?:' + _ORIGIN_ALT + ')价?)', 'g'), '').trim();
     // 2026-08-21：小炉/大炉后缀 S/L（带不带 / 都识别，如 '8K黄钛金(板)/S'、'8K黄钛金(板)S'）
@@ -576,6 +687,17 @@ const PricingEngine = (() => {
     const film2 = normalizeFilm(splitFilm2);
     const basePrice = parseFloat(item.basePrice);
     const isYanYan = !!item.isYanYan || (item.material && /压延/.test(item.material));
+
+    // v1.0.180 热轧（NO.1）短路：材质 201Jx(/NO.1) 或表面列 NO.1 → 热轧独立通道
+    const _mUp = String(material || '').toUpperCase();
+    const _mNo1 = /\/NO\.1$/.test(_mUp);
+    const _mBase = _mNo1 ? _mUp.replace(/\/NO\.1$/, '') : _mUp;
+    const _surfaceUp = String(surface || surfacePart || '').toUpperCase();
+    const _isHot201 = /^201(J[1-5])?$/.test(_mBase) && (_mNo1 || _surfaceUp === 'NO.1' || _surfaceUp === '热轧');
+    if (_isHot201) {
+      const _hotMat = (_mBase === '201') ? '201J2' : _mBase;
+      return calcHot201(item, { material: _hotMat, surface: 'NO.1', thicknessRaw: thicknessRaw, thickness: thickness, width: width, length: length, basePrice: basePrice });
+    }
 
     // 201 系基价宽度档校验（精确值档位；J5 不分宽度，跳过）
     if (isMaterial201(material) && !/^201J5/.test(material)) {
@@ -1190,6 +1312,10 @@ const PricingEngine = (() => {
     // 处理中文逗号和全角符号
     remaining = remaining.replace(/[，,、；;：:]/g, ' ').trim();
 
+    // v1.0.180 热轧标记：材质尾 /NO.1、独立 NO.1/NO1/热轧（剥除标记避免被膜/表面逻辑误抢，末段再按 201 材质回填 surface）
+    const _hotMark = /(^|[\s/])NO\.1(?=$|[\s)）(])|(^|[\s/])NO1(?=$|[\s)）(])|(^|[\s(])热轧(?=$|[\s)）])/i.test(remaining) || /\/NO\.1$/i.test(remaining);
+    remaining = remaining.replace(/(^|[\s/])NO\.1(?=$|[\s)）(])|(^|[\s/])NO1(?=$|[\s)）(])|(^|[\s(])热轧(?=$|[\s)）])/gi, ' ').replace(/\s+/g, ' ').trim();
+
     // 规格支持厚度范围（如 0.55-0.60*1240*2500）
     const specRegex = /(\d+\.?\d*(?:\s*[-~—–]\s*\d+\.?\d*)?)\s*[*×xX]\s*(\d+\.?\d*)\s*[*×xX]\s*(\S+)/;
     const specMatch = remaining.match(specRegex);
@@ -1343,6 +1469,12 @@ const PricingEngine = (() => {
       basePrice = basePriceMap[key] || basePriceMap[material] || 0;
     }
 
+    // v1.0.180：热轧标记 + 201 系列 → 表面归一为 NO.1（热轧）
+    if (_hotMark && /^201(J[1-5])?$/.test(String(material || '').toUpperCase())) {
+      surface = 'NO.1';
+      film1 = ''; film2 = '';
+    }
+
     return {
       origin, material, surface: normalizeSurface(surface) || surface,
       thickness, width, length, film1, film2, basePrice, isYanYan, packing
@@ -1414,6 +1546,7 @@ const PricingEngine = (() => {
     SHEET_PACKING_FEES, SHEET_CONTAINER_FEE,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
     THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500,
-    EDGE_FEES, SHEET_MODE_SURFACES
+    EDGE_FEES, SHEET_MODE_SURFACES,
+    HOT201_MATRIX, HOT201_WIDTHS, HOT201_THICK_MIN, HOT201_THICK_MAX
   };
 })();

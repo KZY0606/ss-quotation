@@ -70,6 +70,9 @@ const App = (() => {
   // 400系基价（按材质+表面）
   let prices400 = {};
   let lockedPrices400 = {};
+  // v1.0.180 热轧（201/NO.1）基价：产地一行一个价（不分宽度档）
+  let hot201Prices = {};
+  let lockedHot201 = {};
   const PRODUCTS_400 = [
     // 410 系列
     { origin: '甬金', material: '410S/BA' },
@@ -128,6 +131,14 @@ const App = (() => {
   }
 
   function getMaterialPrice(origin, material, surface, width, thickness) {
+    // v1.0.180 热轧 201/NO.1：产地一行基价（材质带 /NO.1 或 表面列 NO.1 触发）
+    const _mU = String(material || '').toUpperCase();
+    const _sU = String(surface || '').toUpperCase().replace(/\s+/g, '');
+    const _mBaseU = _mU.replace(/\/NO\.1$/, '');
+    if (/^201(J[1-5])?$/.test(_mBaseU) && (_mU !== _mBaseU || _sU === 'NO.1' || _sU === 'NO1' || _sU === '热轧')) {
+      const hp = hot201Prices[String(origin || '').trim()];
+      return (hp && hp > 0) ? hp : null;
+    }
     // 400系：查独立基价表（按产地+材质），410S/BA 是一个整体材质名
     if (origin && material) {
       const normMat = normalize400Material(material);
@@ -211,6 +222,7 @@ const App = (() => {
     originOrder.forEach(o => { originPrices316L[o] = 0; });
     loadLockedPrices(); // 恢复已锁定的价格（201 + 304 + 316L）
     loadPrices400();    // 恢复400系基价
+    loadHot201();       // v1.0.180 恢复热轧 201/NO.1 基价
     loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
     PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
 
@@ -221,6 +233,7 @@ const App = (() => {
     initExtras();
     bindEvents();
     renderOriginGrid();
+    renderHotBase(); // v1.0.180 热轧基价面板
     renderFilmConfig();
     renderSurfaceConfig();
     renderSheetSurfaceConfig();
@@ -1281,6 +1294,59 @@ const App = (() => {
     });
   }
 
+  // ========== v1.0.180 热轧（201/NO.1）基价面板 ==========
+  function saveHot201() {
+    try {
+      localStorage.setItem('kk_hot201_prices', JSON.stringify(hot201Prices));
+      localStorage.setItem('kk_hot201_locked', JSON.stringify(lockedHot201));
+    } catch (e) { /* ignore */ }
+  }
+  function loadHot201() {
+    try {
+      const a = JSON.parse(localStorage.getItem('kk_hot201_prices') || '{}');
+      hot201Prices = {};
+      for (const [k, v] of Object.entries(a)) { if (v > 0) hot201Prices[k] = v; }
+      const b = JSON.parse(localStorage.getItem('kk_hot201_locked') || '{}');
+      lockedHot201 = {};
+      for (const [k, v] of Object.entries(b)) { if (v) lockedHot201[k] = true; }
+    } catch (e) { hot201Prices = {}; lockedHot201 = {}; }
+  }
+  function renderHotBase() {
+    const area = document.getElementById('hotBaseArea');
+    if (!area) return;
+    const matrix = (PricingEngine.HOT201_MATRIX) || {};
+    const rows = Object.keys(matrix).map(o => ({ origin: o, mats: matrix[o].map(m => m.replace('201', '')).join('/') }));
+    if (!rows.length) return;
+    area.classList.remove('basis-hot-placeholder');
+    area.classList.add('hot201-body');
+    let h = '<div class="hot201-sec-title">201/NO.1 热轧基价（元/吨，产地一行，不分宽度档）</div>';
+    h += '<div class="hot201-note">毛边 1240/1530mm · 切边 1219/1524/1500mm · 厚度 2.00-12.00mm · 边部加价与销售加价同冷轧 · 热轧无表面加工、无厚度加价</div>';
+    rows.forEach(r => {
+      const val = hot201Prices[r.origin] || 0;
+      const locked = !!lockedHot201[r.origin];
+      h += '<div class="origin-row p400-row hot201-row">' +
+        '<span class="oname">' + r.origin + '</span>' +
+        '<span class="p400-mat">' + r.mats + '</span>' +
+        '<div class="oj2"><label>基价</label><input type="number" class="hot201-input" data-origin="' + r.origin + '" value="' + (val || '') + '" step="10" placeholder="未填"></div>' +
+        '<button class="o-lock ' + (locked ? 'locked' : '') + '" data-origin="' + r.origin + '" title="' + (locked ? '解锁' : '锁定') + '">' + (locked ? '🔒' : '🔓') + '</button>' +
+        '</div>';
+    });
+    h += '<div class="hot201-footnote">热轧基价当前仅本机保存（云端发布后续版本提供）；填价后锁定即记忆</div>';
+    area.innerHTML = h;
+    area.querySelectorAll('.hot201-input').forEach(inp => {
+      const save = () => { const v = parseFloat(inp.value); hot201Prices[inp.dataset.origin] = (v > 0) ? v : 0; saveHot201(); };
+      inp.addEventListener('change', save);
+      inp.addEventListener('blur', save);
+    });
+    area.querySelectorAll('.hot201-row .o-lock').forEach(btn => {
+      btn.addEventListener('click', () => {
+        lockedHot201[btn.dataset.origin] = !lockedHot201[btn.dataset.origin];
+        saveHot201();
+        renderHotBase();
+      });
+    });
+  }
+
   // ========== 价格覆盖管理 ==========
   function savePriceOverrides() {
     try { localStorage.setItem('kk_price_overrides', JSON.stringify(priceOverrides)); }
@@ -2234,7 +2300,7 @@ const App = (() => {
         if (item.material && item.material.includes('/') && !item.surface) {
           item.surface = '无';
         }
-        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material, null, parseFloat(item.width), parseFloat(item.thickness)) || 0;
+        item.basePrice = getMaterialPrice(item.origin || '宏旺', item.material, item.surface, parseFloat(item.width), parseFloat(item.thickness)) || 0;
       });
       dataItems = dataItems.concat(items);
       results = [];
@@ -2339,7 +2405,7 @@ const App = (() => {
         originOrder.push(p.origin);
         originPrices[p.origin] = emptyOrigin201();
       }
-      const bp = getMaterialPrice(p.origin || '宏旺', p.material, null, parseFloat(p.width), parseFloat(p.thickness));
+      const bp = getMaterialPrice(p.origin || '宏旺', p.material, p.surface, parseFloat(p.width), parseFloat(p.thickness));
       // v1.0.96：基价无效也入行（计算时给出明确错误，如五尺宽度未提供），不再静默丢弃
       p.basePrice = bp || 0;
       dataItems.push(p);
@@ -2483,7 +2549,7 @@ const App = (() => {
     // Update base prices（模式B：能算的算，算不出的逐行标详细原因，不再整体中止）
     dataItems.forEach(item => {
       const w = parseFloat(item.width);
-      const bp = getMaterialPrice(item.origin || '宏旺', item.material, null, w, parseFloat(item.thickness));
+      const bp = getMaterialPrice(item.origin || '宏旺', item.material, item.surface, w, parseFloat(item.thickness));
       item.basePrice = bp || 0;
       item._bpError = null;
       if (!bp || bp <= 0) {
