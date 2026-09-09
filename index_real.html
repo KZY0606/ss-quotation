@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK不锈钢报价系统</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=1.0.177">
+  <link rel="stylesheet" href="css/style.css?v=1.0.178">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2220%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2224%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text><rect x=%2252%22 y=%2220%22 width=%2228%22 height=%2228%22 rx=%224%22 fill=%22%2334455e%22/><text x=%2256%22 y=%2240%22 font-size=%2224%22 font-weight=%22bold%22 fill=%22white%22>K</text></svg>">
 </head>
 <body>
@@ -62,6 +62,9 @@
 
         <!-- 基价 -->
         <div class="config-panel active" data-config="origins">
+          <div class="basis-panels">
+          <div class="basis-panel basis-cold">
+            <div class="config-section-title basis-title">基价(冷轧)</div>
           <!-- 基价发布栏 v1.0.119：管理员一键发布全员基价 -->
           <div id="pricePublishBar" class="price-publish-bar" style="display:none;">
             <div class="price-publish-info"><span id="publishStatusText">基价同步：加载中…</span></div>
@@ -94,6 +97,14 @@
               <div class="config-section-title" style="width:100%;margin:0 0 4px;">400系列基价</div>
             </div>
           </div>
+          </div>
+          <div class="basis-panel basis-hot">
+            <div class="config-section-title basis-title">基价(热轧)</div>
+            <div id="hotBaseArea" class="basis-hot-placeholder">
+              <div class="basis-hot-hint">热轧系列基价板块（建设中）：待确定热轧的材质、宽度档与计算规则后，在此开放填写热轧基价。<br><b>当前仅支持冷轧系列报价，热轧暂不可计算。</b></div>
+            </div>
+          </div>
+        </div>
         </div>
 
         <!-- 保护膜配置 -->
@@ -295,14 +306,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="js/auth.js?v=1.0.177"></script>
-  <script src="js/changelog.js?v=1.0.178"></script>
-<script src="js/config.js?v=1.0.177"></script>
-  <script src="js/engine.js?v=1.0.177"></script>
-  <script src="js/parser.js?v=1.0.177"></script>
-    <script src="js/contract-template.js?v=1.0.177"></script>
-    <script src="js/quote-template.js?v=1.0.177"></script>
-  <script src="js/app.js?v=1.0.177"></script>
+  <script src="js/auth.js?v=1.0.178"></script>
+  <script src="js/changelog.js?v=1.0.179"></script>
+<script src="js/config.js?v=1.0.178"></script>
+  <script src="js/engine.js?v=1.0.178"></script>
+  <script src="js/parser.js?v=1.0.178"></script>
+    <script src="js/contract-template.js?v=1.0.178"></script>
+    <script src="js/quote-template.js?v=1.0.178"></script>
+  <script src="js/app.js?v=1.0.178"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {

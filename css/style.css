@@ -1115,3 +1115,15 @@ tr.main-row:hover .delete-btn { opacity:1; }
 #publishPriceBtn{background:#2563eb;color:#fff;border:1px solid #2563eb;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer}
 #publishPriceBtn:hover{background:#1d4ed8}
 #publishPriceBtn:disabled{opacity:.6;cursor:not-allowed}
+
+
+/* ===== v1.0.178 基价(冷轧) / 基价(热轧) 双板块 ===== */
+.basis-panels { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start; }
+.basis-cold { min-width:0; }
+.basis-hot { background:var(--primary-bg); border:1px solid var(--border); border-radius:10px; padding:0 0 16px; min-width:0; }
+.basis-title { font-size:15px; font-weight:800; color:var(--primary-dark); padding:10px 14px; margin:0 0 12px; border-left:4px solid var(--steel-4); background:linear-gradient(90deg, rgba(100,116,139,0.14), rgba(100,116,139,0.02) 75%, transparent); border-radius:0 6px 6px 0; }
+.basis-hot .basis-title { border-left-color:#f59e0b; color:#b45309; background:linear-gradient(90deg, rgba(245,158,11,0.16), rgba(245,158,11,0.03) 75%, transparent); }
+.basis-hot-placeholder { margin:0 14px; border:1.5px dashed #fcd34d; border-radius:8px; padding:16px 14px; background:#fffaf0; }
+.basis-hot-hint { font-size:12.5px; color:#92400e; line-height:1.9; }
+.basis-hot-hint b { color:#dc2626; }
+@media (max-width:1280px) { .basis-panels { grid-template-columns:1fr; } }

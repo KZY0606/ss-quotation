@@ -952,12 +952,12 @@ const App = (() => {
       btn._bound = true;
       btn.addEventListener('click', () => {
         const n = countBasePrices();
-        if (!confirm('确认将当前页面基价发布给全体员工？\n（共 ' + n + ' 个有效基价，发布后所有员工打开页面自动生效）')) return;
+        if (!confirm('确认将当前页面基价(冷轧)发布给全体员工？\n（共 ' + n + ' 个有效基价，发布后所有员工打开页面自动生效）')) return;
         btn.disabled = true;
         btn.textContent = '发布中…';
         KKAuth.call('priceTable', { action: 'save', token: (auth && auth.token) || '', prices: collectBasePrices() }).then(r => {
           btn.disabled = false;
-          btn.textContent = '📢 发布当前基价';
+          btn.textContent = '📢 发布当前基价(冷轧)';
           if (r && r.ok) {
             showToast('已发布，全员生效', 'success');
             if (st) st.textContent = '全员基价：' + (r.updatedBy || '') + ' 发布（刚刚）';
@@ -966,7 +966,7 @@ const App = (() => {
           }
         }).catch(() => {
           btn.disabled = false;
-          btn.textContent = '📢 发布当前基价';
+          btn.textContent = '📢 发布当前基价(冷轧)';
           showToast('发布失败：网络错误', 'error');
         });
       });
