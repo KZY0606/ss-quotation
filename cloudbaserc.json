@@ -2,13 +2,87 @@
   "envId": "kk-quotation-d2gtggelpcd901498",
   "functionRoot": "./cloudfunctions",
   "functions": [
-    { "name": "login", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
-    { "name": "verify", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
-    { "name": "logUsage", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
-    { "name": "adminUsers", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
-    { "name": "adminLogs", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
-    { "name": "priceTable", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 15, "memorySize": 256, "installDependency": true },
-    { "name": "init", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 10, "memorySize": 256, "installDependency": true },
-    { "name": "usdRate", "runtime": "Nodejs16.13", "handler": "index.main", "timeout": 20, "memorySize": 256, "installDependency": false, "triggers": [ { "name": "usdRate-http", "type": "http", "config": { "path": "/usdRate", "method": "POST" } } ] }
+    {
+      "name": "login",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 10,
+      "memorySize": 256,
+      "installDependency": true
+    },
+    {
+      "name": "verify",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 10,
+      "memorySize": 256,
+      "installDependency": true
+    },
+    {
+      "name": "logUsage",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 10,
+      "memorySize": 256,
+      "installDependency": true
+    },
+    {
+      "name": "adminUsers",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 10,
+      "memorySize": 256,
+      "installDependency": true
+    },
+    {
+      "name": "adminLogs",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 10,
+      "memorySize": 256,
+      "installDependency": true
+    },
+    {
+      "name": "priceTable",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 15,
+      "memorySize": 256,
+      "installDependency": true
+    },
+    {
+      "name": "init",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 10,
+      "memorySize": 256,
+      "installDependency": true
+    },
+    {
+      "name": "usdRate",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 20,
+      "memorySize": 256,
+      "installDependency": false,
+      "triggers": [
+        {
+          "name": "usdRate-http",
+          "type": "http",
+          "config": {
+            "path": "/usdRate",
+            "method": "POST"
+          }
+        }
+      ]
+    },
+    {
+      "name": "trackingTable",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 20,
+      "memorySize": 256,
+      "installDependency": true
+    }
   ]
 }

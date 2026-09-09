@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>跟单系统 - KK不锈钢</title>
+  <script src="js/auth.js?v=1.0.186"></script>
+  <script src="js/vendor/xlsx.mini.min.js?v=1.0.186"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f4f6f8; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: #1f2937; font-size: 13px; }
+    a { text-decoration: none; }
+    .top { background: linear-gradient(135deg, #1e3a5f, #2c5282); color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+    .top .logo { width: 30px; height: 30px; background: rgba(255,255,255,.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .top h1 { font-size: 17px; flex: 0 0 auto; font-weight: 700; letter-spacing: .5px; }
+    .top .sub { font-size: 11px; opacity: .75; margin-top: 1px; }
+    .top .sp { flex: 1; }
+    .top .user { font-size: 12px; opacity: .9; white-space: nowrap; }
+    .top a.btn, .top button.btn { color: #fff; background: rgba(255,255,255,.15); border: none; border-radius: 7px; padding: 7px 14px; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+    .top a.btn:hover, .top button.btn:hover { background: rgba(255,255,255,.3); }
+    .wrap { max-width: 1760px; margin: 18px auto; padding: 0 14px; }
+    /* 统计条 */
+    .stats { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .stat { background: #fff; border-radius: 10px; padding: 10px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; border: 2px solid transparent; min-width: 130px; }
+    .stat.active { border-color: #2c5282; background: #f0f5fb; }
+    .stat .num { font-size: 22px; font-weight: 700; color: #1e3a5f; }
+    .stat .lbl { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .stat.st-inv .num { color: #047857; }
+    .stat.st-ord .num { color: #c2410c; }
+    /* 工具栏 */
+    .bar { background: #fff; border-radius: 10px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .bar .tabs { display: flex; gap: 6px; }
+    .tabs button { padding: 6px 16px; border: 1px solid #cbd5e0; background: #fff; border-radius: 7px; cursor: pointer; font-size: 13px; }
+    .tabs button.active { background: #2c5282; color: #fff; border-color: #2c5282; }
+    .bar input[type=text] { padding: 7px 12px; border: 1px solid #cbd5e0; border-radius: 7px; font-size: 13px; width: 260px; outline: none; }
+    .bar input[type=text]:focus { border-color: #2c5282; }
+    .bar .sp { flex: 1; }
+    .btn { padding: 7px 16px; border-radius: 7px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 13px; }
+    .btn:hover { background: #f1f5f9; }
+    .btn.primary { background: #2c5282; color: #fff; border-color: #2c5282; }
+    .btn.primary:hover { background: #1e3a5f; }
+    .btn.warn { background: #fff; color: #b91c1c; border-color: #fca5a5; }
+    .btn.warn:hover { background: #fef2f2; }
+    /* 表格 */
+    .tblcard { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: auto; }
+    table.tk { width: 100%; border-collapse: collapse; min-width: 2650px; }
+    table.tk th { background: #f1f5f9; color: #334155; font-size: 12px; font-weight: 700; padding: 8px 8px; border: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; text-align: left; }
+    table.tk td { padding: 7px 8px; border: 1px solid #eef2f6; font-size: 12.5px; white-space: nowrap; }
+    table.tk tr:hover td { background: #f8fafc; }
+    .st { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
+    .st.inv { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .st.ord { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .mini { padding: 3px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; margin-right: 4px; }
+    .mini:hover { background: #f1f5f9; }
+    .mini.go { background: #fff7ed; border-color: #fdba74; color: #c2410c; }
+    .mini.back { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+    .mini.del { background: #fff; border-color: #fca5a5; color: #b91c1c; }
+    .op { white-space: nowrap; }
+    .empty { text-align: center; color: #94a3b8; padding: 40px 0 !important; font-size: 13px; }
+    .num-r { text-align: right; font-variant-numeric: tabular-nums; }
+    /* 弹窗 */
+    .mask { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: flex-start; justify-content: center; z-index: 100; padding: 30px 14px; overflow: auto; }
+    .mask.show { display: flex; }
+    .dlg { background: #fff; border-radius: 12px; width: 960px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+    .dlg-h { padding: 14px 20px; border-bottom: 1px solid #eef2f6; display: flex; align-items: center; }
+    .dlg-h b { font-size: 15px; flex: 1; }
+    .dlg-h .x { border: none; background: none; font-size: 20px; cursor: pointer; color: #64748b; }
+    .dlg-b { padding: 16px 20px; }
+    .dlg-f { padding: 12px 20px; border-top: 1px solid #eef2f6; display: flex; justify-content: flex-end; gap: 8px; }
+    .fgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 12px; }
+    .fg { display: flex; flex-direction: column; gap: 4px; }
+    .fg label { font-size: 11.5px; color: #64748b; font-weight: 600; }
+    .fg label .req { color: #dc2626; }
+    .fg input, .fg select { padding: 7px 9px; border: 1px solid #cbd5e0; border-radius: 7px; font-size: 13px; outline: none; }
+    .fg input:focus, .fg select:focus { border-color: #2c5282; }
+    .fg.full { grid-column: 1 / -1; }
+    .status-pick { display: flex; gap: 8px; }
+    .status-pick button { flex: 0 0 auto; padding: 7px 18px; border-radius: 7px; border: 1.5px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; color: #475569; }
+    .status-pick button.on-inv { border-color: #059669; background: #ecfdf5; color: #047857; }
+    .status-pick button.on-ord { border-color: #ea580c; background: #fff7ed; color: #c2410c; }
+    /* 导入弹窗 */
+    .imp-zone { border: 2px dashed #cbd5e0; border-radius: 10px; padding: 22px; text-align: center; color: #64748b; cursor: pointer; }
+    .imp-zone:hover { border-color: #2c5282; color: #2c5282; }
+    .imp-zone.has { border-style: solid; border-color: #059669; background: #ecfdf5; color: #047857; }
+    .imp-opts { margin-top: 12px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: #475569; }
+    .imp-note { background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 12px; color: #64748b; line-height: 1.7; }
+    .imp-prev { margin-top: 10px; max-height: 260px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+    .imp-prev table { border-collapse: collapse; width: 100%; }
+    .imp-prev th, .imp-prev td { border: 1px solid #eef2f6; padding: 4px 8px; font-size: 11.5px; white-space: nowrap; }
+    .imp-prev th { background: #f1f5f9; }
+    textarea.paste { width: 100%; height: 110px; border: 1px solid #cbd5e0; border-radius: 8px; padding: 8px 10px; font-size: 12px; font-family: Consolas, monospace; margin-top: 10px; outline: none; }
+    /* toast */
+    .toasts { position: fixed; top: 60px; right: 16px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: #1e293b; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: tin .2s ease; }
+    .toast.ok { background: #065f46; }
+    .toast.err { background: #991b1b; }
+    @keyframes tin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+    .loading { text-align: center; color: #94a3b8; padding: 50px 0; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="logo">📋</div>
+    <div>
+      <h1>KK 不锈钢跟单系统</h1>
+      <div class="sub">Tracking System · 生产进度 / 仓储流转 / 库存与接单</div>
+    </div>
+    <div class="sp"></div>
+    <span class="user" id="curUser"></span>
+    <a class="btn" href="index.html">← 报价系统</a>
+    <button class="btn" id="logoutBtn">退出</button>
+  </div>
+
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat active" data-st="">
+        <div class="num" id="nAll">0</div><div class="lbl">全部记录</div>
+      </div>
+      <div class="stat st-inv" data-st="inventory">
+        <div class="num" id="nInv">0</div><div class="lbl">📦 库存</div>
+      </div>
+      <div class="stat st-ord" data-st="ordered">
+        <div class="num" id="nOrd">0</div><div class="lbl">🔥 已接单</div>
+      </div>
+    </div>
+
+    <div class="bar">
+      <div class="tabs" id="stTabs">
+        <button class="active" data-st="">全部</button>
+        <button data-st="inventory">库存</button>
+        <button data-st="ordered">已接单</button>
+      </div>
+      <input type="text" id="kw" placeholder="🔍 搜索：编号 / 合同号 / 供应商 / 钢种 / 仓库…">
+      <div class="sp"></div>
+      <button class="btn primary" id="addBtn">＋ 新增记录</button>
+      <button class="btn" id="impBtn">📥 导入 Excel/CSV</button>
+      <button class="btn" id="expBtn">📤 导出 CSV</button>
+    </div>
+
+    <div class="tblcard">
+      <table class="tk">
+        <thead>
+          <tr>
+            <th style="width:86px">货物状态</th>
+            <th>编号</th>
+            <th>合同号</th>
+            <th>采购日期</th>
+            <th>进仓日期</th>
+            <th>仓库/加工厂</th>
+            <th>钢种</th>
+            <th>表面</th>
+            <th>厚度</th>
+            <th>宽度</th>
+            <th>长度</th>
+            <th>重量</th>
+            <th>卷数/张数</th>
+            <th>原重</th>
+            <th>生产状态</th>
+            <th>类型</th>
+            <th>产地</th>
+            <th>供应商</th>
+            <th class="num-r">单价</th>
+            <th class="num-r">总金额</th>
+            <th class="num-r">销售定价</th>
+            <th>备注</th>
+            <th style="width:190px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"><tr><td colspan="23" class="loading">加载中…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 新增/编辑弹窗 -->
+  <div class="mask" id="editMask">
+    <div class="dlg">
+      <div class="dlg-h"><b id="dlgTitle">新增记录</b><button class="x" id="dlgClose">✕</button></div>
+      <div class="dlg-b">
+        <div class="fg" style="margin-bottom:12px;">
+          <label>货物状态 <span class="req">*</span></label>
+          <div class="status-pick" id="stPick">
+            <button type="button" data-v="inventory">📦 库存</button>
+            <button type="button" data-v="ordered">🔥 已接单</button>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg"><label>编号</label><input id="f_code" placeholder="如 TH240909-01"></div>
+          <div class="fg"><label>合同号</label><input id="f_contractNo"></div>
+          <div class="fg"><label>采购日期</label><input id="f_purchaseDate" placeholder="2026/9/9 或 2026-09-09"></div>
+          <div class="fg"><label>进仓日期</label><input id="f_warehouseDate"></div>
+          <div class="fg"><label>仓库/加工厂</label><input id="f_warehouse" list="dl_warehouse"></div>
+          <div class="fg"><label>钢种</label><input id="f_grade" list="dl_grade" placeholder="201J1 / 304 / 316L…"></div>
+          <div class="fg"><label>表面</label><input id="f_surface" list="dl_surface" placeholder="NO.1 / 2B / 8K…"></div>
+          <div class="fg"><label>厚度 (mm)</label><input id="f_thickness"></div>
+          <div class="fg"><label>宽度 (mm)</label><input id="f_width"></div>
+          <div class="fg"><label>长度</label><input id="f_length" placeholder="C / 2500…"></div>
+          <div class="fg"><label>重量 (吨)</label><input id="f_weight"></div>
+          <div class="fg"><label>卷数/张数</label><input id="f_count"></div>
+          <div class="fg"><label>原重 (吨)</label><input id="f_origWeight"></div>
+          <div class="fg"><label>生产状态</label><input id="f_prodStatus" list="dl_prod" placeholder="未开始/生产中/已完成…"></div>
+          <div class="fg"><label>类型</label><input id="f_type" list="dl_type" placeholder="卷板 / 平板 / 窄带…"></div>
+          <div class="fg"><label>产地</label><input id="f_origin" list="dl_origin" placeholder="鼎信 / 北港 / 永达…"></div>
+          <div class="fg"><label>供应商</label><input id="f_supplier"></div>
+          <div class="fg"><label>单价 (元/吨)</label><input id="f_unitPrice"></div>
+          <div class="fg"><label>总金额 (元)</label><input id="f_totalAmount"></div>
+          <div class="fg"><label>销售定价 (元/吨)</label><input id="f_salePrice"></div>
+          <div class="fg full"><label>备注</label><input id="f_note"></div>
+        </div>
+      </div>
+      <div class="dlg-f">
+        <button class="btn" id="dlgCancel">取消</button>
+        <button class="btn primary" id="dlgSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导入弹窗 -->
+  <div class="mask" id="impMask">
+    <div class="dlg" style="width:1020px">
+      <div class="dlg-h"><b>批量导入（Excel / CSV / 粘贴）</b><button class="x" id="impClose">✕</button></div>
+      <div class="dlg-b">
+        <div class="imp-zone" id="impZone">📄 点击选择文件（.xlsx / .xls / .csv）<br><span style="font-size:11px">或把文件拖到这里</span></div>
+        <input type="file" id="impFile" accept=".xlsx,.xls,.csv" style="display:none">
+        <div class="imp-opts">
+          <label><input type="checkbox" id="impHasHeader" checked> 第一行是表头（自动跳过）</label>
+          <label>默认货物状态：
+            <select id="impDefStatus" style="padding:4px 8px;border:1px solid #cbd5e0;border-radius:6px;">
+              <option value="inventory">📦 库存</option>
+              <option value="ordered">🔥 已接单</option>
+            </select>
+          </label>
+          <span style="color:#94a3b8">若表内含「货物状态」列（值：库存/已接单）则优先使用</span>
+        </div>
+        <textarea class="paste" id="impPaste" placeholder="或直接粘贴 Excel 区域（从 Excel 复制后 Ctrl+V 到这里），列顺序与下方模板一致，用 Tab 或逗号分隔"></textarea>
+        <div class="imp-note" id="impTpl">
+          <b>列模板（按顺序，共 22 列，可缺少尾部列）：</b><br>
+          编号, 合同号, 采购日期, 进仓日期, 仓库/加工厂, 钢种, 表面, 厚度, 宽度, 长度, 重量, 卷数/张数, 原重, 生产状态, 类型, 产地, 供应商, 单价, 总金额, 销售定价, 备注, 货物状态
+        </div>
+        <div class="imp-prev" id="impPrev" style="display:none"></div>
+      </div>
+      <div class="dlg-f">
+        <button class="btn" id="impCancel">取消</button>
+        <button class="btn primary" id="impGo" disabled>确认导入</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <datalist id="dl_warehouse"></datalist>
+  <datalist id="dl_grade"></datalist>
+  <datalist id="dl_surface"></datalist>
+  <datalist id="dl_prod">
+    <option value="未开始"></option>
+    <option value="生产中"></option>
+    <option value="已完成"></option>
+    <option value="已入库"></option>
+    <option value="部分交货"></option>
+    <option value="已交货"></option>
+  </datalist>
+  <datalist id="dl_type">
+    <option value="卷板"></option>
+    <option value="平板"></option>
+    <option value="窄带"></option>
+    <option value="原卷"></option>
+  </datalist>
+  <datalist id="dl_origin">
+    <option value="鼎信"></option><option value="北港"></option><option value="永达"></option>
+    <option value="金海"></option><option value="鑫峰"></option><option value="宏旺"></option>
+    <option value="福欣"></option><option value="张浦"></option><option value="酒钢"></option>
+  </datalist>
+
+  <script src="js/tracking.js?v=1.0.186"></script>
+</body>
+</html>
