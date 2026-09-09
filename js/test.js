@@ -1650,5 +1650,64 @@ test('v1.0.184 parseFreeText 识别窄带产地 金海/鑫峰', () => {
   eq(r2.origin, '鑫峰', '鑫峰 origin');
 });
 
+// === v1.0.187 本地201(压延)：冷轧新产地 + 专属厚度加价表 ===
+test('v1.0.187 本地201(压延) 厚度加价表（0.25-0.26 +1400 … 0.78-3.00 +200）', () => {
+  const cases = [[0.25, 1400], [0.26, 1400], [0.27, 1200], [0.28, 1200], [0.29, 1000], [0.30, 1000], [0.31, 1000], [0.33, 900], [0.37, 900], [0.38, 800], [0.42, 800], [0.43, 700], [0.47, 700], [0.48, 500], [0.57, 500], [0.58, 400], [0.73, 400], [0.74, 300], [0.77, 300], [0.78, 200], [1.50, 200], [3.00, 200]];
+  for (const [t, fee] of cases) {
+    const r = PricingEngine.getThicknessSurcharge(String(t), false, '201J2', '本地201(压延)', '2B');
+    eq(r, fee, t + 'mm → ' + fee + '（实际 ' + r + '）');
+  }
+});
+test('v1.0.187 其他产地 201 不受影响（仍用统一表：0.25→2000）', () => {
+  const r = PricingEngine.getThicknessSurcharge('0.25', false, '201J2', '宏旺', '2B');
+  eq(r, 2000, '宏旺 0.25 → 2000');
+  const r2 = PricingEngine.getThicknessSurcharge('0.25', false, '201J2', '', '2B');
+  eq(r2, 2000, '无产地 0.25 → 2000');
+});
+test('v1.0.187 304/316L 产地表回归（宏旺 304 0.26→1500）', () => {
+  const r = PricingEngine.getThicknessSurcharge('0.26', false, '304', '宏旺', '2B');
+  eq(r, 1500, '宏旺304 0.26 → 1500');
+});
+test('v1.0.187 parseFreeText 识别本地201(压延)产地（全称/本地201/本地；单“压延”仍是轧硬料）', () => {
+  const r1 = PricingEngine.parseFreeText('本地201(压延) 201J3 0.5*1010*C', {});
+  eq(r1.origin, '本地201(压延)', '全称带空格: ' + r1.origin);
+  eq(r1.material, '201J3', 'material');
+  eq(r1.isYanYan, false, '产地里的压延不触发轧硬标志');
+  const r2 = PricingEngine.parseFreeText('本地201(压延)201J3 0.5*1010*C', {});
+  eq(r2.origin, '本地201(压延)', '全称连写: ' + r2.origin);
+  const r3 = PricingEngine.parseFreeText('本地201 201J2 0.5*1010*C', {});
+  eq(r3.origin, '本地201(压延)', '简称本地201: ' + r3.origin);
+  const r4 = PricingEngine.parseFreeText('本地 201J2 0.5*1010*C', {});
+  eq(r4.origin, '本地201(压延)', '简称本地: ' + r4.origin);
+  // '压延'单独出现 = 轧硬料标志（v1.0.187 之前就有的语义，不能被产地破坏）
+  const r5 = PricingEngine.parseFreeText('压延201J2 0.5*1010*C', {});
+  eq(r5.isYanYan, true, '压延料标志保留');
+  eq(r5.origin, '', '压延不归一为产地');
+});
+test('v1.0.187 calculate 本地201(压延) 宽度仅 1219/1240（其他宽度报错）', () => {
+  const base = { material: '201J2', surface: '2B', thickness: '0.25', width: '1240', length: 'C', film1: '', film2: '', basePrice: 6300 };
+  // 1240 可算：基价 6300 + 专属厚度加价 1400（0.25-0.26）→ 含税材料成本 7700
+  const ok = PricingEngine.calculate(Object.assign({}, base, { origin: '本地201(压延)' }));
+  eq(ok.success, true, '1240 应可算: ' + (ok.errors || []).join(';'));
+  eq(ok.detail.costTax, 7700, '含税成本 7700, 实际 ' + ok.detail.costTax);
+  // 1219 可算
+  const ok2 = PricingEngine.calculate(Object.assign({}, base, { origin: '本地201(压延)', width: '1219' }));
+  eq(ok2.success, true, '1219 应可算: ' + (ok2.errors || []).join(';'));
+  // 1010 不可算（专属报错）
+  const bad = PricingEngine.calculate(Object.assign({}, base, { origin: '本地201(压延)', width: '1010' }));
+  eq(bad.success, false, '1010 应报错');
+  eq((bad.errors || []).join(',').indexOf('仅提供 1219/1240') >= 0, true, '报错文案含"仅提供 1219/1240": ' + (bad.errors || []).join(','));
+  // 其他产地 1010 仍走原全局白名单报错（回归）
+  const bad2 = PricingEngine.calculate(Object.assign({}, base, { origin: '宏旺', width: '1010' }));
+  eq(bad2.success, false, '宏旺 1010 仍报错');
+  // 0.80 厚 → 专属 +200
+  const ok3 = PricingEngine.calculate(Object.assign({}, base, { origin: '本地201(压延)', thickness: '0.80' }));
+  eq(ok3.detail.costTax, 6500, '0.80 厚含税 6500, 实际 ' + ok3.detail.costTax);
+});
+test('v1.0.187 calculate 本地201(压延) 非 201J5 之外的材质路径不受影响', () => {
+  const r = PricingEngine.calculate({ material: '304', surface: '2B', thickness: '0.50', width: '1219', length: 'C', film1: '', film2: '', basePrice: 13000, origin: '德龙' });
+  eq(r.success, true, '304 回归: ' + (r.errors || []).join(';'));
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

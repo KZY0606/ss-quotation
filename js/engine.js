@@ -5,7 +5,7 @@
 const PricingEngine = (() => {
 
   // v1.0.176：产地名备料（括注剥除用，任何厂家都要能识别；全中文名无需正则转义）
-  const _ORIGIN_ALT = ORIGIN_KEYWORDS.join('|');
+    const _ORIGIN_ALT = ORIGIN_KEYWORDS.map(function (k) { return k.replace(/[()[\]{}|.*+?^$\\]/g, '\\$&'); }).join('|'); // v1.0.187 产地关键词含括号需转义
 
   // ===== v1.0.180 热轧（NO.1）201 产地/牌号矩阵 =====
   // 产地→牌号：鼎信 J1-J4 / 北港 J1,J4,J5 / 永达 J3（金海/鑫峰待定未开放）
@@ -203,7 +203,10 @@ const PricingEngine = (() => {
     if (material && /^201J5/.test(material)) {
       return findInTable(THICKNESS_SURCHARGE, t);
     }
-    // 201（正材）：暂时不分产地，统一标准
+    // 201：v1.0.187 起支持产地专属厚度加价表（如 本地201(压延)）；未配置的产地仍用统一标准表
+    if (origin && ORIGIN_THICKNESS_SURCHARGE && ORIGIN_THICKNESS_SURCHARGE[origin]) {
+      return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
+    }
     return findInTable(THICKNESS_SURCHARGE, t);
   }
 
@@ -722,6 +725,13 @@ const PricingEngine = (() => {
 
     // 201 系基价宽度档校验（精确值档位；J5 不分宽度，跳过）
     if (isMaterial201(material) && !/^201J5/.test(material)) {
+      // v1.0.187：本地201(压延) 仅提供 1219/1240mm 宽度（单值基价不分档）
+      const _bendiO = (item.origin === '本地201(压延)' || item.origin === '本地201' || item.origin === '本地');
+      if (_bendiO) {
+        if (width !== 1219 && width !== 1240) {
+          errors.push(`本地201(压延) 仅提供 1219/1240mm 宽度（当前 ${isNaN(width) ? (item.width || '?') : width}mm）`);
+        }
+      } else {
       const wb = getWidthBand201(width);
       if (wb === null) {
         errors.push(`宽度 ${isNaN(width) ? (item.width || '?') : width}mm 不在 201 基价档位（1219/1240、1250/1280、1500/1530）`);
@@ -737,6 +747,7 @@ const PricingEngine = (() => {
             errors.push(`厚度 ${isNaN(thickness) ? (item.thickness || '?') : thickness}mm 不在 1500/1530 宽度档 ${material} 的厚度档位内（见基价面板“1500/1530 宽板”版块）`);
           }
         }
+      }
       }
     }
 
@@ -1333,6 +1344,14 @@ const PricingEngine = (() => {
     // 处理中文逗号和全角符号
     remaining = remaining.replace(/[，,、；;：:]/g, ' ').trim();
 
+    // v1.0.187：先摘「本地201(压延)」产地（全称带'压延'二字，须在轧硬料检测之前摘出，避免误触 isYanYan）
+    let _bendiOrigin = false;
+    const _bendiRe = /本地201\s*[(（]?\s*压延\s*[)）]?/;
+    if (_bendiRe.test(remaining)) {
+      _bendiOrigin = true;
+      remaining = remaining.replace(_bendiRe, ' ').replace(/\s+/g, ' ').trim();
+    }
+
     // v1.0.180 热轧标记：材质尾 /NO.1、独立 NO.1/NO1/热轧（剥除标记避免被膜/表面逻辑误抢，末段再按 201 材质回填 surface）
     const _hotMark = /(^|[\s/])NO\.1(?=$|[\s)）(])|(^|[\s/])NO1(?=$|[\s)）(])|(^|[\s(])热轧(?=$|[\s)）])/i.test(remaining) || /\/NO\.1$/i.test(remaining);
     remaining = remaining.replace(/(^|[\s/])NO\.1(?=$|[\s)）(])|(^|[\s/])NO1(?=$|[\s)）(])|(^|[\s(])热轧(?=$|[\s)）])/gi, ' ').replace(/\s+/g, ' ').trim();
@@ -1409,6 +1428,9 @@ const PricingEngine = (() => {
         break;
       }
     }
+    // v1.0.187：本地201(压延) 多写法归一（本地201/本地；全称已在入口摘出；'压延'单独出现仍是轧硬料标志）
+    if (origin === '本地201' || origin === '本地') origin = '本地201(压延)';
+    if (_bendiOrigin) origin = '本地201(压延)';
 
     // 提取保护膜（如果括号里没找到）
     if (!film1) {

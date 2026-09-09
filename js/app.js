@@ -46,6 +46,10 @@ const App = (() => {
   let beigangJ1Locked = false;
   let beigangJ5Price = 0;
   let beigangJ5Locked = false;
+  // v1.0.187 本地201(压延)：J1-J4 单值基价（不分宽度档）
+  const BENDI201_J = ['201J1', '201J2', '201J3', '201J4'];
+  let bendi201Prices = { '201J1': 0, '201J2': 0, '201J3': 0, '201J4': 0 };
+  let bendi201Locked = false;
 
   // 201 基价空结构
   function emptyBandPrices() { return { '201J1': 0, '201J2': 0, '201J3': 0, '201J4': 0 }; }
@@ -193,6 +197,12 @@ const App = (() => {
       if (material === '201J1' && origin === '北港') {
         return (beigangJ1Price > 0) ? beigangJ1Price : null;
       }
+      // v1.0.187 本地201(压延)：J1-J4 单值基价，不分宽度档；'压延' 简称归一
+      if (origin === '本地201(压延)' || origin === '压延') {
+        const bj = (material === '201') ? '201J2' : material;
+        const bp = bendi201Prices[bj];
+        return (bp && bp > 0) ? bp : null;
+      }
       if (origin === '北港') return null; // 北港目前仅 201J1/J5
       const w = parseFloat(width);
       const band = WIDTH_TO_BAND_201[w];
@@ -229,6 +239,7 @@ const App = (() => {
     loadLockedPrices(); // 恢复已锁定的价格（201 + 304 + 316L）
     loadPrices400();    // 恢复400系基价
     loadHot201();       // v1.0.180 恢复热轧 201/NO.1 基价
+    loadBendi201();     // v1.0.187 恢复本地201(压延) 基价
     loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
     PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
 
@@ -643,6 +654,23 @@ const App = (() => {
         saveLockedPrices();
       });
     });
+
+    // v1.0.187 本地201(压延)：J1-J4 单值基价行（紧跟北港行后）
+    const bd = document.createElement('div');
+    bd.className = 'origin-row';
+    bd.innerHTML = `
+      <span class="oname">本地201(压延)</span>
+      ${BENDI201_J.map(j => `<div class="oj2"><label>${j.replace('201', '')}</label><input type="number" data-bendi="${j}" class="origin-j2-input" value="${bendi201Prices[j] > 0 ? bendi201Prices[j] : ''}" step="10" placeholder="未填" ${bendi201Locked ? 'readonly' : ''}></div>`).join('')}
+      <button id="bendi201Lock" class="o-lock ${bendi201Locked ? 'locked' : ''}" title="${bendi201Locked ? '点击解锁' : '点击锁定整行'}">${bendi201Locked ? '🔒' : '🔓'}</button>
+      <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">本地201(压延) J1-J4，仅 1219/1240 宽度；厚度加价走专属表</span>
+    `;
+    els.originRows201.appendChild(bd);
+    bd.querySelectorAll('[data-bendi]').forEach(inp => {
+      inp.addEventListener('input', () => { const v = parseFloat(inp.value); bendi201Prices[inp.dataset.bendi] = (v > 0) ? v : 0; });
+      inp.addEventListener('blur', () => { saveBendi201(); });
+    });
+    const bdLock = bd.querySelector('#bendi201Lock');
+    if (bdLock) bdLock.addEventListener('click', () => { bendi201Locked = !bendi201Locked; saveBendi201(); renderOriginGrid201(); });
   }
 
   function renderOriginGrid304() {
@@ -793,6 +821,7 @@ const App = (() => {
       for (const [o, p] of Object.entries(fiveFootPrices316L)) { if (lockedFiveFoot316L[o]) data316Lff[o] = p; }
       localStorage.setItem('kk_locked_prices_316L_ff', JSON.stringify(data316Lff));
       saveBeigangJ5();
+      saveBendi201();
     } catch (e) { /* ignore */ }
   }
 
@@ -802,6 +831,21 @@ const App = (() => {
 
   function saveBeigangJ5() {
     try { localStorage.setItem('kk_beigang_j5', JSON.stringify({ price: beigangJ5Price, locked: beigangJ5Locked })); } catch (e) { /* ignore */ }
+  }
+
+  // v1.0.187 本地201(压延)
+  function saveBendi201() {
+    try { localStorage.setItem('kk_bendi201', JSON.stringify({ prices: bendi201Prices, locked: bendi201Locked })); } catch (e) { /* ignore */ }
+  }
+  function loadBendi201() {
+    try {
+      const raw = localStorage.getItem('kk_bendi201');
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.prices) BENDI201_J.forEach(j => { if (typeof d.prices[j] === 'number') bendi201Prices[j] = d.prices[j]; });
+        bendi201Locked = !!d.locked;
+      }
+    } catch (e) { /* ignore */ }
   }
 
   function loadLockedPrices() {
@@ -1999,10 +2043,10 @@ const App = (() => {
     // 2026-08-25: 北港 201J1/J5：厚度加价与宏旺 201 正材一致
     h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">北港 201J1/J5：厚度加价与宏旺 201 正材一致');
 
-    // 压延料表
-    h.push('<h4 class="ref-subtitle">本地201(压延）</h4>');
+    // v1.0.187 本地201(压延) 专属厚度加价表
+    h.push('<h4 class="ref-subtitle">本地201(压延)</h4>');
     h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
-    YANYAN_THICKNESS_SURCHARGE.forEach(t => {
+    (ORIGIN_THICKNESS_SURCHARGE['本地201(压延)'] || []).forEach(t => {
       h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
     });
     h.push('</table>');
