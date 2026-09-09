@@ -1329,6 +1329,10 @@ const App = (() => {
       }
     } catch (e) { hot201Prices = {}; lockedHot201 = {}; }
   }
+  function lockBtn(o, oLocked) {
+    return '<button class="o-lock ' + (oLocked ? 'locked' : '') + '" data-key="' + o + '" title="' + (oLocked ? '解锁（该产地全部尺段）' : '锁定整行（该产地四尺/五尺/窄带）') + '">' + (oLocked ? '🔒' : '🔓') + '</button>';
+  }
+
   function renderHotBase() {
     const area = document.getElementById('hot201BaseArea') || document.getElementById('hotBaseArea');
     if (!area) return;
@@ -1339,29 +1343,54 @@ const App = (() => {
     area.classList.remove('basis-hot-placeholder');
     area.classList.add('hot201-body');
     let h = '<div class="hot201-sec-title">201/NO.1 热轧基价（元/吨）</div>';
-    h += '<div class="hot201-note">每个 J 分「四尺(1219/1240)」「五尺(1500/1524/1530)」两个基价，可不同价；报价按宽度自动取对应尺段价。金海/鑫峰为 201 窄带热轧(630-810mm，仅 J3)，无边部费：售价 = 基价×0.92 + 木架包装50 + 装柜50；四尺/五尺：基价×0.92 + 销售加价(同冷轧)。产地行 🔒 锁定整行</div>';
+    h += '<div class="hot201-note">四尺与五尺按组存放、颜色区分，每组内一个产地一行、J 连续排列。报价按宽度自动取组：宽度 ≤1240mm → 四尺价，≥1500mm → 五尺价。金海/鑫峰为 201 窄带热轧(630-810mm 仅 J3)，无边部费：售价 = 基价×0.92 + 木架包装50 + 装柜50；四尺/五尺：基价×0.92 + 销售加价(同冷轧)。🔒 锁定该产地全部尺段价</div>';
     h += '<div class="hot201-rows">';
-    origins.forEach(o => {
-      const isNarrow = narrowOrigins.indexOf(o) !== -1;
-      const oLocked = !!lockedHot201[o];
-      h += '<div class="origin-row hot201-row' + (oLocked ? ' row-locked' : '') + '">' +
-        '<span class="oname" title="' + o + (isNarrow ? '（201 窄带热轧）' : '') + '">' + o + '</span>';
-      matrix[o].forEach(mat => {
-        const jl = mat.replace('201', '');
-        const bands = isNarrow ? [{ ft: 'N', ftl: '窄带', desc: '630/650/690/730/780/810mm' }] : [{ ft: '4', ftl: '四尺', desc: '1219/1240mm' }, { ft: '5', ftl: '五尺', desc: '1500/1524/1530mm' }];
-        bands.forEach(bd => {
-          const key = o + '-' + mat + '-' + bd.ft;
+    const ftGroups = [
+      { ft: '4', name: '四尺基价', wdesc: '宽 1219 / 1240mm 用', cls: 'g4' },
+      { ft: '5', name: '五尺基价', wdesc: '宽 1500 / 1524 / 1530mm 用', cls: 'g5' }
+    ];
+    const footOrigins = origins.filter(o => narrowOrigins.indexOf(o) === -1);
+    const narrowList = narrowOrigins.filter(o => matrix[o]);
+    ftGroups.forEach(g => {
+      h += '<div class="hot201-block ' + g.cls + '">';
+      h += '<div class="hot201-bt"><b>' + g.name + '</b><span>' + g.wdesc + '</span></div>';
+      footOrigins.forEach(o => {
+        const oLocked = !!lockedHot201[o];
+        h += '<div class="origin-row hot201-row' + (oLocked ? ' row-locked' : '') + '">' +
+          '<span class="oname" title="' + o + '">' + o + '</span>';
+        matrix[o].forEach(mat => {
+          const jl = mat.replace('201', '');
+          const key = o + '-' + mat + '-' + g.ft;
           const val = hot201Prices[key] || 0;
           h += '<div class="hot201-cell">' +
             '<span class="hot201-jlabel">' + jl + '</span>' +
-            '<span class="hot201-ft" title="' + bd.desc + '">' + bd.ftl + '</span>' +
             '<input type="number" class="hot201-input" data-key="' + key + '" value="' + (val || '') + '" step="10" placeholder="—"' + (oLocked ? ' disabled' : '') + '>' +
             '</div>';
         });
+        h += lockBtn(o, oLocked) + '</div>';
       });
-      h += '<button class="o-lock ' + (oLocked ? 'locked' : '') + '" data-key="' + o + '" title="' + (oLocked ? '解锁' : '锁定整行') + '">' + (oLocked ? '🔒' : '🔓') + '</button>' +
-        '</div>';
+      h += '</div>';
     });
+    if (narrowList.length) {
+      h += '<div class="hot201-block gn">';
+      h += '<div class="hot201-bt"><b>窄带基价（金海/鑫峰）</b><span>宽 630/650/690/730/780/810mm 共用一个价，无边部费</span></div>';
+      narrowList.forEach(o => {
+        const oLocked = !!lockedHot201[o];
+        h += '<div class="origin-row hot201-row' + (oLocked ? ' row-locked' : '') + '">' +
+          '<span class="oname" title="' + o + '（201 窄带热轧）">' + o + '<em class="hot201-narrow-badge">窄带</em></span>';
+        matrix[o].forEach(mat => {
+          const jl = mat.replace('201', '');
+          const key = o + '-' + mat + '-N';
+          const val = hot201Prices[key] || 0;
+          h += '<div class="hot201-cell">' +
+            '<span class="hot201-jlabel">' + jl + '</span>' +
+            '<input type="number" class="hot201-input" data-key="' + key + '" value="' + (val || '') + '" step="10" placeholder="—"' + (oLocked ? ' disabled' : '') + '>' +
+            '</div>';
+        });
+        h += lockBtn(o, oLocked) + '</div>';
+      });
+      h += '</div>';
+    }
     h += '</div>';
     h += '<div class="hot201-footnote">产地×J：鼎信 J1-J4 · 北港 J1/J4/J5 · 永达 J3 · 金海/鑫峰 J3(窄带 630-810mm)。热轧厚度 2.00-12.00mm；锁定后本机保存，刷新不丢失；云端发布后续版本提供</div>';
     area.innerHTML = h;
@@ -1379,7 +1408,6 @@ const App = (() => {
       });
     });
   }
-
   // ========== 价格覆盖管理 ==========
   function savePriceOverrides() {
     try { localStorage.setItem('kk_price_overrides', JSON.stringify(priceOverrides)); }
