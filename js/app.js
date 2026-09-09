@@ -1314,12 +1314,13 @@ const App = (() => {
         if (k.indexOf('-') === -1 && matrix[k]) { matrix[k].forEach(j => { hot201Prices[k + '-' + j] = v; }); }
         else hot201Prices[k] = v;
       }
+      // v1.0.182：锁定升为产地级（旧 per-J 锁任一命中 → 产地锁）
       const b = JSON.parse(localStorage.getItem('kk_hot201_locked') || '{}');
       lockedHot201 = {};
       for (const [k, v] of Object.entries(b)) {
         if (!v) continue;
-        if (k.indexOf('-') === -1 && matrix[k]) { matrix[k].forEach(j => { lockedHot201[k + '-' + j] = true; }); }
-        else lockedHot201[k] = true;
+        const o = (k.indexOf('-') === -1) ? k : k.split('-')[0];
+        if (o) lockedHot201[o] = true;
       }
     } catch (e) { hot201Prices = {}; lockedHot201 = {}; }
   }
@@ -1331,24 +1332,34 @@ const App = (() => {
     if (!origins.length) return;
     area.classList.remove('basis-hot-placeholder');
     area.classList.add('hot201-body');
+    const jOrder = ['201J1', '201J2', '201J3', '201J4', '201J5'];
     let h = '<div class="hot201-sec-title">201/NO.1 热轧基价（元/吨）</div>';
-    h += '<div class="hot201-note">基价按「产地 - J系列」逐行独立填写；同一产地不同 J 可填不同价。热轧售价 = 基价×0.92 + 销售加价（同冷轧），无表面加工、无厚度加价</div>';
-    h += '<div class="origin-rows hot201-rows">';
+    h += '<div class="hot201-note">一个产地一行，J1/J2/J3… 基价各自独立填写（如 鼎信 J2 填 6800，J1 可另填）。热轧售价 = 基价×0.92 + 销售加价（同冷轧），无表面加工、无厚度加价；产地行 🔒 锁定整行</div>';
+    h += '<div class="hot201-rows">';
     origins.forEach(o => {
-      matrix[o].forEach(mat => {
-        const key = o + '-' + mat;
-        const val = hot201Prices[key] || 0;
-        const locked = !!lockedHot201[key];
-        h += '<div class="origin-row p400-row hot201-row">' +
-          '<span class="oname">' + o + '</span>' +
-          '<span class="hot201-j">' + mat + '</span>' +
-          '<div class="oj2"><label>基价</label><input type="number" class="hot201-input" data-key="' + key + '" value="' + (val || '') + '" step="10" placeholder="未填"></div>' +
-          '<button class="o-lock ' + (locked ? 'locked' : '') + '" data-key="' + key + '" title="' + (locked ? '解锁' : '锁定') + '">' + (locked ? '🔒' : '🔓') + '</button>' +
-          '</div>';
+      const hasJ = {};
+      matrix[o].forEach(mat => { hasJ[mat] = true; });
+      const oLocked = !!lockedHot201[o];
+      h += '<div class="origin-row hot201-row' + (oLocked ? ' row-locked' : '') + '">' +
+        '<span class="oname" title="' + o + '">' + o + '</span>';
+      jOrder.forEach(j => {
+        if (hasJ[j]) {
+          const key = o + '-' + j;
+          const val = hot201Prices[key] || 0;
+          const jl = j.replace('201', '');
+          h += '<div class="hot201-cell">' +
+            '<span class="hot201-jlabel">' + jl + '</span>' +
+            '<input type="number" class="hot201-input" data-key="' + key + '" value="' + (val || '') + '" step="10" placeholder="—"' + (oLocked ? ' disabled' : '') + '>' +
+            '</div>';
+        } else {
+          h += '<div class="hot201-cell hot201-empty">—</div>';
+        }
       });
+      h += '<button class="o-lock ' + (oLocked ? 'locked' : '') + '" data-key="' + o + '" title="' + (oLocked ? '解锁' : '锁定整行') + '">' + (oLocked ? '🔒' : '🔓') + '</button>' +
+        '</div>';
     });
     h += '</div>';
-    h += '<div class="hot201-footnote">产地与 J：鼎信 J1-J4 · 北港 J1/J4/J5 · 永达 J3（金海/鑫峰待后续开放）。填价后点 🔒 锁定即本机保存，刷新不丢失；云端发布后续版本提供</div>';
+    h += '<div class="hot201-footnote">产地与 J：鼎信 J1-J4 · 北港 J1/J4/J5 · 永达 J3（金海/鑫峰待后续开放）；毛边 1240/1530mm、切边 1219/1524/1500mm、厚度 2.00-12.00mm。锁定后本机保存，刷新不丢失；云端发布后续版本提供</div>';
     area.innerHTML = h;
     area.querySelectorAll('.hot201-input').forEach(inp => {
       const save = () => { const v = parseFloat(inp.value); hot201Prices[inp.dataset.key] = (v > 0) ? v : 0; saveHot201(); };
@@ -1357,7 +1368,8 @@ const App = (() => {
     });
     area.querySelectorAll('.hot201-row .o-lock').forEach(btn => {
       btn.addEventListener('click', () => {
-        lockedHot201[btn.dataset.key] = !lockedHot201[btn.dataset.key];
+        const o = btn.dataset.key;
+        lockedHot201[o] = !lockedHot201[o];
         saveHot201();
         renderHotBase();
       });
