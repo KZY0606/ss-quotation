@@ -1135,3 +1135,11 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .hot201-row .oname { min-width:52px; }
 .hot201-row .p400-mat { min-width:120px; color:var(--text-muted); font-size:12px; }
 .hot201-footnote { margin-top:10px; font-size:11px; color:var(--text-muted); line-height:1.6; }
+
+/* ===== v1.0.181 基价(热轧)独立板块：产地×J 逐行独立基价 ===== */
+.hot-basis-title { border-left-color:#f59e0b; color:#b45309; background:linear-gradient(90deg, rgba(245,158,11,0.16), rgba(245,158,11,0.02)); }
+.hot201-rows .hot201-row { background:#fffdf6; }
+.hot201-row .oname { min-width:56px; font-weight:700; }
+.hot201-row .hot201-j { min-width:96px; color:#b45309; font-weight:700; font-size:13px; }
+.hot201-row .oj2 { min-width:150px; }
+@media (max-width:1280px){ .basis-panels { grid-template-columns:1fr; } }

@@ -136,7 +136,9 @@ const App = (() => {
     const _sU = String(surface || '').toUpperCase().replace(/\s+/g, '');
     const _mBaseU = _mU.replace(/\/NO\.1$/, '');
     if (/^201(J[1-5])?$/.test(_mBaseU) && (_mU !== _mBaseU || _sU === 'NO.1' || _sU === 'NO1' || _sU === '热轧')) {
-      const hp = hot201Prices[String(origin || '').trim()];
+      // v1.0.181：基价粒度 = 产地 × J（无 J 后缀按 J2，与冷轧一致）
+      const mJ = (_mBaseU === '201') ? '201J2' : _mBaseU;
+      const hp = hot201Prices[String(origin || '').trim() + '-' + mJ];
       return (hp && hp > 0) ? hp : null;
     }
     // 400系：查独立基价表（按产地+材质），410S/BA 是一个整体材质名
@@ -1302,45 +1304,60 @@ const App = (() => {
     } catch (e) { /* ignore */ }
   }
   function loadHot201() {
+    const matrix = (PricingEngine.HOT201_MATRIX) || {};
     try {
       const a = JSON.parse(localStorage.getItem('kk_hot201_prices') || '{}');
       hot201Prices = {};
-      for (const [k, v] of Object.entries(a)) { if (v > 0) hot201Prices[k] = v; }
+      for (const [k, v] of Object.entries(a)) {
+        if (!(v > 0)) continue;
+        // v1.0.181 迁移：旧版按产地单键（如 '鼎信'）→ 分发给该产地全部 J
+        if (k.indexOf('-') === -1 && matrix[k]) { matrix[k].forEach(j => { hot201Prices[k + '-' + j] = v; }); }
+        else hot201Prices[k] = v;
+      }
       const b = JSON.parse(localStorage.getItem('kk_hot201_locked') || '{}');
       lockedHot201 = {};
-      for (const [k, v] of Object.entries(b)) { if (v) lockedHot201[k] = true; }
+      for (const [k, v] of Object.entries(b)) {
+        if (!v) continue;
+        if (k.indexOf('-') === -1 && matrix[k]) { matrix[k].forEach(j => { lockedHot201[k + '-' + j] = true; }); }
+        else lockedHot201[k] = true;
+      }
     } catch (e) { hot201Prices = {}; lockedHot201 = {}; }
   }
   function renderHotBase() {
-    const area = document.getElementById('hotBaseArea');
+    const area = document.getElementById('hot201BaseArea') || document.getElementById('hotBaseArea');
     if (!area) return;
     const matrix = (PricingEngine.HOT201_MATRIX) || {};
-    const rows = Object.keys(matrix).map(o => ({ origin: o, mats: matrix[o].map(m => m.replace('201', '')).join('/') }));
-    if (!rows.length) return;
+    const origins = Object.keys(matrix);
+    if (!origins.length) return;
     area.classList.remove('basis-hot-placeholder');
     area.classList.add('hot201-body');
-    let h = '<div class="hot201-sec-title">201/NO.1 热轧基价（元/吨，产地一行，不分宽度档）</div>';
-    h += '<div class="hot201-note">毛边 1240/1530mm · 切边 1219/1524/1500mm · 厚度 2.00-12.00mm · 边部加价与销售加价同冷轧 · 热轧无表面加工、无厚度加价</div>';
-    rows.forEach(r => {
-      const val = hot201Prices[r.origin] || 0;
-      const locked = !!lockedHot201[r.origin];
-      h += '<div class="origin-row p400-row hot201-row">' +
-        '<span class="oname">' + r.origin + '</span>' +
-        '<span class="p400-mat">' + r.mats + '</span>' +
-        '<div class="oj2"><label>基价</label><input type="number" class="hot201-input" data-origin="' + r.origin + '" value="' + (val || '') + '" step="10" placeholder="未填"></div>' +
-        '<button class="o-lock ' + (locked ? 'locked' : '') + '" data-origin="' + r.origin + '" title="' + (locked ? '解锁' : '锁定') + '">' + (locked ? '🔒' : '🔓') + '</button>' +
-        '</div>';
+    let h = '<div class="hot201-sec-title">201/NO.1 热轧基价（元/吨）</div>';
+    h += '<div class="hot201-note">基价按「产地 - J系列」逐行独立填写；同一产地不同 J 可填不同价。热轧售价 = 基价×0.92 + 销售加价（同冷轧），无表面加工、无厚度加价</div>';
+    h += '<div class="origin-rows hot201-rows">';
+    origins.forEach(o => {
+      matrix[o].forEach(mat => {
+        const key = o + '-' + mat;
+        const val = hot201Prices[key] || 0;
+        const locked = !!lockedHot201[key];
+        h += '<div class="origin-row p400-row hot201-row">' +
+          '<span class="oname">' + o + '</span>' +
+          '<span class="hot201-j">' + mat + '</span>' +
+          '<div class="oj2"><label>基价</label><input type="number" class="hot201-input" data-key="' + key + '" value="' + (val || '') + '" step="10" placeholder="未填"></div>' +
+          '<button class="o-lock ' + (locked ? 'locked' : '') + '" data-key="' + key + '" title="' + (locked ? '解锁' : '锁定') + '">' + (locked ? '🔒' : '🔓') + '</button>' +
+          '</div>';
+      });
     });
-    h += '<div class="hot201-footnote">热轧基价当前仅本机保存（云端发布后续版本提供）；填价后锁定即记忆</div>';
+    h += '</div>';
+    h += '<div class="hot201-footnote">产地与 J：鼎信 J1-J4 · 北港 J1/J4/J5 · 永达 J3（金海/鑫峰待后续开放）。填价后点 🔒 锁定即本机保存，刷新不丢失；云端发布后续版本提供</div>';
     area.innerHTML = h;
     area.querySelectorAll('.hot201-input').forEach(inp => {
-      const save = () => { const v = parseFloat(inp.value); hot201Prices[inp.dataset.origin] = (v > 0) ? v : 0; saveHot201(); };
+      const save = () => { const v = parseFloat(inp.value); hot201Prices[inp.dataset.key] = (v > 0) ? v : 0; saveHot201(); };
       inp.addEventListener('change', save);
       inp.addEventListener('blur', save);
     });
     area.querySelectorAll('.hot201-row .o-lock').forEach(btn => {
       btn.addEventListener('click', () => {
-        lockedHot201[btn.dataset.origin] = !lockedHot201[btn.dataset.origin];
+        lockedHot201[btn.dataset.key] = !lockedHot201[btn.dataset.key];
         saveHot201();
         renderHotBase();
       });
