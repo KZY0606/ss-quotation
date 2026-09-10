@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>跟单系统 - KK不锈钢</title>
-  <script src="js/auth.js?v=1.0.193"></script>
-  <script src="js/vendor/xlsx.mini.min.js?v=1.0.193"></script>
+  <script src="js/auth.js?v=1.0.194"></script>
+  <script src="js/vendor/xlsx.mini.min.js?v=1.0.194"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #f4f6f8; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: #1f2937; font-size: 13px; }
@@ -19,37 +19,36 @@
     .top a.btn, .top button.btn { color: #fff; background: rgba(255,255,255,.15); border: none; border-radius: 7px; padding: 7px 14px; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
     .top a.btn:hover, .top button.btn:hover { background: rgba(255,255,255,.3); }
     .wrap { max-width: 1760px; margin: 18px auto; padding: 0 14px; }
-    /* 统计条 */
-    .stats { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    /* 板块 + 统计 */
+    .stats { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
     .stat { background: #fff; border-radius: 10px; padding: 10px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; border: 2px solid transparent; min-width: 130px; }
     .stat.active { border-color: #2c5282; background: #f0f5fb; }
     .stat .num { font-size: 22px; font-weight: 700; color: #1e3a5f; }
     .stat .lbl { font-size: 12px; color: #6b7280; margin-top: 2px; }
     .stat.st-inv .num { color: #047857; }
     .stat.st-ord .num { color: #c2410c; }
+    .sumline { background: #fff; border-radius: 10px; padding: 9px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); font-size: 12.5px; color: #475569; margin-bottom: 12px; }
+    .sumline b { color: #1e3a5f; }
     /* 工具栏 */
     .bar { background: #fff; border-radius: 10px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-    .bar .tabs { display: flex; gap: 6px; }
-    .tabs button { padding: 6px 16px; border: 1px solid #cbd5e0; background: #fff; border-radius: 7px; cursor: pointer; font-size: 13px; }
-    .tabs button.active { background: #2c5282; color: #fff; border-color: #2c5282; }
-    .bar input[type=text] { padding: 7px 12px; border: 1px solid #cbd5e0; border-radius: 7px; font-size: 13px; width: 260px; outline: none; }
+    .bar input[type=text] { padding: 7px 12px; border: 1px solid #cbd5e0; border-radius: 7px; font-size: 13px; width: 300px; outline: none; }
     .bar input[type=text]:focus { border-color: #2c5282; }
     .bar .sp { flex: 1; }
     .btn { padding: 7px 16px; border-radius: 7px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 13px; }
     .btn:hover { background: #f1f5f9; }
     .btn.primary { background: #2c5282; color: #fff; border-color: #2c5282; }
     .btn.primary:hover { background: #1e3a5f; }
-    .btn.warn { background: #fff; color: #b91c1c; border-color: #fca5a5; }
-    .btn.warn:hover { background: #fef2f2; }
     /* 表格 */
     .tblcard { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: auto; }
-    table.tk { width: 100%; border-collapse: collapse; min-width: 2650px; }
+    table.tk { border-collapse: collapse; }
     table.tk th { background: #f1f5f9; color: #334155; font-size: 12px; font-weight: 700; padding: 8px 8px; border: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; text-align: left; }
+    table.tk th.num-r { text-align: right; }
+    table.tk th.th-st { width: 132px; }
+    table.tk th.th-op { width: 168px; }
     table.tk td { padding: 7px 8px; border: 1px solid #eef2f6; font-size: 12.5px; white-space: nowrap; }
+    table.tk td.num-r { text-align: right; font-variant-numeric: tabular-nums; }
+    table.tk td.wide { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
     table.tk tr:hover td { background: #f8fafc; }
-    .st { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
-    .st.inv { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-    .st.ord { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
     .mini { padding: 3px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; margin-right: 4px; }
     .mini:hover { background: #f1f5f9; }
     .mini.go { background: #fff7ed; border-color: #fdba74; color: #c2410c; }
@@ -57,11 +56,16 @@
     .mini.del { background: #fff; border-color: #fca5a5; color: #b91c1c; }
     .op { white-space: nowrap; }
     .empty { text-align: center; color: #94a3b8; padding: 40px 0 !important; font-size: 13px; }
-    .num-r { text-align: right; font-variant-numeric: tabular-nums; }
+    /* 状态列（可下拉切换 + 最近变更时间·账号） */
+    .st-cell { min-width: 124px; }
+    .stsel { width: 116px; padding: 4px 6px; border-radius: 6px; font-size: 12px; font-weight: 600; outline: none; cursor: pointer; }
+    .stsel.inv { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .stsel.ord { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .st-log { font-size: 11px; color: #94a3b8; margin-top: 3px; letter-spacing: 0; }
     /* 弹窗 */
     .mask { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: flex-start; justify-content: center; z-index: 100; padding: 30px 14px; overflow: auto; }
     .mask.show { display: flex; }
-    .dlg { background: #fff; border-radius: 12px; width: 960px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+    .dlg { background: #fff; border-radius: 12px; width: 1080px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
     .dlg-h { padding: 14px 20px; border-bottom: 1px solid #eef2f6; display: flex; align-items: center; }
     .dlg-h b { font-size: 15px; flex: 1; }
     .dlg-h .x { border: none; background: none; font-size: 20px; cursor: pointer; color: #64748b; }
@@ -73,11 +77,20 @@
     .fg label .req { color: #dc2626; }
     .fg input, .fg select { padding: 7px 9px; border: 1px solid #cbd5e0; border-radius: 7px; font-size: 13px; outline: none; }
     .fg input:focus, .fg select:focus { border-color: #2c5282; }
-    .fg.full { grid-column: 1 / -1; }
+    .sec-lab { grid-column: 1 / -1; font-size: 11.5px; font-weight: 700; color: #2c5282; letter-spacing: .03em; border-bottom: 1px dashed #dbe3ea; padding-bottom: 4px; margin-top: 2px; }
     .status-pick { display: flex; gap: 8px; }
     .status-pick button { flex: 0 0 auto; padding: 7px 18px; border-radius: 7px; border: 1.5px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; color: #475569; }
     .status-pick button.on-inv { border-color: #059669; background: #ecfdf5; color: #047857; }
     .status-pick button.on-ord { border-color: #ea580c; background: #fff7ed; color: #c2410c; }
+    /* 状态轨迹 */
+    .st-hist { margin-top: 14px; border-top: 1px dashed #d8dee6; padding-top: 10px; }
+    .st-hist .sh-t { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    .st-hist .sh-i { display: flex; gap: 10px; font-size: 12px; color: #475569; padding: 3px 0; border-bottom: 1px dotted #eef2f6; align-items: center; }
+    .st-hist .sh-at { color: #94a3b8; font-family: Consolas, Monaco, monospace; white-space: nowrap; }
+    .st-hist .sh-tag { background: #eef2f7; color: #475569; border-radius: 4px; padding: 1px 7px; font-size: 11px; white-space: nowrap; }
+    .st-hist .sh-w { flex: 1; }
+    .st-hist .sh-by { color: #2c5282; white-space: nowrap; }
+    .st-hist .sh-none { color: #94a3b8; }
     /* 导入弹窗 */
     .imp-zone { border: 2px dashed #cbd5e0; border-radius: 10px; padding: 22px; text-align: center; color: #64748b; cursor: pointer; }
     .imp-zone:hover { border-color: #2c5282; color: #2c5282; }
@@ -103,7 +116,7 @@
     <div class="logo">📋</div>
     <div>
       <h1>KK 不锈钢跟单系统</h1>
-      <div class="sub">Tracking System · 生产进度 / 仓储流转 / 库存与接单</div>
+      <div class="sub">Tracking System · 入仓 / 库存 / 已接单 · 状态留痕</div>
     </div>
     <div class="sp"></div>
     <span class="user" id="curUser"></span>
@@ -113,98 +126,89 @@
 
   <div class="wrap">
     <div class="stats">
-      <div class="stat active" data-st="">
-        <div class="num" id="nAll">0</div><div class="lbl">全部记录</div>
-      </div>
-      <div class="stat st-inv" data-st="inventory">
-        <div class="num" id="nInv">0</div><div class="lbl">📦 库存</div>
+      <div class="stat active" data-st="inventory">
+        <div class="num" id="nInv">0</div><div class="lbl">📦 库存（点击切换板块）</div>
       </div>
       <div class="stat st-ord" data-st="ordered">
         <div class="num" id="nOrd">0</div><div class="lbl">🔥 已接单</div>
       </div>
+      <div class="stat">
+        <div class="num" id="nAll">0</div><div class="lbl">全部记录</div>
+      </div>
     </div>
 
+    <div class="sumline" id="sumLine">加载中…</div>
+
     <div class="bar">
-      <div class="tabs" id="stTabs">
-        <button class="active" data-st="">全部</button>
-        <button data-st="inventory">库存</button>
-        <button data-st="ordered">已接单</button>
-      </div>
-      <input type="text" id="kw" placeholder="🔍 搜索：编号 / 合同号 / 供应商 / 钢种 / 仓库…">
+      <input type="text" id="kw" placeholder="🔍 搜索：编号 / 合同号 / 供应商 / 钢种 / 仓库 / 产地…">
       <div class="sp"></div>
-      <button class="btn primary" id="addBtn">＋ 新增记录</button>
+      <button class="btn primary" id="addBtn">＋ 入仓</button>
       <button class="btn" id="impBtn">📥 导入 Excel/CSV</button>
-      <button class="btn" id="expBtn">📤 导出 CSV</button>
+      <button class="btn" id="expBtn">📤 导出当前板块 CSV</button>
     </div>
 
     <div class="tblcard">
       <table class="tk">
-        <thead>
-          <tr>
-            <th>采购日期</th>
-            <th>进仓日期</th>
-            <th>仓库/加工厂</th>
-            <th>钢种</th>
-            <th>表面</th>
-            <th>厚度</th>
-            <th>宽度</th>
-            <th>长度</th>
-            <th>重量</th>
-            <th>卷数/张数</th>
-            <th>原重</th>
-            <th>生产状态</th>
-            <th>编号</th>
-            <th>合同号</th>
-            <th>备注</th>
-            <th>类型</th>
-            <th>产地</th>
-            <th class="num-r">总金额</th>
-            <th class="num-r">单价</th>
-            <th>供应商</th>
-            <th class="num-r">销售定价</th>
-            <th style="width:118px">货物状态</th>
-            <th style="width:190px">操作</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"><tr><td colspan="23" class="loading">加载中…</td></tr></tbody>
+        <thead id="thead"></thead>
+        <tbody id="tbody"><tr><td class="loading">加载中…</td></tr></tbody>
       </table>
     </div>
   </div>
 
-  <!-- 新增/编辑弹窗 -->
+  <!-- 入仓 / 编辑弹窗 -->
   <div class="mask" id="editMask">
     <div class="dlg">
-      <div class="dlg-h"><b id="dlgTitle">新增记录</b><button class="x" id="dlgClose">✕</button></div>
+      <div class="dlg-h"><b id="dlgTitle">入仓</b><button class="x" id="dlgClose">✕</button></div>
       <div class="dlg-b">
         <div class="fg" style="margin-bottom:12px;">
-          <label>货物状态 <span class="req">*</span></label>
+          <label>入仓类型 <span class="req">*</span>（决定进入哪个板块，两板块列与状态列不同）</label>
           <div class="status-pick" id="stPick">
             <button type="button" data-v="inventory">📦 库存</button>
             <button type="button" data-v="ordered">🔥 已接单</button>
           </div>
         </div>
         <div class="fgrid">
-          <div class="fg"><label>编号</label><input id="f_code" placeholder="如 TH240909-01"></div>
-          <div class="fg"><label>合同号</label><input id="f_contractNo"></div>
-          <div class="fg"><label>采购日期</label><input id="f_purchaseDate" placeholder="2026/9/9 或 2026-09-09"></div>
-          <div class="fg"><label>进仓日期</label><input id="f_warehouseDate"></div>
+          <div class="sec-lab">① 基础信息（按入仓清单顺序）</div>
+          <div class="fg"><label>采购日期</label><input id="f_purchaseDate" placeholder="2026/9/10 或 2026-09-10"></div>
+          <div class="fg"><label>进仓日期</label><input id="f_warehouseDate" placeholder="2026/9/10"></div>
           <div class="fg"><label>仓库/加工厂</label><input id="f_warehouse" list="dl_warehouse"></div>
           <div class="fg"><label>钢种</label><input id="f_grade" list="dl_grade" placeholder="201J1 / 304 / 316L…"></div>
-          <div class="fg"><label>表面</label><input id="f_surface" list="dl_surface" placeholder="NO.1 / 2B / 8K…"></div>
+          <div class="fg"><label>表面</label><input id="f_surface" list="dl_surface" placeholder="2B / NO.1 / 8K…"></div>
           <div class="fg"><label>厚度 (mm)</label><input id="f_thickness"></div>
           <div class="fg"><label>宽度 (mm)</label><input id="f_width"></div>
           <div class="fg"><label>长度</label><input id="f_length" placeholder="C / 2500…"></div>
-          <div class="fg"><label>重量 (吨)</label><input id="f_weight"></div>
-          <div class="fg"><label>卷数/张数</label><input id="f_count"></div>
-          <div class="fg"><label>原重 (吨)</label><input id="f_origWeight"></div>
+          <div class="fg"><label>原重 / KG</label><input id="f_wOrig"></div>
+          <div class="fg"><label>现重 / KG</label><input id="f_wNow"></div>
+          <div class="fg"><label>毛重 / KG</label><input id="f_wGross"></div>
+          <div class="fg"><label>卷数 / 张数</label><input id="f_count"></div>
           <div class="fg"><label>生产状态</label><input id="f_prodStatus" list="dl_prod" placeholder="未开始/生产中/已完成…"></div>
-          <div class="fg"><label>类型</label><input id="f_type" list="dl_type" placeholder="卷板 / 平板 / 窄带…"></div>
-          <div class="fg"><label>产地</label><input id="f_origin" list="dl_origin" placeholder="鼎信 / 北港 / 永达…"></div>
-          <div class="fg"><label>供应商</label><input id="f_supplier"></div>
-          <div class="fg"><label>单价 (元/吨)</label><input id="f_unitPrice"></div>
-          <div class="fg"><label>总金额 (元)</label><input id="f_totalAmount"></div>
-          <div class="fg"><label>销售定价 (元/吨)</label><input id="f_salePrice"></div>
-          <div class="fg full"><label>备注</label><input id="f_note"></div>
+          <div class="fg"><label>编号</label><input id="f_code" placeholder="如 TH240910-01"></div>
+          <div class="fg"><label>合同号</label><input id="f_contractNo"></div>
+          <div class="fg"><label>备注</label><input id="f_note"></div>
+          <div class="fg"><label>类型</label><input id="f_type" list="dl_type" placeholder="正品 / 余卷 / 边带 / 自由边…"></div>
+          <div class="sec-lab">② 价格（可自动算：不含税总金额 = 不含税单价 × 现重/1000）</div>
+          <div class="fg"><label>产地</label><input id="f_origin" list="dl_origin" placeholder="宏旺 / 鼎信 / 北港…"></div>
+          <div class="fg"><label>单价 (含税)</label><input id="f_priceTax"></div>
+          <div class="fg"><label>单价 (不含税)</label><input id="f_priceNotax"></div>
+          <div class="fg"><label>总金额 (含税)</label><input id="f_amountTax"></div>
+          <div class="fg"><label>总金额 (不含税)</label><input id="f_amountNotax"></div>
+          <div class="fg"><label>供应商</label><input id="f_supplier" list="dl_supplier"></div>
+          <div class="fg"><label>销售定价</label><input id="f_salePrice"></div>
+          <div class="fg" id="fgInvExtra" style="display:contents">
+            <div class="fg"><label>负差</label><input id="f_negativeDiff" placeholder="-0 / -0.02…"></div>
+            <div class="fg"><label>实卡厚</label><input id="f_realThickness"></div>
+          </div>
+          <div class="sec-lab">③ 状态（两板块各自独立，改动会记录时间与操作账号）</div>
+          <div class="fg" id="fgInvSt"><label>库存状态</label>
+            <select id="f_invStatus">
+              <option>在库</option><option>已预订</option><option>部分出库</option><option>已售出</option>
+            </select>
+          </div>
+          <div class="fg" id="fgOrdSt" style="display:none"><label>订单状态</label>
+            <select id="f_ordStatus">
+              <option>采购下单</option><option>原料到仓</option><option>投入生产</option><option>加工完成</option><option>发货自提</option><option>已交付</option>
+            </select>
+          </div>
         </div>
         <div class="st-hist" id="stHistory"></div>
       </div>
@@ -217,27 +221,27 @@
 
   <!-- 导入弹窗 -->
   <div class="mask" id="impMask">
-    <div class="dlg" style="width:1020px">
-      <div class="dlg-h"><b>批量导入（Excel / CSV / 粘贴）</b><button class="x" id="impClose">✕</button></div>
+    <div class="dlg" style="width:1060px">
+      <div class="dlg-h"><b>批量入仓（Excel / CSV / 粘贴）</b><button class="x" id="impClose">✕</button></div>
       <div class="dlg-b">
         <div class="imp-zone" id="impZone">📄 点击选择文件（.xlsx / .xls / .csv）<br><span style="font-size:11px">或把文件拖到这里</span></div>
         <input type="file" id="impFile" accept=".xlsx,.xls,.csv" style="display:none">
         <div class="imp-opts">
           <label><input type="checkbox" id="impHasHeader" checked> 第一行是表头（自动跳过）</label>
-          <label>默认货物状态：
+          <label>默认入仓类型：
             <select id="impDefStatus" style="padding:4px 8px;border:1px solid #cbd5e0;border-radius:6px;">
               <option value="inventory">📦 库存</option>
               <option value="ordered">🔥 已接单</option>
             </select>
           </label>
-          <span style="color:#94a3b8">若表内含「货物状态」列（值：库存/已接单）则优先使用</span>
+          <span style="color:#94a3b8">若表内含「入仓类型 / 货物状态」列（值：库存/已接单）则优先使用</span>
         </div>
         <textarea class="paste" id="impPaste" placeholder="或直接粘贴 Excel 区域（从 Excel 复制后 Ctrl+V 到这里），列顺序与下方模板一致，用 Tab 或逗号分隔"></textarea>
-        <div class="imp-note" id="impTpl">
-          <b>列模板（按顺序，共 22 列，可缺少尾部列）：</b><br>
-          采购日期, 进仓日期, 仓库/加工厂, 钢种, 表面, 厚度, 宽度, 长度, 重量, 卷数/张数, 原重, 生产状态, 编号, 合同号, 备注, 类型, 产地, 总金额, 单价, 供应商, 销售定价, 货物状态
+        <div class="imp-note">
+          <b>列模板（按顺序，共 27 列，可缺少尾部列）：</b><br>
+          采购日期, 进仓日期, 仓库/加工厂, 钢种, 表面, 厚度, 宽度, 长度, 原重/KG, 现重/KG, 毛重/KG, 卷数/张数, 生产状态, 编号, 合同号, 备注, 类型, 产地, 单价(含税), 单价(不含税), 总金额(含税), 总金额(不含税), 供应商, 销售定价, 负差, 实卡厚, 入仓类型
         </div>
-        <div class="imp-prev" id="impPrev" style="display:none"></div>
+        <div class="imp-prev" id="impPrev"></div>
       </div>
       <div class="dlg-f">
         <button class="btn" id="impCancel">取消</button>
@@ -246,31 +250,15 @@
     </div>
   </div>
 
-  <div class="toasts" id="toasts"></div>
-
   <datalist id="dl_warehouse"></datalist>
   <datalist id="dl_grade"></datalist>
   <datalist id="dl_surface"></datalist>
-  <datalist id="dl_prod">
-    <option value="未开始"></option>
-    <option value="生产中"></option>
-    <option value="已完成"></option>
-    <option value="已入库"></option>
-    <option value="部分交货"></option>
-    <option value="已交货"></option>
-  </datalist>
-  <datalist id="dl_type">
-    <option value="卷板"></option>
-    <option value="平板"></option>
-    <option value="窄带"></option>
-    <option value="原卷"></option>
-  </datalist>
-  <datalist id="dl_origin">
-    <option value="鼎信"></option><option value="北港"></option><option value="永达"></option>
-    <option value="金海"></option><option value="鑫峰"></option><option value="宏旺"></option>
-    <option value="福欣"></option><option value="张浦"></option><option value="酒钢"></option>
-  </datalist>
+  <datalist id="dl_type"></datalist>
+  <datalist id="dl_origin"></datalist>
+  <datalist id="dl_supplier"></datalist>
+  <datalist id="dl_prod"></datalist>
 
-  <script src="js/tracking.js?v=1.0.193"></script>
+  <div class="toasts" id="toasts"></div>
+  <script src="js/tracking.js?v=1.0.194"></script>
 </body>
 </html>
