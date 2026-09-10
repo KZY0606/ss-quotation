@@ -72,9 +72,9 @@ exports.main = async (event) => {
     }
 
     if (type === 'usage') {
-      // v1.0.131: 排除 admin 记录；同批次（batch_id）合并为一条，items 含明细
-      const r = await exec('SELECT l.username, u.real_name, l.material, l.spec, l.surface, l.calc_mode, l.unit_price, l.batch_id, to_char(l.created_at, \'YYYY-MM-DD HH24:MI:SS\') AS created_at FROM usage_logs l LEFT JOIN users u ON u.username = l.username WHERE l.created_at > now() - interval ' + q(days + ' days') + ' AND (u.role IS NULL OR u.role != \'admin\') ORDER BY l.id DESC LIMIT 500');
-      const rows = rowsToArray(r).map(x => ({ username: x.username, realName: x.real_name, material: x.material, spec: x.spec, surface: x.surface, calcMode: x.calc_mode, unitPrice: x.unit_price === null ? null : Number(x.unit_price), batchId: x.batch_id, createdAt: x.created_at }));
+      // v1.0.191（2026-09-10 用户要求）：报价记录包含管理员（老板自己）的报价；同批次（batch_id）合并为一条，items 含明细
+      const r = await exec('SELECT l.username, u.real_name, u.role, l.material, l.spec, l.surface, l.calc_mode, l.unit_price, l.batch_id, to_char(l.created_at, \'YYYY-MM-DD HH24:MI:SS\') AS created_at FROM usage_logs l LEFT JOIN users u ON u.username = l.username WHERE l.created_at > now() - interval ' + q(days + ' days') + ' ORDER BY l.id DESC LIMIT 500');
+      const rows = rowsToArray(r).map(x => ({ username: x.username, realName: x.real_name, role: x.role, material: x.material, spec: x.spec, surface: x.surface, calcMode: x.calc_mode, unitPrice: x.unit_price === null ? null : Number(x.unit_price), batchId: x.batch_id, createdAt: x.created_at }));
       const groups = [];
       const idx = {};
       for (let i = rows.length - 1; i >= 0; i--) { // 从旧到新，同批次合并
@@ -82,7 +82,7 @@ exports.main = async (event) => {
         const key = (x.batchId && String(x.batchId).trim()) ? String(x.batchId) : ('__single_' + i);
         if (idx[key] === undefined) {
           idx[key] = groups.length;
-          groups.push({ batchId: (x.batchId && String(x.batchId).trim()) || null, username: x.username, realName: x.realName, count: 0, createdAt: x.createdAt, items: [] });
+          groups.push({ batchId: (x.batchId && String(x.batchId).trim()) || null, username: x.username, realName: x.realName, role: x.role, count: 0, createdAt: x.createdAt, items: [] });
         }
         const g = groups[idx[key]];
         g.count++;
