@@ -265,6 +265,21 @@
   .dict-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;min-height:22px}
   .dict-ops{display:flex;gap:8px;margin-top:8px}
   .cellin.auto{background:#fffdf3;border-color:#d6bd6b}
+  /* v1.0.199 入仓板块：录入表格（紧凑、铺满，不留白） */
+  .stat.st-intake .num { color: #b45309; }
+  .stat.st-intake.active { border-color: #f0b429; box-shadow: inset 0 -2px 0 #f0b429; }
+  table.tk.inin { width: 100%; }
+  table.tk.inin td { padding: 1px 2px; border: 1px solid #e8eef3; }
+  table.tk.inin td.in-no { width: 34px; text-align: center; color: #94a3b8; font-size: 11px; background: #f8fafc; padding: 0; }
+  table.tk.inin td .cellin { width: 100%; min-width: 54px; border: 1px solid transparent; background: transparent; padding: 4px 5px; font-size: 12.5px; font-family: inherit; outline: none; border-radius: 0; }
+  table.tk.inin td .cellin::placeholder { color: #cbd5e0; }
+  table.tk.inin td .cellin:hover { border-color: #cbd5e0; }
+  table.tk.inin td .cellin:focus { background: #fffbeb; border-color: #f0b429; }
+  table.tk.inin td.num-r .cellin { text-align: right; }
+  table.tk.inin .cell-dd { display: flex; align-items: center; }
+  table.tk.inin .ddbtn { flex: none; }
+  table.tk.inin tr.inrow:hover td { background: #f8fafc; }
+  table.tk.inin tr.inrow:hover td.in-no { background: #f1f5f9; }
 </style>
 </head>
 <body>
@@ -282,6 +297,9 @@
 
   <div class="wrap">
     <div class="stats">
+      <div class="stat st-intake" data-st="intake">
+        <div class="num" id="nIn">0</div><div class="lbl">📥 入仓</div>
+      </div>
       <div class="stat active" data-st="inventory">
         <div class="num" id="nInv">0</div><div class="lbl">📦 库存</div>
       </div>
@@ -301,6 +319,11 @@
     <div class="bar">
       <input type="text" id="kw" placeholder="🔍 搜索客户 / 跟单员 / 合同号 / 编号 / 钢种 / 仓库，或直接输入重量数字（如 5433）">
       <div class="sp"></div>
+      <div class="grp" id="inGrp" style="display:none">
+        <button class="btn sm" id="inAddBtn" title="在表格末尾追加 10 行">＋ 加 10 行</button>
+        <button class="btn sm" id="inClearBtn" title="清空录入表格（不影响已入库数据）">清空表格</button>
+        <button class="btn primary" id="inGoBtn" title="把表格里填好的行一次性写入库存">📥 一键入仓</button>
+      </div>
       <div class="grp">
         <button class="btn sm" id="myOnlyBtn" title="只看跟单员是我自己的单">👤 只看我的单</button>
         <button class="btn sm" id="procLibBtn" title="维护工序清单">⚙ 工序库</button>
@@ -544,6 +567,6 @@
   <datalist id="dl_follower"></datalist>
 
   <div class="toasts" id="toasts"></div>
-  <script src="js/tracking.js?v=1.0.198"></script>
+  <script src="js/tracking.js?v=1.0.199"></script>
 </body>
 </html>
