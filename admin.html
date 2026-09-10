@@ -360,7 +360,7 @@
               '<div class="log-sub" style="display:none">' + it.items.map(function (x) {
                 return '<div class="log-sub-item">' + fmtTime(x.createdAt) + ' ' + (x.material || '') + ' ' + (x.surface || '') + ' ' + (x.spec || '') +
                   (x.unitPrice ? ' 单价 ' + x.unitPrice + ' 元/吨' : '') + (x.calcMode === 'sheet' ? '（平板）' : '') + '</div>';
-              }).join('') + '</div>';
+              }).join('') + (it.hidden > 0 ? '<div class="log-sub-item" style="color:#98a2b3">… 另有 ' + it.hidden + ' 条（共 ' + it.count + ' 条报价）</div>' : '') + '</div>';
             div.querySelector('.log-toggle').addEventListener('click', function (ev) {
               ev.preventDefault();
               var sub = div.querySelector('.log-sub');

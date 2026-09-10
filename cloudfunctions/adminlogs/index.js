@@ -73,8 +73,18 @@ exports.main = async (event) => {
 
     if (type === 'usage') {
       // v1.0.191（2026-09-10 用户要求）：报价记录包含管理员（老板自己）的报价；同批次（batch_id）合并为一条，items 含明细
-      const r = await exec('SELECT l.username, u.real_name, u.role, l.material, l.spec, l.surface, l.calc_mode, l.unit_price, l.batch_id, to_char(l.created_at, \'YYYY-MM-DD HH24:MI:SS\') AS created_at FROM usage_logs l LEFT JOIN users u ON u.username = l.username WHERE l.created_at > now() - interval ' + q(days + ' days') + ' ORDER BY l.id DESC LIMIT 500');
-      const rows = rowsToArray(r).map(x => ({ username: x.username, realName: x.real_name, role: x.role, material: x.material, spec: x.spec, surface: x.surface, calcMode: x.calc_mode, unitPrice: x.unit_price === null ? null : Number(x.unit_price), batchId: x.batch_id, createdAt: x.created_at }));
+      // v1.0.192（2026-09-10 用户反馈「其他人的报价记录也没有了」）：老写法按**原始记录条数** LIMIT 500，
+      // 而管理员账号常在一次批量报价里产生上百条记录 → 几个大批次就把 500 条额度占满，其他同事的批次被挤出窗口。
+      // 改为**按批次聚合**：先取最近 200 个批次（无 batch_id 的老记录按单条算一个批次），每批最多带 10 条明细，
+      // cnt 为该批真实条数（前端照旧显示「共 N 条报价」），hidden 为未展开的明细条数。
+      const grp = "COALESCE(NULLIF(l.batch_id, ''), 'single-' || l.id)";
+      const usageSql = 'SELECT t.username, u.real_name, u.role, t.material, t.spec, t.surface, t.calc_mode, t.unit_price, t.batch_id, t.cnt, to_char(t.created_at, \'YYYY-MM-DD HH24:MI:SS\') AS created_at FROM ('
+        + 'SELECT l.*, ROW_NUMBER() OVER (PARTITION BY ' + grp + ' ORDER BY l.id DESC) AS rn, COUNT(*) OVER (PARTITION BY ' + grp + ') AS cnt, ' + grp + ' AS gkey FROM usage_logs l'
+        + ' WHERE l.created_at > now() - interval ' + q(days + ' days')
+        + ' AND ' + grp + ' IN (SELECT ' + grp + ' FROM usage_logs WHERE created_at > now() - interval ' + q(days + ' days') + ' GROUP BY ' + grp + ' ORDER BY MAX(id) DESC LIMIT 200)'
+        + ') t LEFT JOIN users u ON u.username = t.username WHERE t.rn <= 10 ORDER BY t.id DESC';
+      const r = await exec(usageSql);
+      const rows = rowsToArray(r).map(x => ({ username: x.username, realName: x.real_name, role: x.role, material: x.material, spec: x.spec, surface: x.surface, calcMode: x.calc_mode, unitPrice: x.unit_price === null ? null : Number(x.unit_price), batchId: x.batch_id, cnt: x.cnt === null || x.cnt === undefined ? null : Number(x.cnt), createdAt: x.created_at }));
       const groups = [];
       const idx = {};
       for (let i = rows.length - 1; i >= 0; i--) { // 从旧到新，同批次合并
@@ -82,7 +92,7 @@ exports.main = async (event) => {
         const key = (x.batchId && String(x.batchId).trim()) ? String(x.batchId) : ('__single_' + i);
         if (idx[key] === undefined) {
           idx[key] = groups.length;
-          groups.push({ batchId: (x.batchId && String(x.batchId).trim()) || null, username: x.username, realName: x.realName, role: x.role, count: 0, createdAt: x.createdAt, items: [] });
+          groups.push({ batchId: (x.batchId && String(x.batchId).trim()) || null, username: x.username, realName: x.realName, role: x.role, count: 0, total: (x.cnt || 0), createdAt: x.createdAt, items: [] });
         }
         const g = groups[idx[key]];
         g.count++;
@@ -90,6 +100,8 @@ exports.main = async (event) => {
       }
       groups.reverse(); // 新批次在前
       groups.forEach(g => { g.items.reverse(); }); // 批内旧→新
+      // v1.0.192：count = 真实条数（来自窗口计数），shown = 实际返回的明细数，hidden = 未展开条数
+      groups.forEach(g => { g.count = g.total || g.count; g.shown = g.items.length; g.hidden = Math.max(0, g.count - g.shown); });
       return { ok: true, groups: groups };
     }
 
