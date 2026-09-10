@@ -16,6 +16,8 @@
   var selId = null;         // 选中行 id
   var picks = {};           // 勾选的行：{ id: true }
   var editId = null;        // 行内编辑中的行 id
+  var editMode = false;     // 整表编辑模式：所有行可逐格编辑
+  var mods = {};            // 未保存改动 { 记录id: { 列key: 新值 } }
   var editingId = null;     // 弹窗编辑的记录 id（null = 新增）
   var editBoard = 'inventory';
   var impRows = null;
@@ -345,14 +347,16 @@
   }
 
   function stSelect(it, c, inline) {
-    var cur = String(it[c.k] || '');
+    var m = inline ? (mods[it.id] || {}) : {};
+    var dirty = m[c.k] != null;
+    var cur = dirty ? String(m[c.k]) : String(it[c.k] || '');
     var lg = stLast(it, c.k);
-    var opts = ['<option value="">—</option>'].concat(c.enum.map(function (v) {
+    var opts = ['<option value="">\u2014</option>'].concat(c.enum.map(function (v) {
       return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>';
     })).join('');
     var attr = inline ? ('data-k="' + c.k + '"') : ('data-act="setf" data-f="' + c.k + '" data-id="' + it.id + '"');
     return '<div class="st-cell">' +
-      '<select class="stsel ' + (c.k === 'inv_status' ? 'inv' : 'ord') + '" ' + attr + '>' + opts + '</select>' +
+      '<select class="stsel ' + (c.k === 'inv_status' ? 'inv' : 'ord') + (dirty ? ' dirty' : '') + '" ' + attr + '>' + opts + '</select>' +
       (lg ? '<div class="st-log" title="' + esc(stTitle(it, c.k)) + '">' + esc(lg) + '</div>' : '') +
       '</div>';
   }
@@ -385,15 +389,39 @@
       (d.tag ? ' <span style="font-size:11px">(' + esc(d.tag) + ')</span>' : '') + '</span></td>';
   }
 
+  function inputHtml(it, k, v) {
+    var m = mods[it.id] || {};
+    var dirty = m[k] != null;
+    return '<input class="cellin' + (dirty ? ' dirty' : '') + '" data-k="' + k + '" value="' + esc(dirty ? m[k] : v) + '">';
+  }
+  function specEditCell(it) {
+    var m = mods[it.id] || {};
+    function one(k, w) {
+      var d = m[k] != null;
+      return '<input class="cellin' + (d ? ' dirty' : '') + '" data-k="' + k + '" value="' + esc(d ? m[k] : (it[k] || '')) + '" style="width:' + w + 'px">';
+    }
+    return '<div class="spec-edit">' + one('thickness', 46) + '<span>\u00d7</span>' + one('width', 52) + '<span>\u00d7</span>' + one('length', 52) + '</div>';
+  }
   function cellHtml(it, c, inline) {
+    var m = mods[it.id] || {};
     if (c.ck) return '<td class="ck"><input type="checkbox" class="ckb rowck" data-id="' + it.id + '"' + (picks[it.id] ? ' checked' : '') + '></td>';
     if (c.st) return '<td>' + stSelect(it, c, inline) + '</td>';
-    if (c.sp === 'proc') return inline ? '<td>' + esc(procCur(it) || '—') + '</td>' : procCell(it);
-    if (c.sp === 'bar') return '<td>' + (inline ? esc(String(procPct(it) == null ? '' : procPct(it) + '%')) : barCell(it).replace(/^<td>|<\/td>$/g, '')) + '</td>';
-    if (c.sp === 'due') return inline ? '<td><input class="cellin" data-k="due_date" value="' + esc(it.due_date || '') + '"></td>' : dueCell(it);
-    if (c.sp === 'spec') return '<td>' + esc(specOf(it)) + '</td>';
+    if (c.sp === 'proc') {
+      if (!inline) return procCell(it);
+      var f = flowOf(it);
+      return '<td><div class="proc-edit-inline">' +
+        (procCur(it) ? '<span class="proc-cur">' + esc(procCur(it)) + '</span>' : '<span class="proc-none">未设工序</span>') +
+        '<button class="proc-edit" data-act="proc" data-id="' + it.id + '">' + (f.length ? '改' : '设工序') + '</button></div></td>';
+    }
+    if (c.sp === 'bar') return '<td class="ro">' + (inline ? esc(procPct(it) == null ? '\u2014' : procPct(it) + '%') : barCell(it).replace(/^<td>|<\/td>$/g, '')) + '</td>';
+    if (c.sp === 'due') {
+      if (!inline) return dueCell(it);
+      var dd = m.due_date != null;
+      return '<td><input type="date" class="cellin' + (dd ? ' dirty' : '') + '" data-k="due_date" value="' + esc(dd ? m.due_date : (it.due_date || '')) + '"></td>';
+    }
+    if (c.sp === 'spec') return inline ? ('<td>' + specEditCell(it) + '</td>') : ('<td>' + esc(specOf(it)) + '</td>');
     var v = val(it, c.k);
-    if (inline) return '<td' + (c.num ? ' class="num-r"' : '') + '><input class="cellin" data-k="' + c.k + '" value="' + esc(v) + '"></td>';
+    if (inline) return '<td' + (c.num ? ' class="num-r"' : '') + '>' + inputHtml(it, c.k, v) + '</td>';
     if (c.wide) return '<td class="wide" title="' + esc(v) + '">' + esc(v) + '</td>';
     if (c.bold) return '<td><b>' + esc(v) + '</b></td>';
     if (c.num) return '<td class="num-r">' + esc(v) + '</td>';
@@ -414,9 +442,9 @@
       return;
     }
     tb.innerHTML = rows.map(function (it) {
-      var inline = String(it.id) === String(editId);
+      var inline = editMode;
       var tds = cols.map(function (c) { return cellHtml(it, c, inline); }).join('');
-      var cls = (String(it.id) === String(selId) ? 'sel ' : '') + (inline ? 'editing ' : '') + (picks[it.id] ? 'picked' : '');
+      var cls = (String(it.id) === String(selId) ? 'sel ' : '') + (editMode ? 'editing ' : '') + (picks[it.id] ? 'picked' : '');
       return '<tr data-id="' + it.id + '" class="' + cls.trim() + '">' + tds + '</tr>';
     }).join('');
     var ca = $('ckAll');
@@ -428,11 +456,15 @@
 
   function syncBar() {
     var sel = selId != null ? items.find(function (x) { return String(x.id) === String(selId); }) : null;
-    var editing = editId != null;
+    var editing = editMode;
+    var nMod = modCount();
     $('rowEditBtn').style.display = editing ? 'none' : '';
     $('rowSaveBtn').style.display = editing ? '' : 'none';
     $('rowCancelBtn').style.display = editing ? '' : 'none';
-    $('rowEditBtn').disabled = !sel || editing;
+    $('rowEditBtn').disabled = editing;
+    $('rowSaveBtn').disabled = !nMod;
+    $('rowSaveBtn').textContent = nMod ? ('\ud83d\udcbe 保存全部（' + nMod + '）') : '\ud83d\udcbe 保存全部';
+    $('rowCancelBtn').textContent = nMod ? ('取消编辑（' + nMod + '）') : '取消编辑';
     $('rowAdvBtn').style.display = (board === 'ordered' && !editing) ? '' : 'none';
     $('rowAdvBtn').disabled = !sel || editing || !(sel && nextOrd(sel));
     $('rowProcBtn').style.display = ((board === 'ordered' || board === 'progress') && !editing) ? '' : 'none';
@@ -442,13 +474,14 @@
     $('rowBackBtn').textContent = (board === 'inventory') ? '转生产中' : '转库存';
     $('myOnlyBtn').className = 'btn sm' + (myOnly ? ' on' : '');
     var f = filterCount();
-    $('selHint').textContent = editing ? ('正在编辑 #' + editId + '，改完整行后点保存')
+    $('selHint').className = 'hint' + (editing ? ' hot' : '');
+    $('selHint').textContent = editing
+      ? ('编辑模式 · 已改 ' + nMod + ' 处 / ' + modRowCount() + ' 条 · 回车或点「保存全部」提交，Esc 取消')
       : sel ? ('已选中 #' + sel.id + (sel.code ? ' · ' + sel.code : ''))
         : (f ? ('筛选中：' + f + ' 列') : '未选中行');
-    // 批量条
     var pids = Object.keys(picks).filter(function (k) { return picks[k]; });
     $('batchCnt').textContent = '已选 ' + pids.length + ' 条';
-    $('batchBar').className = 'batch' + (pids.length ? ' show' : '');
+    $('batchBar').className = 'batch' + (!editing && pids.length ? ' show' : '');
     $('batchOrdBtn').disabled = !pids.length;
     $('batchInvBtn').disabled = !pids.length;
     $('batchDelBtn').disabled = !pids.length;
@@ -613,6 +646,7 @@
       items = r.items || [];
       if (selId != null && !items.some(function (x) { return String(x.id) === String(selId); })) selId = null;
       if (editId != null && !items.some(function (x) { return String(x.id) === String(editId); })) editId = null;
+    if (!editMode) mods = {};
       Object.keys(picks).forEach(function (k) { if (!items.some(function (x) { return String(x.id) === String(k); })) delete picks[k]; });
       refreshDatalists();
       render();
@@ -742,49 +776,76 @@
     if (p > 0 && kg > 0) amountEl.value = (p * kg / 1000).toFixed(2);
   }
 
-  // ---------- 行内编辑（一键编辑整行）----------
+  // ---------- 编辑模式（整表逐格编辑，最后统一保存）----------
+  var K2DB = { w_orig: 'weight_orig', w_now: 'weight_now', w_gross: 'weight_gross' };
+  function modCount() {
+    var n = 0;
+    Object.keys(mods).forEach(function (id) { n += Object.keys(mods[id]).length; });
+    return n;
+  }
+  function modRowCount() {
+    return Object.keys(mods).filter(function (id) { return Object.keys(mods[id]).length; }).length;
+  }
   function startRowEdit() {
-    if (selId == null) { toast('请先在表格里点一行选中', false); return; }
-    editId = selId;
+    if (editMode) return;
+    editMode = true;
+    mods = {};
     render();
-    var tr = document.querySelector('#tbody tr[data-id="' + editId + '"]');
-    if (tr) tr.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    toast('已进入整行编辑，改完点「保存」');
+    toast('编辑模式：点任意格子直接改，改完点「保存全部」（回车保存 / Esc 取消）');
   }
-  async function saveRowEdit() {
-    var it = items.find(function (x) { return String(x.id) === String(editId); });
-    if (!it) { toast('记录已被刷新，请重试', false); return; }
-    var send = { id: it.id, status: it.status };
-    Object.keys(it).forEach(function (k) {
-      if (['id', 'status_log', 'created_at', 'updated_at', 'created_by'].indexOf(k) >= 0) return;
-      if (k === 'status' || k === 'inv_status' || k === 'ord_status') return;
-      send[k] = it[k];
+  // 逐格改动记入 mods（未保存），并高亮该格
+  function onCellEdit(e) {
+    var el = e.target;
+    if (!editMode || !el || !el.dataset) return;
+    var isIn = !!(el.classList && el.classList.contains('cellin'));
+    var isSel = !!(el.classList && el.classList.contains('stsel') && el.dataset.k);
+    if (!isIn && !isSel) return;
+    var tr = el.closest ? el.closest('tr') : null;
+    if (!tr || !tr.dataset.id) return;
+    var id = tr.dataset.id, k = el.dataset.k;
+    if (!k) return;
+    var it = items.find(function (x) { return String(x.id) === String(id); });
+    var ov = it ? val(it, k) : '';
+    var orig = String(ov == null ? '' : ov).trim();
+    var v = String(el.value == null ? '' : el.value).trim();
+    mods[id] = mods[id] || {};
+    if (v === orig) delete mods[id][k]; else mods[id][k] = v;
+    if (!Object.keys(mods[id]).length) delete mods[id];
+    var dirty = !!(mods[id] && mods[id][k] != null);
+    if (el.classList) { if (dirty) el.classList.add('dirty'); else el.classList.remove('dirty'); }
+    var td = el.closest ? el.closest('td') : null;
+    if (td) { if (dirty) td.classList.add('dirty-td'); else td.classList.remove('dirty-td'); }
+    syncBar();
+  }
+  // 统一保存：每条记录只提交自己改动过的字段（各条可以不同）
+  async function saveAllEdits() {
+    var ids = Object.keys(mods).filter(function (id) { return Object.keys(mods[id]).length; });
+    if (!ids.length) { toast('没有改动'); return; }
+    var payload = ids.map(function (id) {
+      var f = {};
+      Object.keys(mods[id]).forEach(function (k) {
+        var v = mods[id][k];
+        if (k === 'purchase_date' || k === 'warehouse_date' || k === 'due_date') v = normDate(v);
+        f[K2DB[k] || k] = v;
+      });
+      return { id: parseInt(id, 10), fields: f };
     });
-    if (it.status === 'inventory') { send.contractNo = ''; send.note = ''; send.salePrice = ''; }
-    var changed = 0;
-    var K2DB = { w_orig: 'weight_orig', w_now: 'weight_now', w_gross: 'weight_gross' };
-    Array.prototype.forEach.call(document.querySelectorAll('#tbody tr.editing .cellin'), function (el) {
-      var k = el.dataset.k, v = el.value.trim();
-      if (String(val(it, k)) !== v) changed++;
-      send[K2DB[k] || k] = v;
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('#tbody tr.editing select[data-k]'), function (el) {
-      var k = el.dataset.k, v = el.value;
-      if (String(it[k] || '') !== v) changed++;
-      send[K2DB[k] || k] = v;
-    });
-    send.purchaseDate = normDate(send.purchase_date || '');
-    send.warehouseDate = normDate(send.warehouse_date || '');
-    send.dueDate = normDate(send.due_date || '');
-    if (!changed) { toast('没有改动'); editId = null; render(); return; }
+    var n = modCount();
+    $('rowSaveBtn').disabled = true;
     try {
-      await api({ action: 'save', item: send });
-      editId = null;
-      toast('已保存');
+      var r = await api({ action: 'batchsave', items: payload });
+      mods = {}; editMode = false; selId = null;
+      toast('已保存 ' + r.updated + ' 条记录、共 ' + (r.cells || n) + ' 处改动');
       await load();
-    } catch (e) { toast(e.message, false); }
+    } catch (e) { toast(e.message, false); $('rowSaveBtn').disabled = false; }
   }
-  function cancelRowEdit() { editId = null; render(); toast('已取消编辑'); }
+  function cancelEditMode() {
+    var n = modCount();
+    if (n && !confirm('放弃 ' + n + ' 处未保存的改动？')) return;
+    mods = {}; editMode = false;
+    render();
+    toast(n ? ('已放弃 ' + n + ' 处改动') : '已退出编辑');
+  }
 
   // ---------- 单行动作 ----------
   async function doAdvance() {
@@ -856,58 +917,7 @@
       await load();
     } catch (e) { toast(e.message, false); }
   }
-  var BATCH_FIELDS = [
-    { c: 'customer', t: '客户名称' },
-    { c: 'follower', t: '跟单员' },
-    { c: 'due_date', t: '预期交期' },
-    { c: 'contract_no', t: '合同编号' },
-    { c: 'warehouse', t: '仓库/加工厂' },
-    { c: 'prod_status', t: '生产状态' },
-    { c: 'origin', t: '产地' },
-    { c: 'supplier', t: '供应商' },
-    { c: 'note', t: '备注' },
-    { c: 'ord_status', t: '订单状态', opts: ENUM_ORD },
-    { c: 'inv_status', t: '库存状态', opts: ENUM_INV },
-    { c: 'status', t: '所属板块', opts: [{ v: 'inventory', t: '库存' }, { v: 'ordered', t: '生产中' }] }
-  ];
-  function openBatchEdit() {
-    var ids = pickIds();
-    if (!ids.length) return;
-    $('batchNote').innerHTML = '正在批量编辑 <b>' + ids.length + '</b> 条记录。勾选要改的字段并填值，<b>未勾选的字段保持原值不变</b>。状态类字段（订单状态/库存状态/板块）的改动会记录时间与操作账号。';
-    $('batchFields').innerHTML = BATCH_FIELDS.map(function (f, i) {
-      var inp = f.opts
-        ? '<select id="bf_' + f.c + '" disabled><option value="">（不修改）</option>' + f.opts.map(function (o) {
-          var v = (typeof o === 'string') ? o : o.v, t = (typeof o === 'string') ? o : o.t;
-          return '<option value="' + esc(v) + '">' + esc(t) + '</option>';
-        }).join('') + '</select>'
-        : '<input id="bf_' + f.c + '" disabled placeholder="填写新值">';
-      return '<div class="bf"><input type="checkbox" class="ckb" data-bf="' + f.c + '"><label>' + esc(f.t) + '</label>' + inp + '</div>';
-    }).join('');
-    $('batchMask').classList.add('show');
-  }
-  async function saveBatchEdit() {
-    var ids = pickIds();
-    if (!ids.length) return;
-    var fields = {};
-    Array.prototype.forEach.call($('batchFields').querySelectorAll('input[data-bf]'), function (cb) {
-      if (!cb.checked) return;
-      var c = cb.dataset.bf;
-      var el = $('bf_' + c);
-      if (!el) return;
-      var v = String(el.value || '').trim();
-      if (v === '') return;
-      fields[c] = (c === 'due_date') ? normDate(v) : v;
-    });
-    var cols = Object.keys(fields);
-    if (!cols.length) { toast('请勾选要修改的字段并填写新值', false); return; }
-    try {
-      var r = await api({ action: 'batchset', ids: ids, fields: fields });
-      $('batchMask').classList.remove('show');
-      toast('已批量更新 ' + r.updated + ' 条（字段：' + cols.join('、') + '）');
-      picks = {};
-      await load();
-    } catch (e) { toast(e.message, false); }
-  }
+  // （v1.0.197 起批量改值弹窗取消，改为整表逐格编辑）
 
   // ---------- 工序编辑 ----------
   function openProc(ids) {
@@ -1231,7 +1241,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (el) {
       if (!el.dataset.st) return;
       el.addEventListener('click', function () {
-        if (editId != null) { toast('请先保存或取消整行编辑', false); return; }
+        if (editMode) { toast('请先点「保存全部」或「取消编辑」', false); return; }
         board = el.dataset.st || 'inventory';
         selId = null;
         colF = {}; sortKey = ''; sortDir = '';
@@ -1259,8 +1269,8 @@
     });
     // 单行工具
     $('rowEditBtn').addEventListener('click', startRowEdit);
-    $('rowSaveBtn').addEventListener('click', saveRowEdit);
-    $('rowCancelBtn').addEventListener('click', cancelRowEdit);
+    $('rowSaveBtn').addEventListener('click', saveAllEdits);
+    $('rowCancelBtn').addEventListener('click', cancelEditMode);
     $('rowAdvBtn').addEventListener('click', doAdvance);
     $('rowProcBtn').addEventListener('click', function () { if (selId != null) openProc([selId]); });
     $('rowBackBtn').addEventListener('click', doSwitchBoard);
@@ -1274,7 +1284,6 @@
     });
     $('procLibBtn').addEventListener('click', openLib);
     // 批量
-    $('batchEditBtn').addEventListener('click', openBatchEdit);
     $('batchProcBtn').addEventListener('click', function () { openProc(pickIds()); });
     $('batchOrdBtn').addEventListener('click', function () { batchBoard('ordered'); });
     $('batchInvBtn').addEventListener('click', function () { batchBoard('inventory'); });
@@ -1313,7 +1322,7 @@
         if (act === 'nextproc') { doNextProc(pid); return; }
         if (act === 'proc') { selId = pid; openProc([pid]); return; }
       }
-      if (editId != null) return;
+      if (editMode) return;
       var tr = e.target.closest('tr');
       if (!tr || !tr.dataset.id) return;
       selId = parseInt(tr.dataset.id, 10);
@@ -1333,14 +1342,16 @@
       visibleRows().forEach(function (r) { if (on) picks[r.id] = true; else delete picks[r.id]; });
       render();
     });
+    $('tbody').addEventListener('input', onCellEdit);
     $('tbody').addEventListener('dblclick', function (e) {
       var tr = e.target.closest('tr');
       if (!tr || !tr.dataset.id) return;
-      if (editId != null) return;
+      if (editMode) return;
       selId = parseInt(tr.dataset.id, 10);
       startRowEdit();
     });
     $('tbody').addEventListener('change', async function (e) {
+      if (editMode && e.target.closest && e.target.closest('select.stsel[data-k]')) { onCellEdit(e); return; }
       var sel = e.target.closest('select[data-act="setf"]');
       if (!sel) return;
       try {
@@ -1350,8 +1361,8 @@
       } catch (err) { toast(err.message, false); await load(); }
     });
     $('tbody').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('cellin')) { e.preventDefault(); saveRowEdit(); }
-      if (e.key === 'Escape' && e.target.classList && e.target.classList.contains('cellin')) { e.preventDefault(); cancelRowEdit(); }
+      if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('cellin')) { e.preventDefault(); saveAllEdits(); }
+      if (e.key === 'Escape' && editMode) { e.preventDefault(); cancelEditMode(); }
     });
     // 筛选面板
     $('fPanel').addEventListener('click', function (e) {
@@ -1414,17 +1425,6 @@
     $('libCancel').addEventListener('click', function () { $('libMask').classList.remove('show'); });
     $('libMask').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
     $('libSave').addEventListener('click', saveLib);
-    // 批量编辑
-    $('batchClose').addEventListener('click', function () { $('batchMask').classList.remove('show'); });
-    $('batchCancel').addEventListener('click', function () { $('batchMask').classList.remove('show'); });
-    $('batchMask').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
-    $('batchFields').addEventListener('change', function (e) {
-      var cb = e.target.closest('input[data-bf]');
-      if (!cb) return;
-      var el = $('bf_' + cb.dataset.bf);
-      if (el) el.disabled = !cb.checked;
-    });
-    $('batchSave').addEventListener('click', saveBatchEdit);
     // 导入
     $('impBtn').addEventListener('click', openImp);
     $('impClose').addEventListener('click', function () { $('impMask').classList.remove('show'); });

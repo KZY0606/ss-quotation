@@ -220,7 +220,19 @@
     .toast.err { background: #991b1b; }
     @keyframes tin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
     .loading { text-align: center; color: #94a3b8; padding: 50px 0; }
-  </style>
+    /* v1.0.197 整表编辑模式 */
+  .tk tr.editing td { background: #fbfdfe; }
+  .tk tr.editing td.dirty-td { background: #fffaf0; }
+  .cellin.dirty { background: #fff7db; border-color: #e0a800; }
+  .stsel.dirty { background: #fff7db !important; border-color: #e0a800 !important; }
+  td.ro { color: #78838c; font-size: 12.5px; }
+  .spec-edit { display: flex; align-items: center; gap: 3px; }
+  .spec-edit input { min-width: 0; padding: 4px 4px; border: 1px solid #93c5fd; border-radius: 5px; font-size: 12.5px; outline: none; background: #fff; }
+  .spec-edit input.dirty { background: #fff7db; border-color: #e0a800; }
+  .spec-edit span { color: #9aa4ac; font-size: 12px; }
+  .proc-edit-inline { display: flex; align-items: center; gap: 5px; }
+  .hint.hot { color: #b45309; font-weight: 600; }
+</style>
 </head>
 <body>
   <div class="top">
@@ -262,9 +274,9 @@
       </div>
       <div class="grp">
         <span class="hint" id="selHint">未选中行</span>
-        <button class="btn edit" id="rowEditBtn" disabled>编辑</button>
-        <button class="btn save" id="rowSaveBtn" style="display:none">保存</button>
-        <button class="btn cancel" id="rowCancelBtn" style="display:none">取消</button>
+        <button class="btn edit" id="rowEditBtn" disabled>✏️ 编辑</button>
+        <button class="btn save" id="rowSaveBtn" style="display:none">💾 保存全部</button>
+        <button class="btn cancel" id="rowCancelBtn" style="display:none">取消编辑</button>
       </div>
       <div class="grp">
         <button class="btn go" id="rowProcBtn" style="display:none" disabled>设工序</button>
@@ -282,7 +294,6 @@
     <!-- 批量操作条（勾选行后出现） -->
     <div class="batch" id="batchBar">
       <span class="cnt" id="batchCnt">已选 0 条</span>
-      <button class="btn" id="batchEditBtn">✎ 批量编辑</button>
       <button class="btn" id="batchProcBtn">⚙ 批量设工序</button>
       <button class="btn" id="batchOrdBtn">→ 转生产中</button>
       <button class="btn" id="batchInvBtn">→ 转库存</button>
@@ -408,20 +419,6 @@
     </div>
   </div>
 
-  <!-- 批量编辑弹窗 -->
-  <div class="mask" id="batchMask">
-    <div class="dlg" style="width:760px">
-      <div class="dlg-h"><b>批量编辑（只改勾选的行，留空的字段不动）</b><button class="x" id="batchClose">✕</button></div>
-      <div class="dlg-b">
-        <div class="bfields" id="batchFields"></div>
-        <div class="imp-note" id="batchNote">正在批量编辑 <b>0</b> 条记录。勾选要改的字段并填值，未勾选的字段保持原值不变。状态类字段（订单状态/库存状态）的改动会记录时间与操作账号。</div>
-      </div>
-      <div class="dlg-f">
-        <button class="btn" id="batchCancel">取消</button>
-        <button class="btn primary" id="batchSave">确定修改</button>
-      </div>
-    </div>
-  </div>
 
   <!-- 工序库维护弹窗 -->
   <div class="mask" id="libMask">

@@ -223,6 +223,29 @@ function parseIds(arr) {
   return out;
 }
 
+// v1.0.197 单条多字段写入（batchset / batchsave 共用）：只写传入的字段，其余字段不动；三个状态字段变更留痕
+async function applyFields(id, fields, user) {
+  const cols = Object.keys(fields).filter(c => ALIAS[c] || EXTRA_COLS.indexOf(c) >= 0);
+  if (!cols.length) return { ok: false, cols: [] };
+  for (const fl of ['status', 'inv_status', 'ord_status']) {
+    if (cols.indexOf(fl) < 0) continue;
+    let nv = String(fields[fl] == null ? '' : fields[fl]).trim();
+    if (fl === 'status') nv = validStatus(nv);
+    else if (STATUS_FIELDS[fl].indexOf(nv) < 0) nv = '';
+    const ov = await readField(id, fl);
+    if (ov === null) continue;
+    if (String(ov) !== nv) await pushLog(id, logEntry('change', String(ov), nv, user.username, fl));
+  }
+  const sets = cols.map(c => {
+    let v = (fields[c] == null) ? '' : String(fields[c]);
+    if (c === 'status') v = validStatus(v);
+    if (c === 'inv_status' || c === 'ord_status') { if (STATUS_FIELDS[c].indexOf(v.trim()) < 0) v = ''; v = v.trim(); }
+    return c + '=' + q(cleanStr(v, MAXLEN[c]));
+  });
+  await exec('UPDATE tracking_items SET ' + sets.join(', ') + ', updated_at=now() WHERE id=' + q(id));
+  return { ok: true, cols: cols };
+}
+
 exports.main = async (event) => {
   const evt = parseEvt(event);
   try {
@@ -286,28 +309,29 @@ exports.main = async (event) => {
       if (!cols.length) return { ok: false, msg: '没有可更新的字段' };
       let n = 0, miss = 0;
       for (const id of ids) {
-        const exist = await readCol(id, cols[0]);
+        const exist = await readField(id, 'status');
         if (exist === null) { miss++; continue; }
-        // 状态字段先比对留痕
-        for (const fl of ['status', 'inv_status', 'ord_status']) {
-          if (cols.indexOf(fl) < 0) continue;
-          let nv = String(fields[fl] == null ? '' : fields[fl]).trim();
-          if (fl === 'status') nv = validStatus(nv);
-          else if (STATUS_FIELDS[fl].indexOf(nv) < 0) nv = '';
-          const ov = await readField(id, fl);
-          if (ov === null) continue;
-          if (String(ov) !== nv) await pushLog(id, logEntry('batch', String(ov), nv, user.username, fl));
-        }
-        const sets = cols.map(c => {
-          let v = (fields[c] == null) ? '' : String(fields[c]);
-          if (c === 'status') v = validStatus(v);
-          if (c === 'inv_status' || c === 'ord_status') { if (STATUS_FIELDS[c].indexOf(v.trim()) < 0) v = ''; v = v.trim(); }
-          return c + '=' + q(cleanStr(v, MAXLEN[c]));
-        });
-        await exec('UPDATE tracking_items SET ' + sets.join(', ') + ', updated_at=now() WHERE id=' + q(id));
-        n++;
+        const r = await applyFields(id, fields, user);
+        if (r.ok) n++;
       }
       return { ok: true, updated: n, missing: miss };
+    }
+
+    // v1.0.197 逐格编辑保存：每条记录带自己改动过的字段（各自不同）
+    if (action === 'batchsave') {
+      const list = Array.isArray(evt.items) ? evt.items : [];
+      if (!list.length) return { ok: false, msg: '没有要保存的改动' };
+      let updated = 0, cells = 0, miss = 0, skipped = 0;
+      for (const it of list) {
+        const id = parseInt(it && it.id, 10);
+        if (!(id > 0)) { miss++; continue; }
+        const fields = (it && it.fields && typeof it.fields === 'object') ? it.fields : {};
+        const exist = await readField(id, 'status');
+        if (exist === null) { miss++; continue; }
+        const r = await applyFields(id, fields, user);
+        if (r.ok) { updated++; cells += r.cols.length; } else skipped++;
+      }
+      return { ok: true, updated: updated, cells: cells, missing: miss, skipped: skipped };
     }
 
     // v1.0.196 批量删除
