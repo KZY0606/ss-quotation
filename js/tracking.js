@@ -45,6 +45,26 @@
     if (/库存|inventory/i.test(v)) return 'inventory';
     return '';
   }
+  // v1.0.193：货物状态变更轨迹（云函数记录 {at, by, action, from, to}）
+  function stLogArr(it) {
+    try { var a = JSON.parse((it && it.status_log) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function stLogText(l) {
+    if (l.action === 'created') return '新建 → ' + statusLabel(l.to);
+    if (l.action === 'import') return '导入 → ' + statusLabel(l.to);
+    return statusLabel(l.from) + ' → ' + statusLabel(l.to);
+  }
+  function stLast(it) {
+    var a = stLogArr(it);
+    if (!a.length) return '';
+    var l = a[a.length - 1];
+    return String(l.at || '').slice(5, 16) + ' · ' + (l.by || '—');
+  }
+  function stTitle(it) {
+    var a = stLogArr(it);
+    if (!a.length) return '';
+    return a.map(function (l) { return String(l.at || '') + '  ' + stLogText(l) + '  ｜ ' + (l.by || '—'); }).join('\n');
+  }
 
   // ---------- 渲染 ----------
   function refreshDatalists() {
@@ -78,10 +98,8 @@
     }
     tb.innerHTML = rows.map(function (it) {
       var ord = it.status === 'ordered';
+      var lg = stLast(it);
       return '<tr>' +
-        '<td><span class="st ' + (ord ? 'ord' : 'inv') + '">' + (ord ? '🔥 已接单' : '📦 库存') + '</span></td>' +
-        '<td><b>' + esc(it.code) + '</b></td>' +
-        '<td>' + esc(it.contract_no) + '</td>' +
         '<td>' + esc(it.purchase_date) + '</td>' +
         '<td>' + esc(it.warehouse_date) + '</td>' +
         '<td>' + esc(it.warehouse) + '</td>' +
@@ -94,13 +112,18 @@
         '<td>' + esc(it.count) + '</td>' +
         '<td>' + esc(it.orig_weight) + '</td>' +
         '<td>' + esc(it.prod_status) + '</td>' +
+        '<td><b>' + esc(it.code) + '</b></td>' +
+        '<td>' + esc(it.contract_no) + '</td>' +
+        '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="' + esc(it.note) + '">' + esc(it.note) + '</td>' +
         '<td>' + esc(it.type) + '</td>' +
         '<td>' + esc(it.origin) + '</td>' +
-        '<td>' + esc(it.supplier) + '</td>' +
-        '<td class="num-r">' + esc(it.unit_price) + '</td>' +
         '<td class="num-r">' + esc(it.total_amount) + '</td>' +
+        '<td class="num-r">' + esc(it.unit_price) + '</td>' +
+        '<td>' + esc(it.supplier) + '</td>' +
         '<td class="num-r">' + esc(it.sale_price) + '</td>' +
-        '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="' + esc(it.note) + '">' + esc(it.note) + '</td>' +
+        '<td class="st-cell"><span class="st ' + (ord ? 'ord' : 'inv') + '">' + (ord ? '🔥 已接单' : '📦 库存') + '</span>' +
+        (lg ? '<div class="st-log" title="' + esc(stTitle(it)) + '">' + esc(lg) + '</div>' : '') +
+        '</td>' +
         '<td class="op">' +
           '<button class="mini" data-act="edit" data-id="' + it.id + '">编辑</button>' +
           (ord
@@ -139,7 +162,20 @@
     if (it && it.purchase_date) $('f_purchaseDate').value = it.purchase_date;
     if (it && it.warehouse_date) $('f_warehouseDate').value = it.warehouse_date;
     renderStPick();
+    renderStHistory(it);
     $('editMask').classList.add('show');
+  }
+  // v1.0.193：编辑弹窗底部展示该条记录的状态变更轨迹（时间 + 操作账号）
+  function renderStHistory(it) {
+    var box = $('stHistory');
+    if (!box) return;
+    var a = it ? stLogArr(it) : [];
+    if (!a.length) { box.innerHTML = '<div class="sh-t">状态变更记录</div><div class="sh-i sh-none">暂无记录（保存后开始记录）</div>'; return; }
+    box.innerHTML = '<div class="sh-t">状态变更记录</div>' + a.slice().reverse().map(function (l) {
+      return '<div class="sh-i"><span class="sh-at">' + esc(String(l.at || '')) + '</span>' +
+        '<span class="sh-w">' + esc(stLogText(l)) + '</span>' +
+        '<span class="sh-by">' + esc(l.by || '—') + '</span></div>';
+    }).join('');
   }
   function renderStPick() {
     Array.prototype.forEach.call($('stPick').children, function (b) {
@@ -283,10 +319,10 @@
   // ---------- 导出 ----------
   function doExport() {
     var rows = items.filter(function (it) { return !curFilter || it.status === curFilter; });
-    var head = ['货物状态','编号','合同号','采购日期','进仓日期','仓库/加工厂','钢种','表面','厚度','宽度','长度','重量','卷数/张数','原重','生产状态','类型','产地','供应商','单价','总金额','销售定价','备注'];
+    var head = ['采购日期','进仓日期','仓库/加工厂','钢种','表面','厚度','宽度','长度','重量','卷数/张数','原重','生产状态','编号','合同号','备注','类型','产地','总金额','单价','供应商','销售定价','货物状态'];
     var lines = [head.join(',')];
     rows.forEach(function (it) {
-      lines.push(['"' + statusLabel(it.status) + '"', it.code, it.contract_no, it.purchase_date, it.warehouse_date, it.warehouse, it.grade, it.surface, it.thickness, it.width, it.length, it.weight, it.count, it.orig_weight, it.prod_status, it.type, it.origin, it.supplier, it.unit_price, it.total_amount, it.sale_price, '"' + String(it.note || '').replace(/"/g, '""') + '"']
+      lines.push([it.purchase_date, it.warehouse_date, it.warehouse, it.grade, it.surface, it.thickness, it.width, it.length, it.weight, it.count, it.orig_weight, it.prod_status, it.code, it.contract_no, '"' + String(it.note || '').replace(/"/g, '""') + '"', it.type, it.origin, it.total_amount, it.unit_price, it.supplier, it.sale_price, '"' + statusLabel(it.status) + '"']
         .map(function (c) { return c == null ? '' : String(c); }).join(','));
     });
     var blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });

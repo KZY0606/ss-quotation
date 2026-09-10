@@ -1170,3 +1170,14 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .hot201-row .o-lock { flex:0 0 auto; margin-left:2px; }
 .hot201-narrow-badge { display:inline-block; margin-left:4px; font-size:10px; font-style:normal; color:#047857; border:1px solid #6ee7b7; background:#ecfdf5; border-radius:4px; padding:0 3px; line-height:14px; vertical-align:middle; }
 .hot201-rows + .hot201-footnote { margin-top:10px; }
+
+/* v1.0.193 跟单：货物状态单元格（徽章 + 最近变更时间·操作账号）+ 弹窗状态轨迹 */
+.st-cell{white-space:nowrap}
+.st-log{font-size:11px;color:#94a3b8;margin-top:3px;letter-spacing:0}
+.st-hist{margin-top:14px;border-top:1px dashed #d8dee6;padding-top:10px}
+.st-hist .sh-t{font-size:12px;font-weight:600;color:#475569;margin-bottom:6px}
+.st-hist .sh-i{display:flex;gap:10px;font-size:12px;color:#475569;padding:3px 0;border-bottom:1px dotted #eef2f6}
+.st-hist .sh-at{color:#94a3b8;font-family:Consolas,Monaco,monospace;white-space:nowrap}
+.st-hist .sh-w{flex:1}
+.st-hist .sh-by{color:#2c5282;white-space:nowrap}
+.st-hist .sh-none{color:#94a3b8}

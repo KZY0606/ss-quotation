@@ -1,0 +1,12 @@
+{
+  "triggers": [
+    {
+      "name": "trackingTable-http",
+      "type": "http",
+      "config": {
+        "path": "/trackingTable",
+        "method": "POST"
+      }
+    }
+  ]
+}

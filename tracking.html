@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>跟单系统 - KK不锈钢</title>
-  <script src="js/auth.js?v=1.0.186"></script>
-  <script src="js/vendor/xlsx.mini.min.js?v=1.0.186"></script>
+  <script src="js/auth.js?v=1.0.193"></script>
+  <script src="js/vendor/xlsx.mini.min.js?v=1.0.193"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #f4f6f8; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: #1f2937; font-size: 13px; }
@@ -141,9 +141,6 @@
       <table class="tk">
         <thead>
           <tr>
-            <th style="width:86px">货物状态</th>
-            <th>编号</th>
-            <th>合同号</th>
             <th>采购日期</th>
             <th>进仓日期</th>
             <th>仓库/加工厂</th>
@@ -156,13 +153,16 @@
             <th>卷数/张数</th>
             <th>原重</th>
             <th>生产状态</th>
+            <th>编号</th>
+            <th>合同号</th>
+            <th>备注</th>
             <th>类型</th>
             <th>产地</th>
-            <th>供应商</th>
-            <th class="num-r">单价</th>
             <th class="num-r">总金额</th>
+            <th class="num-r">单价</th>
+            <th>供应商</th>
             <th class="num-r">销售定价</th>
-            <th>备注</th>
+            <th style="width:118px">货物状态</th>
             <th style="width:190px">操作</th>
           </tr>
         </thead>
@@ -206,6 +206,7 @@
           <div class="fg"><label>销售定价 (元/吨)</label><input id="f_salePrice"></div>
           <div class="fg full"><label>备注</label><input id="f_note"></div>
         </div>
+        <div class="st-hist" id="stHistory"></div>
       </div>
       <div class="dlg-f">
         <button class="btn" id="dlgCancel">取消</button>
@@ -234,7 +235,7 @@
         <textarea class="paste" id="impPaste" placeholder="或直接粘贴 Excel 区域（从 Excel 复制后 Ctrl+V 到这里），列顺序与下方模板一致，用 Tab 或逗号分隔"></textarea>
         <div class="imp-note" id="impTpl">
           <b>列模板（按顺序，共 22 列，可缺少尾部列）：</b><br>
-          编号, 合同号, 采购日期, 进仓日期, 仓库/加工厂, 钢种, 表面, 厚度, 宽度, 长度, 重量, 卷数/张数, 原重, 生产状态, 类型, 产地, 供应商, 单价, 总金额, 销售定价, 备注, 货物状态
+          采购日期, 进仓日期, 仓库/加工厂, 钢种, 表面, 厚度, 宽度, 长度, 重量, 卷数/张数, 原重, 生产状态, 编号, 合同号, 备注, 类型, 产地, 总金额, 单价, 供应商, 销售定价, 货物状态
         </div>
         <div class="imp-prev" id="impPrev" style="display:none"></div>
       </div>
@@ -270,6 +271,6 @@
     <option value="福欣"></option><option value="张浦"></option><option value="酒钢"></option>
   </datalist>
 
-  <script src="js/tracking.js?v=1.0.186"></script>
+  <script src="js/tracking.js?v=1.0.193"></script>
 </body>
 </html>

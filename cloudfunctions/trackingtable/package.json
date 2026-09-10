@@ -1,0 +1,9 @@
+{
+  "name": "trackingTable",
+  "version": "1.0.0",
+  "description": "KK tracking table API",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/manager-node": "latest"
+  }
+}
