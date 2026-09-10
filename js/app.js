@@ -662,7 +662,7 @@ const App = (() => {
       <span class="oname">本地201(压延)</span>
       ${BENDI201_J.map(j => `<div class="oj2"><label>${j.replace('201', '')}</label><input type="number" data-bendi="${j}" class="origin-j2-input" value="${bendi201Prices[j] > 0 ? bendi201Prices[j] : ''}" step="10" placeholder="未填" ${bendi201Locked ? 'readonly' : ''}></div>`).join('')}
       <button id="bendi201Lock" class="o-lock ${bendi201Locked ? 'locked' : ''}" title="${bendi201Locked ? '点击解锁' : '点击锁定整行'}">${bendi201Locked ? '🔒' : '🔓'}</button>
-      <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">本地201(压延) J1-J4，仅 1219/1240 宽度；厚度加价走专属表</span>
+      <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">本地201(压延) J1-J4，仅 1219/1240 宽度；厚度加价走专属表；随「📢 发布当前基价」同步全员</span>
     `;
     els.originRows201.appendChild(bd);
     bd.querySelectorAll('[data-bendi]').forEach(inp => {
@@ -947,7 +947,9 @@ const App = (() => {
       fiveFootPrices400: fiveFootPrices400,
       beigangJ1Price: beigangJ1Price,
       beigangJ5Price: beigangJ5Price,
-      prices400: prices400
+      prices400: prices400,
+      bendi201Prices: bendi201Prices,   // v1.0.190 本地201(压延) J1-J4 单价基价
+      hot201Prices: hot201Prices        // v1.0.190 热轧 201 基价（产地-Jx-4/-5/-N）
     };
   }
   function countBasePrices() {
@@ -964,6 +966,7 @@ const App = (() => {
     cnt(originPrices); cnt(originPrices304); cnt(originPrices316L);
     cnt(fiveFootPrices304); cnt(fiveFootPrices316L); cnt(fiveFootPrices400);
     cnt(prices400);
+    cnt(bendi201Prices); cnt(hot201Prices);
     if (beigangJ1Price > 0) n++;
     if (beigangJ5Price > 0) n++;
     return n;
@@ -972,6 +975,9 @@ const App = (() => {
     try {
       ['kk_locked_prices','kk_locked_prices_304','kk_locked_prices_316L','kk_locked_prices_304_ff','kk_locked_prices_316L_ff','kk_beigang_j1','kk_beigang_j5','kk_prices_400','kk_prices_400_ff']
         .forEach(k => localStorage.removeItem(k));
+      // v1.0.190 云端价优先：本地201(压延) 与热轧面板解锁（价格已由 applyBasePrices 写入）
+      bendi201Locked = false; saveBendi201();
+      lockedHot201 = {}; saveHot201();
     } catch (e) { /* ignore */ }
   }
   function applyBasePrices(p) {
@@ -1000,6 +1006,23 @@ const App = (() => {
     if (p.prices400 && typeof p.prices400 === 'object') { for (const [k, v] of Object.entries(p.prices400)) { prices400[k] = v; lockedPrices400[k] = false; changed = true; } }
     if (typeof p.beigangJ1Price === 'number') { beigangJ1Price = p.beigangJ1Price; beigangJ1Locked = false; changed = true; }
     if (typeof p.beigangJ5Price === 'number') { beigangJ5Price = p.beigangJ5Price; beigangJ5Locked = false; changed = true; }
+    // v1.0.190 本地201(压延) 基价（J1-J4 单价）
+    if (p.bendi201Prices && typeof p.bendi201Prices === 'object') {
+      let bdChanged = false;
+      for (const [j, v] of Object.entries(p.bendi201Prices)) {
+        if (BENDI201_J.indexOf(j) !== -1 && typeof v === 'number') { bendi201Prices[j] = v; bdChanged = true; }
+      }
+      if (bdChanged) { bendi201Locked = false; saveBendi201(); changed = true; }
+    }
+    // v1.0.190 热轧 201 基价（key: 产地-201Jx-4/-5/-N）
+    if (p.hot201Prices && typeof p.hot201Prices === 'object') {
+      let hotChanged = false;
+      for (const [k, v] of Object.entries(p.hot201Prices)) {
+        if (typeof v !== 'number') continue;
+        if (/^.+-(201J[1-5])-(4|5|N)$/.test(k)) { hot201Prices[k] = v; hotChanged = true; }
+      }
+      if (hotChanged) { lockedHot201 = {}; saveHot201(); changed = true; }
+    }
     return changed;
   }
   function fmtSyncTime(t) { return t ? String(t).replace('T', ' ').slice(0, 16) : ''; }
@@ -1017,12 +1040,12 @@ const App = (() => {
       btn._bound = true;
       btn.addEventListener('click', () => {
         const n = countBasePrices();
-        if (!confirm('确认将当前页面基价(冷轧)发布给全体员工？\n（共 ' + n + ' 个有效基价，发布后所有员工打开页面自动生效）')) return;
+        if (!confirm('确认将当前页面基价（冷轧 + 热轧 201）发布给全体员工？\n（共 ' + n + ' 个有效基价，发布后所有员工打开页面自动生效）')) return;
         btn.disabled = true;
         btn.textContent = '发布中…';
         KKAuth.call('priceTable', { action: 'save', token: (auth && auth.token) || '', prices: collectBasePrices() }).then(r => {
           btn.disabled = false;
-          btn.textContent = '📢 发布当前基价(冷轧)';
+          btn.textContent = '📢 发布当前基价（冷轧+热轧）';
           if (r && r.ok) {
             showToast('已发布，全员生效', 'success');
             if (st) st.textContent = '全员基价：' + (r.updatedBy || '') + ' 发布（刚刚）';
@@ -1031,7 +1054,7 @@ const App = (() => {
           }
         }).catch(() => {
           btn.disabled = false;
-          btn.textContent = '📢 发布当前基价(冷轧)';
+          btn.textContent = '📢 发布当前基价（冷轧+热轧）';
           showToast('发布失败：网络错误', 'error');
         });
       });
@@ -1042,6 +1065,8 @@ const App = (() => {
         if (applyBasePrices(r.data.prices)) {
           clearLocalLocked();
           renderOriginGrid();
+          if (typeof renderOriginGrid201 === 'function') renderOriginGrid201();
+          if (typeof renderHotBase === 'function') renderHotBase();
           if (typeof updateAllDerived === 'function') updateAllDerived();
           render();
         }
@@ -1424,7 +1449,7 @@ const App = (() => {
       h += lockBtn(o, oLocked) + '</div>';
     });
     h += '</div>';
-    h += '<div class="hot201-footnote">产地×J：鼎信 J1-J4 · 北港 J1/J4/J5 · 永达 J3 · 金海/鑫峰 J3(窄带 630-810mm)。虚线格 = 该产地无此牌号。热轧厚度 2.00-12.00mm；锁定后本机保存，刷新不丢失；云端发布后续版本提供</div>';
+    h += '<div class="hot201-footnote">产地×J：鼎信 J1-J4 · 北港 J1/J4/J5 · 永达 J3 · 金海/鑫峰 J3(窄带 630-810mm)。虚线格 = 该产地无此牌号。热轧厚度 2.00-12.00mm；锁定后本机保存，刷新不丢失；随管理员「📢 发布当前基价」同步全员</div>';
     area.innerHTML = h;
     area.querySelectorAll('.hot201-input').forEach(inp => {
       const save = () => { const v = parseFloat(inp.value); hot201Prices[inp.dataset.key] = (v > 0) ? v : 0; saveHot201(); };
