@@ -1709,5 +1709,47 @@ test('v1.0.187 calculate 本地201(压延) 非 201J5 之外的材质路径不受
   eq(r.success, true, '304 回归: ' + (r.errors || []).join(';'));
 });
 
+
+// === v1.0.191 400系 BA / 2BA 表面 = 2B（不加表面加工费）；BA 不是抛光（2026-09-10 用户规则） ===
+test('v1.0.191 别名 ba → BA（不再映射为「单面抛光」）', () => {
+  eq(PricingEngine.SURFACE_ALIASES['ba'], 'BA', 'SURFACE_ALIASES[ba]');
+  eq(PricingEngine.normalizeSurface('BA'), 'BA', 'normalizeSurface(BA)');
+  eq(PricingEngine.normalizeSurface('ba'), 'BA', 'normalizeSurface(ba)');
+  eq(PricingEngine.normalizeSurface('2BA'), '2BA', 'normalizeSurface(2BA)');
+});
+test('v1.0.191 400系 BA 表面加工费 = 0（与 2B 同）', () => {
+  eq(PricingEngine.getSurfaceFee('BA', 0.50, 1219, '410S'), 0, '410S BA');
+  eq(PricingEngine.getSurfaceFee('BA', 0.50, 1240, '430B'), 0, '430B BA');
+});
+test('v1.0.191 400系 2BA 表面加工费 = 0', () => {
+  eq(PricingEngine.getSurfaceFee('2BA', 0.50, 1219, '430W'), 0, '430W 2BA');
+  eq(PricingEngine.getSurfaceFee('2BA(非标)', 0.50, 1219, '410S'), 0, '410S 2BA(非标)');
+});
+test('v1.0.191 抛光（显式输入「单面抛光」）仍按吨计价 150（未被 BA 改动影响）', () => {
+  eq(PricingEngine.getSurfaceFee('单面抛光', 0.50, 1219, '410S'), 150, '单面抛光');
+  eq(PricingEngine.getSurfaceFee('双面抛光', 0.50, 1219, '410S'), 300, '双面抛光');
+});
+test('v1.0.191 430B/BA 甬金 表面填 BA → 加价0 + 走 430B-BA 厚度表', () => {
+  const r = PricingEngine.calculate({ material: '430B/BA', origin: '甬金', surface: 'BA', thickness: '0.50', width: '1240', length: 'C', basePrice: 8000 });
+  eq(r.success, true, '应可算: ' + (r.errors || []).join(';'));
+  eq(r.detail.surfaceFeePerTon, 0, 'BA 表面费=0, 实际 ' + r.detail.surfaceFeePerTon);
+  eq(r.detail.thickTable, '400系(430B-BA)', '厚度表: ' + r.detail.thickTable);
+});
+test('v1.0.191 410S/2BA 宏旺 表面填 2BA → 加价0 + 走宏旺表', () => {
+  const r = PricingEngine.calculate({ material: '410S/2BA', origin: '宏旺', surface: '2BA', thickness: '0.50', width: '1219', length: 'C', basePrice: 8000 });
+  eq(r.success, true, '应可算: ' + (r.errors || []).join(';'));
+  eq(r.detail.surfaceFeePerTon, 0, '2BA 表面费=0, 实际 ' + r.detail.surfaceFeePerTon);
+  eq(r.detail.thickTable, '400系(410S-2BA-宏旺)', '厚度表: ' + r.detail.thickTable);
+});
+test('v1.0.191 平板(单张)模式 表面填 BA 不再报「仅支持 2B 与五种单张8K」', () => {
+  const r = PricingEngine.calculate({ material: '430B/BA', surface: 'BA', thickness: '0.50', width: '1219', length: '2440', origin: '甬金', basePrice: 8000, calcMode: 'sheet', boardType: 'sheet', packing: '木架', film1: '', film2: '', quantity: '10' });
+  eq(r.success, true, '平板 BA 应可算: ' + (r.errors || []).join(';'));
+  eq(r.detail.surfaceFeeSqm, 0, 'BA 单张表面加工费=0, 实际 ' + r.detail.surfaceFeeSqm);
+});
+test('v1.0.191 回归：201/304 表面填 BA 也不加价（BA 不是抛光）', () => {
+  eq(PricingEngine.getSurfaceFee('BA', 0.50, 1240, '201'), 0, '201 BA');
+  eq(PricingEngine.getSurfaceFee('BA', 0.50, 1240, '304'), 0, '304 BA');
+});
+
 console.log(`\n========== ${pass} passed, ${fail} failed ==========`);
 process.exit(fail > 0 ? 1 : 0);

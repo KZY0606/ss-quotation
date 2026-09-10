@@ -1,3 +1,10 @@
+## 2026-09-10 v1.0.191
+- 400 系表面 BA / 2BA = 2B，不加表面加工费：SURFACE_FEES 新增 'BA' / '2BA' / '2BA(非标)'（type none）；别名 'ba' 由「单面抛光」改为 'BA'（BA 是光亮退火，不是抛光）；SHEET_MODE_SURFACES 增补 BA/2BA 支持平板
+- BA-LINEN（BA 小珠光）既有产品价格保持不变（历史上 BA 部分按单面抛光 150 计），是否随新规则调整待用户确认
+- 参考板块 400 系厚度加价区加注说明
+- 管理后台报价记录含管理员：adminLogs 的 usage 查询去掉 admin 排除，返回 role；admin.html 给管理员记录加「管理员」标注
+- 单测 243 项（+8：BA/2BA 别名、400 系表面费 0、厚度表命中、平板模式、抛光不受影响、201/304 BA）
+
 ## 2026-09-10 v1.0.190
 - 修复：本地201(压延) 基价（J1-J4）与热轧 201 基价（产地-Jx-4/-5/-N）没有进入基价发布/同步链路 —— collectBasePrices 不带这两个字段、applyBasePrices 不应用，导致管理员发布后只有本机生效、员工端不变
 - collectBasePrices/applyBasePrices/countBasePrices 补齐 bendi201Prices 与 hot201Prices；apply 时解锁对应面板（bendi201Locked=false / lockedHot201={}）

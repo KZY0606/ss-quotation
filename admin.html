@@ -128,7 +128,7 @@
     <!-- 使用日志 -->
     <div class="panel" id="panelUsage">
       <div class="card">
-        <h2>报价记录（最近 7 天）</h2>
+        <h2>报价记录（最近 7 天，含管理员）</h2>
         <div id="usageList"><div class="empty">加载中…</div></div>
       </div>
     </div>
@@ -353,7 +353,8 @@
             div.innerHTML = '<span class="log-time">' + fmtTime(it.createdAt) + '</span>' + st + ' <b>' + (it.realName || it.username) + '</b>（' + it.username + '） ' + (it.reason || '');
           } else {
             // v1.0.131: 批次合并为一条，箭头点击展开明细
-            div.innerHTML = '<span class="log-time">' + fmtTime(it.createdAt) + '</span><b>' + (it.realName || it.username) + '</b> ' +
+            var adminBadge = (it.role === 'admin') ? ' <span class="badge badge-on">管理员</span>' : '';
+            div.innerHTML = '<span class="log-time">' + fmtTime(it.createdAt) + '</span><b>' + (it.realName || it.username) + '</b> ' + adminBadge +
               (it.count > 0 ? '（' + it.count + ' 条报价）' : '') +
               ' <a class="log-toggle" data-open="0" href="javascript:;">▸ 展开</a>' +
               '<div class="log-sub" style="display:none">' + it.items.map(function (x) {

@@ -857,7 +857,11 @@ const PricingEngine = (() => {
 
     if (hasLinen && linenSuffix) {
       // 剥离linen，归一化基础表面
-      const linBase = normalizeSurface(linenSuffix[1]);
+      let linBase = normalizeSurface(linenSuffix[1]);
+      // v1.0.191：BA / 2BA 本身已改为「与 2B 同、不加价」的表面；
+      // 但 BA-LINEN（BA 小珠光）是既有销售产品，历史上把 BA 部分按「单面抛光」计价（0.45mm → 150 + 珠光 300 = 450），
+      // 本次保持原价不变（是否随新规则一并调整待用户确认），避免静默改价。
+      if (linBase === 'BA') linBase = '单面抛光';
       if (linBase && SURFACE_FEES[linBase]) baseSurface = linBase;
     } else if (aliasedName === 'LINEN') {
       // 纯压花（无主表面，如只输 "linen"）：表面加工费为 0，压花费照算
@@ -1589,7 +1593,7 @@ const PricingEngine = (() => {
     SHEET_PACKING_FEES, SHEET_CONTAINER_FEE,
     WIDTH_BANDS_201, WIDTH_TO_BAND_201, MATERIALS_201, BEIGANG, getWidthBand201, isMaterial201,
     THICK_BANDS_1500, THICK_BANDS_1500_LABELS, getThickBand1500,
-    EDGE_FEES, SHEET_MODE_SURFACES,
+    EDGE_FEES, SHEET_MODE_SURFACES, SURFACE_ALIASES,
     HOT201_MATRIX, HOT201_WIDTHS, HOT201_WIDTHS_FOOT4, HOT201_WIDTHS_FOOT5, HOT201_WIDTHS_NARROW, HOT201_NARROW_ORIGINS, HOT201_NARROW_MARKUP,
     HOT201_THICK_MIN, HOT201_THICK_MAX
   };

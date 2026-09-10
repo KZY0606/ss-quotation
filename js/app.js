@@ -2111,6 +2111,7 @@ const App = (() => {
       });
       h.push('</table>');
     }
+    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">400 系表面 BA / 2BA：光亮退火（非抛光），与 2B 相同不加表面加工费（2026-09-10）</div>');
 
     // 316L 厚度加价（2026-08-21：张浦 16 档 + 甬金 17 档；太钢未提供）
     h.push('<h4 class="ref-subtitle">316L厚度加价</h4>');
