@@ -1,6 +1,8 @@
-// trackingTable — 不锈钢跟单系统数据接口（v1.0.186）
+// trackingTable — 不锈钢跟单系统数据接口（v1.0.194）
 // 表：tracking_items（PG）
-// action: list(登录) / save(登录,新增或按id更新) / delete(登录) / import(登录,批量)
+// action: list / save(新增或按id更新) / delete / import(批量) / setfield(切换 status|inv_status|ord_status)  —— 均需登录
+// v1.0.194：入仓字段按业务清单扩展（原重/现重/毛重 KG、单价含税/不含税、总金额含税/不含税、负差、实卡厚）
+//           库存板块与已接单板块各自独立状态列（inv_status / ord_status），切换留痕（时间 + 操作账号）
 const CloudBase = require('@cloudbase/manager-node');
 const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
 const database = app.database;
@@ -15,7 +17,48 @@ async function exec(Sql) {
   return await database.executePGSql({ Sql });
 }
 
-const COLS = ['status'];
+// 业务字段（DB 列名）+ 允许的入参别名（兼容驼峰/下划线/短名）
+const ALIAS = {
+  purchase_date: ['purchaseDate', 'purchase_date'],
+  warehouse_date: ['warehouseDate', 'warehouse_date'],
+  warehouse: ['warehouse'],
+  grade: ['grade'],
+  surface: ['surface'],
+  thickness: ['thickness'],
+  width: ['width'],
+  length: ['length'],
+  count: ['count'],
+  prod_status: ['prodStatus', 'prod_status'],
+  code: ['code'],
+  contract_no: ['contractNo', 'contract_no'],
+  note: ['note'],
+  type: ['type'],
+  origin: ['origin'],
+  supplier: ['supplier'],
+  weight: ['weight'],
+  orig_weight: ['origWeight', 'orig_weight'],
+  weight_orig: ['wOrig', 'weightOrig', 'weight_orig'],
+  weight_now: ['wNow', 'weightNow', 'weight_now'],
+  weight_gross: ['wGross', 'weightGross', 'weight_gross'],
+  unit_price: ['unitPrice', 'unit_price'],
+  total_amount: ['totalAmount', 'total_amount'],
+  price_tax: ['priceTax', 'price_tax'],
+  price_notax: ['priceNotax', 'price_notax'],
+  amount_tax: ['amountTax', 'amount_tax'],
+  amount_notax: ['amountNotax', 'amount_notax'],
+  negative_diff: ['negativeDiff', 'negative_diff'],
+  real_thickness: ['realThickness', 'real_thickness'],
+  sale_price: ['salePrice', 'sale_price'],
+  inv_status: ['invStatus', 'inv_status'],
+  ord_status: ['ordStatus', 'ord_status']
+};
+const MAXLEN = { note: 1000 };
+
+// 状态枚举
+const ENUM_STATUS = ['inventory', 'ordered'];                  // 板块归属
+const ENUM_INV = ['在库', '已预订', '部分出库', '已售出'];      // 库存板块状态列
+const ENUM_ORD = ['采购下单', '原料到仓', '投入生产', '加工完成', '发货自提', '已交付']; // 已接单板块状态列
+const STATUS_FIELDS = { status: ENUM_STATUS, inv_status: ENUM_INV, ord_status: ENUM_ORD };
 
 async function ensureTables() {
   await exec(`CREATE TABLE IF NOT EXISTS tracking_items (
@@ -29,8 +72,13 @@ async function ensureTables() {
     total_amount TEXT DEFAULT '', unit_price TEXT DEFAULT '', supplier TEXT DEFAULT '', sale_price TEXT DEFAULT '',
     created_by TEXT DEFAULT '', created_at TIMESTAMP DEFAULT now(), updated_at TIMESTAMP DEFAULT now()
   )`);
-  // v1.0.193：货物状态变更轨迹（JSON 数组：[{at, action, from, to, by}]，by = 操作账号）
+  // v1.0.193 货物状态变更轨迹：[{at, action, field, from, to, by}]
   await exec("ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS status_log TEXT DEFAULT '[]'");
+  // v1.0.194 入仓扩展字段（KG 三重量 / 含税不含税价 / 负差 / 实卡厚 / 两板块状态列）
+  for (const c of ['weight_orig', 'weight_now', 'weight_gross', 'price_tax', 'price_notax',
+    'amount_tax', 'amount_notax', 'negative_diff', 'real_thickness', 'inv_status', 'ord_status']) {
+    await exec(`ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS ${c} TEXT DEFAULT ''`);
+  }
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_status ON tracking_items (status)');
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_code ON tracking_items (code)');
 }
@@ -42,7 +90,7 @@ function parseEvt(ev) {
 
 async function checkToken(token) {
   if (!token) return null;
-  const res = await exec('SELECT t.token, t.username, t.role, t.expires_at, u.enabled, u.real_name FROM tokens t LEFT JOIN users u ON t.username = t.username WHERE t.token=' + q(token) + ' LIMIT 1');
+  const res = await exec('SELECT t.token, t.username, t.role, t.expires_at, u.enabled, u.real_name FROM tokens t LEFT JOIN users u ON t.username = u.username WHERE t.token=' + q(token) + ' LIMIT 1');
   if (!res.Rows || !res.Rows.length) return null;
   const row = JSON.parse(res.Rows[0]);
   const item = {};
@@ -70,14 +118,42 @@ function cleanStr(v, maxLen) {
 
 function validStatus(v) { return v === 'ordered' ? 'ordered' : 'inventory'; }
 
-// ---------- v1.0.193：货物状态变更轨迹 ----------
-// 时间取北京时间（云函数运行时时区不定，统一手动 +8）
+// 把前端传入的 item 归一化成 DB 行（未传字段 → 空串）
+function buildRow(it) {
+  const row = {};
+  const pick = (names) => {
+    for (const nm of names) { if (it[nm] !== undefined && it[nm] !== null && String(it[nm]).trim() !== '') return it[nm]; }
+    return '';
+  };
+  for (const col of Object.keys(ALIAS)) {
+    if (col === 'inv_status' || col === 'ord_status') { row[col] = cleanStr(pick(ALIAS[col])); continue; }
+    row[col] = cleanStr(pick(ALIAS[col]), MAXLEN[col]);
+  }
+  // 状态列只在值合法时保留，避免脏值
+  if (row.inv_status && ENUM_INV.indexOf(row.inv_status) < 0) row.inv_status = '';
+  if (row.ord_status && ENUM_ORD.indexOf(row.ord_status) < 0) row.ord_status = '';
+  return row;
+}
+
+function sqlInsert(row, username, initLog) {
+  const cols = Object.keys(row), vals = cols.map(c => q(row[c]));
+  cols.push('created_by'); vals.push(q(username));
+  cols.push('status_log'); vals.push(q(initLog));
+  return `INSERT INTO tracking_items (${cols.join(', ')}) VALUES (${vals.join(', ')})`;
+}
+function sqlUpdate(id, row) {
+  const sets = Object.keys(row).map(c => `${c}=${q(row[c])}`);
+  sets.push('updated_at=now()');
+  return `UPDATE tracking_items SET ${sets.join(', ')} WHERE id=${q(id)}`;
+}
+
+// ---------- 变更留痕（时间按北京时间；云函数时区不定，统一手动 +8）----------
 function beijingNow() {
   const d = new Date(Date.now() + 8 * 3600 * 1000);
   return d.toISOString().slice(0, 19).replace('T', ' ');
 }
-function logEntry(action, from, to, by) {
-  return { at: beijingNow(), action: action, from: from || '', to: to, by: by || '' };
+function logEntry(action, from, to, by, field) {
+  return { at: beijingNow(), action: action, field: field || 'status', from: from || '', to: to || '', by: by || '' };
 }
 async function readStatusLog(id) {
   try {
@@ -96,12 +172,14 @@ async function pushLog(id, entry) {
   await exec('UPDATE tracking_items SET status_log=' + q(JSON.stringify(arr)) + ' WHERE id=' + q(id));
   return arr;
 }
-async function readStatus(id) {
+// 只允许白名单字段（防注入）
+async function readField(id, field) {
+  if (!STATUS_FIELDS[field]) return null;
   try {
-    const o = await exec('SELECT status FROM tracking_items WHERE id=' + q(id));
+    const o = await exec('SELECT ' + field + ' FROM tracking_items WHERE id=' + q(id));
     if (o.Rows && o.Rows.length) { const r0 = JSON.parse(o.Rows[0]); return String(r0[0] || ''); }
   } catch (e) {}
-  return '';
+  return null;
 }
 
 exports.main = async (event) => {
@@ -124,28 +202,18 @@ exports.main = async (event) => {
     if (action === 'save') {
       const it = evt.item;
       if (!it || typeof it !== 'object') return { ok: false, msg: '数据无效' };
-      // 兼容前端驼峰/下划线
-      const pick = (...names) => { for (const nm of names) { if (it[nm] !== undefined && it[nm] !== null && String(it[nm]).trim() !== '') return it[nm]; } return ''; };
-      const row = {
-        status: validStatus(pick('status')),
-        purchase_date: cleanStr(pick('purchaseDate', 'purchase_date')), warehouse_date: cleanStr(pick('warehouseDate', 'warehouse_date')),
-        warehouse: cleanStr(pick('warehouse')), grade: cleanStr(pick('grade')), surface: cleanStr(pick('surface')),
-        thickness: cleanStr(pick('thickness')), width: cleanStr(pick('width')), length: cleanStr(pick('length')),
-        weight: cleanStr(pick('weight')), count: cleanStr(pick('count')), orig_weight: cleanStr(pick('origWeight', 'orig_weight')),
-        prod_status: cleanStr(pick('prodStatus', 'prod_status')), code: cleanStr(pick('code')), contract_no: cleanStr(pick('contractNo', 'contract_no')),
-        note: cleanStr(pick('note'), 1000), type: cleanStr(pick('type')), origin: cleanStr(pick('origin')),
-        total_amount: cleanStr(pick('totalAmount', 'total_amount')), unit_price: cleanStr(pick('unitPrice', 'unit_price')),
-        supplier: cleanStr(pick('supplier')), sale_price: cleanStr(pick('salePrice', 'sale_price'))
-      };
+      const row = buildRow(it);
+      row.status = validStatus(it.status);
       const id = parseInt(it.id, 10);
       if (id > 0) {
-        const oldStatus = await readStatus(id); // v1.0.193：先取原状态，变化则写轨迹
-        await exec(`UPDATE tracking_items SET status=${q(row.status)}, purchase_date=${q(row.purchase_date)}, warehouse_date=${q(row.warehouse_date)}, warehouse=${q(row.warehouse)}, grade=${q(row.grade)}, surface=${q(row.surface)}, thickness=${q(row.thickness)}, width=${q(row.width)}, length=${q(row.length)}, weight=${q(row.weight)}, count=${q(row.count)}, orig_weight=${q(row.orig_weight)}, prod_status=${q(row.prod_status)}, code=${q(row.code)}, contract_no=${q(row.contract_no)}, note=${q(row.note)}, type=${q(row.type)}, origin=${q(row.origin)}, total_amount=${q(row.total_amount)}, unit_price=${q(row.unit_price)}, supplier=${q(row.supplier)}, sale_price=${q(row.sale_price)}, updated_at=now() WHERE id=${q(id)}`);
-        if (oldStatus && oldStatus !== row.status) await pushLog(id, logEntry('change', oldStatus, row.status, user.username));
+        const oldStatus = await readField(id, 'status');
+        if (oldStatus === null) return { ok: false, msg: '记录不存在或已被删除' };
+        await exec(sqlUpdate(id, row));
+        if (oldStatus && oldStatus !== row.status) await pushLog(id, logEntry('change', oldStatus, row.status, user.username, 'status'));
         return { ok: true, id: id };
       }
-      const initLog = JSON.stringify([logEntry('created', '', row.status, user.username)]);
-      await exec(`INSERT INTO tracking_items (status, purchase_date, warehouse_date, warehouse, grade, surface, thickness, width, length, weight, count, orig_weight, prod_status, code, contract_no, note, type, origin, total_amount, unit_price, supplier, sale_price, created_by, status_log) VALUES (${q(row.status)}, ${q(row.purchase_date)}, ${q(row.warehouse_date)}, ${q(row.warehouse)}, ${q(row.grade)}, ${q(row.surface)}, ${q(row.thickness)}, ${q(row.width)}, ${q(row.length)}, ${q(row.weight)}, ${q(row.count)}, ${q(row.orig_weight)}, ${q(row.prod_status)}, ${q(row.code)}, ${q(row.contract_no)}, ${q(row.note)}, ${q(row.type)}, ${q(row.origin)}, ${q(row.total_amount)}, ${q(row.unit_price)}, ${q(row.supplier)}, ${q(row.sale_price)}, ${q(user.username)}, ${q(initLog)})`);
+      const initLog = JSON.stringify([logEntry('created', '', row.status, user.username, 'status')]);
+      await exec(sqlInsert(row, user.username, initLog));
       return { ok: true };
     }
 
@@ -163,37 +231,43 @@ exports.main = async (event) => {
       let n = 0, errs = 0;
       for (const it of rows) {
         try {
-          const pick = (...names) => { for (const nm of names) { if (it[nm] !== undefined && it[nm] !== null && String(it[nm]).trim() !== '') return it[nm]; } return ''; };
-          const row = {
-            status: validStatus(pick('status')), purchase_date: cleanStr(pick('purchaseDate', 'purchase_date')), warehouse_date: cleanStr(pick('warehouseDate', 'warehouse_date')),
-            warehouse: cleanStr(pick('warehouse')), grade: cleanStr(pick('grade')), surface: cleanStr(pick('surface')),
-            thickness: cleanStr(pick('thickness')), width: cleanStr(pick('width')), length: cleanStr(pick('length')),
-            weight: cleanStr(pick('weight')), count: cleanStr(pick('count')), orig_weight: cleanStr(pick('origWeight', 'orig_weight')),
-            prod_status: cleanStr(pick('prodStatus', 'prod_status')), code: cleanStr(pick('code')), contract_no: cleanStr(pick('contractNo', 'contract_no')),
-            note: cleanStr(pick('note'), 1000), type: cleanStr(pick('type')), origin: cleanStr(pick('origin')),
-            total_amount: cleanStr(pick('totalAmount', 'total_amount')), unit_price: cleanStr(pick('unitPrice', 'unit_price')),
-            supplier: cleanStr(pick('supplier')), sale_price: cleanStr(pick('salePrice', 'sale_price'))
-          };
-          // 至少有一个业务字段非空才导入
-          const hasAny = [row.code, row.grade, row.supplier, row.warehouse, row.contract_no].some(v => v !== '');
+          const row = buildRow(it);
+          row.status = validStatus(it.status);
+          const hasAny = [row.code, row.grade, row.supplier, row.warehouse, row.contract_no, row.warehouse_date].some(v => v !== '');
           if (!hasAny) { errs++; continue; }
-          const initLog = JSON.stringify([logEntry('import', '', row.status, user.username)]);
-          await exec(`INSERT INTO tracking_items (status, purchase_date, warehouse_date, warehouse, grade, surface, thickness, width, length, weight, count, orig_weight, prod_status, code, contract_no, note, type, origin, total_amount, unit_price, supplier, sale_price, created_by, status_log) VALUES (${q(row.status)}, ${q(row.purchase_date)}, ${q(row.warehouse_date)}, ${q(row.warehouse)}, ${q(row.grade)}, ${q(row.surface)}, ${q(row.thickness)}, ${q(row.width)}, ${q(row.length)}, ${q(row.weight)}, ${q(row.count)}, ${q(row.orig_weight)}, ${q(row.prod_status)}, ${q(row.code)}, ${q(row.contract_no)}, ${q(row.note)}, ${q(row.type)}, ${q(row.origin)}, ${q(row.total_amount)}, ${q(row.unit_price)}, ${q(row.supplier)}, ${q(row.sale_price)}, ${q(user.username)}, ${q(initLog)})`);
+          const initLog = JSON.stringify([logEntry('import', '', row.status, user.username, 'status')]);
+          await exec(sqlInsert(row, user.username, initLog));
           n++;
         } catch (e) { errs++; }
       }
       return { ok: true, imported: n, skipped: errs };
     }
 
+    // 状态列切换：status(板块) / inv_status(库存状态) / ord_status(订单状态)
+    if (action === 'setfield') {
+      const id = parseInt(evt.id, 10);
+      if (!(id > 0)) return { ok: false, msg: 'id 无效' };
+      const field = String(evt.field || '');
+      if (!STATUS_FIELDS[field]) return { ok: false, msg: '不支持的状态字段：' + field };
+      let value = String(evt.value == null ? '' : evt.value).trim();
+      if (field === 'status') value = validStatus(value);
+      if (STATUS_FIELDS[field].indexOf(value) < 0) return { ok: false, msg: '状态值不合法：' + value };
+      const oldVal = await readField(id, field);
+      if (oldVal === null) return { ok: false, msg: '记录不存在或已被删除' };
+      await exec('UPDATE tracking_items SET ' + field + '=' + q(value) + ', updated_at=now() WHERE id=' + q(id));
+      if (oldVal !== value) await pushLog(id, logEntry('change', oldVal, value, user.username, field));
+      return { ok: true, field: field, from: oldVal, to: value, changed: oldVal !== value };
+    }
+
+    // 兼容旧接口名 status（等价于 setfield field=status）
     if (action === 'status') {
-      // 单独切换状态（库存↔已接单；两个方向都允许——已接单退回库存属特殊情况，可回退）
       const id = parseInt(evt.id, 10);
       if (!(id > 0)) return { ok: false, msg: 'id 无效' };
       const st = validStatus(evt.status);
-      const oldStatus = await readStatus(id);
-      if (!oldStatus) return { ok: false, msg: '记录不存在或已被删除' };
+      const oldStatus = await readField(id, 'status');
+      if (oldStatus === null) return { ok: false, msg: '记录不存在或已被删除' };
       await exec('UPDATE tracking_items SET status=' + q(st) + ', updated_at=now() WHERE id=' + q(id));
-      if (oldStatus !== st) await pushLog(id, logEntry('change', oldStatus, st, user.username));
+      if (oldStatus !== st) await pushLog(id, logEntry('change', oldStatus, st, user.username, 'status'));
       return { ok: true, status: st, from: oldStatus, changed: oldStatus !== st };
     }
 
