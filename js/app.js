@@ -1386,22 +1386,29 @@ const App = (() => {
     if (!origins.length) return;
     area.classList.remove('basis-hot-placeholder');
     area.classList.add('hot201-body');
-    // v1.0.188：一个产地一行，行内「四尺」「五尺」两段并排（窄带产地只有窄带段），紧凑无留白
+    // v1.0.189：一个产地一行，四尺/五尺两段等宽 + J 列纵向对齐（缺牌号的产地留同宽空位，保证色块上下对齐）
+    const jCols = [];
+    origins.forEach(o => matrix[o].forEach(m => { if (jCols.indexOf(m) < 0) jCols.push(m); }));
+    jCols.sort();
     let h = '<div class="hot201-sec-title">201/NO.1 热轧基价（元/吨）</div>';
-    h += '<div class="hot201-note">一个产地一行：行内「四尺」(宽 1219/1240mm) 与「五尺」(宽 1500/1524/1530mm) 两段并排、颜色区分；金海/鑫峰为 201 窄带热轧(630-810mm 仅 J3)，无边部费：售价 = 基价×0.92 + 木架包装50 + 装柜50；四尺/五尺：基价×0.92 + 销售加价(同冷轧)。🔒 锁定该产地全部尺段价</div>';
+    h += '<div class="hot201-note">一个产地一行：「四尺」(宽 1219/1240mm) 与「五尺」(宽 1500/1524/1530mm) 两段等宽并排、颜色区分，J 列上下对齐；某产地没有的牌号留同宽空位（虚线格）。金海/鑫峰为 201 窄带热轧(630-810mm 仅 J3)，无边部费：售价 = 基价×0.92 + 木架包装50 + 装柜50；四尺/五尺：基价×0.92 + 销售加价(同冷轧)。🔒 锁定该产地全部尺段价</div>';
     h += '<div class="hot201-rows">';
-    const segDefs = [
-      { ft: '4', tag: '四尺', cls: 's4', title: '宽 1219 / 1240mm 用' },
-      { ft: '5', tag: '五尺', cls: 's5', title: '宽 1500 / 1524 / 1530mm 用' }
-    ];
-    const cellHtml = (o, mat, ft, oLocked, cls) => {
-      const jl = mat.replace('201', '');
-      const key = o + '-' + mat + '-' + ft;
-      const val = hot201Prices[key] || 0;
-      return '<div class="hot201-cell ' + cls + '">' +
-        '<span class="hot201-jlabel">' + jl + '</span>' +
-        '<input type="number" class="hot201-input" data-key="' + key + '" value="' + (val || '') + '" step="10" placeholder="—"' + (oLocked ? ' disabled' : '') + '>' +
-        '</div>';
+    const segHtml = (o, ft, cls, tag, tagTitle, oLocked) => {
+      let inner = '';
+      jCols.forEach(mat => {
+        const jl = mat.replace('201', '');
+        const has = matrix[o].indexOf(mat) !== -1;
+        if (has) {
+          const key = o + '-' + mat + '-' + ft;
+          const val = hot201Prices[key] || 0;
+          inner += '<div class="hot201-cell"><span class="hot201-jlabel">' + jl + '</span>' +
+            '<input type="number" class="hot201-input" data-key="' + key + '" value="' + (val || '') + '" step="10" placeholder="—"' + (oLocked ? ' disabled' : '') + '></div>';
+        } else {
+          inner += '<div class="hot201-cell ghost"><span class="hot201-jlabel">' + jl + '</span><span class="hot201-ghost" title="该产地无此牌号"></span></div>';
+        }
+      });
+      return '<div class="hot201-seg ' + cls + '"><span class="hot201-segtag" title="' + tagTitle + '">' + tag + '</span>' +
+        '<div class="hot201-segcells" style="grid-template-columns:repeat(' + jCols.length + ',88px)">' + inner + '</div></div>';
     };
     origins.forEach(o => {
       const oLocked = !!lockedHot201[o];
@@ -1409,20 +1416,15 @@ const App = (() => {
       h += '<div class="origin-row hot201-row' + (oLocked ? ' row-locked' : '') + '">' +
         '<span class="oname" title="' + o + (isNarrow ? '（201 窄带热轧）' : '') + '">' + o + (isNarrow ? '<em class="hot201-narrow-badge">窄带</em>' : '') + '</span>';
       if (isNarrow) {
-        h += '<div class="hot201-seg sN"><span class="hot201-segtag" title="宽 630/650/690/730/780/810mm 共用一个价，无边部费">窄带</span>';
-        matrix[o].forEach(mat => { h += cellHtml(o, mat, 'N', oLocked, 'cn'); });
-        h += '</div>';
+        h += segHtml(o, 'N', 'sN', '窄带', '宽 630/650/690/730/780/810mm 共用一个价，无边部费', oLocked);
       } else {
-        segDefs.forEach(sg => {
-          h += '<div class="hot201-seg ' + sg.cls + '"><span class="hot201-segtag" title="' + sg.title + '">' + sg.tag + '</span>';
-          matrix[o].forEach(mat => { h += cellHtml(o, mat, sg.ft, oLocked, sg.cls === 's4' ? 'c4' : 'c5'); });
-          h += '</div>';
-        });
+        h += segHtml(o, '4', 's4', '四尺', '宽 1219 / 1240mm 用', oLocked);
+        h += segHtml(o, '5', 's5', '五尺', '宽 1500 / 1524 / 1530mm 用', oLocked);
       }
       h += lockBtn(o, oLocked) + '</div>';
     });
     h += '</div>';
-    h += '<div class="hot201-footnote">产地×J：鼎信 J1-J4 · 北港 J1/J4/J5 · 永达 J3 · 金海/鑫峰 J3(窄带 630-810mm)。热轧厚度 2.00-12.00mm；锁定后本机保存，刷新不丢失；云端发布后续版本提供</div>';
+    h += '<div class="hot201-footnote">产地×J：鼎信 J1-J4 · 北港 J1/J4/J5 · 永达 J3 · 金海/鑫峰 J3(窄带 630-810mm)。虚线格 = 该产地无此牌号。热轧厚度 2.00-12.00mm；锁定后本机保存，刷新不丢失；云端发布后续版本提供</div>';
     area.innerHTML = h;
     area.querySelectorAll('.hot201-input').forEach(inp => {
       const save = () => { const v = parseFloat(inp.value); hot201Prices[inp.dataset.key] = (v > 0) ? v : 0; saveHot201(); };
@@ -2019,60 +2021,57 @@ const App = (() => {
       '<button class="ref-nav-btn" data-target="ref-top">↑ 顶部</button>' +
       '</div>');
     // ===== 1. 厚度加价总表 =====
+    // v1.0.189：补齐全部厚度加价表（201 通用 / 201 产地 / 压延料 / 本地201(压延) / 304 通用 / 304 产地 / 400系 / 316L）
     h.push('<div class="ref-section" id="ref-sec-1"><h3 class="ref-title"><span class="ref-toggle">▾</span>📐 厚度加价总表</h3>');
-    // 默认表
-    h.push('<h4 class="ref-subtitle">宏旺201(正材）</h4>');
-    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
-    THICKNESS_SURCHARGE.forEach(t => {
-      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+    const refTable = (table) => {
+      h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
+      (table || []).forEach(t => {
+        h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
+      });
+      h.push('</table>');
+    };
+    // 201 通用表（宏旺 201 正材；北港 J1/J5、德龙/永达 201 同表）
+    h.push('<h4 class="ref-subtitle">宏旺201(正材)</h4>');
+    refTable(THICKNESS_SURCHARGE);
+    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 4px;">北港 201J1/J5、德龙 201、永达 201：厚度加价与宏旺 201 正材一致（用本表）</div>');
+
+    // 201 产地特异性表（甬金 / 上克 / 张浦）
+    Object.entries(ORIGIN_THICKNESS_SURCHARGE).forEach(([origin, table]) => {
+      if (origin === '本地201(压延)') return; // 压延料专属表，单独成段（见下）
+      h.push(`<h4 class="ref-subtitle">${origin} (201正材)</h4>`);
+      refTable(table);
     });
-    h.push('</table>');
-    // 2026-08-25: 北港 201J1/J5：厚度加价与宏旺 201 正材一致
-    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">北港 201J1/J5：厚度加价与宏旺 201 正材一致');
+
+    // 压延料（轧硬料）厚度加价
+    h.push('<h4 class="ref-subtitle">压延料（轧硬料）</h4>');
+    refTable(YANYAN_THICKNESS_SURCHARGE);
+    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 4px;">报关写「压延」且未指定「本地201(压延)」时按本表计厚度加价</div>');
 
     // v1.0.187 本地201(压延) 专属厚度加价表
     h.push('<h4 class="ref-subtitle">本地201(压延)</h4>');
-    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
-    (ORIGIN_THICKNESS_SURCHARGE['本地201(压延)'] || []).forEach(t => {
-      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
-    });
-    h.push('</table>');
+    refTable(ORIGIN_THICKNESS_SURCHARGE['本地201(压延)']);
+    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 4px;">仅 1219/1240mm 宽度；0.31-0.32mm 未单独给档，并入 0.29-0.32 档 +1000</div>');
 
-    // 304 表（2026-08-21：宏旺已建独立表，通用表仅德龙）
+    // 304 通用表（宏旺已建独立表，通用表仅德龙）
     h.push('<h4 class="ref-subtitle">德龙304</h4>');
-    h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
-    THICKNESS_SURCHARGE_304.forEach(t => {
-      h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
-    });
-    h.push('</table>');
+    refTable(THICKNESS_SURCHARGE_304);
 
-    // 产地特异性表（2026-08-20：张浦 304 已用独立新表，跳过避免误导）
-    Object.entries(ORIGIN_THICKNESS_SURCHARGE).forEach(([origin, table]) => {
-      if (origin === '张浦') return;
-      h.push(`<h4 class="ref-subtitle">${origin} (304正材)</h4>`);
-      h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
-      table.forEach(t => {
-        h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
-      });
-      h.push('</table>');
-    });
-    // 304 产地特异性表（2026-08-20：张浦上限 6.00mm；2026-08-21：宏旺 0.26-0.27 +1500 上限 3.00）
+    // 304 产地特异性表（宏旺 上限 3.00；张浦 上限 6.00）
     Object.entries(ORIGIN_THICKNESS_SURCHARGE_304).forEach(([origin, table]) => {
       const maxThk = origin === '张浦' ? '上限 6.00mm' : '上限 3.00mm';
       h.push(`<h4 class="ref-subtitle">${origin} 304（${maxThk}${origin === '宏旺' ? '，含 0.26-0.27 +1500' : ''}）</h4>`);
-      h.push('<table class="ref-table"><tr><th>厚度 (mm)</th><th>加价 (元/吨)</th></tr>');
-      table.forEach(t => {
-        h.push(`<tr><td>${t.min}～${t.max}</td><td class="ref-num">+${t.price}</td></tr>`);
-      });
-      h.push('</table>');
+      refTable(table);
     });
+
     // 400系厚度加价表（标签顺序对齐面板板块：410 系列 → 430 系列）
     const THICK_400_LABELS = [
       ['410S-BA', '410S/BA（甬金/上克）'],
       ['410S-2BA-瑞钢', '410S/2BA（瑞钢）'],
       ['410S-2BA(非标)', '410S/2BA(非标)（瑞钢）'],
+      ['410S-2BA-宏旺', '410S/BA（宏旺，与宏旺其他 400 系同表）'],
       ['430B-BA', '430B/BA（甬金/上克）'],
       ['430-BA', '430/BA（甬金/上克）'],
+      ['430-BA-硕阳', '430/BA（硕阳专属表）'],
       ['430W-2BA', '宏旺 400系（410S/2BA、430W/2BA、430W/2BB，同价）'],
       ['430B-2BA-瑞钢', '430B/2BA（瑞钢）']
     ];
@@ -2087,6 +2086,7 @@ const App = (() => {
       });
       h.push('</table>');
     }
+
     // 316L 厚度加价（2026-08-21：张浦 16 档 + 甬金 17 档；太钢未提供）
     h.push('<h4 class="ref-subtitle">316L厚度加价</h4>');
     Object.entries(ORIGIN_THICKNESS_SURCHARGE_316L).forEach(([origin, table]) => {
@@ -2098,6 +2098,7 @@ const App = (() => {
       h.push('</table>');
     });
     h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">太钢 316L：未提供厚度加价数据，暂不报价（2026-08-20）</div>');
+    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 2px;">热轧(NO.1) 201：无厚度加价（售价 = 基价×0.92 + 销售加价；金海/鑫峰窄带固定 +100 木架+装柜）</div>');
     h.push('</div>');
 
     // ===== 2. 表面加工费总表 =====
