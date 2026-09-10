@@ -1010,27 +1010,41 @@
     var vals = uniqueVals(k);
     var box = $('fPanel');
     var list = vals.map(function (v) {
-      return '<label><input type="checkbox" value="' + esc(v) + '"' + (cur.vals && cur.vals.length && cur.vals.indexOf(v) >= 0 ? ' checked' : '') + '><span>' + (v === '' ? '（空白）' : esc(v)) + '</span></label>';
+      var txt = v === '' ? '（空白）' : String(v);
+      return '<label title="' + esc(txt) + '"><input type="checkbox" value="' + esc(v) + '"' + (cur.vals && cur.vals.length && cur.vals.indexOf(v) >= 0 ? ' checked' : '') + '><span>' + esc(txt) + '</span></label>';
     }).join('');
+    var emptyTip = hasDictCol(k)
+      ? '在表格里填一次，或在「📚 数据词典」里给这一列加点值'
+      : '该列没有候选值，用下面的最小 / 最大范围来筛';
+    // 一个真实候选值都没有（只剩「（空白）」）时，不给空瘪小框，直接走空态说明
+    var realN = vals.filter(function (v) { return v !== ''; }).length;
+    if (!realN) list = '';
     box.innerHTML = '<div class="fp-t"><span>' + esc(c.t) + '</span><span class="sp"></span><button data-fp="close">✕</button></div>' +
       '<input class="fp-s" id="fpSearch" placeholder="在值里搜索…">' +
-      '<div class="fp-list" id="fpList">' + (list || '<div class="fp-empty">（本列暂无数据）</div>') + '</div>' +
+      '<div class="fp-list" id="fpList">' + (list || '<div class="fp-empty"><b>该列暂无可选值</b><i>' + emptyTip + '</i></div>') + '</div>' +
       (c.kind === 'date' || c.kind === 'num' ?
         '<div class="fp-row"><span class="lbl">' + (c.kind === 'date' ? '起' : '最小') + '</span><input id="fpMin" value="' + esc(cur.min || '') + '" placeholder="' + (c.kind === 'date' ? '2026-01-01' : '') + '">' +
         '<span class="lbl">' + (c.kind === 'date' ? '止' : '最大') + '</span><input id="fpMax" value="' + esc(cur.max || '') + '" placeholder="' + (c.kind === 'date' ? '2026-12-31' : '') + '"></div>' : '') +
       '<div class="fp-f">' +
-      '<button data-fp="all">全选</button><button data-fp="none">清空</button>' +
+      '<button data-fp="all"' + (realN ? '' : ' disabled') + '>全选</button><button data-fp="none"' + (realN ? '' : ' disabled') + '>清空</button>' +
       '<button data-fp="asc">↑ 升序</button><button data-fp="desc">↓ 降序</button>' +
       '</div>' +
       '<div class="fp-f"><button data-fp="clear">清除此列</button><button class="pri" data-fp="apply">应用</button></div>';
     box.dataset.k = k;
     box.classList.add('show');
-    var card = $('tblCard').getBoundingClientRect();
+    var tw = $('tblCard');
+    var card = tw.getBoundingClientRect();
     var r = btn.getBoundingClientRect();
-    var left = r.left - card.left + $('tblCard').scrollLeft;
-    var top = r.bottom - card.top + $('tblCard').scrollTop + 4;
-    box.style.left = Math.max(6, Math.min(left - 60, $('tblCard').clientWidth - 276)) + 'px';
+    var pw = box.offsetWidth || 340;
+    var left = r.left - card.left + tw.scrollLeft;
+    var top = r.bottom - card.top + tw.scrollTop + 4;
+    var lx = Math.max(4, Math.min(left - 60, tw.clientWidth - pw - 8));
+    box.style.left = lx + 'px';
     box.style.top = top + 'px';
+    // 面板可能越过窗口右边界 → 左移
+    var rect = box.getBoundingClientRect();
+    var over = rect.right - (window.innerWidth - 8);
+    if (over > 0) box.style.left = Math.max(4, lx - over) + 'px';
   }
   function readFPanel() {
     var box = $('fPanel'), k = box.dataset.k;
