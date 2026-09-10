@@ -507,6 +507,12 @@
     if (board === 'intake') {
       var s0 = inSum();
       if ($('nIn')) $('nIn').textContent = s0.n;
+      var n1 = items.filter(function (i) { return i.status === 'inventory'; }).length;
+      var n2 = items.filter(function (i) { return i.status === 'ordered'; }).length;
+      $('nInv').textContent = n1;
+      $('nOrd').textContent = n2;
+      $('nPg').textContent = n2;
+      $('nAll').textContent = items.length;
       $('sumLine').innerHTML = '<b>📥 入仓录入</b>：已填 <b>' + s0.n + '</b> 行 · <b>' + fmtNum(s0.cnt, 0) + '</b> 卷/张 · 合计 <b>' +
         fmtNum(s0.kg / 1000, 3) + '</b> 吨（' + fmtNum(s0.kg, 0) + ' KG） · 不含税金额 <b>' + fmtNum(s0.amt, 2) + '</b> 元' +
         '<span style="color:#64748b">　（筛选只影响显示，一键入仓提交全部已填行）</span>';
