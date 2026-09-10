@@ -1,10 +1,11 @@
-// trackingTable — 不锈钢跟单系统数据接口（v1.0.195）
-// 表：tracking_items（PG）
-// action: list / save(新增或按id更新) / delete / import(批量) / setfield(切换 status|inv_status|ord_status)  —— 均需登录
+// trackingTable — 不锈钢跟单系统数据接口（v1.0.196）
+// 表：tracking_items（PG）/ tracking_lib（工序库等字典）
+// action: list / save / delete / import / setfield / batchset / batchdel / libget / libset —— 均需登录
 // v1.0.194：入仓字段按业务清单扩展（原重/现重/毛重 KG、单价含税/不含税、总金额含税/不含税、负差、实卡厚）
-//           库存板块与已接单板块各自独立状态列（inv_status / ord_status），切换留痕（时间 + 操作账号）
-// v1.0.195：save 更新时对 status / inv_status / ord_status 三个状态字段逐一比对留痕（支持整行编辑一次性提交）
-//           import 状态列归位保底：带订单状态的行自动进「已接单」板块
+// v1.0.195：save 更新时对 status / inv_status / ord_status 逐一比对留痕；import 状态列归位保底
+// v1.0.196：① 新增 客户名称 customer / 跟单员 follower / 预期交期 due_date / 工序链 process_flow / 当前工序 process_step
+//           ② 「已接单」改名「生产中」（status 值仍为 ordered）；新增「生产进度」视图（同一批数据的精简列）
+//           ③ 批量接口 batchset / batchdel；工序库字典接口 libget / libset（存 tracking_lib）
 const CloudBase = require('@cloudbase/manager-node');
 const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
 const database = app.database;
@@ -52,15 +53,29 @@ const ALIAS = {
   real_thickness: ['realThickness', 'real_thickness'],
   sale_price: ['salePrice', 'sale_price'],
   inv_status: ['invStatus', 'inv_status'],
-  ord_status: ['ordStatus', 'ord_status']
+  ord_status: ['ordStatus', 'ord_status'],
+  // v1.0.196 生产进度相关
+  customer: ['customer', 'custName'],
+  follower: ['follower', 'salesman', 'owner'],
+  due_date: ['dueDate', 'due_date'],
+  process_flow: ['processFlow', 'process_flow'],
+  process_step: ['processStep', 'process_step']
 };
-const MAXLEN = { note: 1000 };
+const MAXLEN = { note: 1000, process_flow: 4000, customer: 200, follower: 100, due_date: 40 };
 
 // 状态枚举
-const ENUM_STATUS = ['inventory', 'ordered'];                  // 板块归属
+const ENUM_STATUS = ['inventory', 'ordered'];                  // 板块归属（ordered = 生产中 / 生产进度）
 const ENUM_INV = ['在库', '已预订', '部分出库', '已售出'];      // 库存板块状态列
-const ENUM_ORD = ['采购下单', '原料到仓', '投入生产', '加工完成', '发货自提', '已交付']; // 已接单板块状态列
+const ENUM_ORD = ['采购下单', '原料到仓', '投入生产', '加工完成', '发货自提', '已交付']; // 订单状态列
 const STATUS_FIELDS = { status: ENUM_STATUS, inv_status: ENUM_INV, ord_status: ENUM_ORD };
+// batchset 允许的额外列（不在 ALIAS 映射里的系统列）
+const EXTRA_COLS = ['status'];
+
+// 默认工序库（图1 清单，可在界面增删）
+const DEFAULT_PROCESS = ['开平', '飞剪', '纵剪/分条', '修边', '整平/矫平', '剪板', '激光切割', '冲孔', '折弯', '焊接',
+  '酸洗', '退火酸洗', '普通磨砂', '雪花砂', '短丝', '长丝', '拉丝', '油磨', '干磨', '水磨', '缎纹', '乱纹/和纹',
+  '8K镜面', '喷砂', '压花', '蚀刻', 'PVD镀色', '仿古铜', '做旧', '抗指纹', '覆膜', '贴膜', '撕膜',
+  '检验', '包装', '装车', '运输', '客户签收', '返工'];
 
 async function ensureTables() {
   await exec(`CREATE TABLE IF NOT EXISTS tracking_items (
@@ -81,8 +96,16 @@ async function ensureTables() {
     'amount_tax', 'amount_notax', 'negative_diff', 'real_thickness', 'inv_status', 'ord_status']) {
     await exec(`ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS ${c} TEXT DEFAULT ''`);
   }
+  // v1.0.196 生产进度字段（客户 / 跟单员 / 预期交期 / 工序链 / 当前工序）
+  for (const c of ['customer', 'follower', 'due_date', 'process_flow', 'process_step']) {
+    await exec(`ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS ${c} TEXT DEFAULT ''`);
+  }
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_status ON tracking_items (status)');
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_code ON tracking_items (code)');
+  await exec('CREATE INDEX IF NOT EXISTS idx_tracking_contract ON tracking_items (contract_no)');
+  await exec('CREATE INDEX IF NOT EXISTS idx_tracking_follower ON tracking_items (follower)');
+  // 字典表（工序库等）：k = 字典键，v = JSON 字符串
+  await exec("CREATE TABLE IF NOT EXISTS tracking_lib (k TEXT PRIMARY KEY, v TEXT DEFAULT '', updated_at TIMESTAMP DEFAULT now())");
 }
 
 function parseEvt(ev) {
@@ -183,6 +206,22 @@ async function readField(id, field) {
   } catch (e) {}
   return null;
 }
+// 通用字段读取（仅白名单列）
+async function readCol(id, col) {
+  if (!ALIAS[col] && EXTRA_COLS.indexOf(col) < 0) return null;
+  try {
+    const o = await exec('SELECT ' + col + ' FROM tracking_items WHERE id=' + q(id));
+    if (o.Rows && o.Rows.length) { const r0 = JSON.parse(o.Rows[0]); return String(r0[0] || ''); }
+  } catch (e) {}
+  return null;
+}
+
+function parseIds(arr) {
+  if (!Array.isArray(arr)) return [];
+  const out = [];
+  arr.forEach(x => { const n = parseInt(x, 10); if (n > 0 && out.indexOf(n) < 0) out.push(n); });
+  return out;
+}
 
 exports.main = async (event) => {
   const evt = parseEvt(event);
@@ -208,7 +247,7 @@ exports.main = async (event) => {
       row.status = validStatus(it.status);
       const id = parseInt(it.id, 10);
       if (id > 0) {
-        // v1.0.195：先读三个状态字段（板块 / 库存状态 / 订单状态），变更逐一留痕
+        // 先读三个状态字段（板块 / 库存状态 / 订单状态），变更逐一留痕
         const olds = {
           status: await readField(id, 'status'),
           inv_status: await readField(id, 'inv_status'),
@@ -238,26 +277,64 @@ exports.main = async (event) => {
       return { ok: true };
     }
 
-    if (action === 'import') {
-      const rows = evt.rows;
-      if (!Array.isArray(rows) || !rows.length) return { ok: false, msg: '导入数据为空' };
-      if (rows.length > 500) return { ok: false, msg: '单次最多导入 500 条' };
-      let n = 0, errs = 0;
-      for (const it of rows) {
-        try {
-          const row = buildRow(it);
-          row.status = validStatus(it.status);
-          // v1.0.195：Excel 状态列归位保底 —— 有订单状态即进「已接单」，只有库存状态则进「库存」
-          if (row.ord_status && !row.inv_status) row.status = 'ordered';
-          if (row.inv_status && !row.ord_status) row.status = 'inventory';
-          const hasAny = [row.code, row.grade, row.supplier, row.warehouse, row.contract_no, row.warehouse_date].some(v => v !== '');
-          if (!hasAny) { errs++; continue; }
-          const initLog = JSON.stringify([logEntry('import', '', row.status, user.username, 'status')]);
-          await exec(sqlInsert(row, user.username, initLog));
-          n++;
-        } catch (e) { errs++; }
+    // v1.0.196 批量更新指定字段（未列出的字段不动；三个状态字段变更留痕）
+    if (action === 'batchset') {
+      const ids = parseIds(evt.ids);
+      if (!ids.length) return { ok: false, msg: '未选择记录' };
+      const fields = evt.fields && typeof evt.fields === 'object' ? evt.fields : {};
+      const cols = Object.keys(fields).filter(c => ALIAS[c] || EXTRA_COLS.indexOf(c) >= 0);
+      if (!cols.length) return { ok: false, msg: '没有可更新的字段' };
+      let n = 0, miss = 0;
+      for (const id of ids) {
+        const exist = await readCol(id, cols[0]);
+        if (exist === null) { miss++; continue; }
+        // 状态字段先比对留痕
+        for (const fl of ['status', 'inv_status', 'ord_status']) {
+          if (cols.indexOf(fl) < 0) continue;
+          let nv = String(fields[fl] == null ? '' : fields[fl]).trim();
+          if (fl === 'status') nv = validStatus(nv);
+          else if (STATUS_FIELDS[fl].indexOf(nv) < 0) nv = '';
+          const ov = await readField(id, fl);
+          if (ov === null) continue;
+          if (String(ov) !== nv) await pushLog(id, logEntry('batch', String(ov), nv, user.username, fl));
+        }
+        const sets = cols.map(c => {
+          let v = (fields[c] == null) ? '' : String(fields[c]);
+          if (c === 'status') v = validStatus(v);
+          if (c === 'inv_status' || c === 'ord_status') { if (STATUS_FIELDS[c].indexOf(v.trim()) < 0) v = ''; v = v.trim(); }
+          return c + '=' + q(cleanStr(v, MAXLEN[c]));
+        });
+        await exec('UPDATE tracking_items SET ' + sets.join(', ') + ', updated_at=now() WHERE id=' + q(id));
+        n++;
       }
-      return { ok: true, imported: n, skipped: errs };
+      return { ok: true, updated: n, missing: miss };
+    }
+
+    // v1.0.196 批量删除
+    if (action === 'batchdel') {
+      const ids = parseIds(evt.ids);
+      if (!ids.length) return { ok: false, msg: '未选择记录' };
+      // 逐条读日志不需要，直接删
+      await exec('DELETE FROM tracking_items WHERE id IN (' + ids.map(x => q(x)).join(',') + ')');
+      return { ok: true, deleted: ids.length };
+    }
+
+    // v1.0.196 字典：工序库（processLib）
+    if (action === 'libget') {
+      const key = String(evt.key || 'processLib');
+      const res = await exec('SELECT v FROM tracking_lib WHERE k=' + q(key) + ' LIMIT 1');
+      let val = null;
+      if (res.Rows && res.Rows.length) { try { val = JSON.parse(JSON.parse(res.Rows[0])[0] || 'null'); } catch (e) { val = null; } }
+      if (val === null && key === 'processLib') val = DEFAULT_PROCESS.slice();
+      return { ok: true, key: key, value: val };
+    }
+    if (action === 'libset') {
+      const key = String(evt.key || 'processLib');
+      const val = Array.isArray(evt.value) ? evt.value.map(x => String(x).trim()).filter(x => x) : null;
+      if (!val) return { ok: false, msg: '字典值必须是数组' };
+      await exec('INSERT INTO tracking_lib (k, v, updated_at) VALUES (' + q(key) + ', ' + q(JSON.stringify(val)) + ', now()) ' +
+        'ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()');
+      return { ok: true, key: key, count: val.length };
     }
 
     // 状态列切换：status(板块) / inv_status(库存状态) / ord_status(订单状态)
@@ -286,6 +363,28 @@ exports.main = async (event) => {
       await exec('UPDATE tracking_items SET status=' + q(st) + ', updated_at=now() WHERE id=' + q(id));
       if (oldStatus !== st) await pushLog(id, logEntry('change', oldStatus, st, user.username, 'status'));
       return { ok: true, status: st, from: oldStatus, changed: oldStatus !== st };
+    }
+
+    // import 放在最后（逻辑较长）
+    if (action === 'import') {
+      const rows = evt.rows;
+      if (!Array.isArray(rows) || !rows.length) return { ok: false, msg: '导入数据为空' };
+      if (rows.length > 500) return { ok: false, msg: '单次最多导入 500 条' };
+      let n = 0, errs = 0;
+      for (const it of rows) {
+        try {
+          const row = buildRow(it);
+          row.status = validStatus(it.status);
+          if (row.ord_status && !row.inv_status) row.status = 'ordered';
+          if (row.inv_status && !row.ord_status) row.status = 'inventory';
+          const hasAny = [row.code, row.grade, row.supplier, row.warehouse, row.contract_no, row.warehouse_date, row.customer].some(v => v !== '');
+          if (!hasAny) { errs++; continue; }
+          const initLog = JSON.stringify([logEntry('import', '', row.status, user.username, 'status')]);
+          await exec(sqlInsert(row, user.username, initLog));
+          n++;
+        } catch (e) { errs++; }
+      }
+      return { ok: true, imported: n, skipped: errs };
     }
 
     return { ok: false, msg: '未知 action: ' + action };
