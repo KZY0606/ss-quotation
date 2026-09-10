@@ -812,10 +812,13 @@
     renderTrack();
     var rows = visibleRows();
     var tb = $('tbody');
+    var cardEl = $('tblCard');
+    if (cardEl) cardEl.classList[rows.length ? 'remove' : 'add']('tf-empty');
     var cols = colsOf(board);
     if (!rows.length) {
-      tb.innerHTML = '<tr><td colspan="' + cols.length + '" class="empty">' +
-        (boardRowsOf(board).length ? '当前筛选 / 搜索无匹配' : (board === 'progress' ? '生产进度板块显示「生产中」的货，先到生产中板块录入或转过来' : '该板块暂无数据，点「＋ 入仓」或「📥 导入 Excel/CSV」开始')) + '</td></tr>';
+      tb.innerHTML = '';
+      var et = $('emptyText');
+      if (et) et.textContent = (boardRowsOf(board).length ? '当前筛选 / 搜索无匹配' : (board === 'progress' ? '生产进度板块显示「生产中」的货，先到生产中板块录入或转过来' : '该板块暂无数据，点「＋ 入仓」或「📥 导入 Excel/CSV」开始'));
       return;
     }
     tb.innerHTML = rows.map(function (it) {

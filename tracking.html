@@ -8,7 +8,7 @@
   <script src="js/vendor/xlsx.mini.min.js?v=1.0.196"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #f4f6f8; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: #1f2937; font-size: 13px; }
+    body { background: #f4f6f8; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: #1f2937; font-size: 13px; min-height: 100vh; display: flex; flex-direction: column; }
     a { text-decoration: none; }
     .top { background: linear-gradient(135deg, #1e3a5f, #2c5282); color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
     .top .logo { width: 30px; height: 30px; background: rgba(255,255,255,.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
@@ -18,7 +18,7 @@
     .top .user { font-size: 12px; opacity: .9; white-space: nowrap; }
     .top a.btn, .top button.btn { color: #fff; background: rgba(255,255,255,.15); border: none; border-radius: 7px; padding: 7px 14px; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
     .top a.btn:hover, .top button.btn:hover { background: rgba(255,255,255,.3); }
-    .wrap { max-width: 1760px; margin: 18px auto; padding: 0 14px; }
+    .wrap { max-width: 1760px; margin: 18px auto; padding: 0 14px; width: 100%; flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
     /* 板块 + 统计 */
     .stats { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
     .stat { background: #fff; border-radius: 10px; padding: 10px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; border: 2px solid transparent; min-width: 130px; }
@@ -80,8 +80,12 @@
     .sub-row .go { border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; border-radius: 5px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
     .sub-row .go:hover { background: #eef2f7; }
     /* 表格 */
-    .tblcard { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: auto; position: relative; }
+    .tblcard { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: auto; position: relative; flex: 1 1 auto; min-height: 280px; }
     table.tk { border-collapse: collapse; }
+  /* 板块无数据时：提示覆盖在卡片上，纵向铺到卡片底部（v1.0.202） */
+  .emptystate { position: absolute; left: 0; right: 0; top: 46px; bottom: 18px; display: none; align-items: center; justify-content: center; padding: 20px 20px 30px; pointer-events: none; }
+  .tblcard.tf-empty .emptystate { display: flex; }
+  .emptystate .es-t { color: #94a3b8; font-size: 13px; line-height: 1.9; text-align: center; max-width: 92%; }
     table.tk th { background: #f1f5f9; color: #334155; font-size: 12px; font-weight: 700; padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; text-align: left; }
     table.tk th.num-r { text-align: right; }
     table.tk th.num-r .th-in { justify-content: flex-end; }
@@ -379,6 +383,7 @@
         <thead id="thead"></thead>
         <tbody id="tbody"><tr><td class="loading">加载中…</td></tr></tbody>
       </table>
+      <div class="emptystate" id="emptyState"><div class="es-t" id="emptyText"></div></div>
       <div class="fpanel" id="fPanel"></div>
       <div class="ddpanel" id="ddPanel"></div>
     </div>
@@ -578,6 +583,6 @@
   <datalist id="dl_follower"></datalist>
 
   <div class="toasts" id="toasts"></div>
-  <script src="js/tracking.js?v=1.0.201"></script>
+  <script src="js/tracking.js?v=1.0.202"></script>
 </body>
 </html>
