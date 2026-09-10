@@ -1,8 +1,10 @@
-// trackingTable — 不锈钢跟单系统数据接口（v1.0.194）
+// trackingTable — 不锈钢跟单系统数据接口（v1.0.195）
 // 表：tracking_items（PG）
 // action: list / save(新增或按id更新) / delete / import(批量) / setfield(切换 status|inv_status|ord_status)  —— 均需登录
 // v1.0.194：入仓字段按业务清单扩展（原重/现重/毛重 KG、单价含税/不含税、总金额含税/不含税、负差、实卡厚）
 //           库存板块与已接单板块各自独立状态列（inv_status / ord_status），切换留痕（时间 + 操作账号）
+// v1.0.195：save 更新时对 status / inv_status / ord_status 三个状态字段逐一比对留痕（支持整行编辑一次性提交）
+//           import 状态列归位保底：带订单状态的行自动进「已接单」板块
 const CloudBase = require('@cloudbase/manager-node');
 const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
 const database = app.database;
@@ -37,9 +39,9 @@ const ALIAS = {
   supplier: ['supplier'],
   weight: ['weight'],
   orig_weight: ['origWeight', 'orig_weight'],
-  weight_orig: ['wOrig', 'weightOrig', 'weight_orig'],
-  weight_now: ['wNow', 'weightNow', 'weight_now'],
-  weight_gross: ['wGross', 'weightGross', 'weight_gross'],
+  weight_orig: ['wOrig', 'w_orig', 'weightOrig', 'weight_orig'],
+  weight_now: ['wNow', 'w_now', 'weightNow', 'weight_now'],
+  weight_gross: ['wGross', 'w_gross', 'weightGross', 'weight_gross'],
   unit_price: ['unitPrice', 'unit_price'],
   total_amount: ['totalAmount', 'total_amount'],
   price_tax: ['priceTax', 'price_tax'],
@@ -206,10 +208,22 @@ exports.main = async (event) => {
       row.status = validStatus(it.status);
       const id = parseInt(it.id, 10);
       if (id > 0) {
-        const oldStatus = await readField(id, 'status');
-        if (oldStatus === null) return { ok: false, msg: '记录不存在或已被删除' };
+        // v1.0.195：先读三个状态字段（板块 / 库存状态 / 订单状态），变更逐一留痕
+        const olds = {
+          status: await readField(id, 'status'),
+          inv_status: await readField(id, 'inv_status'),
+          ord_status: await readField(id, 'ord_status')
+        };
+        if (olds.status === null) return { ok: false, msg: '记录不存在或已被删除' };
         await exec(sqlUpdate(id, row));
-        if (oldStatus && oldStatus !== row.status) await pushLog(id, logEntry('change', oldStatus, row.status, user.username, 'status'));
+        const news = { status: row.status, inv_status: row.inv_status || '', ord_status: row.ord_status || '' };
+        for (const fl of ['status', 'inv_status', 'ord_status']) {
+          const a = olds[fl] === null ? '' : String(olds[fl]);
+          const b = String(news[fl] || '');
+          if (a === b) continue;
+          if (fl === 'status' && !a) continue;            // 板块原值缺失时不记（避免脏轨迹）
+          await pushLog(id, logEntry('change', a, b, user.username, fl));
+        }
         return { ok: true, id: id };
       }
       const initLog = JSON.stringify([logEntry('created', '', row.status, user.username, 'status')]);
@@ -233,6 +247,9 @@ exports.main = async (event) => {
         try {
           const row = buildRow(it);
           row.status = validStatus(it.status);
+          // v1.0.195：Excel 状态列归位保底 —— 有订单状态即进「已接单」，只有库存状态则进「库存」
+          if (row.ord_status && !row.inv_status) row.status = 'ordered';
+          if (row.inv_status && !row.ord_status) row.status = 'inventory';
           const hasAny = [row.code, row.grade, row.supplier, row.warehouse, row.contract_no, row.warehouse_date].some(v => v !== '');
           if (!hasAny) { errs++; continue; }
           const initLog = JSON.stringify([logEntry('import', '', row.status, user.username, 'status')]);

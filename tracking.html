@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>跟单系统 - KK不锈钢</title>
-  <script src="js/auth.js?v=1.0.194"></script>
-  <script src="js/vendor/xlsx.mini.min.js?v=1.0.194"></script>
+  <script src="js/auth.js?v=1.0.195"></script>
+  <script src="js/vendor/xlsx.mini.min.js?v=1.0.195"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #f4f6f8; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: #1f2937; font-size: 13px; }
@@ -31,31 +31,61 @@
     .sumline b { color: #1e3a5f; }
     /* 工具栏 */
     .bar { background: #fff; border-radius: 10px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-    .bar input[type=text] { padding: 7px 12px; border: 1px solid #cbd5e0; border-radius: 7px; font-size: 13px; width: 300px; outline: none; }
+    .bar input[type=text] { padding: 7px 12px; border: 1px solid #cbd5e0; border-radius: 7px; font-size: 13px; width: 330px; outline: none; }
     .bar input[type=text]:focus { border-color: #2c5282; }
     .bar .sp { flex: 1; }
+    .bar .grp { display: flex; gap: 6px; align-items: center; padding-left: 10px; border-left: 1px solid #e2e8f0; }
+    .bar .hint { font-size: 11.5px; color: #94a3b8; }
     .btn { padding: 7px 16px; border-radius: 7px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 13px; }
     .btn:hover { background: #f1f5f9; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn:disabled:hover { background: #fff; }
     .btn.primary { background: #2c5282; color: #fff; border-color: #2c5282; }
     .btn.primary:hover { background: #1e3a5f; }
+    .btn.edit { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+    .btn.save { background: #065f46; color: #fff; border-color: #065f46; }
+    .btn.cancel { background: #fff; border-color: #cbd5e0; color: #64748b; }
+    .btn.go { background: #fff7ed; border-color: #fdba74; color: #c2410c; }
+    .btn.back { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+    .btn.del { background: #fff; border-color: #fca5a5; color: #b91c1c; }
     /* 表格 */
-    .tblcard { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: auto; }
+    .tblcard { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: auto; position: relative; }
     table.tk { border-collapse: collapse; }
-    table.tk th { background: #f1f5f9; color: #334155; font-size: 12px; font-weight: 700; padding: 8px 8px; border: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; text-align: left; }
+    table.tk th { background: #f1f5f9; color: #334155; font-size: 12px; font-weight: 700; padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; text-align: left; }
     table.tk th.num-r { text-align: right; }
-    table.tk th.th-st { width: 132px; }
-    table.tk th.th-op { width: 168px; }
-    table.tk td { padding: 7px 8px; border: 1px solid #eef2f6; font-size: 12.5px; white-space: nowrap; }
+    table.tk th.num-r .th-in { justify-content: flex-end; }
+    table.tk th.th-st { width: 138px; }
+    table.tk .th-in { display: flex; align-items: center; gap: 2px; }
+    .fbtn { border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 10px; line-height: 1; padding: 1px 3px; border-radius: 3px; }
+    .fbtn:hover { background: #e2e8f0; color: #1e3a5f; }
+    .fbtn.on { color: #fff; background: #c2410c; }
+    table.tk td { padding: 6px 8px; border: 1px solid #eef2f6; font-size: 12.5px; white-space: nowrap; }
     table.tk td.num-r { text-align: right; font-variant-numeric: tabular-nums; }
     table.tk td.wide { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
-    table.tk tr:hover td { background: #f8fafc; }
-    .mini { padding: 3px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; margin-right: 4px; }
-    .mini:hover { background: #f1f5f9; }
-    .mini.go { background: #fff7ed; border-color: #fdba74; color: #c2410c; }
-    .mini.back { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
-    .mini.del { background: #fff; border-color: #fca5a5; color: #b91c1c; }
-    .op { white-space: nowrap; }
+    table.tk tbody tr { cursor: pointer; }
+    table.tk tbody tr:hover td { background: #f8fafc; }
+    table.tk tbody tr.sel td { background: #e8f1fb; }
+    table.tk tbody tr.editing td { background: #fffbeb; }
+    .cellin { width: 100%; min-width: 66px; padding: 4px 6px; border: 1px solid #93c5fd; border-radius: 5px; font-size: 12.5px; outline: none; background: #fff; }
+    .cellin:focus { border-color: #2c5282; box-shadow: 0 0 0 2px rgba(44,82,130,.12); }
     .empty { text-align: center; color: #94a3b8; padding: 40px 0 !important; font-size: 13px; }
+    /* 筛选面板 */
+    .fpanel { position: absolute; z-index: 70; background: #fff; border: 1px solid #cbd5e0; border-radius: 9px; box-shadow: 0 12px 34px rgba(0,0,0,.2); width: 262px; padding: 10px 12px; font-size: 12.5px; display: none; }
+    .fpanel.show { display: block; }
+    .fpanel .fp-t { font-weight: 700; color: #1e3a5f; margin-bottom: 6px; display: flex; align-items: center; }
+    .fpanel .fp-t .sp { flex: 1; }
+    .fpanel .fp-t button { border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 14px; }
+    .fpanel .fp-s { width: 100%; padding: 5px 7px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 12px; outline: none; }
+    .fpanel .fp-list { max-height: 176px; overflow: auto; border: 1px solid #eef2f6; border-radius: 6px; padding: 4px 6px; margin: 6px 0; }
+    .fpanel .fp-list label { display: flex; gap: 6px; align-items: center; padding: 2px 0; cursor: pointer; font-size: 12px; }
+    .fpanel .fp-list label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fpanel .fp-list .fp-empty { color: #94a3b8; padding: 6px 0; }
+    .fpanel .fp-row { display: flex; gap: 6px; align-items: center; margin: 5px 0; }
+    .fpanel .fp-row input { width: 100%; padding: 4px 6px; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 12px; outline: none; }
+    .fpanel .fp-row .lbl { color: #64748b; white-space: nowrap; }
+    .fpanel .fp-f { display: flex; gap: 6px; margin-top: 8px; }
+    .fpanel .fp-f button { flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 12px; }
+    .fpanel .fp-f button.pri { background: #2c5282; color: #fff; border-color: #2c5282; }
     /* 状态列（可下拉切换 + 最近变更时间·账号） */
     .st-cell { min-width: 124px; }
     .stsel { width: 116px; padding: 4px 6px; border-radius: 6px; font-size: 12px; font-weight: 600; outline: none; cursor: pointer; }
@@ -140,18 +170,32 @@
     <div class="sumline" id="sumLine">加载中…</div>
 
     <div class="bar">
-      <input type="text" id="kw" placeholder="🔍 搜索：编号 / 合同号 / 供应商 / 钢种 / 仓库 / 产地…">
+      <input type="text" id="kw" placeholder="🔍 搜索：编号 / 钢种 / 仓库 / 产地 / 供应商，或直接输入重量数字（如 5433）">
       <div class="sp"></div>
-      <button class="btn primary" id="addBtn">＋ 入仓</button>
-      <button class="btn" id="impBtn">📥 导入 Excel/CSV</button>
-      <button class="btn" id="expBtn">📤 导出当前板块 CSV</button>
+      <div class="grp">
+        <span class="hint" id="selHint">未选中行</span>
+        <button class="btn edit" id="rowEditBtn" disabled>编辑</button>
+        <button class="btn save" id="rowSaveBtn" style="display:none">保存</button>
+        <button class="btn cancel" id="rowCancelBtn" style="display:none">取消</button>
+      </div>
+      <div class="grp">
+        <button class="btn go" id="rowAdvBtn" style="display:none" disabled>推进</button>
+        <button class="btn back" id="rowBackBtn" disabled>转库存</button>
+        <button class="btn del" id="rowDelBtn" disabled>删除</button>
+      </div>
+      <div class="grp">
+        <button class="btn primary" id="addBtn">＋ 入仓</button>
+        <button class="btn" id="impBtn">📥 导入 Excel/CSV</button>
+        <button class="btn" id="expBtn">📤 导出当前板块 CSV</button>
+      </div>
     </div>
 
-    <div class="tblcard">
+    <div class="tblcard" id="tblCard">
       <table class="tk">
         <thead id="thead"></thead>
         <tbody id="tbody"><tr><td class="loading">加载中…</td></tr></tbody>
       </table>
+      <div class="fpanel" id="fPanel"></div>
     </div>
   </div>
 
@@ -183,22 +227,19 @@
           <div class="fg"><label>卷数 / 张数</label><input id="f_count"></div>
           <div class="fg"><label>生产状态</label><input id="f_prodStatus" list="dl_prod" placeholder="未开始/生产中/已完成…"></div>
           <div class="fg"><label>编号</label><input id="f_code" placeholder="如 TH240910-01"></div>
-          <div class="fg"><label>合同号</label><input id="f_contractNo"></div>
-          <div class="fg"><label>备注</label><input id="f_note"></div>
           <div class="fg"><label>类型</label><input id="f_type" list="dl_type" placeholder="正品 / 余卷 / 边带 / 自由边…"></div>
-          <div class="sec-lab">② 价格（可自动算：不含税总金额 = 不含税单价 × 现重/1000）</div>
           <div class="fg"><label>产地</label><input id="f_origin" list="dl_origin" placeholder="宏旺 / 鼎信 / 北港…"></div>
+          <div class="fg"><label>供应商</label><input id="f_supplier" list="dl_supplier"></div>
+          <div class="sec-lab">② 价格（可自动算：不含税总金额 = 不含税单价 × 现重/1000）</div>
           <div class="fg"><label>单价 (含税)</label><input id="f_priceTax"></div>
           <div class="fg"><label>单价 (不含税)</label><input id="f_priceNotax"></div>
           <div class="fg"><label>总金额 (含税)</label><input id="f_amountTax"></div>
           <div class="fg"><label>总金额 (不含税)</label><input id="f_amountNotax"></div>
-          <div class="fg"><label>供应商</label><input id="f_supplier" list="dl_supplier"></div>
-          <div class="fg"><label>销售定价</label><input id="f_salePrice"></div>
-          <div class="fg" id="fgInvExtra" style="display:contents">
-            <div class="fg"><label>负差</label><input id="f_negativeDiff" placeholder="-0 / -0.02…"></div>
-            <div class="fg"><label>实卡厚</label><input id="f_realThickness"></div>
-          </div>
-          <div class="sec-lab">③ 状态（两板块各自独立，改动会记录时间与操作账号）</div>
+          <div class="sec-lab" id="secOrdOnly" style="display:none">③ 已接单专属（库存板块不显示这些字段）</div>
+          <div class="fg ord-only" style="display:none"><label>合同号</label><input id="f_contractNo"></div>
+          <div class="fg ord-only" style="display:none"><label>备注</label><input id="f_note"></div>
+          <div class="fg ord-only" style="display:none"><label>销售定价</label><input id="f_salePrice"></div>
+          <div class="sec-lab" id="secStatus">③ 状态（两板块各自独立，改动会记录时间与操作账号）</div>
           <div class="fg" id="fgInvSt"><label>库存状态</label>
             <select id="f_invStatus">
               <option>在库</option><option>已预订</option><option>部分出库</option><option>已售出</option>
@@ -234,12 +275,13 @@
               <option value="ordered">🔥 已接单</option>
             </select>
           </label>
-          <span style="color:#94a3b8">若表内含「入仓类型 / 货物状态」列（值：库存/已接单）则优先使用</span>
+          <span style="color:#94a3b8">表内「库存状态 / 订单状态 / 状态」列会按状态清单自动归位</span>
         </div>
-        <textarea class="paste" id="impPaste" placeholder="或直接粘贴 Excel 区域（从 Excel 复制后 Ctrl+V 到这里），列顺序与下方模板一致，用 Tab 或逗号分隔"></textarea>
+        <textarea class="paste" id="impPaste" placeholder="或直接粘贴 Excel 区域（从 Excel 复制后 Ctrl+V 到这里），有表头会自动按列名对应"></textarea>
         <div class="imp-note">
-          <b>列模板（按顺序，共 27 列，可缺少尾部列）：</b><br>
-          采购日期, 进仓日期, 仓库/加工厂, 钢种, 表面, 厚度, 宽度, 长度, 原重/KG, 现重/KG, 毛重/KG, 卷数/张数, 生产状态, 编号, 合同号, 备注, 类型, 产地, 单价(含税), 单价(不含税), 总金额(含税), 总金额(不含税), 供应商, 销售定价, 负差, 实卡厚, 入仓类型
+          <b>列模板（按顺序，共 27 列，可缺少尾部列；有表头时按列名智能对应，顺序不同也能认）：</b><br>
+          采购日期, 进仓日期, 仓库/加工厂, 钢种, 表面, 厚度, 宽度, 长度, 原重/KG, 现重/KG, 毛重/KG, 卷数/张数, 生产状态, 编号, 类型, 产地, 单价(含税), 单价(不含税), 总金额(含税), 总金额(不含税), 供应商, 合同号, 备注, 销售定价, 库存状态, 订单状态, 入仓类型<br>
+          <b>状态列怎么归位：</b>「库存状态」列的值（在库 / 已预订 / 部分出库 / 已售出）→ 存进库存状态；「订单状态」列的值（采购下单 → 原料到仓 → 投入生产 → 加工完成 → 发货自提 → 已交付）→ 存进订单状态；只写「状态」一列时按值自动判断属于哪类，并据此决定进库存还是已接单板块。
         </div>
         <div class="imp-prev" id="impPrev"></div>
       </div>
@@ -259,6 +301,6 @@
   <datalist id="dl_prod"></datalist>
 
   <div class="toasts" id="toasts"></div>
-  <script src="js/tracking.js?v=1.0.194"></script>
+  <script src="js/tracking.js?v=1.0.195"></script>
 </body>
 </html>
