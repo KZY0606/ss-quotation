@@ -1144,32 +1144,27 @@ tr.main-row:hover .delete-btn { opacity:1; }
 .hot201-row .oj2 { min-width:150px; }
 @media (max-width:1280px){ .basis-panels { grid-template-columns:1fr; } }
 
-/* ===== v1.0.185 热轧：四尺/五尺/窄带分块 + 颜色区分；块内产地行连续排列 ===== */
-.hot201-rows { display:flex; flex-direction:column; gap:10px; width:max-content; max-width:100%; }
-.hot201-block { border-radius:10px; padding:10px 12px 12px; }
-.hot201-block.g4 { background:#f0f7ff; border:1px solid #bfdbfe; }
-.hot201-block.g5 { background:#fff7ed; border:1px solid #fed7aa; }
-.hot201-block.gn { background:#ecfdf5; border:1px solid #a7f3d0; }
-.hot201-bt { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin:0 2px 8px; }
-.hot201-bt b { font-size:13px; }
-.hot201-block.g4 .hot201-bt b { color:#1d4ed8; }
-.hot201-block.g5 .hot201-bt b { color:#c2410c; }
-.hot201-block.gn .hot201-bt b { color:#047857; }
-.hot201-bt span { font-size:11px; color:#6b7280; }
-.hot201-rows .hot201-row { display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px; padding:6px 8px; border-radius:8px; }
-.hot201-block.g4 .hot201-row:hover { background:#e5f0fd; }
-.hot201-block.g5 .hot201-row:hover { background:#ffedd7; }
-.hot201-block.gn .hot201-row:hover { background:#d9f7e8; }
-.hot201-rows .hot201-row + .hot201-row { margin-top:6px; }
-.hot201-row .oname { flex:0 0 auto; font-weight:700; color:#374151; white-space:nowrap; font-size:13px; padding-bottom:9px; line-height:1; min-width:44px; }
-.hot201-cell { flex:0 0 96px; display:flex; flex-direction:column; gap:3px; min-width:0; }
-.hot201-cell .hot201-jlabel { font-size:11px; color:#6b7280; font-weight:700; line-height:1; }
-.hot201-block.g4 .hot201-jlabel { color:#1d4ed8; }
-.hot201-block.g5 .hot201-jlabel { color:#c2410c; }
-.hot201-block.gn .hot201-jlabel { color:#047857; }
-.hot201-cell .hot201-input { width:100%; min-width:0; padding:3px 6px; font-size:12.5px; height:26px; border:1px solid var(--border); border-radius:5px; box-sizing:border-box; text-align:center; background:#fff; }
+/* ===== v1.0.188 热轧：一个产地一行，行内四尺/五尺两段并排（段色区分，紧凑无留白） ===== */
+.hot201-rows { display:flex; flex-direction:column; gap:6px; width:max-content; max-width:100%; }
+.hot201-rows .hot201-row { display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; padding:5px 8px; border-radius:8px; background:#fffdf6; }
+.hot201-rows .hot201-row:hover { background:#fdf6e3; }
+.hot201-seg { display:flex; flex-wrap:nowrap; align-items:flex-end; gap:6px; padding:5px 8px 7px; border-radius:8px; }
+.hot201-seg.s4 { background:#f0f7ff; border:1px solid #bfdbfe; }
+.hot201-seg.s5 { background:#fff7ed; border:1px solid #fed7aa; }
+.hot201-seg.sN { background:#ecfdf5; border:1px solid #a7f3d0; }
+.hot201-segtag { font-size:11px; font-weight:700; line-height:1; padding-bottom:8px; white-space:nowrap; }
+.hot201-seg.s4 .hot201-segtag { color:#1d4ed8; }
+.hot201-seg.s5 .hot201-segtag { color:#c2410c; }
+.hot201-seg.sN .hot201-segtag { color:#047857; }
+.hot201-seg .hot201-jlabel { font-size:11px; font-weight:700; line-height:1; }
+.hot201-seg.s4 .hot201-jlabel { color:#1d4ed8; }
+.hot201-seg.s5 .hot201-jlabel { color:#c2410c; }
+.hot201-seg.sN .hot201-jlabel { color:#047857; }
+.hot201-seg .hot201-cell { flex:0 0 88px; display:flex; flex-direction:column; gap:3px; min-width:0; }
+.hot201-seg .hot201-input { width:100%; min-width:0; padding:3px 6px; font-size:12.5px; height:26px; border:1px solid var(--border); border-radius:5px; box-sizing:border-box; text-align:center; background:#fff; }
 .hot201-row.row-locked .hot201-input { background:#f3f4f6; color:#9ca3af; }
-.hot201-row .o-lock { flex:0 0 auto; margin-left:4px; }
+.hot201-row .oname { flex:0 0 auto; font-weight:700; color:#374151; white-space:nowrap; font-size:13px; padding-bottom:9px; line-height:1; min-width:44px; }
+.hot201-row .o-lock { flex:0 0 auto; margin-left:2px; }
 .hot201-narrow-badge { display:inline-block; margin-left:4px; font-size:10px; font-style:normal; color:#047857; border:1px solid #6ee7b7; background:#ecfdf5; border-radius:4px; padding:0 3px; line-height:14px; vertical-align:middle; }
 .hot201-rows + .hot201-footnote { margin-top:10px; }
-@media (max-width:1100px){ .hot201-cell { flex-basis:88px; } }
+@media (max-width:1100px){ .hot201-seg .hot201-cell { flex-basis:80px; } }
