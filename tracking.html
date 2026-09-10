@@ -232,6 +232,39 @@
   .spec-edit span { color: #9aa4ac; font-size: 12px; }
   .proc-edit-inline { display: flex; align-items: center; gap: 5px; }
   .hint.hot { color: #b45309; font-weight: 600; }
+
+  /* v1.0.198 单元格下拉（Excel 手感） */
+  .cell-dd{position:relative;display:flex;align-items:center}
+  .cell-dd input.cellin{flex:1;min-width:0;border-radius:4px 0 0 4px}
+  .ddbtn{flex:none;height:22px;padding:0 4px;border:1px solid #cbd5e0;border-left:0;border-radius:0 4px 4px 0;background:#f7fafc;color:#4a5568;font-size:8px;line-height:1;cursor:pointer}
+  .ddbtn:hover{background:#e6f3f6;color:#0b6b7d;border-color:#0b6b7d}
+  .ddpanel{position:absolute;z-index:70;display:none;width:252px;background:#fff;border:1px solid #cbd5e0;border-radius:8px;box-shadow:0 12px 32px rgba(15,23,42,.16);overflow:hidden}
+  .ddpanel.show{display:block}
+  .ddpanel .dds{padding:7px 8px;border-bottom:1px solid #edf2f7;background:#f8fafc}
+  .ddpanel .dds input{width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid #cbd5e0;border-radius:6px;font-size:12.5px;outline:none}
+  .ddlist{max-height:204px;overflow:auto;padding:3px 0}
+  .dditem{padding:5px 10px;font-size:12.5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#2d3748}
+  .dditem:hover,.dditem.cur{background:#e6f3f6;color:#0b6b7d}
+  .dditem.on{font-weight:700;color:#0b6b7d}
+  .dditem.ddempty{color:#a0aec0;cursor:default}
+  .dditem.ddempty:hover{background:transparent;color:#a0aec0}
+  .ddfoot{display:flex;align-items:center;gap:6px;padding:6px 8px;border-top:1px solid #edf2f7;background:#f8fafc;font-size:11px;color:#718096}
+  .ddfoot button{font-size:11px;padding:2px 8px;border:1px solid #cbd5e0;border-radius:5px;background:#fff;cursor:pointer;color:#4a5568}
+  .ddfoot button:hover{border-color:#0b6b7d;color:#0b6b7d}
+  /* v1.0.198 词典弹窗 */
+  .dict-note{font-size:12.5px;color:#4a5568;background:#f7fafc;border:1px solid #e2e8f0;border-left:3px solid #0b6b7d;padding:9px 12px;margin-bottom:12px;line-height:1.72}
+  .dict-box{display:flex;gap:14px;min-height:372px}
+  .dict-side{width:238px;flex:none;border:1px solid #e2e8f0;border-radius:8px;overflow:auto;max-height:392px;background:#fbfcfd}
+  .dict-cat-head{padding:6px 10px;font-size:10.5px;letter-spacing:.1em;color:#94a3b8;background:#f1f5f9;border-bottom:1px solid #e9eef2}
+  .dict-cat{padding:7px 10px;font-size:12.5px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:baseline;gap:6px;color:#2d3748}
+  .dict-cat:hover{background:#eef6f8}
+  .dict-cat.on{background:#0b6b7d;color:#fff}
+  .dict-cat .cn{font-size:10.5px;color:#a0aec0;flex:none}
+  .dict-cat.on .cn{color:#cfe9ee}
+  .dict-main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .dict-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;min-height:22px}
+  .dict-ops{display:flex;gap:8px;margin-top:8px}
+  .cellin.auto{background:#fffdf3;border-color:#d6bd6b}
 </style>
 </head>
 <body>
@@ -271,6 +304,7 @@
       <div class="grp">
         <button class="btn sm" id="myOnlyBtn" title="只看跟单员是我自己的单">👤 只看我的单</button>
         <button class="btn sm" id="procLibBtn" title="维护工序清单">⚙ 工序库</button>
+        <button class="btn sm" id="dictBtn" title="维护各列的下拉候选值（单元格点右下角箭头时选的就是这份）">📚 数据词典</button>
       </div>
       <div class="grp">
         <span class="hint" id="selHint">未选中行</span>
@@ -312,6 +346,7 @@
         <tbody id="tbody"><tr><td class="loading">加载中…</td></tr></tbody>
       </table>
       <div class="fpanel" id="fPanel"></div>
+      <div class="ddpanel" id="ddPanel"></div>
     </div>
   </div>
 
@@ -435,6 +470,36 @@
     </div>
   </div>
 
+  <!-- 基础数据词典弹窗（v1.0.198） -->
+  <div class="mask" id="dictMask">
+    <div class="dlg" style="width:1040px">
+      <div class="dlg-h"><b>基础数据词典（单元格下拉的候选值 · 全体跟单共用）</b><button class="x" id="dictClose">✕</button></div>
+      <div class="dlg-b">
+        <div class="dict-note">
+          左侧选一个标题，右侧<b>一行一个值</b>，保存后表格里对应的格子点<b>右下角箭头</b>就能选到这些值；以后要加品种，就在这里加一行、再保存。<br>
+          表格里已经填过的值会自动并进候选（词典里没有也不会丢）。
+        </div>
+        <div class="dict-box">
+          <div class="dict-side" id="dictSide"></div>
+          <div class="dict-main">
+            <div class="dict-head"><b id="dictTitle">—</b><span class="hint" id="dictCount"></span></div>
+            <textarea class="paste" id="dictText" style="height:300px" placeholder="一行一个值…"></textarea>
+            <div class="dict-ops">
+              <button class="btn sm" id="dictDedup">去重</button>
+              <button class="btn sm" id="dictSort">按拼音排序</button>
+              <button class="btn sm" id="dictRestore">恢复该列默认</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dlg-f">
+        <button class="btn" id="dictCancel">取消</button>
+        <button class="btn warning" id="dictResetAll">全部恢复默认</button>
+        <button class="btn primary" id="dictSave">保存词典</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 导入弹窗 -->
   <div class="mask" id="impMask">
     <div class="dlg" style="width:1060px">
@@ -479,6 +544,6 @@
   <datalist id="dl_follower"></datalist>
 
   <div class="toasts" id="toasts"></div>
-  <script src="js/tracking.js?v=1.0.196"></script>
+  <script src="js/tracking.js?v=1.0.198"></script>
 </body>
 </html>

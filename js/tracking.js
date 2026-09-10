@@ -286,22 +286,172 @@
   }
 
   // ---------- 渲染 ----------
+  // ---------- v1.0.198 基础数据词典 ----------
+  function hasDictCol(k) { return !!(dictAll.cols && Object.prototype.hasOwnProperty.call(dictAll.cols, k)); }
+  function dictCols(k) { return (dictAll.cols && Array.isArray(dictAll.cols[k])) ? dictAll.cols[k] : []; }
+  function dictExtra(k) { return (dictAll.extra && Array.isArray(dictAll.extra[k])) ? dictAll.extra[k] : []; }
+  function dataVals(k) {
+    var out = [];
+    items.forEach(function (it) { var v = String(val(it, k) || '').trim(); if (v && out.indexOf(v) < 0) out.push(v); });
+    return out;
+  }
+  // 候选 = 词典值（按词典顺序在前）+ 表格里已出现过的值
+  function combinedVals(k) {
+    var out = dictCols(k).slice();
+    dataVals(k).forEach(function (v) { if (out.indexOf(v) < 0) out.push(v); });
+    return out;
+  }
+  async function loadDict() {
+    try {
+      var r = await api({ action: 'dictget' });
+      if (r && r.dict) { dictAll = r.dict; if (!dictAll.cols) dictAll.cols = {}; if (!dictAll.extra) dictAll.extra = {}; }
+      if (r && r.label) dictLabel = r.label;
+      if (r && r.defaults) dictDef = r.defaults;
+    } catch (e) { /* 词典拉取失败不影响主流程 */ }
+    refreshDatalists();
+    fillStatusSelects();
+  }
+  function fillStatusSelects() {
+    [['f_invStatus', 'inv_status'], ['f_ordStatus', 'ord_status']].forEach(function (p) {
+      var el = $(p[0]);
+      if (!el) return;
+      var cur = el.value;
+      var vals = combinedVals(p[1]);
+      el.innerHTML = '<option value="">\u2014</option>' + vals.map(function (v) {
+        return '<option value="' + esc(v) + '">' + esc(v) + '</option>';
+      }).join('');
+      if (cur) el.value = cur;
+    });
+  }
   function refreshDatalists() {
-    var uniq = function (key) {
-      var s = new Set();
-      items.forEach(function (it) { var v = String(val(it, key) || '').trim(); if (v) s.add(v); });
-      return Array.from(s).sort();
-    };
     var fill = function (id, arr) { var el = $(id); if (el) el.innerHTML = arr.map(function (v) { return '<option value="' + esc(v) + '"></option>'; }).join(''); };
-    fill('dl_warehouse', uniq('warehouse'));
-    fill('dl_grade', uniq('grade'));
-    fill('dl_surface', uniq('surface'));
-    fill('dl_type', uniq('type'));
-    fill('dl_origin', uniq('origin'));
-    fill('dl_supplier', uniq('supplier'));
-    fill('dl_prod', uniq('prod_status'));
-    fill('dl_customer', uniq('customer'));
-    fill('dl_follower', uniq('follower'));
+    fill('dl_warehouse', combinedVals('warehouse'));
+    fill('dl_grade', combinedVals('grade'));
+    fill('dl_surface', combinedVals('surface'));
+    fill('dl_type', combinedVals('type'));
+    fill('dl_origin', combinedVals('origin'));
+    fill('dl_supplier', combinedVals('supplier'));
+    fill('dl_prod', combinedVals('prod_status'));
+    fill('dl_customer', combinedVals('customer'));
+    fill('dl_follower', combinedVals('follower'));
+  }
+  // 单元格下拉面板（Excel 手感：点右下角箭头选值，也能手输/搜索）
+  function closeDD() {
+    var p = $('ddPanel');
+    if (p) { p.classList.remove('show'); p.innerHTML = ''; }
+    ddTarget = null; ddKey = ''; ddHit = []; ddIdx = -1;
+  }
+  function ddMark() {
+    var box = $('ddPanel');
+    if (!box) return;
+    Array.prototype.forEach.call(box.querySelectorAll('.dditem'), function (el, i) { if (el.dataset.v !== undefined && i === ddIdx) el.classList.add('cur'); else el.classList.remove('cur'); });
+    var c = box.querySelector('.dditem.cur');
+    if (c && c.scrollIntoView) c.scrollIntoView({ block: 'nearest' });
+  }
+  function ddRenderList(q) {
+    var vals = combinedVals(ddKey);
+    var cur = ddTarget ? String(ddTarget.value || '') : '';
+    var ql = String(q || '').trim().toLowerCase();
+    ddHit = vals.filter(function (v) { return !ql || v.toLowerCase().indexOf(ql) >= 0; });
+    ddIdx = ddHit.indexOf(cur);
+    var list = $('ddList');
+    if (list) {
+      list.innerHTML = ddHit.length
+        ? ddHit.map(function (v) { return '<div class="dditem' + (v === cur ? ' on' : '') + '" data-v="' + esc(v) + '">' + esc(v) + '</div>'; }).join('')
+        : '<div class="dditem ddempty">词典里没有匹配值（可直接手输）</div>';
+    }
+    ddMark();
+  }
+  function ddApply(v) {
+    if (!ddTarget) return;
+    ddTarget.value = v;
+    ddTarget.dispatchEvent(new Event('input', { bubbles: true }));
+    closeDD();
+  }
+  function ddKeyNav(e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (ddIdx < ddHit.length - 1) ddIdx++; ddMark(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (ddIdx > 0) ddIdx--; ddMark(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (ddIdx >= 0 && ddHit[ddIdx] != null) ddApply(ddHit[ddIdx]); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeDD(); }
+  }
+  function openDD(btn) {
+    var wrap = btn.closest ? btn.closest('.cell-dd') : null;
+    var inp = wrap ? wrap.querySelector('input.cellin') : null;
+    if (!inp) return;
+    var k = inp.dataset.k;
+    if (!combinedVals(k).length) { toast('「' + (dictLabel[k] || k) + '」还没有候选值，可点「📚 数据词典」添加', false); return; }
+    var box = $('ddPanel');
+    box.dataset.k = k;
+    box.innerHTML = '<div class="dds"><input id="ddSearch" placeholder="在词典里搜索…" autocomplete="off"></div>' +
+      '<div class="ddlist" id="ddList"></div>' +
+      '<div class="ddfoot"><span id="ddCnt"></span><span style="flex:1"></span>' +
+      '<button data-dd-act="clear">清空</button><button data-dd-act="dict">📚 词典</button></div>';
+    ddTarget = inp; ddKey = k;
+    ddRenderList('');
+    var cnt = $('ddCnt');
+    if (cnt) cnt.textContent = combinedVals(k).length + ' 个候选';
+    var card = $('tblCard').getBoundingClientRect();
+    var r = inp.getBoundingClientRect();
+    var left = r.left - card.left + $('tblCard').scrollLeft;
+    var top = r.bottom - card.top + $('tblCard').scrollTop + 2;
+    box.style.left = Math.max(6, Math.min(left, Math.max(6, $('tblCard').clientWidth - 262))) + 'px';
+    box.style.top = top + 'px';
+    box.classList.add('show');
+    var si = $('ddSearch');
+    if (si) {
+      si.addEventListener('input', function () { ddRenderList(this.value); });
+      si.addEventListener('keydown', ddKeyNav);
+      si.focus();
+    }
+  }
+  // 词典维护弹窗
+  function dictCatList() {
+    var out = [];
+    Object.keys(dictAll.cols || {}).forEach(function (k) { out.push({ key: k, label: dictLabel[k] || k, kind: 'col' }); });
+    Object.keys(dictAll.extra || {}).forEach(function (k) { out.push({ key: k, label: k, kind: 'extra' }); });
+    return out;
+  }
+  function curDictArr() { return dictCatKind === 'col' ? dictCols(dictCat) : dictExtra(dictCat); }
+  function renderDictSide() {
+    var cats = dictCatList();
+    var row = function (c) {
+      var n = (c.kind === 'col' ? dictCols(c.key) : dictExtra(c.key)).length;
+      return '<div class="dict-cat' + (c.key === dictCat && c.kind === dictCatKind ? ' on' : '') + '" data-cat="' + esc(c.key) + '" data-kind="' + c.kind + '">' + esc(c.label) + '<span class="cn">' + n + ' 项</span></div>';
+    };
+    $('dictSide').innerHTML = '<div class="dict-cat-head">表格列（单元格可下拉）</div>' +
+      cats.filter(function (c) { return c.kind === 'col'; }).map(row).join('') +
+      '<div class="dict-cat-head">预留类别（系统暂无对应列）</div>' +
+      cats.filter(function (c) { return c.kind === 'extra'; }).map(row).join('');
+  }
+  function fillDictText() {
+    var label = dictCatKind === 'col' ? (dictLabel[dictCat] || dictCat) : dictCat;
+    $('dictTitle').textContent = label + (dictCatKind === 'extra' ? '（预留类别）' : '');
+    var arr = curDictArr();
+    $('dictText').value = arr.join('\n');
+    $('dictCount').textContent = arr.length + ' 个候选值（一行一个）';
+  }
+  function readDictText() {
+    var arr = $('dictText').value.split('\n').map(function (x) { return x.trim(); }).filter(function (x) { return x; });
+    var uniq = [];
+    arr.forEach(function (v) { if (uniq.indexOf(v) < 0) uniq.push(v); });
+    if (dictCatKind === 'col') dictAll.cols[dictCat] = uniq; else dictAll.extra[dictCat] = uniq;
+    return uniq;
+  }
+  function openDict() {
+    if (!dictCat) { var first = dictCatList()[0]; dictCat = first ? first.key : ''; dictCatKind = first ? first.kind : 'col'; }
+    $('dictMask').classList.add('show');
+    renderDictSide();
+    fillDictText();
+  }
+  async function saveDict() {
+    readDictText();
+    try {
+      var r = await api({ action: 'dictset', dict: dictAll });
+      $('dictMask').classList.remove('show');
+      toast('词典已保存（列词典 ' + r.colItems + ' 项 / 预留类别 ' + r.extraItems + ' 项）');
+      await loadDict();
+      render();
+    } catch (e) { toast(e.message, false); }
   }
 
   function renderStats() {
@@ -351,7 +501,9 @@
     var dirty = m[c.k] != null;
     var cur = dirty ? String(m[c.k]) : String(it[c.k] || '');
     var lg = stLast(it, c.k);
-    var opts = ['<option value="">\u2014</option>'].concat(c.enum.map(function (v) {
+    var svals = combinedVals(c.k);
+    if (!svals.length) svals = c.enum || [];
+    var opts = ['<option value="">\u2014</option>'].concat(svals.map(function (v) {
       return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>';
     })).join('');
     var attr = inline ? ('data-k="' + c.k + '"') : ('data-act="setf" data-f="' + c.k + '" data-id="' + it.id + '"');
@@ -392,7 +544,9 @@
   function inputHtml(it, k, v) {
     var m = mods[it.id] || {};
     var dirty = m[k] != null;
-    return '<input class="cellin' + (dirty ? ' dirty' : '') + '" data-k="' + k + '" value="' + esc(dirty ? m[k] : v) + '">';
+    var inp = '<input class="cellin' + (dirty ? ' dirty' : '') + '" data-k="' + k + '" value="' + esc(dirty ? m[k] : v) + '">';
+    if (hasDictCol(k) && combinedVals(k).length) return '<div class="cell-dd">' + inp + '<button class="ddbtn" data-dd="' + k + '" tabindex="-1" title="从词典选择">\u25bc</button></div>';
+    return inp;
   }
   function specEditCell(it) {
     var m = mods[it.id] || {};
@@ -589,9 +743,20 @@
 
   // ---------- 表头筛选面板 ----------
   function uniqueVals(k) {
+    var d = dictCols(k);
     var s = [];
+    if (d.length) {
+      // 有词典：词典全部值在前（这就是「对应标题可以筛选词典中的所有品种」），再补表格里出现过的其它值
+      d.forEach(function (v) { if (s.indexOf(v) < 0) s.push(v); });
+      boardRowsOf(board).forEach(function (it) {
+        var v = String(val(it, k) || '').trim();
+        if (v && s.indexOf(v) < 0) s.push(v);
+      });
+      if (s.indexOf('') < 0) s.push('');
+      return s;
+    }
     boardRowsOf(board).forEach(function (it) {
-      var v = String(val(it, k));
+      var v = String(val(it, k) || '').trim();
       if (s.indexOf(v) < 0) s.push(v);
     });
     s.sort(function (a, b) { return String(a).localeCompare(String(b), 'zh-CN'); });
@@ -778,6 +943,14 @@
 
   // ---------- 编辑模式（整表逐格编辑，最后统一保存）----------
   var K2DB = { w_orig: 'weight_orig', w_now: 'weight_now', w_gross: 'weight_gross' };
+
+  // v1.0.198 基础数据词典：列 -> 候选值；单元格点右下角箭头从这里选
+  var dictAll = { cols: {}, extra: {} };
+  var dictLabel = {};
+  var dictDef = null;
+  var dictCat = '';
+  var dictCatKind = 'col';
+  var ddTarget = null, ddKey = '', ddHit = [], ddIdx = -1;
   function modCount() {
     var n = 0;
     Object.keys(mods).forEach(function (id) { n += Object.keys(mods[id]).length; });
@@ -1308,6 +1481,8 @@
     });
     // 表格：勾选 / 选中 / 工序按钮 / 双击
     $('tbody').addEventListener('click', function (e) {
+      var db = e.target.closest('.ddbtn');
+      if (db) { e.preventDefault(); e.stopPropagation(); openDD(db); return; }
       var ck = e.target.closest('.rowck');
       if (ck) {
         var id = parseInt(ck.dataset.id, 10);
@@ -1425,6 +1600,66 @@
     $('libCancel').addEventListener('click', function () { $('libMask').classList.remove('show'); });
     $('libMask').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
     $('libSave').addEventListener('click', saveLib);
+    // v1.0.198 下拉面板
+    $('ddPanel').addEventListener('click', function (e) {
+      var it = e.target.closest('.dditem');
+      if (it && it.dataset.v !== undefined && !it.classList.contains('ddempty')) { ddApply(it.dataset.v); return; }
+      var a = e.target.closest('[data-dd-act]');
+      if (!a) return;
+      if (a.dataset.ddAct === 'clear') { if (ddTarget) { ddTarget.value = ''; ddTarget.dispatchEvent(new Event('input', { bubbles: true })); } closeDD(); }
+      if (a.dataset.ddAct === 'dict') { closeDD(); openDict(); }
+    });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#ddPanel') && !e.target.closest('.ddbtn')) closeDD();
+    });
+    // v1.0.198 词典弹窗
+    $('dictBtn').addEventListener('click', openDict);
+    $('dictClose').addEventListener('click', function () { $('dictMask').classList.remove('show'); });
+    $('dictCancel').addEventListener('click', function () { $('dictMask').classList.remove('show'); });
+    $('dictMask').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
+    $('dictSide').addEventListener('click', function (e) {
+      var c = e.target.closest('.dict-cat');
+      if (!c) return;
+      readDictText();
+      dictCat = c.dataset.cat;
+      dictCatKind = c.dataset.kind;
+      renderDictSide();
+      fillDictText();
+    });
+    $('dictText').addEventListener('input', function () {
+      var n = this.value.split('\n').map(function (x) { return x.trim(); }).filter(function (x) { return x; }).length;
+      $('dictCount').textContent = n + ' 个候选值（一行一个）';
+    });
+    $('dictDedup').addEventListener('click', function () {
+      var arr = readDictText();
+      var uniq = [];
+      arr.forEach(function (v) { if (uniq.indexOf(v) < 0) uniq.push(v); });
+      if (dictCatKind === 'col') dictAll.cols[dictCat] = uniq; else dictAll.extra[dictCat] = uniq;
+      fillDictText();
+      toast('已去重：' + arr.length + ' → ' + uniq.length);
+    });
+    $('dictSort').addEventListener('click', function () {
+      var arr = readDictText().slice().sort(function (a, b) { return String(a).localeCompare(String(b), 'zh-CN'); });
+      if (dictCatKind === 'col') dictAll.cols[dictCat] = arr; else dictAll.extra[dictCat] = arr;
+      fillDictText();
+    });
+    $('dictRestore').addEventListener('click', function () {
+      if (!dictDef) { toast('默认词典未加载', false); return; }
+      if (!confirm('把「' + (dictCatKind === 'col' ? (dictLabel[dictCat] || dictCat) : dictCat) + '」恢复成系统默认值？')) return;
+      var d = dictCatKind === 'col' ? dictDef.cols[dictCat] : dictDef.extra[dictCat];
+      $('dictText').value = (d || []).join('\n');
+      $('dictCount').textContent = (d || []).length + ' 个候选值（一行一个）';
+      toast('已填入默认值，点「保存词典」生效');
+    });
+    $('dictResetAll').addEventListener('click', function () {
+      if (!dictDef) { toast('默认词典未加载', false); return; }
+      if (!confirm('把整个词典恢复成系统默认（含你自己加的值会丢）？')) return;
+      dictAll = { cols: JSON.parse(JSON.stringify(dictDef.cols)), extra: JSON.parse(JSON.stringify(dictDef.extra)) };
+      renderDictSide();
+      fillDictText();
+      toast('已填入全部默认值，点「保存词典」生效');
+    });
+    $('dictSave').addEventListener('click', saveDict);
     // 导入
     $('impBtn').addEventListener('click', openImp);
     $('impClose').addEventListener('click', function () { $('impMask').classList.remove('show'); });
@@ -1458,6 +1693,7 @@
     myName = String(auth.realName || auth.username || '').trim();
     $('curUser').textContent = '当前：' + myName + (auth.realName ? '' : '（未设姓名，跟单员请填真实姓名）');
     await loadLib();
+    await loadDict();
     await load();
   })();
 })();
