@@ -131,7 +131,8 @@
     { k: 'proc', t: '当前工序', sp: 'proc' },
     { k: 'bar', t: '生产进度', sp: 'bar' },
     { k: 'due_date', t: '预期交期', kind: 'date', sp: 'due' },
-    { k: 'ord_status', t: '订单状态', st: 1, enum: ENUM_ORD }
+    { k: 'ord_status', t: '订单状态', st: 1, enum: ENUM_ORD },
+    { k: 'note', t: '备注', wide: 1 }
   ];
   function dataBoard(b) { return b === 'progress' ? 'ordered' : (b === 'intake' ? 'inventory' : b); }
   function colsCore(b) {
@@ -581,7 +582,279 @@
     });
   }
 
+  // ---------- v1.0.214 表头右键菜单 + 拖拽移动列（像 Excel 那样直接管列） ----------
+  var CM = { key: null };
+  var HDRAG = null, colDlgCb = null;
+  function cmList() { return colsOf(board); }
+  function cmIndexOf(key) { var l = cmList(); for (var i = 0; i < l.length; i++) if (l[i].k === key) return i; return -1; }
+  function cmTitleOf(key) {
+    var rn = LAYOUT.rename || {};
+    if (rn[key]) return rn[key];
+    var cl = csCustomCols();
+    for (var i = 0; i < cl.length; i++) if (cl[i].k === key) return cl[i].t;
+    var c = csLookup(key);
+    return c ? (c.t || key) : key;
+  }
+  function cmClose() { var m = $('colMenu'); if (m) m.classList.remove('show'); CM.key = null; }
+  function cmOpen(ev, key) {
+    var m = $('colMenu');
+    if (!m) return;
+    CM.key = key;
+    var hid = (LAYOUT.hidden || []).length;
+    var i = cmIndexOf(key), n = cmList().length;
+    var t = $('colMenuTitle');
+    if (t) t.textContent = '列：' + cmTitleOf(key);
+    var acts = m.querySelectorAll('[data-act]');
+    for (var a = 0; a < acts.length; a++) {
+      var act = acts[a].getAttribute('data-act'), dis = false;
+      if (act === 'mvL') dis = i <= 1;
+      if (act === 'mvR') dis = i < 0 || i >= n - 1;
+      if (act === 'del') dis = !csIsCustom(key);
+      if (act === 'del' && !dis) acts[a].textContent = '删除此列（自定义列）';
+      if (act === 'del' && dis) acts[a].textContent = '删除此列（内置列不能删，可隐藏）';
+      if (act === 'hidAll') {
+        acts[a].textContent = '恢复隐藏的列' + (hid ? '（' + hid + '）' : '');
+        acts[a].style.display = hid ? '' : 'none';
+      }
+      acts[a].disabled = dis;
+    }
+    m.classList.add('show');
+    var w = m.offsetWidth || 232, hh = m.offsetHeight || 320;
+    var x = Math.min(ev.clientX, window.innerWidth - w - 12);
+    var y = Math.min(ev.clientY, window.innerHeight - hh - 12);
+    m.style.left = Math.max(6, x) + 'px';
+    m.style.top = Math.max(6, y) + 'px';
+  }
+  function colOrderList() {
+    var seen = {}, out = [];
+    (LAYOUT.order || []).forEach(function (k) { if (!seen[k]) { seen[k] = 1; out.push(k); } });
+    csDefaultOrder().forEach(function (k) { if (!seen[k]) { seen[k] = 1; out.push(k); } });
+    return out;
+  }
+  async function saveLayoutV(msg, ok) {
+    try {
+      await csPersist({
+        order: colOrderList(), hidden: (LAYOUT.hidden || []).slice(),
+        custom: JSON.parse(JSON.stringify(LAYOUT.custom || [])),
+        rename: JSON.parse(JSON.stringify(LAYOUT.rename || {})),
+        width: JSON.parse(JSON.stringify(LAYOUT.width || {}))
+      });
+      if (msg) toast(msg, ok !== false);
+    } catch (e) { toast('列布局保存失败：' + e.message, false); }
+  }
+  // 插入位置按「当前板块看得见的列」算（避免被别的板块的列挤开）
+  function colInsertPos(o, target, before) {
+    var vl = cmList().map(function (c) { return c.k; });
+    var ti = vl.indexOf(target);
+    if (ti < 0) return o.length;
+    if (before) {
+      if (ti === 0) { var z = o.indexOf(target); return z < 0 ? 0 : z; }
+      var pi = o.indexOf(vl[ti - 1]);
+      return pi < 0 ? o.length : pi + 1;
+    }
+    if (ti + 1 < vl.length) { var ni = o.indexOf(vl[ti + 1]); if (ni >= 0) return ni; }
+    var oi = o.indexOf(target);
+    return oi < 0 ? o.length : oi + 1;
+  }
+  function colMoveTo(key, target, before) {
+    var o = colOrderList();
+    var at = colInsertPos(o, target, before);
+    var i = o.indexOf(key);
+    if (i >= 0) { o.splice(i, 1); if (i < at) at--; }
+    if (at < 0) at = 0;
+    if (at > o.length) at = o.length;
+    o.splice(at, 0, key);
+    var kn = cmTitleOf(key), tn = cmTitleOf(target);
+    LAYOUT.order = o;
+    render();
+    saveLayoutV('已把「' + kn + '」移到「' + tn + '」的' + (before ? '左' : '右') + '边', true);
+  }
+  function cmMoveStep(key, dir) {
+    var cur = cmList().map(function (c) { return c.k; });
+    var i = cur.indexOf(key), j = i + dir;
+    if (i < 0 || j < 0 || j >= cur.length) return;
+    colMoveTo(key, cur[j], dir < 0);
+  }
+  function colHide(key) {
+    var t = cmTitleOf(key);
+    LAYOUT.hidden = (LAYOUT.hidden || []).slice();
+    if (LAYOUT.hidden.indexOf(key) < 0) LAYOUT.hidden.push(key);
+    render();
+    saveLayoutV('已隐藏「' + t + '」；在表头任意位置右键可「恢复隐藏的列」', true);
+  }
+  async function colDel(key) {
+    if (!csIsCustom(key)) { toast('内置列不能删除，可以选「隐藏此列」', false); return; }
+    var t = cmTitleOf(key);
+    if (!confirm('删除自定义列「' + t + '」？表格里不再显示它，已有的内容仍留在数据库里。')) return;
+    LAYOUT.custom = (LAYOUT.custom || []).filter(function (c) { return c.k !== key; });
+    LAYOUT.order = colOrderList().filter(function (k) { return k !== key; });
+    LAYOUT.hidden = (LAYOUT.hidden || []).filter(function (k) { return k !== key; });
+    if (LAYOUT.rename) delete LAYOUT.rename[key];
+    render();
+    saveLayoutV('已删除列「' + t + '」', true);
+  }
+  function colDlgOpen(title, name, kind, hint, cb) {
+    var m = $('colDlgMask');
+    if (!m) return;
+    var tt = $('colDlgTitle'), nm = $('colDlgName'), kd = $('colDlgKind'), hn = $('colDlgHint');
+    if (tt) tt.textContent = title;
+    if (nm) nm.value = name || '';
+    var isRen = title.indexOf('重命名') >= 0;
+    if (kd) { kd.value = kind || 'text'; if (kd.parentNode) kd.parentNode.style.display = isRen ? 'none' : ''; }
+    if (hn) hn.textContent = hint || '';
+    colDlgCb = cb;
+    m.classList.add('show');
+    setTimeout(function () { var e = $('colDlgName'); if (e) { e.focus(); try { e.select(); } catch (x) { } } }, 60);
+  }
+  function colDlgClose() { var m = $('colDlgMask'); if (m) m.classList.remove('show'); colDlgCb = null; }
+  function colDlgOk() {
+    var el = $('colDlgName');
+    var t = el ? String(el.value || '').trim() : '';
+    if (!t) { toast('请先填列标题', false); if (el) el.focus(); return; }
+    var kind = ($('colDlgKind') || {}).value || 'text';
+    var cb = colDlgCb;
+    colDlgClose();
+    if (cb) cb(t, kind);
+  }
+  function colDlgNew(target, before) {
+    var tn = cmTitleOf(target);
+    colDlgOpen('新增一列', '', 'text',
+      '新列会插在「' + tn + '」的' + (before ? '左' : '右') + '边；保存后全体跟单员都能看到，可以直接填内容。',
+      function (title, kind) { colInsert(target, before, title, kind); });
+  }
+  function colDlgRename(key) {
+    colDlgOpen('重命名此列', cmTitleOf(key), 'text', '只改显示的名字，里面的内容不受影响。',
+      function (title) { colRename(key, title); });
+  }
+  async function colInsert(target, before, title, kind) {
+    var used = {};
+    (LAYOUT.custom || []).forEach(function (c) { used[c.k] = 1; });
+    var slot = '';
+    for (var i = 1; i <= CS_MAX; i++) if (!used['c' + i]) { slot = 'c' + i; break; }
+    if (!slot) { toast('自定义列最多 ' + CS_MAX + ' 个，已经用满了；可以先删掉不用的列', false); return; }
+    LAYOUT.custom = (LAYOUT.custom || []).slice();
+    LAYOUT.custom.push({ k: slot, t: title, num: kind === 'num' ? 1 : 0, kind: kind === 'num' ? 'num' : (kind === 'date' ? 'date' : '') });
+    var o = colOrderList().filter(function (k) { return k !== slot; });
+    o.splice(Math.max(0, Math.min(o.length, colInsertPos(o, target, before))), 0, slot);
+    LAYOUT.order = o;
+    LAYOUT.hidden = (LAYOUT.hidden || []).filter(function (k) { return k !== slot; });
+    var tn = cmTitleOf(target);
+    render();
+    var b = cwBoard();
+    LAYOUT.width = LAYOUT.width || {};
+    LAYOUT.width[b] = LAYOUT.width[b] || {};
+    LAYOUT.width[b][slot] = 160;
+    cwApply();
+    await saveLayoutV('已新增列「' + title + '」（在「' + tn + '」的' + (before ? '左' : '右') + '边），直接双击单元格就能填内容', true);
+  }
+  function colRename(key, title) {
+    if (csIsCustom(key)) {
+      (LAYOUT.custom || []).forEach(function (c) { if (c.k === key) c.t = title; });
+      if (LAYOUT.rename) delete LAYOUT.rename[key];
+    } else {
+      LAYOUT.rename = LAYOUT.rename || {};
+      LAYOUT.rename[key] = title;
+    }
+    render();
+    saveLayoutV('已把列名改成「' + title + '」', true);
+  }
+  function cmInit() {
+    var m = $('colMenu');
+    if (m && !m._b) {
+      m._b = 1;
+      m.addEventListener('click', function (e) {
+        var b = (e.target && e.target.closest) ? e.target.closest('[data-act]') : null;
+        if (!b || b.disabled) return;
+        var act = b.getAttribute('data-act'), k = CM.key;
+        cmClose();
+        if (act === 'panel') { csOpen(); return; }
+        if (act === 'hidAll') { LAYOUT.hidden = []; render(); saveLayoutV('已恢复显示全部隐藏的列', true); return; }
+        if (!k) return;
+        if (act === 'insL') colDlgNew(k, true);
+        else if (act === 'insR') colDlgNew(k, false);
+        else if (act === 'ren') colDlgRename(k);
+        else if (act === 'mvL') cmMoveStep(k, -1);
+        else if (act === 'mvR') cmMoveStep(k, 1);
+        else if (act === 'hide') colHide(k);
+        else if (act === 'del') colDel(k);
+      });
+    }
+    document.addEventListener('contextmenu', function (e) {
+      var th = (e.target && e.target.closest) ? e.target.closest('#thead th') : null;
+      if (!th) { cmClose(); return; }
+      var k = th.getAttribute('data-k');
+      if (!k || k === '_chk' || k === '_no') { cmClose(); return; }
+      e.preventDefault();
+      cmOpen(e, k);
+    });
+    document.addEventListener('mousedown', function (e) {
+      var m2 = $('colMenu');
+      if (!m2 || !m2.classList.contains('show')) return;
+      var t = e.target;
+      if (t && t.closest && (t.closest('#colMenu') || t.closest('#thead'))) return;
+      cmClose();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') cmClose(); });
+    window.addEventListener('blur', cmClose);
+    var ok = $('colDlgOk'), ccl = $('colDlgCancel'), cx = $('colDlgX'), dm = $('colDlgMask'), dn = $('colDlgName');
+    if (ok && !ok._b) { ok._b = 1; ok.addEventListener('click', colDlgOk); }
+    if (ccl && !ccl._b) { ccl._b = 1; ccl.addEventListener('click', colDlgClose); }
+    if (cx && !cx._b) { cx._b = 1; cx.addEventListener('click', colDlgClose); }
+    if (dm && !dm._b) { dm._b = 1; dm.addEventListener('click', function (e) { if (e.target === dm) colDlgClose(); }); }
+    if (dn && !dn._b) { dn._b = 1; dn.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); colDlgOk(); } }); }
+  }
+  // 表头拖动左右移动整列（拖到目标列左半边 = 放左侧，右半边 = 放右侧）
+  function hdInit() {
+    var thead = $('thead');
+    if (!thead || thead._hd) return;
+    thead._hd = 1;
+    thead.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    thead.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return;
+      var t = e.target;
+      if (t && t.closest && (t.closest('.cw-rs') || t.closest('.fbtn') || t.closest('input') || t.closest('button'))) return;
+      var th = (t && t.closest) ? t.closest('th') : null;
+      if (!th) return;
+      var k = th.getAttribute('data-k');
+      if (!k || k === '_chk' || k === '_no') return;
+      HDRAG = { k: k, x0: e.clientX, on: false, th: th, over: null, side: '' };
+    });
+    document.addEventListener('mousemove', function (e) {
+      var d = HDRAG;
+      if (!d) return;
+      if (!d.on) {
+        if (Math.abs(e.clientX - d.x0) < 7) return;
+        d.on = true;
+        document.body.classList.add('hd-dragging');
+        if (d.th.classList) d.th.classList.add('hd-drag');
+      }
+      if (e.preventDefault) e.preventDefault();
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var th2 = (el && el.closest) ? el.closest('#thead th') : null;
+      if (d.over && d.over !== th2 && d.over.classList) d.over.classList.remove('hd-over-l', 'hd-over-r');
+      d.over = null; d.side = '';
+      if (th2 && th2 !== d.th) {
+        var r = th2.getBoundingClientRect();
+        d.side = (e.clientX < r.left + r.width / 2) ? 'l' : 'r';
+        if (th2.classList) th2.classList.add(d.side === 'l' ? 'hd-over-l' : 'hd-over-r');
+        d.over = th2;
+      }
+    });
+    document.addEventListener('mouseup', function () {
+      var d = HDRAG;
+      if (!d) return;
+      HDRAG = null;
+      document.body.classList.remove('hd-dragging');
+      if (d.th && d.th.classList) d.th.classList.remove('hd-drag');
+      if (!d.on || !d.over) { if (d.over && d.over.classList) d.over.classList.remove('hd-over-l', 'hd-over-r'); return; }
+      var tk = d.over.getAttribute('data-k');
+      d.over.classList.remove('hd-over-l', 'hd-over-r');
+      if (tk && tk !== d.k) colMoveTo(d.k, tk, d.side === 'l');
+    });
+  }
   function csBind() {
+    cmInit();
+    hdInit();
     if ($('colSetBtn')) $('colSetBtn').addEventListener('click', csOpen);
     if ($('colSetClose')) $('colSetClose').addEventListener('click', csClose);
     if ($('csCancelBtn')) $('csCancelBtn').addEventListener('click', csClose);

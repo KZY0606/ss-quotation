@@ -344,6 +344,24 @@
     /* v1.0.213 宽列（备注）：保证有足够宽度显示内容，过长时省略并可悬浮查看 */
     table.tk th.wide, table.tk td.wide { min-width: 180px; }
     table.tk td.wide { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  
+    /* v1.0.214 表头右键菜单 / 拖拽移动列 / 新增列弹窗 */
+    .colmenu{position:fixed;z-index:9999;min-width:230px;background:#fff;border:1px solid #dcdfe2;box-shadow:0 12px 30px rgba(16,24,40,.18);padding:6px;display:none}
+    .colmenu.show{display:block}
+    .colmenu .cm-t{padding:5px 10px 8px;font-size:11px;letter-spacing:.06em;color:#78838c;border-bottom:1px solid #eceff1;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .colmenu .cm-i{display:block;width:100%;text-align:left;background:none;border:0;padding:7px 10px;font-size:13.5px;font-family:inherit;color:#16181a;cursor:pointer;border-radius:4px}
+    .colmenu .cm-i:hover:not(:disabled){background:#eef3f8;color:#2c5282}
+    .colmenu .cm-i:disabled{color:#b6bcc2;cursor:default}
+    .colmenu .cm-sep{height:1px;background:#eceff1;margin:5px 2px}
+    table.tk th.hd-drag{opacity:.4}
+    table.tk th.hd-over-l{box-shadow:inset 3px 0 0 0 #2c5282}
+    table.tk th.hd-over-r{box-shadow:inset -3px 0 0 0 #2c5282}
+    body.hd-dragging{cursor:grabbing;-webkit-user-select:none;user-select:none}
+    #colDlgMask .dlg{width:430px;max-width:92vw}
+    #colDlgMask .cd-row{display:block;margin:0 0 11px}
+    #colDlgMask .cd-row span{display:block;font-size:12.5px;color:#414a51;margin-bottom:4px}
+    #colDlgMask .cd-row input,#colDlgMask .cd-row select{width:100%;height:34px;padding:0 9px;border:1px solid #dcdfe2;background:#fff;font-family:inherit;font-size:14px;color:#16181a;box-sizing:border-box}
+    #colDlgMask .cd-hint{font-size:12.5px;color:#78838c;line-height:1.6}
   </style>
 </head>
 <body>
@@ -667,6 +685,34 @@
           </div>
         </div>
       </div>
-<script src="js/tracking.js?v=1.0.213"></script>
+<!-- v1.0.214 表头右键菜单 -->
+<div class="colmenu" id="colMenu">
+  <div class="cm-t" id="colMenuTitle">列</div>
+  <button class="cm-i" data-act="insL">在左边插入一列</button>
+  <button class="cm-i" data-act="insR">在右边插入一列</button>
+  <button class="cm-i" data-act="ren">重命名此列…</button>
+  <div class="cm-sep"></div>
+  <button class="cm-i" data-act="mvL">整列左移</button>
+  <button class="cm-i" data-act="mvR">整列右移</button>
+  <div class="cm-sep"></div>
+  <button class="cm-i" data-act="hide">隐藏此列</button>
+  <button class="cm-i" data-act="del">删除此列</button>
+  <button class="cm-i" data-act="hidAll">恢复隐藏的列</button>
+  <div class="cm-sep"></div>
+  <button class="cm-i" data-act="panel">更多设置（列设置面板）…</button>
+</div>
+<!-- v1.0.214 新增列 / 重命名弹窗 -->
+<div class="mask" id="colDlgMask">
+  <div class="dlg">
+    <div class="dlg-h"><b id="colDlgTitle">新增一列</b><button class="x" id="colDlgX">×</button></div>
+    <div class="dlg-b">
+      <label class="cd-row"><span>列标题</span><input id="colDlgName" maxlength="20" placeholder="例如：质检结果"></label>
+      <label class="cd-row" id="colDlgKindRow"><span>内容类型</span><select id="colDlgKind"><option value="text">文本</option><option value="num">数字</option><option value="date">日期</option></select></label>
+      <div class="cd-hint" id="colDlgHint"></div>
+    </div>
+    <div class="dlg-f"><button class="btn" id="colDlgCancel">取消</button><button class="btn primary" id="colDlgOk">确定</button></div>
+  </div>
+</div>
+<script src="js/tracking.js?v=1.0.214"></script>
 </body>
 </html>
