@@ -37,6 +37,13 @@
     .bar .sp { flex: 1; }
     .bar .grp { display: flex; gap: 6px; align-items: center; padding-left: 10px; border-left: 1px solid #e2e8f0; }
     .bar .hint { font-size: 11.5px; color: #94a3b8; }
+     .taxbox { display: inline-flex; align-items: center; gap: 4px; padding: 0 9px; height: 31px; border: 1px solid #cbd5e0; border-radius: 7px; background: #fff; flex: 0 0 auto; }
+     .taxbox .taxlb { font-size: 12px; color: #475569; white-space: nowrap; }
+     .taxbox input { width: 54px; border: 0; outline: 0; font-size: 13px; text-align: right; color: #1e293b; background: transparent; font-family: inherit; }
+     .taxbox .taxpct { font-size: 12px; color: #64748b; }
+     .taxbox:focus-within { border-color: #2c5282; box-shadow: 0 0 0 2px rgba(44,82,130,.12); }
+     .imp-intake { border: 1px solid #c7d2fe; background: #eef2ff; color: #3730a3; border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 12.5px; line-height: 1.7; }
+     .imp-intake b { color: #312e81; }
     .btn { padding: 7px 16px; border-radius: 7px; border: 1px solid #cbd5e0; background: #fff; cursor: pointer; font-size: 13px; }
     .btn:hover { background: #f1f5f9; }
     .btn:disabled { opacity: .4; cursor: not-allowed; }
@@ -333,6 +340,11 @@
 
     <div class="bar">
       <input type="text" id="kw" placeholder="🔍 搜索客户 / 跟单员 / 合同号 / 编号 / 钢种 / 仓库，或直接输入重量数字（如 5433）">
+      <div class="taxbox" title="税点（%）：填「单价(含税)」或「总金额(含税)」时会按这个税点自动算出不含税值（不含税 = 含税 ×（1 − 税点））">
+        <span class="taxlb">税点</span>
+        <input type="number" id="taxRate" min="0" max="100" step="0.1" value="13" inputmode="decimal">
+        <span class="taxpct">%</span>
+      </div>
       <div class="sp"></div>
       <div class="grp" id="inGrp" style="display:none">
         <button class="btn sm" id="inAddBtn" title="在表格末尾追加 10 行">＋ 加 10 行</button>
@@ -546,6 +558,7 @@
       <div class="dlg-b">
         <div class="imp-zone" id="impZone">📄 点击选择文件（.xlsx / .xls / .csv）<br><span style="font-size:11px">或把文件拖到这里</span></div>
         <input type="file" id="impFile" accept=".xlsx,.xls,.csv" style="display:none">
+        <div class="imp-intake" id="impIntakeTip" style="display:none">📥 <b>当前是「入仓」板块</b>：导入的数据会先放进下面的<b>入仓录入表格</b>（不会直接进库存）—— 你可以补充 / 核对，确认后点「📥 一键入仓」正式进库存。</div>
         <div class="imp-opts">
           <label><input type="checkbox" id="impHasHeader" checked> 第一行是表头（自动跳过）</label>
           <label>默认入仓类型：
@@ -583,6 +596,6 @@
   <datalist id="dl_follower"></datalist>
 
   <div class="toasts" id="toasts"></div>
-  <script src="js/tracking.js?v=1.0.202"></script>
+  <script src="js/tracking.js?v=1.0.203"></script>
 </body>
 </html>

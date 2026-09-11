@@ -546,8 +546,10 @@
   }
 
   // ---------- v1.0.199 入仓录入 ----------
+  // v1.0.203 日期列有默认值（当天），判定「这一行是否已填」时忽略日期，避免空行被当成数据
+  var IN_KEYS_DATA = IN_KEYS.filter(function (k) { return k !== 'purchase_date' && k !== 'warehouse_date'; });
   function inHas(r) {
-    for (var i = 0; i < IN_KEYS.length; i++) { var v = String(r[IN_KEYS[i]] == null ? '' : r[IN_KEYS[i]]).trim(); if (v) return true; }
+    for (var i = 0; i < IN_KEYS_DATA.length; i++) { var v = String(r[IN_KEYS_DATA[i]] == null ? '' : r[IN_KEYS_DATA[i]]).trim(); if (v) return true; }
     return false;
   }
   function inValid(r) {
@@ -555,16 +557,18 @@
       return String(r[k] == null ? '' : r[k]).trim();
     });
   }
+  // v1.0.203 空白行的采购日期 / 进仓日期默认当天，省掉手输
+  function inBlank() { return { _r: ++inSeq, purchase_date: todayStr(), warehouse_date: todayStr() }; }
   function initInRows(n) {
     if (inRows.length) return;
-    for (var i = 0; i < (n || IN_MIN); i++) inRows.push({ _r: ++inSeq });
+    for (var i = 0; i < (n || IN_MIN); i++) inRows.push(inBlank());
   }
   function inRowHtml(r) {
     return '<tr data-r="' + r._r + '" class="inrow">' + '<td class="in-no">' + r._r + '</td>' +
       COL_IN.map(function (c) { return '<td' + (c.num ? ' class="num-r"' : '') + '>' + inCellHtml(r, c) + '</td>'; }).join('') + '</tr>';
   }
   function inPh(c) {
-    if (c.kind === 'date') return '2026-09-10';
+    if (c.kind === 'date') return todayStr();
     if (c.k === 'thickness') return '0.63';
     if (c.k === 'width') return '1219';
     if (c.k === 'length') return '如 C';
@@ -592,7 +596,7 @@
   }
   function inAdd(n) {
     var added = [];
-    for (var i = 0; i < (n || 10); i++) { var r = { _r: ++inSeq }; inRows.push(r); added.push(r); }
+    for (var i = 0; i < (n || 10); i++) { var r = inBlank(); inRows.push(r); added.push(r); }
     if (board !== 'intake' || filterCount()) { renderStats(); return; }
     var tb = $('tbody');
     if (!tb || tb.querySelector('td.empty')) { render(); return; }
@@ -611,6 +615,30 @@
       });
     }
     return rows;
+  }
+  // v1.0.203 录入表行号重排（导入/追加后保持 1..n 连续，粘贴定位才准）
+  function inRenumber() {
+    inRows.forEach(function (r, i) { r._r = i + 1; });
+    inSeq = inRows.length;
+  }
+  // v1.0.203 把导入解析出来的行灌进入仓录入表格（不写库）—— 用户补充数据后再点「一键入仓」
+  function impToIntake() {
+    var filled = inRows.filter(inHas);
+    var add = impRows.map(function (it) {
+      var r = { _r: 0 };
+      IN_MAP.forEach(function (p) { r[p[0]] = String(it[p[1]] == null ? '' : it[p[1]]).trim(); });
+      r.purchase_date = normDate(r.purchase_date) || todayStr();
+      r.warehouse_date = normDate(r.warehouse_date) || todayStr();
+      r.due_date = normDate(r.due_date);
+      return r;
+    });
+    inRows = filled.concat(add);
+    for (var i = 0; i < IN_MIN; i++) inRows.push(inBlank());
+    inRenumber();
+    colF = {}; sortKey = ''; sortDir = ''; closeFPanel();
+    if (board !== 'intake') board = 'intake';
+    render();
+    toast('已把 ' + add.length + ' 条放进入仓表格 —— 核对/补充后点「📥 一键入仓」再进库存');
   }
   function inSum() {
     var o = { n: 0, cnt: 0, kg: 0, amt: 0 };
@@ -652,7 +680,7 @@
     if (c0 < 0) c0 = 0;
     var r0 = (el && el.dataset && el.dataset.r) ? (parseInt(el.dataset.r, 10) - 1) : 0;
     if (!(r0 >= 0)) r0 = 0;
-    while (inRows.length < r0 + aoa.length) inRows.push({ _r: ++inSeq });
+    while (inRows.length < r0 + aoa.length) inRows.push(inBlank());
     var cells = 0;
     aoa.forEach(function (arr, ri) {
       var row = inRows[r0 + ri];
@@ -856,7 +884,7 @@
     var f = filterCount();
     $('selHint').className = 'hint' + (editing ? ' hot' : '');
     $('selHint').textContent = editing
-      ? ('编辑模式 · 已改 ' + nMod + ' 处 / ' + modRowCount() + ' 条 · 回车或点「保存全部」提交，Esc 取消')
+      ? ('编辑中 · 改动 ' + nMod + ' 处 / ' + modRowCount() + ' 条 · 回车跳下行 · Ctrl+Enter 保存')
       : sel ? ('已选中 #' + sel.id + (sel.code ? ' · ' + sel.code : ''))
         : (f ? ('筛选中：' + f + ' 列') : '未选中行');
     var pids = Object.keys(picks).filter(function (k) { return picks[k]; });
@@ -1108,6 +1136,7 @@
       if (!it) {
         if (f === 'follower') v = myName;
         if (f === 'warehouseDate') v = todayStr();
+        if (f === 'purchaseDate') v = todayStr();
       }
       el.value = v == null ? '' : String(v);
     });
@@ -1190,6 +1219,23 @@
       await load();
     } catch (e) { toast(e.message, false); }
   }
+  // v1.0.203 弹窗里填含税 → 自动带出不含税（用户自己填过的不覆盖）
+  function autoTaxFill() {
+    var pt = $('f_priceTax'), pn = $('f_priceNotax');
+    if (pt && pn && String(pt.value).trim()) {
+      if (!String(pn.value).trim() || pn.dataset.auto === '1') {
+        var nv = notaxOf(String(pt.value).trim());
+        if (isFinite(nv)) { pn.value = nv; pn.dataset.auto = '1'; }
+      }
+    }
+    var at = $('f_amountTax'), an = $('f_amountNotax');
+    if (at && an && String(at.value).trim()) {
+      if (!String(an.value).trim() || an.dataset.auto === '1') {
+        var nv2 = notaxOf(String(at.value).trim());
+        if (isFinite(nv2)) { an.value = nv2; an.dataset.auto = '1'; }
+      }
+    }
+  }
   function autoAmount() {
     var amountEl = $('f_amountNotax');
     if (!amountEl || amountEl.value.trim()) return;
@@ -1221,8 +1267,88 @@
     editMode = true;
     mods = {};
     render();
-    toast('编辑模式：点任意格子直接改，改完点「保存全部」（回车保存 / Esc 取消）');
+    toast('编辑模式：点任意格子直接改，回车跳同列下一行（Shift+Enter 上一行 / Ctrl+Enter 保存 / Esc 取消）');
   }
+  // ---------- v1.0.203 税点（%）：不含税 = 含税 × (1 - 税点) ----------
+  var taxRate = '13';       // 默认 13%，改了会记住
+  function round2v(n) { return Math.round((n + 1e-9) * 100) / 100; }
+  function taxPct() { var t = num(taxRate); return isFinite(t) ? t : 0; }
+  function notaxOf(v) { var n = num(v); return isFinite(n) ? round2v(n * (1 - taxPct() / 100)) : NaN; }
+  function initTax() {
+    var el = $('taxRate');
+    var saved = null;
+    try { saved = localStorage.getItem('kk_tax_rate'); } catch (e) { }
+    if (saved != null && String(saved).trim() !== '') taxRate = String(saved).trim();
+    if (!el) return;
+    el.value = taxRate;
+    el.addEventListener('input', function () {
+      taxRate = el.value;
+      try { localStorage.setItem('kk_tax_rate', taxRate); } catch (e) { }
+    });
+    el.addEventListener('change', function () {
+      taxRate = el.value;
+      try { localStorage.setItem('kk_tax_rate', taxRate); } catch (e) { }
+      toast('税点已设为 ' + (taxRate === '' ? '0' : taxRate) + '% —— 以后填含税单价 / 总金额会自动算出不含税');
+    });
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+  }
+  // 编辑模式：把不含税结果写进 mods（与原值相同则清理该改动）
+  function autoNotaxMod(it, id, pair, rawVal) {
+    var s = String(rawVal == null ? '' : rawVal).trim();
+    if (!s) return null;
+    var nv = notaxOf(s);
+    if (!isFinite(nv)) return null;
+    var ov = String(val(it, pair) == null ? '' : val(it, pair)).trim();
+    mods[id] = mods[id] || {};
+    if (String(nv) === ov) delete mods[id][pair]; else mods[id][pair] = String(nv);
+    if (!Object.keys(mods[id]).length) delete mods[id];
+    return nv;
+  }
+  // 录入表：直接写行数据
+  function autoNotaxRow(row, pair, rawVal) {
+    var s = String(rawVal == null ? '' : rawVal).trim();
+    if (!s) return null;
+    var nv = notaxOf(s);
+    if (!isFinite(nv)) return null;
+    row[pair] = String(nv);
+    return nv;
+  }
+  function fillPairInput(tr, pair, pv) {
+    if (!tr || pv === null || !tr.querySelector) return;
+    var pi = tr.querySelector('input.cellin[data-k="' + pair + '"]');
+    if (!pi) return;
+    pi.value = pv;
+    if (pi.classList) pi.classList.add('dirty');
+    var ptd = pi.closest ? pi.closest('td') : null;
+    if (ptd) ptd.classList.add('dirty-td');
+  }
+  // v1.0.203 回车跳到同列下一行（Excel 手感）：在 tbody 里按「列的位置」往下找可编辑格
+  function cellEditableIn(td) {
+    if (!td) return null;
+    return td.querySelector('input.cellin, select.stsel[data-k]');
+  }
+  function moveCellVert(el, dir) {
+    var tr = el.closest ? el.closest('tr') : null;
+    if (!tr || !tr.parentNode) return false;
+    var rows = Array.prototype.slice.call(tr.parentNode.children);
+    var ri = rows.indexOf(tr);
+    var td = el.closest ? el.closest('td') : null;
+    if (ri < 0 || !td) return false;
+    var ci = Array.prototype.slice.call(tr.children).indexOf(td);
+    if (ci < 0) return false;
+    for (var r = ri + dir; r >= 0 && r < rows.length; r += dir) {
+      var tds = rows[r].children;
+      if (!tds || ci >= tds.length) continue;
+      var t = cellEditableIn(tds[ci]);
+      if (t) {
+        t.focus();
+        try { if (t.select) t.select(); } catch (e) { }
+        return true;
+      }
+    }
+    return false;
+  }
+
   // 逐格改动记入 mods（未保存），并高亮该格
   function onCellEdit(e) {
     var el = e.target;
@@ -1245,6 +1371,12 @@
     if (el.classList) { if (dirty) el.classList.add('dirty'); else el.classList.remove('dirty'); }
     var td = el.closest ? el.closest('td') : null;
     if (td) { if (dirty) td.classList.add('dirty-td'); else td.classList.remove('dirty-td'); }
+    // v1.0.203 填了含税单价 / 总金额 → 按税点自动算出不含税
+    if (dirty && (k === 'price_tax' || k === 'amount_tax')) {
+      var pair = k === 'price_tax' ? 'price_notax' : 'amount_notax';
+      var pv = autoNotaxMod(it, id, pair, v);
+      fillPairInput(tr, pair, pv);
+    }
     syncBar();
   }
   // 统一保存：每条记录只提交自己改动过的字段（各条可以不同）
@@ -1571,6 +1703,13 @@
     $('impZone').className = 'imp-zone';
     $('impZone').innerHTML = $('impZone').getAttribute('data-html') || $('impZone').innerHTML;
     $('impDefStatus').value = dataBoard(board);
+    var _isIn = board === 'intake';
+    if ($('impIntakeTip')) $('impIntakeTip').style.display = _isIn ? '' : 'none';
+    if ($('impDefStatus') && $('impDefStatus').closest) {
+      var _lb = $('impDefStatus').closest('label');
+      if (_lb) _lb.style.display = _isIn ? 'none' : '';
+    }
+    if ($('impGo')) $('impGo').textContent = _isIn ? '导入到入仓表格' : '确认导入';
     $('impMask').classList.add('show');
   }
   function handleFile(file) {
@@ -1589,8 +1728,8 @@
         var res = buildRowsFromAoA(aoa, hasHeader);
         if (!res) { toast('未解析到有效数据行', false); return; }
         res.rows.forEach(function (it) {
-          it.purchaseDate = normDate(it.purchaseDate);
-          it.warehouseDate = normDate(it.warehouseDate);
+          it.purchaseDate = normDate(it.purchaseDate) || todayStr();
+          it.warehouseDate = normDate(it.warehouseDate) || todayStr();
           it.dueDate = normDate(it.dueDate);
         });
         $('impZone').className = 'imp-zone has';
@@ -1614,14 +1753,16 @@
     var res = buildRowsFromAoA(aoa, hits >= 3);
     if (!res) { toast('未解析到有效数据行', false); return; }
     res.rows.forEach(function (it) {
-      it.purchaseDate = normDate(it.purchaseDate);
-      it.warehouseDate = normDate(it.warehouseDate);
+      it.purchaseDate = normDate(it.purchaseDate) || todayStr();
+      it.warehouseDate = normDate(it.warehouseDate) || todayStr();
       it.dueDate = normDate(it.dueDate);
     });
     showPrev(res);
   }
   async function doImport() {
     if (!impRows || !impRows.length) return;
+    // v1.0.203 入仓板块：数据先进录入表格（还能补/改），点「一键入仓」才写进库存
+    if (board === 'intake') { impToIntake(); $('impMask').classList.remove('show'); return; }
     $('impGo').disabled = true;
     $('impGo').textContent = '导入中…';
     try {
@@ -1703,6 +1844,12 @@
       var row = inRows.filter(function (x) { return String(x._r) === String(el.dataset.r); })[0];
       if (!row) return;
       row[k] = el.value;
+      // v1.0.203 含税 → 不含税自动填
+      if (k === 'price_tax' || k === 'amount_tax') {
+        var _pair = k === 'price_tax' ? 'price_notax' : 'amount_notax';
+        var _pv = autoNotaxRow(row, _pair, el.value);
+        fillPairInput(el.closest ? el.closest('tr') : null, _pair, _pv);
+      }
       var last = inRows[inRows.length - 1];
       if (last && inHas(last) && !filterCount()) inAdd(10);
       renderStats();
@@ -1722,6 +1869,12 @@
     });
     ['f_priceNotax', 'f_wNow', 'f_wOrig'].forEach(function (id) {
       var el = $(id); if (el) el.addEventListener('blur', autoAmount);
+    });
+    ['f_priceTax', 'f_amountTax'].forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      el.addEventListener('input', autoTaxFill);
+      el.addEventListener('blur', autoTaxFill);
     });
     // 单行工具
     $('rowEditBtn').addEventListener('click', startRowEdit);
@@ -1819,7 +1972,16 @@
       } catch (err) { toast(err.message, false); await load(); }
     });
     $('tbody').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('cellin')) { e.preventDefault(); saveAllEdits(); }
+      var t = e.target;
+      var tcls = (t && t.classList) ? t.classList : null;
+      var editable = !!tcls && (tcls.contains('cellin') || (tcls.contains('stsel') && t.dataset && t.dataset.k));
+      if (e.key === 'Enter' && editable) {
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) { saveAllEdits(); return; }
+        var dir = e.shiftKey ? -1 : 1;
+        if (!moveCellVert(t, dir)) toast(e.shiftKey ? '已经是本列第一行' : '已经是本列最后一行');
+        return;
+      }
       if (e.key === 'Escape' && editMode) { e.preventDefault(); cancelEditMode(); }
     });
     // 筛选面板
@@ -1960,6 +2122,7 @@
     $('impPaste').addEventListener('input', handlePaste);
     $('impGo').addEventListener('click', doImport);
     $('expBtn').addEventListener('click', doExport);
+    initTax();
   }
   function paintStats(active) {
     Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (x) {
