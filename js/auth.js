@@ -11,7 +11,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data || {})
     });
-    if (!r.ok) throw new Error('网络错误 ' + r.status);
+    if (!r.ok) throw new Error(r.status === 413 ? '\u6570\u636e\u592a\u5927\uff08\u8bf7\u6c42\u4f53\u8d85\u9650 413\uff09\uff1a\u5df2\u81ea\u52a8\u5206\u6279\uff0c\u82e5\u4ecd\u62a5\u9519\u8bf7\u51cf\u5c11\u4e00\u6b21\u63d0\u4ea4\u7684\u6570\u91cf' : '\u7f51\u7edc\u9519\u8bef ' + r.status);
     return r.json();
   }
 

@@ -1142,6 +1142,29 @@
     render();
     toast('已粘贴 ' + aoa.length + ' 行 · ' + cells + ' 格' + (filterCount() ? '（筛选中，部分行可能不显示）' : ''));
   }
+  // ===== v1.0.211 分批提交 =====
+  // 网关（CloudBase HTTP 访问服务）单次请求体上限约 100KB，实测 96KB 通过 / 128KB 被拒；
+  // 1513 条入仓数据的 JSON 约 700KB，一次性提交必然被 413 拒绝 → 拆成多批串行提交。
+  var BATCH_MAX_ROWS = 30;          // 每批最多条数（云函数是逐条写库，控制单次执行时长）
+  var BATCH_MAX_BYTES = 40 * 1024;  // 每批请求体字节上限（网关约 100KB，留足余量）
+  function byteLen(s) {
+    try { return new TextEncoder().encode(s).length; } catch (e) { return s.length * 3; }
+  }
+  function splitBatches(items, srcs) {
+    var out = [], cur = [], curs = [], cb = 0;
+    for (var i = 0; i < items.length; i++) {
+      var b = byteLen(JSON.stringify(items[i])) + 1;
+      if (cur.length && (cur.length >= BATCH_MAX_ROWS || cb + b > BATCH_MAX_BYTES)) {
+        out.push({ items: cur, src: curs }); cur = []; curs = []; cb = 0;
+      }
+      cur.push(items[i]);
+      curs.push(srcs ? srcs[i] : null);
+      cb += b;
+    }
+    if (cur.length) out.push({ items: cur, src: curs });
+    return out;
+  }
+
   async function doIntake() {
     var rows = inRows.filter(inHas);
     if (!rows.length) { toast('还没有填任何数据 —— 直接在表格里输入，或从 Excel 复制后粘贴', false); return; }
@@ -1160,11 +1183,30 @@
       return o;
     });
     notaxApply(payload);
+
+    var groups = splitBatches(payload, rows);
     var btn = $('inGoBtn');
-    if (btn) { btn.disabled = true; btn.textContent = '入仓中…'; }
-    try {
-      var r2 = await api({ action: 'import', rows: payload });
-      toast('已入仓 ' + (r2.imported || 0) + ' 条' + (r2.skipped ? '，跳过 ' + r2.skipped + ' 条' : '') + ' → 已进库存板块');
+    if (btn) { btn.disabled = true; btn.textContent = '入仓中 0/' + rows.length; }
+    if (groups.length > 1) toast('数据较多（' + rows.length + ' 条），正在分 ' + groups.length + ' 批提交，请勿关闭页面');
+
+    var done = 0, skipped = 0, failAt = -1, emsg = '';
+    for (var gi = 0; gi < groups.length; gi++) {
+      var okk = false;
+      for (var at = 0; at < 3 && !okk; at++) {
+        try {
+          var rr = await api({ action: 'import', rows: groups[gi].items });
+          done += (rr.imported || 0); skipped += (rr.skipped || 0); okk = true;
+        } catch (e) {
+          emsg = (e && e.message) ? e.message : String(e);
+          if (at < 2) await new Promise(function (res) { setTimeout(res, 900); });
+        }
+      }
+      if (!okk) { failAt = gi; break; }
+      if (btn) btn.textContent = '入仓中 ' + done + '/' + rows.length;
+    }
+
+    if (failAt < 0) {
+      toast('已入仓 ' + done + ' 条' + (skipped ? '，跳过 ' + skipped + ' 条' : '') + ' → 已进库存板块');
       inRows = []; inSeq = 0;
       initInRows(IN_MIN);
       colF = {}; sortKey = ''; sortDir = ''; closeFPanel();
@@ -1173,7 +1215,20 @@
       var st = Array.prototype.slice.call(document.querySelectorAll('.stat')).filter(function (x) { return x.dataset.st === 'inventory'; })[0];
       paintStats(st || null);
       render();
-    } catch (e) { toast(e.message, false); }
+    } else {
+      // 只清掉已经成功的批次，失败批次的数据留在录入表，避免让用户重新录一遍
+      var rest = [];
+      for (var k2 = failAt; k2 < groups.length; k2++) {
+        (groups[k2].src || []).forEach(function (r0) { if (r0) rest.push(r0); });
+      }
+      var restN = rest.length;
+      inRows = rest;
+      for (var m2 = 0; m2 < IN_MIN; m2++) inRows.push(inBlank());
+      inRows.forEach(function (r, i) { r._r = i + 1; });
+      inSeq = inRows.length;
+      render();
+      toast('已入仓 ' + done + ' 条；剩余 ' + restN + ' 条没提交成功（' + emsg + '），已经留在录入表里，请再点一次「一键入仓」', false);
+    }
     if (btn) { btn.disabled = false; btn.textContent = IN_GO_LABEL; }
   }
 
@@ -2059,9 +2114,14 @@
     var n = modCount();
     $('rowSaveBtn').disabled = true;
     try {
-      var r = await api({ action: 'batchsave', items: payload });
+      var bgroups = splitBatches(payload, null);
+      var updated = 0, cells = 0;
+      for (var bg = 0; bg < bgroups.length; bg++) {
+        var bres = await api({ action: 'batchsave', items: bgroups[bg].items });
+        updated += (bres.updated || 0); cells += (bres.cells || 0);
+      }
       mods = {}; editMode = false; selId = null;
-      toast('已保存 ' + r.updated + ' 条记录、共 ' + (r.cells || n) + ' 处改动');
+      toast('已保存 ' + updated + ' 条记录、共 ' + (cells || n) + ' 处改动');
       await load();
     } catch (e) { toast(e.message, false); $('rowSaveBtn').disabled = false; }
   }
