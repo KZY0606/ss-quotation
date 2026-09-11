@@ -305,6 +305,16 @@
   /* v1.0.199 入仓板块：录入表格（紧凑、铺满，不留白） */
   .stat.st-intake .num { color: #b45309; }
   .stat.st-intake.active { border-color: #f0b429; box-shadow: inset 0 -2px 0 #f0b429; }
+    /* v1.0.209 列宽：拖动表头右边缘调整 / 双击自动适配 */
+    body.cw-dragging, body.cw-dragging * { cursor: col-resize !important; user-select: none !important; }
+    table.tk.cwf { table-layout: fixed; }
+    table.tk.cwf td { overflow: hidden; text-overflow: ellipsis; }
+    table.tk.cwf th .th-in { overflow: hidden; }
+    table.tk.cwf th .th-in > span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    table.tk.cwf th .th-in .fbtn { flex: none; }
+    table.tk th .cw-rs { position: absolute; top: 0; right: -4px; width: 9px; height: 100%; cursor: col-resize; z-index: 9; display: block; }
+    table.tk th .cw-rs::after { content: ''; position: absolute; left: 4px; top: 22%; height: 56%; width: 1px; background: #cbd5e1; }
+    table.tk th .cw-rs:hover::after { background: #2c5282; width: 2px; }
   table.tk.inin { width: 100%; }
   table.tk.inin td { padding: 1px 2px; border: 1px solid #e8eef3; }
   table.tk.inin td.in-no { width: 34px; text-align: center; color: #94a3b8; font-size: 11px; background: #f8fafc; padding: 0; }
@@ -634,13 +644,15 @@
             </div>
             <div class="cs-tip" style="margin:8px 0 0">新增的自定义列会先加在最后一列，可用 ↑ 移到想要的位置；列里的内容直接在表格中双击单元格填写（会自动存库）。</div>
           </div>
+          <div class="cs-tip" style="margin:8px 0 0">表格里把鼠标移到表头的右边缘，按住拖动即可调整列宽；双击列边界会按内容自动适配。列宽随「保存」一起对全体跟单生效。</div>
           <div class="dlg-f">
+            <button class="btn" id="cwResetBtn">↔ 重置列宽</button>
             <button class="btn" id="csResetBtn">恢复默认</button>
             <button class="btn" id="csCancelBtn">取消</button>
             <button class="btn primary" id="csSaveBtn">保存</button>
           </div>
         </div>
       </div>
-<script src="js/tracking.js?v=1.0.208"></script>
+<script src="js/tracking.js?v=1.0.209"></script>
 </body>
 </html>

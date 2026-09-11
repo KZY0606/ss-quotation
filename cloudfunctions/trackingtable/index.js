@@ -457,6 +457,7 @@ exports.main = async (event) => {
       if (!Array.isArray(val.hidden)) val.hidden = [];
       if (!Array.isArray(val.custom)) val.custom = [];
       if (!val.rename || typeof val.rename !== 'object') val.rename = {};
+      if (!val.width || typeof val.width !== 'object') val.width = {};
       return { ok: true, layout: val };
     }
     if (action === 'layoutsave') {
@@ -464,7 +465,18 @@ exports.main = async (event) => {
       const okK = k => /^[a-z_][a-z0-9_]{0,39}$/.test(String(k)) || /^c([1-9]|1[0-2])$/.test(String(k));
       const arr = a => (Array.isArray(a) ? a.map(x => String(x)).filter(x => okK(x)) : []);
       const cut = (s, n) => String(s == null ? '' : s).trim().slice(0, n);
-      const out = { order: arr(L.order).slice(0, 200), hidden: arr(L.hidden).slice(0, 200), custom: [], rename: {} };
+      const out = { order: arr(L.order).slice(0, 200), hidden: arr(L.hidden).slice(0, 200), custom: [], rename: {}, width: {} };
+      const okB = b => ['inventory', 'ordered', 'progress', 'intake'].indexOf(String(b)) >= 0;
+      Object.keys(L.width || {}).forEach(b => {
+        if (!okB(b)) return;
+        const src = (L.width || {})[b] || {}, o = {};
+        Object.keys(src).forEach(k => {
+          if (!okK(k)) return;
+          const v = Math.round(Number(src[k]) || 0);
+          if (v >= 36 && v <= 800) o[k] = v;
+        });
+        if (Object.keys(o).length) out.width[b] = o;
+      });
       const used = {};
       (Array.isArray(L.custom) ? L.custom : []).forEach(c => {
         const k = String((c || {}).k || '');

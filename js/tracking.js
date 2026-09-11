@@ -199,7 +199,7 @@
     (nl.order || []).forEach(function (k) { if (ord.indexOf(k) < 0) ord.push(k); });
     (nl.custom || []).forEach(function (c) { cus.push({ k: c.k, t: c.t, num: c.num ? 1 : 0, kind: c.kind || '' }); });
     Object.keys(nl.rename || {}).forEach(function (k) { if (nl.rename[k]) ren[k] = nl.rename[k]; });
-    return { order: ord, hidden: (nl.hidden || []).slice(), custom: cus, rename: ren };
+    return { order: ord, hidden: (nl.hidden || []).slice(), custom: cus, rename: ren, width: csNormW(nl.widthClear ? {} : (nl.width || LAYOUT.width || {})) };
   }
   async function csPersist(nl) {
     var body = csNorm(nl);
@@ -295,7 +295,7 @@
     toast('已移除列「' + t + '」：保存后表格不再显示，已有数据仍留在数据库', true);
   }
   function csReset() {
-    csDraft = { order: csDefaultOrder(), hidden: [], custom: [], rename: {} };
+    csDraft = { order: csDefaultOrder(), hidden: [], custom: [], rename: {}, widthClear: 1 };
     csDraw();
     toast('已恢复默认列顺序与列名，点「保存」后生效', true);
   }
@@ -307,6 +307,184 @@
       toast('列设置已保存（全体跟单共用）', true);
     } catch (e) { toast('保存失败：' + e.message, false); }
   }
+  // ===== v1.0.209 列宽：表头右边缘拖动调整 / 双击按内容自动适配（Excel 式） =====
+  var CW_MIN = 38, CW_MAX = 760, cwDrag = null, cwCv = null;
+
+  function cwBoard() { return board || 'inventory'; }
+  function cwOf() { var w = LAYOUT.width || {}; return w[cwBoard()] || {}; }
+  function cwHas() { return Object.keys(cwOf()).length > 0; }
+  function csNormW(nw) {
+    var out = {};
+    if (!nw || typeof nw !== 'object') return out;
+    ['inventory', 'ordered', 'progress', 'intake'].forEach(function (b) {
+      var src = nw[b];
+      if (!src || typeof src !== 'object') return;
+      var o = {};
+      Object.keys(src).forEach(function (k) {
+        if (!/^(_no|_chk|[a-z_][a-z0-9_]{0,39}|c([1-9]|1[0-2]))$/.test(k)) return;
+        var v = Math.round(Number(src[k]) || 0);
+        if (v >= 36 && v <= 800) o[k] = v;
+      });
+      if (Object.keys(o).length) out[b] = o;
+    });
+    return out;
+  }
+  function cwKeys() {
+    var out = [], ths = document.querySelectorAll('#thead th');
+    for (var i = 0; i < ths.length; i++) out.push(ths[i].dataset.cw || ('_c' + i));
+    return out;
+  }
+  function cwRs() { return '<span class="cw-rs" title="拖动调整列宽，双击自动适配"></span>'; }
+  function cwWrite() {
+    var t = document.querySelector('table.tk');
+    if (!t) return;
+    var el = document.getElementById('cwStyle');
+    if (!el) { el = document.createElement('style'); el.id = 'cwStyle'; document.head.appendChild(el); }
+    var keys = cwKeys(), w = cwOf(), css = [], b = cwBoard(), ths = document.querySelectorAll('#thead th');
+    var fixed = cwHas(), sum = 0, a, i;
+    if (fixed) {
+      var loose = false;
+      for (a = 0; a < keys.length; a++) {
+        if (!w[keys[a]]) {
+          var cur = ths[a] ? Math.round(ths[a].getBoundingClientRect().width) : 0;
+          w[keys[a]] = Math.max(60, cur || 100);
+          loose = true;
+        }
+      }
+      if (loose) { LAYOUT.width = LAYOUT.width || {}; LAYOUT.width[b] = w; }
+    }
+    for (i = 0; i < keys.length; i++) {
+      var px = w[keys[i]];
+      if (!px) continue;
+      if (fixed) sum += px;
+      css.push('table.tk.fb-' + b + ' tr > *:nth-child(' + (i + 1) + '){width:' + px + 'px;max-width:' + px + 'px;}');
+    }
+    el.textContent = css.join('');
+    ['intake', 'inventory', 'ordered', 'progress'].forEach(function (x) { t.classList.remove('fb-' + x); });
+    t.classList.add('fb-' + b);
+    if (fixed && sum > 0) { t.classList.add('cwf'); t.style.minWidth = ''; t.style.width = sum + 'px'; }
+    else { t.classList.remove('cwf'); t.style.width = ''; }
+  }
+  function cwPin() {
+    if (cwHas()) return;
+    var ths = document.querySelectorAll('#thead th'), keys = cwKeys(), w = {};
+    for (var i = 0; i < ths.length; i++) {
+      var px = Math.round(ths[i].getBoundingClientRect().width);
+      if (px >= 20) w[keys[i]] = Math.min(CW_MAX, px);
+    }
+    if (!Object.keys(w).length) return;
+    LAYOUT.width = LAYOUT.width || {};
+    LAYOUT.width[cwBoard()] = w;
+  }
+  function cwApply() { try { cwWrite(); } catch (e) { } }
+  function cwSet(k, px) {
+    px = Math.max(CW_MIN, Math.min(CW_MAX, Math.round(px)));
+    LAYOUT.width = LAYOUT.width || {};
+    var b = cwBoard();
+    LAYOUT.width[b] = LAYOUT.width[b] || {};
+    LAYOUT.width[b][k] = px;
+    cwWrite();
+  }
+  function cwSave() {
+    var body = {
+      order: LAYOUT.order || [], hidden: LAYOUT.hidden || [],
+      custom: LAYOUT.custom || [], rename: LAYOUT.rename || {}, width: LAYOUT.width || {}
+    };
+    api({ action: 'layoutsave', layout: body }).then(function (r) {
+      if (r && r.ok && r.layout) LAYOUT = r.layout;
+    }).catch(function (e) { toast('列宽保存失败：' + e.message, false); });
+  }
+  function cwMeasure(txt, font) {
+    if (!cwCv) cwCv = document.createElement('canvas').getContext('2d');
+    if (font) cwCv.font = font;
+    return cwCv.measureText(String(txt == null ? '' : txt)).width;
+  }
+  function cwFont(st) {
+    return (st.fontStyle && st.fontStyle !== 'normal' ? st.fontStyle + ' ' : '') + (st.fontWeight || '400') + ' ' +
+      (st.fontSize || '12px') + ' ' + (st.fontFamily || 'sans-serif');
+  }
+  function cwCellW(el) {
+    var isTh = el.tagName === 'TH';
+    var f = el.querySelector('input, select, textarea');
+    if (f) {
+      var st = getComputedStyle(f);
+      return cwMeasure(f.value || f.placeholder || '', cwFont(st)) + 30;
+    }
+    var st2 = getComputedStyle(el);
+    return cwMeasure(el.textContent || '', cwFont(st2)) + (isTh ? 50 : 34);
+  }
+  function cwFit(k) {
+    if (!cwHas()) cwPin();
+    var i = cwKeys().indexOf(k);
+    if (i < 0) return;
+    var ths = document.querySelectorAll('#thead th'), max = 0;
+    if (ths[i]) max = Math.max(max, cwCellW(ths[i]));
+    var trs = document.querySelectorAll('#tbody tr');
+    for (var a = 0; a < trs.length; a++) {
+      var td = trs[a].children[i];
+      if (td) max = Math.max(max, cwCellW(td));
+    }
+    cwSet(k, max + 4);
+    var j = cwKeys().indexOf(k);
+    if (j >= 0) {
+      var th2 = document.querySelectorAll('#thead th')[j];
+      var tr0 = document.querySelector('#tbody tr[data-id]');
+      var cell = tr0 ? tr0.children[j] : null;
+      var over = 0;
+      if (th2) {
+        var ti = th2.querySelector('.th-in');
+        if (ti) over = Math.max(over, ti.scrollWidth - ti.clientWidth);
+      }
+      if (cell) over = Math.max(over, cell.scrollWidth - cell.clientWidth);
+      if (over > 0) cwSet(k, (cwOf()[k] || 0) + over + 6);
+    }
+    cwSave();
+  }
+  function cwEnd() {
+    if (!cwDrag) return;
+    var moved = cwDrag.moved;
+    cwDrag = null;
+    document.body.classList.remove('cw-dragging');
+    if (moved) cwSave();
+  }
+  function cwBind() {
+    var th = $('thead');
+    if (!th) return;
+    th.addEventListener('mousedown', function (e) {
+      var h = e.target.closest ? e.target.closest('.cw-rs') : null;
+      if (!h) return;
+      var cell = h.closest('th');
+      if (!cell || !cell.dataset.cw) return;
+      e.preventDefault();
+      var k = cell.dataset.cw;
+      if (!cwHas()) cwPin();
+      cwDrag = { k: k, x: e.clientX, w: cwOf()[k] || Math.round(cell.getBoundingClientRect().width), moved: false };
+      document.body.classList.add('cw-dragging');
+    });
+    th.addEventListener('dblclick', function (e) {
+      var h = e.target.closest ? e.target.closest('.cw-rs') : null;
+      if (!h) return;
+      var cell = h.closest('th');
+      if (!cell || !cell.dataset.cw) return;
+      e.preventDefault();
+      cwFit(cell.dataset.cw);
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (!cwDrag) return;
+      var d = e.clientX - cwDrag.x;
+      if (Math.abs(d) > 1) cwDrag.moved = true;
+      cwSet(cwDrag.k, cwDrag.w + d);
+    });
+    document.addEventListener('mouseup', cwEnd);
+    window.addEventListener('blur', cwEnd);
+    var rb = $('cwResetBtn');
+    if (rb) rb.addEventListener('click', function () {
+      LAYOUT.width = {};
+      cwWrite();
+      toast('列宽已恢复默认', true);
+    });
+  }
+
   function csBind() {
     if ($('colSetBtn')) $('colSetBtn').addEventListener('click', csOpen);
     if ($('colSetClose')) $('colSetClose').addEventListener('click', csClose);
@@ -314,6 +492,7 @@
     if ($('csSaveBtn')) $('csSaveBtn').addEventListener('click', csSavePanel);
     if ($('csResetBtn')) $('csResetBtn').addEventListener('click', csReset);
     if ($('csAddBtn')) $('csAddBtn').addEventListener('click', csAdd);
+    cwBind();
     var mask = $('colSetMask');
     if (mask) mask.addEventListener('click', function (e) { if (e.target === mask) csClose(); });
     var box = $('colSetList');
@@ -856,6 +1035,7 @@
     syncBar();
     var t = document.querySelector('table.tk');
     if (t) { t.className = 'tk inin'; t.style.minWidth = (COL_IN.length * 92 + 46) + 'px'; }
+    cwApply();
     if ($('trackCard')) { $('trackCard').className = 'track'; $('trackCard').innerHTML = ''; }
     var rows = inVisible();
     if (!rows.length) {
@@ -932,11 +1112,11 @@
 
   function renderThead() {
     var cols = board === 'intake' ? COL_IN : colsOf(board);
-    $('thead').innerHTML = '<tr>' + (board === 'intake' ? '<th class="th-no" title="行号"></th>' : '') + cols.map(function (c) {
-      if (c.ck) return '<th class="th-ck"><div class="th-in"><input type="checkbox" class="ckb" id="ckAll" title="全选本页"></div></th>';
+    $('thead').innerHTML = '<tr>' + (board === 'intake' ? '<th class="th-no" data-cw="_no" title="行号">' + cwRs() + '</th>' : '') + cols.map(function (c) {
+      if (c.ck) return '<th class="th-ck" data-cw="_chk"><div class="th-in"><input type="checkbox" class="ckb" id="ckAll" title="全选本页"></div>' + cwRs() + '</th>';
       var cls = c.st ? 'th-st' : (c.num ? 'num-r' : '');
-      return '<th class="' + cls + '" data-k="' + c.k + '"><div class="th-in"><span>' + esc(c.t) + '</span>' +
-        '<button class="fbtn' + (fActive(c.k) ? ' on' : '') + '" data-fk="' + c.k + '" title="筛选 / 排序">▼</button></div></th>';
+      return '<th class="' + cls + '" data-k="' + c.k + '" data-cw="' + c.k + '"><div class="th-in"><span>' + esc(c.t) + '</span>' +
+        '<button class="fbtn' + (fActive(c.k) ? ' on' : '') + '" data-fk="' + c.k + '" title="筛选 / 排序">▼</button></div>' + cwRs() + '</th>';
     }).join('') + '</tr>';
     var t = document.querySelector('table.tk');
     if (t) {
@@ -945,6 +1125,7 @@
     }
     var ca = $('ckAll');
     if (ca) ca.checked = false;
+    cwApply();
   }
 
   function stSelect(it, c, inline) {
