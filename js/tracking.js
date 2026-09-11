@@ -1224,14 +1224,20 @@
   }
   // v1.0.203 弹窗里填含税 → 自动带出不含税（用户自己填过的不覆盖）
   function autoTaxFill() {
-    var pt = $('f_priceTax'), pn = $('f_priceNotax');
+    var pt = $('f_priceTax'), pn = $('f_priceNotax'), at = $('f_amountTax'), an = $('f_amountNotax');
+    var wo = $('f_wOrig'), wn = $('f_wNow');
+    var kgv = num(wo && wo.value) || num(wn && wn.value);
+    // v1.0.205 tax price + weight -> tax amount
+    if (pt && at && String(pt.value).trim() && kgv > 0) {
+      var av = amountTaxOf(String(pt.value).trim(), kgv);
+      if (isFinite(av) && (!String(at.value).trim() || at.dataset.auto === '1')) { at.value = av; at.dataset.auto = '1'; }
+    }
     if (pt && pn && String(pt.value).trim()) {
       if (!String(pn.value).trim() || pn.dataset.auto === '1') {
         var nv = notaxOf(String(pt.value).trim());
         if (isFinite(nv)) { pn.value = nv; pn.dataset.auto = '1'; }
       }
     }
-    var at = $('f_amountTax'), an = $('f_amountNotax');
     if (at && an && String(at.value).trim()) {
       if (!String(an.value).trim() || an.dataset.auto === '1') {
         var nv2 = notaxOf(String(at.value).trim());
@@ -1240,6 +1246,7 @@
     }
   }
   function autoAmount() {
+    autoTaxFill();
     var amountEl = $('f_amountNotax');
     if (!amountEl || amountEl.value.trim()) return;
     var p = num($('f_priceNotax').value);
@@ -1277,11 +1284,37 @@
   function round2v(n) { return Math.round((n + 1e-9) * 100) / 100; }
   function taxPct() { var t = num(taxRate); return isFinite(t) ? t : 0; }
   function notaxOf(v) { var n = num(v); return isFinite(n) ? round2v(n * (1 - taxPct() / 100)) : NaN; }
+  // v1.0.205 amount(CNY) = price(CNY per ton) x orig weight(KG) / 1000  (same rule as dialog autoAmount)
+  var AMOUNT_TAX_SRC = [['price_tax', 'amount_tax'], ['priceTax', 'amountTax']];
+  var WEIGHT_KEYS = ['weight_orig', 'w_orig', 'wOrig'];
+  function origOf(o) {
+    if (!o) return '';
+    for (var i = 0; i < WEIGHT_KEYS.length; i++) {
+      var v = o[WEIGHT_KEYS[i]];
+      if (v != null && String(v).trim() !== '') return v;
+    }
+    return '';
+  }
+  function amountTaxOf(pt, w) {
+    var p = num(pt), kg = num(w);
+    return (isFinite(p) && isFinite(kg) && p > 0 && kg > 0) ? round2v(p * kg / 1000) : NaN;
+  }
   // v1.0.204 batch entries (import / paste / one-click intake) also fill notax from tax-included values
   var NOTAX_PAIRS = [['price_tax', 'price_notax'], ['amount_tax', 'amount_notax'], ['priceTax', 'priceNotax'], ['amountTax', 'amountNotax']];
   function notaxFillRow(o, force) {
     var n = 0;
     if (!o) return 0;
+    AMOUNT_TAX_SRC.forEach(function (p) {
+      var t = String(o[p[0]] == null ? '' : o[p[0]]).trim();
+      if (!t) return;
+      var a = String(o[p[1]] == null ? '' : o[p[1]]).trim();
+      if (a && !force) return;
+      var v = amountTaxOf(t, origOf(o));
+      if (!isFinite(v)) return;
+      if (String(v) === a) return;
+      o[p[1]] = String(v);
+      n++;
+    });
     NOTAX_PAIRS.forEach(function (p) {
       var t = String(o[p[0]] == null ? '' : o[p[0]]).trim();
       if (!t) return;
@@ -1403,10 +1436,35 @@
     var td = el.closest ? el.closest('td') : null;
     if (td) { if (dirty) td.classList.add('dirty-td'); else td.classList.remove('dirty-td'); }
     // v1.0.203 填了含税单价 / 总金额 → 按税点自动算出不含税
-    if (dirty && (k === 'price_tax' || k === 'amount_tax')) {
-      var pair = k === 'price_tax' ? 'price_notax' : 'amount_notax';
-      var pv = autoNotaxMod(it, id, pair, v);
-      fillPairInput(tr, pair, pv);
+    if (k === 'price_tax' || k === 'amount_tax' || k === 'w_orig') {
+      var _mt = mods[id] || {};
+      var _ptv = String(k === 'price_tax' ? v : (_mt['price_tax'] != null ? _mt['price_tax'] : (val(it, 'price_tax') || ''))).trim();
+      var _wv = String(k === 'w_orig' ? v : (_mt['w_orig'] != null ? _mt['w_orig'] : (val(it, 'w_orig') || ''))).trim();
+      var _atv = String(k === 'amount_tax' ? v : (_mt['amount_tax'] != null ? _mt['amount_tax'] : (val(it, 'amount_tax') || ''))).trim();
+      // price_tax changed -> always recompute amount_tax ; w_orig changed -> only fill when amount_tax empty
+      if (k === 'price_tax' || k === 'w_orig') {
+        var _calc = amountTaxOf(_ptv, _wv);
+        if (isFinite(_calc)) {
+          var _old = String(val(it, 'amount_tax') == null ? '' : val(it, 'amount_tax')).trim();
+          mods[id] = mods[id] || {};
+          if (String(_calc) === _old) delete mods[id]['amount_tax']; else mods[id]['amount_tax'] = String(_calc);
+          if (!Object.keys(mods[id]).length) delete mods[id];
+          _atv = String(_calc);
+          fillPairInput(tr, 'amount_tax', _atv);
+        }
+      }
+      if (dirty && k === 'price_tax') {
+        var _pvA = autoNotaxMod(it, id, 'price_notax', v);
+        fillPairInput(tr, 'price_notax', _pvA);
+      }
+      if (dirty && k === 'amount_tax') {
+        var _pvB = autoNotaxMod(it, id, 'amount_notax', v);
+        fillPairInput(tr, 'amount_notax', _pvB);
+      }
+      if (k !== 'amount_tax' && _atv) {
+        var _pvC = autoNotaxMod(it, id, 'amount_notax', _atv);
+        fillPairInput(tr, 'amount_notax', _pvC);
+      }
     }
     syncBar();
   }
@@ -1880,10 +1938,25 @@
       if (!row) return;
       row[k] = el.value;
       // v1.0.203 含税 → 不含税自动填
-      if (k === 'price_tax' || k === 'amount_tax') {
-        var _pair = k === 'price_tax' ? 'price_notax' : 'amount_notax';
-        var _pv = autoNotaxRow(row, _pair, el.value);
-        fillPairInput(el.closest ? el.closest('tr') : null, _pair, _pv);
+      var _tr2 = el.closest ? el.closest('tr') : null;
+      if (k === 'price_tax') {
+        var _amtv = amountTaxOf(el.value, origOf(row));
+        var _keep = String(row['amount_tax'] == null ? '' : row['amount_tax']).trim();
+        if (isFinite(_amtv)) { row['amount_tax'] = String(_amtv); _keep = String(_amtv); fillPairInput(_tr2, 'amount_tax', _keep); }
+        var _p1 = autoNotaxRow(row, 'price_notax', el.value);
+        fillPairInput(_tr2, 'price_notax', _p1);
+        if (_keep) { var _p2 = autoNotaxRow(row, 'amount_notax', _keep); fillPairInput(_tr2, 'amount_notax', _p2); }
+      } else if (k === 'amount_tax') {
+        var _p3 = autoNotaxRow(row, 'amount_notax', el.value);
+        fillPairInput(_tr2, 'amount_notax', _p3);
+      } else if (k === 'w_orig') {
+        var _a2 = amountTaxOf(row['price_tax'], el.value);
+        if (isFinite(_a2)) {
+          row['amount_tax'] = String(_a2);
+          fillPairInput(_tr2, 'amount_tax', String(_a2));
+          var _p4 = autoNotaxRow(row, 'amount_notax', String(_a2));
+          fillPairInput(_tr2, 'amount_notax', _p4);
+        }
       }
       var last = inRows[inRows.length - 1];
       if (last && inHas(last) && !filterCount()) inAdd(10);
@@ -1901,6 +1974,9 @@
     });
     Array.prototype.forEach.call($('stPick').children, function (b) {
       b.addEventListener('click', function () { editBoard = b.dataset.v; renderStPick(); });
+    });
+    ['f_wNow', 'f_wOrig'].forEach(function (id) {
+      var el = $(id); if (el) el.addEventListener('input', autoTaxFill);
     });
     ['f_priceNotax', 'f_wNow', 'f_wOrig'].forEach(function (id) {
       var el = $(id); if (el) el.addEventListener('blur', autoAmount);
