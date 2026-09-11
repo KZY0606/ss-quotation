@@ -27,6 +27,7 @@ const ALIAS = {
   warehouse: ['warehouse'],
   grade: ['grade'],
   surface: ['surface'],
+  film_status: ['filmStatus', 'film_status'],
   thickness: ['thickness'],
   width: ['width'],
   length: ['length'],
@@ -61,7 +62,7 @@ const ALIAS = {
   process_flow: ['processFlow', 'process_flow'],
   process_step: ['processStep', 'process_step']
 };
-const MAXLEN = { note: 1000, process_flow: 4000, customer: 200, follower: 100, due_date: 40 };
+const MAXLEN = { note: 1000, process_flow: 4000, customer: 200, follower: 100, due_date: 40, film_status: 100 };
 
 // 状态枚举
 const ENUM_STATUS = ['inventory', 'ordered'];                  // 板块归属（ordered = 生产中 / 生产进度）
@@ -89,6 +90,7 @@ const DEFAULT_DICT = {
     prod_status: ["库存","生产中"],
     inv_status: ["在库","已预订","部分出库","已售出","可销售","已锁货","加工中","在途","待检验","待处理","不可售","已出库"],
     ord_status: ["采购下单","原料到仓","投入生产","加工完成","发货自提","已交付","待确认","已确认","备料中","加工中","待交货","部分交货","已完成","已取消","暂停","异常"],
+    film_status: ["不贴膜","普通蓝膜","普通黑白膜","激光膜","激光双层膜","透明膜","PVC膜","PE膜","进口膜","客户指定","5C膜","7C膜","鱼头膜","Novacel","5C激光膜","7C激光膜","深冲膜","低粘膜","中粘膜","高粘膜"],
     customer: [],
     supplier: [],
   },
@@ -122,7 +124,7 @@ const DEFAULT_DICT = {
     "金额核对容差": ["0.01","元，避免分币误差"],
   }
 };
-const DICT_LABEL = { grade: '钢种', surface: '表面', origin: '产地', warehouse: '仓库/加工厂', follower: '跟单员', type: '类型', prod_status: '生产状态', inv_status: '库存状态', ord_status: '订单状态', customer: '客户名称', supplier: '供应商' };
+const DICT_LABEL = { grade: '钢种', surface: '表面', film_status: '保护膜状态', origin: '产地', warehouse: '仓库/加工厂', follower: '跟单员', type: '类型', prod_status: '生产状态', inv_status: '库存状态', ord_status: '订单状态', customer: '客户名称', supplier: '供应商' };
 
 async function ensureTables() {
   await exec(`CREATE TABLE IF NOT EXISTS tracking_items (
@@ -147,6 +149,8 @@ async function ensureTables() {
   for (const c of ['customer', 'follower', 'due_date', 'process_flow', 'process_step']) {
     await exec(`ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS ${c} TEXT DEFAULT ''`);
   }
+  // v1.0.206 保护膜状态列
+  await exec("ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS film_status TEXT DEFAULT ''");
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_status ON tracking_items (status)');
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_code ON tracking_items (code)');
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_contract ON tracking_items (contract_no)');
@@ -415,6 +419,9 @@ exports.main = async (event) => {
       if (res.Rows && res.Rows.length) { try { val = JSON.parse(JSON.parse(res.Rows[0])[0] || 'null'); } catch (e) { val = null; } }
       if (!val || !val.cols) val = { cols: DEFAULT_DICT.cols, extra: DEFAULT_DICT.extra };
       if (!val.extra) val.extra = DEFAULT_DICT.extra;
+      // v1.0.206：已保存的词典里缺少新增类别时，用默认值补齐
+      Object.keys(DEFAULT_DICT.cols).forEach(k => { if (!Array.isArray(val.cols[k])) val.cols[k] = DEFAULT_DICT.cols[k].slice(); });
+      Object.keys(DEFAULT_DICT.extra).forEach(k => { if (!Array.isArray(val.extra[k])) val.extra[k] = DEFAULT_DICT.extra[k].slice(); });
       return { ok: true, dict: val, label: DICT_LABEL, defaults: DEFAULT_DICT, global: true };
     }
     if (action === 'dictset') {

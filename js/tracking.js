@@ -36,11 +36,11 @@
   var inSeq = 0;            // 行号自增
   var IN_MIN = 20;          // 最少显示行数
   var IN_GO_LABEL = '📥 一键入仓';
-  var IN_KEYS = ['purchase_date', 'warehouse_date', 'warehouse', 'grade', 'surface', 'thickness', 'width', 'length',
+  var IN_KEYS = ['purchase_date', 'warehouse_date', 'warehouse', 'grade', 'surface', 'film_status', 'thickness', 'width', 'length',
     'w_orig', 'w_now', 'w_gross', 'count', 'prod_status', 'code', 'type', 'origin', 'price_tax', 'price_notax',
     'amount_tax', 'amount_notax', 'supplier', 'customer', 'follower', 'due_date', 'contract_no', 'note'];
   var IN_MAP = [['purchase_date', 'purchaseDate'], ['warehouse_date', 'warehouseDate'], ['warehouse', 'warehouse'],
-    ['grade', 'grade'], ['surface', 'surface'], ['thickness', 'thickness'], ['width', 'width'], ['length', 'length'],
+    ['grade', 'grade'], ['surface', 'surface'], ['film_status', 'filmStatus'], ['thickness', 'thickness'], ['width', 'width'], ['length', 'length'],
     ['w_orig', 'wOrig'], ['w_now', 'wNow'], ['w_gross', 'wGross'], ['count', 'count'], ['prod_status', 'prodStatus'],
     ['code', 'code'], ['type', 'type'], ['origin', 'origin'], ['price_tax', 'priceTax'], ['price_notax', 'priceNotax'],
     ['amount_tax', 'amountTax'], ['amount_notax', 'amountNotax'], ['supplier', 'supplier'], ['customer', 'customer'],
@@ -51,6 +51,7 @@
     { k: 'warehouse', t: '仓库/加工厂' },
     { k: 'grade', t: '钢种' },
     { k: 'surface', t: '表面' },
+    { k: 'film_status', t: '保护膜状态' },
     { k: 'thickness', t: '厚度', num: 1, kind: 'num' },
     { k: 'width', t: '宽度', num: 1, kind: 'num' },
     { k: 'length', t: '长度' },
@@ -91,6 +92,7 @@
     { k: 'warehouse', t: '仓库/加工厂' },
     { k: 'grade', t: '钢种' },
     { k: 'surface', t: '表面' },
+    { k: 'film_status', t: '保护膜状态' },
     { k: 'thickness', t: '厚度', num: 1, kind: 'num' },
     { k: 'width', t: '宽度', num: 1, kind: 'num' },
     { k: 'length', t: '长度' },
@@ -377,6 +379,7 @@
     fill('dl_warehouse', combinedVals('warehouse'));
     fill('dl_grade', combinedVals('grade'));
     fill('dl_surface', combinedVals('surface'));
+    fill('dl_filmStatus', combinedVals('film_status'));
     fill('dl_type', combinedVals('type'));
     fill('dl_origin', combinedVals('origin'));
     fill('dl_supplier', combinedVals('supplier'));
@@ -836,7 +839,12 @@
   }
 
   function render() {
-    if (board === 'intake') { renderIntake(); return; }
+    if (board === 'intake') {
+      var _c0 = $('tblCard');
+      if (_c0) _c0.classList.remove('tf-empty');
+      renderIntake();
+      return;
+    }
     renderThead();
     renderStats();
     syncBar();
@@ -1116,7 +1124,7 @@
   }
 
   // ---------- 弹窗：入仓 / 编辑 ----------
-  var FORM_FIELDS = ['purchaseDate', 'warehouseDate', 'warehouse', 'grade', 'surface', 'thickness', 'width', 'length',
+  var FORM_FIELDS = ['purchaseDate', 'warehouseDate', 'warehouse', 'grade', 'surface', 'filmStatus', 'thickness', 'width', 'length',
     'wOrig', 'wNow', 'wGross', 'count', 'prodStatus', 'code', 'type', 'origin',
     'priceTax', 'priceNotax', 'amountTax', 'amountNotax', 'supplier',
     'contractNo', 'customer', 'follower', 'dueDate', 'note', 'salePrice'];
@@ -1412,6 +1420,110 @@
     }
     return false;
   }
+  // ---------- v1.0.206 Excel 式填充柄：拖动单元格右下角小方块，把该格内容复制到同列其它行 ----------
+  var fhEl = null, fhSrc = null, fhLast = null, fhTargets = [], fhDragging = false;
+  function fhTr(el) { return (el && el.closest) ? el.closest('tr') : null; }
+  function fhTd(el) { return (el && el.closest) ? el.closest('td') : null; }
+  function fhCol(el) {
+    var td = fhTd(el), tr = fhTr(el);
+    if (!td || !tr) return -1;
+    return Array.prototype.slice.call(tr.children).indexOf(td);
+  }
+  function fhCellAt(tr, ci, k) {
+    var td = (tr && tr.children) ? tr.children[ci] : null;
+    return td ? td.querySelector('input.cellin[data-k="' + k + '"]') : null;
+  }
+  function fhEnsure() {
+    if (fhEl) return fhEl;
+    fhEl = document.createElement('div');
+    fhEl.className = 'fillhandle';
+    fhEl.title = '拖动可把本格内容复制到下面若干行（双击自动填到底）';
+    fhEl.addEventListener('mousedown', fhDown);
+    fhEl.addEventListener('dblclick', function (e) { e.preventDefault(); fhFillDown(); });
+    document.body.appendChild(fhEl);
+    return fhEl;
+  }
+  function fhMove(el) {
+    if (!el || !el.getBoundingClientRect) return;
+    var h = fhEnsure(), r = el.getBoundingClientRect();
+    h.style.left = (r.right - 5) + 'px';
+    h.style.top = (r.bottom - 5) + 'px';
+    h.style.display = 'block';
+    fhSrc = el;
+    fhLast = el;
+  }
+  function fhClearHl() {
+    fhTargets.forEach(function (x) { var td = fhTd(x); if (td && td.classList) td.classList.remove('fh-hl'); });
+    fhTargets = [];
+  }
+  function fhHide() {
+    if (fhEl) fhEl.style.display = 'none';
+    fhClearHl();
+    fhSrc = null;
+  }
+  function fhOnMove(e) {
+    if (!fhDragging || !fhSrc) return;
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var tr = fhTr(el), srcTr = fhTr(fhSrc);
+    if (!tr || !srcTr) return;
+    var rows = srcTr.parentNode ? Array.prototype.slice.call(srcTr.parentNode.children) : [];
+    var i0 = rows.indexOf(srcTr), i1 = rows.indexOf(tr);
+    var ci = fhCol(fhSrc), k = fhSrc.dataset ? fhSrc.dataset.k : '';
+    if (i0 < 0 || i1 < 0 || ci < 0 || !k) return;
+    fhClearHl();
+    var step = i1 >= i0 ? 1 : -1;
+    for (var i = i0 + step; step > 0 ? i <= i1 : i >= i1; i += step) {
+      var t = fhCellAt(rows[i], ci, k);
+      if (t) { var td = fhTd(t); if (td && td.classList) td.classList.add('fh-hl'); fhTargets.push(t); }
+    }
+  }
+  function fhDown(e) {
+    var src0 = fhSrc || fhLast;
+    if (!src0) return;
+    fhSrc = src0;
+    e.preventDefault();
+    e.stopPropagation();
+    fhDragging = true;
+    document.addEventListener('mousemove', fhOnMove);
+    document.addEventListener('mouseup', fhUp);
+  }
+  function fhUp() {
+    document.removeEventListener('mousemove', fhOnMove);
+    document.removeEventListener('mouseup', fhUp);
+    if (!fhDragging) return;
+    fhDragging = false;
+    var els = fhTargets.slice(), src = fhSrc;
+    fhClearHl();
+    if (src && els.length) fhFill(src, els);
+  }
+  function fhFill(src, inputs) {
+    var v = src.value, n = 0;
+    inputs.forEach(function (t) {
+      if (!t || !t.dataset) return;
+      t.value = v;
+      try { t.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) { }
+      n++;
+    });
+    if (n) toast('已向下填充 ' + n + ' 行');
+    return n;
+  }
+  // 双击填充柄：一直填到本列下面第一个已有值的行之前
+  function fhFillDown() {
+    var src1 = fhSrc || fhLast;
+    if (!src1) return;
+    fhSrc = src1;
+    var srcTr = fhTr(fhSrc), ci = fhCol(fhSrc), k = fhSrc.dataset ? fhSrc.dataset.k : '';
+    if (!srcTr || ci < 0 || !k) return;
+    var rows = srcTr.parentNode ? Array.prototype.slice.call(srcTr.parentNode.children) : [];
+    var i0 = rows.indexOf(srcTr), out = [];
+    for (var i = i0 + 1; i < rows.length; i++) {
+      var t = fhCellAt(rows[i], ci, k);
+      if (!t) break;
+      if (String(t.value == null ? '' : t.value).trim()) break;
+      out.push(t);
+    }
+    if (out.length) fhFill(fhSrc, out); else toast('下面已经没有空行可填');
+  }
 
   // 逐格改动记入 mods（未保存），并高亮该格
   function onCellEdit(e) {
@@ -1645,7 +1757,7 @@
   }
 
   // ---------- 导入 ----------
-  var IMP_COLS = ['purchaseDate', 'warehouseDate', 'warehouse', 'grade', 'surface', 'thickness', 'width', 'length',
+  var IMP_COLS = ['purchaseDate', 'warehouseDate', 'warehouse', 'grade', 'surface', 'filmStatus', 'thickness', 'width', 'length',
     'wOrig', 'wNow', 'wGross', 'count', 'prodStatus', 'code', 'type', 'origin',
     'priceTax', 'priceNotax', 'amountTax', 'amountNotax', 'supplier',
     'contractNo', 'customer', 'follower', 'dueDate', 'note', 'salePrice',
@@ -1659,6 +1771,7 @@
     [/仓库|加工厂|存放/, 'warehouse'],
     [/钢种|材质|牌号/, 'grade'],
     [/表面|surface/i, 'surface'],
+    [/保护膜状态|保护膜|贴膜/, 'filmStatus'],
     [/厚度/, 'thickness'],
     [/宽度/, 'width'],
     [/长度/, 'length'],
@@ -1929,6 +2042,24 @@
     });
     if ($('inGoBtn')) { $('inGoBtn').textContent = IN_GO_LABEL; $('inGoBtn').addEventListener('click', doIntake); }
     $('tbody').addEventListener('paste', inPaste, true);
+    // v1.0.206 填充柄：单元格获得焦点时在右下角显示小方块，拖动即可向上/向下填充
+    $('tbody').addEventListener('focusin', function (e) {
+      var el = e.target;
+      if (!el || !el.classList || !el.classList.contains('cellin')) { fhHide(); return; }
+      fhMove(el);
+    });
+    $('tbody').addEventListener('focusout', function (e) {
+      var el = e.target;
+      if (!el || !el.classList || !el.classList.contains('cellin')) return;
+      setTimeout(function () {
+        if (fhDragging) return;
+        var a = document.activeElement;
+        if (a && a.classList && a.classList.contains('cellin')) { fhMove(a); return; }
+        fhHide();
+      }, 140);
+    });
+    document.addEventListener('scroll', fhHide, true);
+    window.addEventListener('resize', fhHide);
     $('tbody').addEventListener('input', function (e) {
       var el = e.target;
       if (!el || !el.dataset || !el.dataset.r || el.dataset.id) return;

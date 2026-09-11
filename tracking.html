@@ -302,6 +302,9 @@
   table.tk.inin .ddbtn { flex: none; }
   table.tk.inin tr.inrow:hover td { background: #f8fafc; }
   table.tk.inin tr.inrow:hover td.in-no { background: #f1f5f9; }
+  /* v1.0.206 Excel 式填充柄：单元格右下角小方块，拖动即可把内容复制到其它行 */
+  .fillhandle { position: fixed; width: 9px; height: 9px; display: none; background: #2c5282; border: 1px solid #fff; box-shadow: 0 0 0 1px #2c5282; z-index: 9998; cursor: crosshair; }
+  .fh-hl { outline: 2px solid #2c5282; outline-offset: -2px; }
 </style>
 </head>
 <body>
@@ -420,6 +423,7 @@
           <div class="fg"><label>仓库/加工厂</label><input id="f_warehouse" list="dl_warehouse"></div>
           <div class="fg"><label>钢种</label><input id="f_grade" list="dl_grade" placeholder="201J1 / 304 / 316L…"></div>
           <div class="fg"><label>表面</label><input id="f_surface" list="dl_surface" placeholder="2B / NO.1 / 8K…"></div>
+          <div class="fg"><label>保护膜状态</label><input id="f_filmStatus" list="dl_filmStatus" placeholder="普通蓝膜 / 激光膜…"></div>
           <div class="fg"><label>厚度 (mm)</label><input id="f_thickness"></div>
           <div class="fg"><label>宽度 (mm)</label><input id="f_width"></div>
           <div class="fg"><label>长度</label><input id="f_length" placeholder="C / 2500…"></div>
@@ -588,6 +592,7 @@
   <datalist id="dl_warehouse"></datalist>
   <datalist id="dl_grade"></datalist>
   <datalist id="dl_surface"></datalist>
+  <datalist id="dl_filmStatus"></datalist>
   <datalist id="dl_type"></datalist>
   <datalist id="dl_origin"></datalist>
   <datalist id="dl_supplier"></datalist>
@@ -596,6 +601,6 @@
   <datalist id="dl_follower"></datalist>
 
   <div class="toasts" id="toasts"></div>
-  <script src="js/tracking.js?v=1.0.205"></script>
+  <script src="js/tracking.js?v=1.0.206"></script>
 </body>
 </html>
