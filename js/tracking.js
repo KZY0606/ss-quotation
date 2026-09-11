@@ -51,7 +51,7 @@
     { k: 'warehouse', t: '仓库/加工厂' },
     { k: 'grade', t: '钢种' },
     { k: 'surface', t: '表面' },
-    { k: 'film_status', t: '保护膜状态' },
+    { k: 'film_status', t: '保护膜' },
     { k: 'thickness', t: '厚度', num: 1, kind: 'num' },
     { k: 'width', t: '宽度', num: 1, kind: 'num' },
     { k: 'length', t: '长度' },
@@ -92,7 +92,7 @@
     { k: 'warehouse', t: '仓库/加工厂' },
     { k: 'grade', t: '钢种' },
     { k: 'surface', t: '表面' },
-    { k: 'film_status', t: '保护膜状态' },
+    { k: 'film_status', t: '保护膜' },
     { k: 'thickness', t: '厚度', num: 1, kind: 'num' },
     { k: 'width', t: '宽度', num: 1, kind: 'num' },
     { k: 'length', t: '长度' },
@@ -895,7 +895,7 @@
     var f = filterCount();
     $('selHint').className = 'hint' + (editing ? ' hot' : '');
     $('selHint').textContent = editing
-      ? ('编辑中 · 改动 ' + nMod + ' 处 / ' + modRowCount() + ' 条 · 回车跳下行 · Ctrl+Enter 保存')
+      ? ('编辑中 · 改动 ' + nMod + ' 处 / ' + modRowCount() + ' 条 · 回车跳下行 · 方向键移动单元格 · Ctrl+Enter 保存')
       : sel ? ('已选中 #' + sel.id + (sel.code ? ' · ' + sel.code : ''))
         : (f ? ('筛选中：' + f + ' 列') : '未选中行');
     var pids = Object.keys(picks).filter(function (k) { return picks[k]; });
@@ -1259,7 +1259,7 @@
     if (!amountEl || amountEl.value.trim()) return;
     var p = num($('f_priceNotax').value);
     var kg = num($('f_wNow').value) || num($('f_wOrig').value);
-    if (p > 0 && kg > 0) amountEl.value = (p * kg / 1000).toFixed(2);
+    if (p > 0 && kg > 0) amountEl.value = (p * kg).toFixed(2);
   }
 
   // ---------- 编辑模式（整表逐格编辑，最后统一保存）----------
@@ -1285,14 +1285,14 @@
     editMode = true;
     mods = {};
     render();
-    toast('编辑模式：点任意格子直接改，回车跳同列下一行（Shift+Enter 上一行 / Ctrl+Enter 保存 / Esc 取消）');
+    toast('编辑模式：点任意格子直接改，回车跳同列下一行，方向键上下左右移动（Shift+Enter 上一行 / Ctrl+Enter 保存 / Esc 取消）');
   }
   // ---------- v1.0.203 税点（%）：不含税 = 含税 × (1 - 税点) ----------
   var taxRate = '13';       // 默认 13%，改了会记住
   function round2v(n) { return Math.round((n + 1e-9) * 100) / 100; }
   function taxPct() { var t = num(taxRate); return isFinite(t) ? t : 0; }
   function notaxOf(v) { var n = num(v); return isFinite(n) ? round2v(n * (1 - taxPct() / 100)) : NaN; }
-  // v1.0.205 amount(CNY) = price(CNY per ton) x orig weight(KG) / 1000  (same rule as dialog autoAmount)
+  // v1.0.207 amount(CNY) = price(CNY per KG) x orig weight(KG)  (unit rule confirmed by user)
   var AMOUNT_TAX_SRC = [['price_tax', 'amount_tax'], ['priceTax', 'amountTax']];
   var WEIGHT_KEYS = ['weight_orig', 'w_orig', 'wOrig'];
   function origOf(o) {
@@ -1305,7 +1305,7 @@
   }
   function amountTaxOf(pt, w) {
     var p = num(pt), kg = num(w);
-    return (isFinite(p) && isFinite(kg) && p > 0 && kg > 0) ? round2v(p * kg / 1000) : NaN;
+    return (isFinite(p) && isFinite(kg) && p > 0 && kg > 0) ? round2v(p * kg) : NaN;
   }
   // v1.0.204 batch entries (import / paste / one-click intake) also fill notax from tax-included values
   var NOTAX_PAIRS = [['price_tax', 'price_notax'], ['amount_tax', 'amount_notax'], ['priceTax', 'priceNotax'], ['amountTax', 'amountNotax']];
@@ -1412,6 +1412,25 @@
       var tds = rows[r].children;
       if (!tds || ci >= tds.length) continue;
       var t = cellEditableIn(tds[ci]);
+      if (t) {
+        t.focus();
+        try { if (t.select) t.select(); } catch (e) { }
+        return true;
+      }
+    }
+    return false;
+  }
+  // v1.0.207 arrow-key navigation: left/right jump to the neighbour editable cell
+  function moveCellHoriz(el, dir) {
+    var tr = el.closest ? el.closest('tr') : null;
+    if (!tr) return false;
+    var td = el.closest ? el.closest('td') : null;
+    if (!td) return false;
+    var tds = Array.prototype.slice.call(tr.children);
+    var ci = tds.indexOf(td);
+    if (ci < 0) return false;
+    for (var i = ci + dir; i >= 0 && i < tds.length; i += dir) {
+      var t = cellEditableIn(tds[i]);
       if (t) {
         t.focus();
         try { if (t.select) t.select(); } catch (e) { }
@@ -2225,6 +2244,20 @@
         return;
       }
       if (e.key === 'Escape' && editMode) { e.preventDefault(); cancelEditMode(); }
+      // v1.0.207 arrow-key cell navigation (inputs only; selects keep native behaviour)
+      if (editable && t.tagName === 'INPUT') {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          moveCellVert(t, e.key === 'ArrowDown' ? 1 : -1);
+          return;
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          var s0 = t.selectionStart, e0 = t.selectionEnd;
+          var atEdge = (e.key === 'ArrowLeft') ? (s0 === 0 && e0 === 0) : (s0 === t.value.length && e0 === t.value.length);
+          if (atEdge) { if (moveCellHoriz(t, e.key === 'ArrowLeft' ? -1 : 1)) e.preventDefault(); }
+          return;
+        }
+      }
     });
     // 筛选面板
     $('fPanel').addEventListener('click', function (e) {

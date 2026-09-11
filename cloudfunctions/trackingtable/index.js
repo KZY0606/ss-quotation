@@ -124,7 +124,7 @@ const DEFAULT_DICT = {
     "金额核对容差": ["0.01","元，避免分币误差"],
   }
 };
-const DICT_LABEL = { grade: '钢种', surface: '表面', film_status: '保护膜状态', origin: '产地', warehouse: '仓库/加工厂', follower: '跟单员', type: '类型', prod_status: '生产状态', inv_status: '库存状态', ord_status: '订单状态', customer: '客户名称', supplier: '供应商' };
+const DICT_LABEL = { grade: '钢种', surface: '表面', film_status: '保护膜', origin: '产地', warehouse: '仓库/加工厂', follower: '跟单员', type: '类型', prod_status: '生产状态', inv_status: '库存状态', ord_status: '订单状态', customer: '客户名称', supplier: '供应商' };
 
 async function ensureTables() {
   await exec(`CREATE TABLE IF NOT EXISTS tracking_items (
@@ -149,7 +149,7 @@ async function ensureTables() {
   for (const c of ['customer', 'follower', 'due_date', 'process_flow', 'process_step']) {
     await exec(`ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS ${c} TEXT DEFAULT ''`);
   }
-  // v1.0.206 保护膜状态列
+  // v1.0.206 保护膜列
   await exec("ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS film_status TEXT DEFAULT ''");
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_status ON tracking_items (status)');
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_code ON tracking_items (code)');
