@@ -172,6 +172,21 @@
     /* 弹窗 */
     .mask { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: flex-start; justify-content: center; z-index: 100; padding: 30px 14px; overflow: auto; }
     .mask.show { display: flex; }
+    .cs-tip { font-size: 12.5px; color: #64748b; margin-bottom: 8px; line-height: 1.6; }
+    .cs-list { max-height: min(52vh, 460px); overflow: auto; border: 1px solid #eef2f6; border-radius: 8px; padding: 4px 8px; }
+    .cs-row { display: flex; gap: 8px; align-items: center; padding: 5px 2px; border-bottom: 1px solid #f4f7fa; }
+    .cs-row:last-child { border-bottom: 0; }
+    .cs-row .mv { width: 26px; height: 26px; border: 1px solid #cbd5e0; background: #fff; border-radius: 6px; cursor: pointer; line-height: 1; color: #475569; flex: none; }
+    .cs-row .mv:hover { border-color: #2c5282; color: #2c5282; }
+    .cs-row input.t { flex: 1; min-width: 0; padding: 5px 8px; border: 1px solid #e2e8f0; border-radius: 5px; font-size: 12.5px; outline: none; }
+    .cs-row input.t:focus { border-color: #2c5282; box-shadow: 0 0 0 3px rgba(44,82,130,.12); }
+    .cs-row .tag { font-size: 11px; color: #94a3b8; white-space: nowrap; min-width: 46px; text-align: right; flex: none; }
+    .cs-row label { display: flex; gap: 5px; align-items: center; font-size: 12px; color: #475569; white-space: nowrap; flex: none; }
+    .cs-row .del { border: 1px solid #f0c5c5; background: #fff; color: #b91c1c; border-radius: 6px; cursor: pointer; font-size: 12px; padding: 4px 7px; flex: none; }
+    .cs-add { display: flex; gap: 8px; margin-top: 10px; }
+    .cs-add input { flex: 1; min-width: 0; padding: 7px 9px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 12.5px; outline: none; }
+    .cs-add input:focus { border-color: #2c5282; box-shadow: 0 0 0 3px rgba(44,82,130,.12); }
+    .cs-add select { padding: 7px 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 12.5px; }
     .dlg { background: #fff; border-radius: 12px; width: 1080px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
     .dlg-h { padding: 14px 20px; border-bottom: 1px solid #eef2f6; display: flex; align-items: center; }
     .dlg-h b { font-size: 15px; flex: 1; }
@@ -357,6 +372,7 @@
       <div class="grp">
         <button class="btn sm" id="myOnlyBtn" title="只看跟单员是我自己的单">👤 只看我的单</button>
         <button class="btn sm" id="procLibBtn" title="维护工序清单">⚙ 工序库</button>
+        <button class="btn sm" id="colSetBtn" title="调整列的显示顺序 / 改列名 / 隐藏列 / 新增自定义列（全体跟单共用）">🧩 列设置</button>
         <button class="btn sm" id="dictBtn" title="维护各列的下拉候选值（单元格点右下角箭头时选的就是这份）">📚 数据词典</button>
       </div>
       <div class="grp">
@@ -601,6 +617,30 @@
   <datalist id="dl_follower"></datalist>
 
   <div class="toasts" id="toasts"></div>
-  <script src="js/tracking.js?v=1.0.207"></script>
+        <div class="mask" id="colSetMask">
+        <div class="dlg" style="width:760px">
+          <div class="dlg-h"><b>列设置：移动列 / 改列名 / 隐藏列 / 新增列（全体跟单共用）</b><button class="x" id="colSetClose">×</button></div>
+          <div class="dlg-b">
+            <div class="cs-tip">用 <b>↑ ↓</b> 把列移动到想要的位置；不想看的列取消「显示」即可隐藏；标题栏可以直接改列名。改动点「保存」后对所有跟单员生效。</div>
+            <div class="cs-list" id="colSetList"></div>
+            <div class="cs-add">
+              <input id="csNewTitle" placeholder="新列的标题，例如：客户订单号" maxlength="20">
+              <select id="csNewType" title="列内容类型">
+                <option value="text">文本</option>
+                <option value="num">数字</option>
+                <option value="date">日期</option>
+              </select>
+              <button class="btn sm" id="csAddBtn">＋ 新增列</button>
+            </div>
+            <div class="cs-tip" style="margin:8px 0 0">新增的自定义列会先加在最后一列，可用 ↑ 移到想要的位置；列里的内容直接在表格中双击单元格填写（会自动存库）。</div>
+          </div>
+          <div class="dlg-f">
+            <button class="btn" id="csResetBtn">恢复默认</button>
+            <button class="btn" id="csCancelBtn">取消</button>
+            <button class="btn primary" id="csSaveBtn">保存</button>
+          </div>
+        </div>
+      </div>
+<script src="js/tracking.js?v=1.0.208"></script>
 </body>
 </html>

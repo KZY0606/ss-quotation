@@ -60,9 +60,13 @@ const ALIAS = {
   follower: ['follower', 'salesman', 'owner'],
   due_date: ['dueDate', 'due_date'],
   process_flow: ['processFlow', 'process_flow'],
-  process_step: ['processStep', 'process_step']
+  process_step: ['processStep', 'process_step'],
+  // v1.0.208 custom columns (user-defined; up to 12 slots)
+  c1: ['c1'], c2: ['c2'], c3: ['c3'], c4: ['c4'], c5: ['c5'], c6: ['c6'],
+  c7: ['c7'], c8: ['c8'], c9: ['c9'], c10: ['c10'], c11: ['c11'], c12: ['c12']
 };
-const MAXLEN = { note: 1000, process_flow: 4000, customer: 200, follower: 100, due_date: 40, film_status: 100 };
+const MAXLEN = { note: 1000, process_flow: 4000, customer: 200, follower: 100, due_date: 40, film_status: 100,
+  c1: 500, c2: 500, c3: 500, c4: 500, c5: 500, c6: 500, c7: 500, c8: 500, c9: 500, c10: 500, c11: 500, c12: 500 };
 
 // 状态枚举
 const ENUM_STATUS = ['inventory', 'ordered'];                  // 板块归属（ordered = 生产中 / 生产进度）
@@ -151,6 +155,10 @@ async function ensureTables() {
   }
   // v1.0.206 保护膜列
   await exec("ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS film_status TEXT DEFAULT ''");
+  // v1.0.208 custom column slots (c1..c12) - created up front so adding a column needs no schema change
+  for (let i = 1; i <= 12; i++) {
+    await exec(`ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS c${i} TEXT DEFAULT ''`);
+  }
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_status ON tracking_items (status)');
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_code ON tracking_items (code)');
   await exec('CREATE INDEX IF NOT EXISTS idx_tracking_contract ON tracking_items (contract_no)');
@@ -437,6 +445,43 @@ exports.main = async (event) => {
       const nc = Object.keys(out.cols).reduce((a, k) => a + out.cols[k].length, 0);
       const ne = Object.keys(out.extra).reduce((a, k) => a + out.extra[k].length, 0);
       return { ok: true, colItems: nc, extraItems: ne, cols: Object.keys(out.cols).length, extra: Object.keys(out.extra).length };
+    }
+
+    // v1.0.208 column layout (order / hidden / custom columns / renamed titles), shared by all users
+    if (action === 'layoutget') {
+      const res = await exec("SELECT v FROM tracking_lib WHERE k='trackingLayout' LIMIT 1");
+      let val = null;
+      if (res.Rows && res.Rows.length) { try { val = JSON.parse(JSON.parse(res.Rows[0])[0] || 'null'); } catch (e) { val = null; } }
+      if (!val || typeof val !== 'object') val = { order: [], hidden: [], custom: [], rename: {} };
+      if (!Array.isArray(val.order)) val.order = [];
+      if (!Array.isArray(val.hidden)) val.hidden = [];
+      if (!Array.isArray(val.custom)) val.custom = [];
+      if (!val.rename || typeof val.rename !== 'object') val.rename = {};
+      return { ok: true, layout: val };
+    }
+    if (action === 'layoutsave') {
+      const L = evt.layout || {};
+      const okK = k => /^[a-z_][a-z0-9_]{0,39}$/.test(String(k)) || /^c([1-9]|1[0-2])$/.test(String(k));
+      const arr = a => (Array.isArray(a) ? a.map(x => String(x)).filter(x => okK(x)) : []);
+      const cut = (s, n) => String(s == null ? '' : s).trim().slice(0, n);
+      const out = { order: arr(L.order).slice(0, 200), hidden: arr(L.hidden).slice(0, 200), custom: [], rename: {} };
+      const used = {};
+      (Array.isArray(L.custom) ? L.custom : []).forEach(c => {
+        const k = String((c || {}).k || '');
+        if (!/^c([1-9]|1[0-2])$/.test(k) || used[k]) return;
+        const t = cut((c || {}).t, 20);
+        if (!t) return;
+        used[k] = 1;
+        out.custom.push({ k: k, t: t, num: (c || {}).num ? 1 : 0, kind: cut((c || {}).kind, 10) });
+      });
+      Object.keys(L.rename || {}).forEach(k => {
+        if (!okK(k)) return;
+        const t = cut((L.rename || {})[k], 20);
+        if (t) out.rename[k] = t;
+      });
+      await exec('INSERT INTO tracking_lib (k, v, updated_at) VALUES (' + q('trackingLayout') + ', ' + q(JSON.stringify(out)) + ', now()) ' +
+        'ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()');
+      return { ok: true, layout: out, order: out.order.length, hidden: out.hidden.length, custom: out.custom.length };
     }
 
     // 状态列切换：status(板块) / inv_status(库存状态) / ord_status(订单状态)

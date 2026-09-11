@@ -38,13 +38,13 @@
   var IN_GO_LABEL = '📥 一键入仓';
   var IN_KEYS = ['purchase_date', 'warehouse_date', 'warehouse', 'grade', 'surface', 'film_status', 'thickness', 'width', 'length',
     'w_orig', 'w_now', 'w_gross', 'count', 'prod_status', 'code', 'type', 'origin', 'price_tax', 'price_notax',
-    'amount_tax', 'amount_notax', 'supplier', 'customer', 'follower', 'due_date', 'contract_no', 'note'];
+    'amount_tax', 'amount_notax', 'supplier', 'note', 'follower'];
   var IN_MAP = [['purchase_date', 'purchaseDate'], ['warehouse_date', 'warehouseDate'], ['warehouse', 'warehouse'],
     ['grade', 'grade'], ['surface', 'surface'], ['film_status', 'filmStatus'], ['thickness', 'thickness'], ['width', 'width'], ['length', 'length'],
     ['w_orig', 'wOrig'], ['w_now', 'wNow'], ['w_gross', 'wGross'], ['count', 'count'], ['prod_status', 'prodStatus'],
     ['code', 'code'], ['type', 'type'], ['origin', 'origin'], ['price_tax', 'priceTax'], ['price_notax', 'priceNotax'],
-    ['amount_tax', 'amountTax'], ['amount_notax', 'amountNotax'], ['supplier', 'supplier'], ['customer', 'customer'],
-    ['follower', 'follower'], ['due_date', 'dueDate'], ['contract_no', 'contractNo'], ['note', 'note']];
+    ['amount_tax', 'amountTax'], ['amount_notax', 'amountNotax'], ['supplier', 'supplier'], ['note', 'note'],
+    ['follower', 'follower']];
   var COL_IN = [
     { k: 'purchase_date', t: '采购日期', kind: 'date' },
     { k: 'warehouse_date', t: '进仓日期', kind: 'date' },
@@ -68,11 +68,8 @@
     { k: 'amount_tax', t: '总金额(含税)', num: 1, kind: 'num' },
     { k: 'amount_notax', t: '总金额(不含税)', num: 1, kind: 'num' },
     { k: 'supplier', t: '供应商' },
-    { k: 'customer', t: '客户名称' },
-    { k: 'follower', t: '跟单员' },
-    { k: 'due_date', t: '预期交期', kind: 'date' },
-    { k: 'contract_no', t: '合同编号' },
-    { k: 'note', t: '备注', wide: 1 }
+    { k: 'note', t: '备注', wide: 1 },
+    { k: 'follower', t: '跟单员' }
   ];
 
   // ---------- 状态枚举 ----------
@@ -142,12 +139,210 @@
     if (b === 'ordered') return COL_BASE.concat(COL_PROD, COL_ORD_ST);
     return COL_BASE.concat(COL_INV_ST);
   }
-  function colsOf(b) { return COL_CHK.concat(colsCore(b)); }
+  function colsOf(b) { return COL_CHK.concat(csApply(colsCore(b))); }
   function colsAll() {
-    var out = COL_BASE.concat(COL_PROD, COL_INV_ST, COL_ORD_ST);
-    // 补上仅生产进度板块使用的虚拟列（筛选/搜索时按需取值）
-    return out.concat([{ k: 'proc', t: '当前工序' }, { k: 'spec', t: '规格' }]);
+    // v1.0.208 走列布局：顺序 / 隐藏 / 自定义列 全部生效（搜索、筛选、列设置面板共用）
+    return csApply(csAllBase().concat([{ k: 'proc', t: '当前工序' }, { k: 'spec', t: '规格' }]));
   }
+  // ---------- v1.0.208 列布局：顺序 / 隐藏 / 列名 / 自定义列（全体跟单共用，存云函数）----------
+  var CS_MAX = 12;
+  var LAYOUT = { order: [], hidden: [], custom: [], rename: {} };
+  function csCopy(o) { var r = {}; for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) r[k] = o[k]; return r; }
+  function csIsCustom(k) { return /^c([1-9]|1[0-2])$/.test(String(k)); }
+  function csCustomCols() {
+    return (LAYOUT.custom || []).map(function (c) {
+      return { k: c.k, t: c.t || c.k, num: c.num ? 1 : 0, kind: c.kind || '', cs: 1 };
+    });
+  }
+  function csAllBase() {
+    var out = [], seen = {};
+    [COL_BASE, COL_PROD, COL_PG, COL_INV_ST, COL_ORD_ST].forEach(function (g) {
+      g.forEach(function (c) { if (!seen[c.k]) { seen[c.k] = 1; out.push(c); } });
+    });
+    return out;
+  }
+  function csApply(cols, withCustom) {
+    var list = cols.map(csCopy), i;
+    if (withCustom !== false) {
+      var have = {}; list.forEach(function (c) { have[c.k] = 1; });
+      csCustomCols().forEach(function (c) { if (!have[c.k]) list.push(c); });
+    }
+    var hid = {}; (LAYOUT.hidden || []).forEach(function (k) { hid[k] = 1; });
+    var pos = {}; (LAYOUT.order || []).forEach(function (k, n) { pos[k] = n; });
+    for (i = 0; i < list.length; i++) list[i]._i = i;
+    list.sort(function (a, b) {
+      var pa = pos[a.k] == null ? 1e6 + a._i : pos[a.k];
+      var pb = pos[b.k] == null ? 1e6 + b._i : pos[b.k];
+      return pa - pb;
+    });
+    var rn = LAYOUT.rename || {}, out = [];
+    list.forEach(function (c) {
+      if (hid[c.k]) return;
+      var t = rn[c.k];
+      if (t) c.t = t;
+      out.push(c);
+    });
+    return out;
+  }
+  function csLookup(k) {
+    var all = csAllBase().concat(csCustomCols());
+    for (var i = 0; i < all.length; i++) if (all[i].k === k) return all[i];
+    return null;
+  }
+  function csLoad() {
+    return api({ action: 'layoutget' }).then(function (r) {
+      if (r && r.ok && r.layout) LAYOUT = r.layout;
+    }).catch(function () { });
+  }
+  function csNorm(nl) {
+    var ord = [], cus = [], ren = {};
+    (nl.order || []).forEach(function (k) { if (ord.indexOf(k) < 0) ord.push(k); });
+    (nl.custom || []).forEach(function (c) { cus.push({ k: c.k, t: c.t, num: c.num ? 1 : 0, kind: c.kind || '' }); });
+    Object.keys(nl.rename || {}).forEach(function (k) { if (nl.rename[k]) ren[k] = nl.rename[k]; });
+    return { order: ord, hidden: (nl.hidden || []).slice(), custom: cus, rename: ren };
+  }
+  async function csPersist(nl) {
+    var body = csNorm(nl);
+    var r = await api({ action: 'layoutsave', layout: body });
+    LAYOUT = (r && r.ok && r.layout) ? r.layout : body;
+    return LAYOUT;
+  }
+  var csDraft = null;
+  function csDefaultOrder() {
+    var seen = {}, out = [];
+    csAllBase().concat(csCustomCols()).forEach(function (c) { if (!seen[c.k]) { seen[c.k] = 1; out.push(c.k); } });
+    return out;
+  }
+  function csTitleOf(k) {
+    if (csDraft) {
+      if (csDraft.rename[k]) return csDraft.rename[k];
+      var dl = csDraft.custom || [];
+      for (var i = 0; i < dl.length; i++) if (dl[i].k === k) return dl[i].t;
+    }
+    var c = csLookup(k);
+    return c ? (c.t || k) : k;
+  }
+  function csOpen() {
+    var seen = {}, ord = [];
+    (LAYOUT.order || []).forEach(function (k) { if (!seen[k]) { seen[k] = 1; ord.push(k); } });
+    csDefaultOrder().forEach(function (k) { if (!seen[k]) { seen[k] = 1; ord.push(k); } });
+    csDraft = {
+      order: ord, hidden: (LAYOUT.hidden || []).slice(),
+      custom: JSON.parse(JSON.stringify(LAYOUT.custom || [])),
+      rename: JSON.parse(JSON.stringify(LAYOUT.rename || {}))
+    };
+    csDraw();
+    var m = $('colSetMask');
+    if (m) m.classList.add('show');
+  }
+  function csClose() { var m = $('colSetMask'); if (m) m.classList.remove('show'); csDraft = null; }
+  function csDraw() {
+    if (!csDraft) return;
+    var box = $('colSetList');
+    if (!box) return;
+    box.innerHTML = csDraft.order.map(function (k) {
+      var c = csLookup(k) || { k: k, t: k };
+      var isC = csIsCustom(k);
+      var hide = csDraft.hidden.indexOf(k) >= 0;
+      var kindTxt = isC ? '自定义' : (c.st ? '状态列' : (c.sp ? '系统列' : '内置'));
+      return '<div class="cs-row" data-k="' + esc(k) + '">' +
+        '<button class="mv" data-mv="up" title="上移">↑</button>' +
+        '<button class="mv" data-mv="down" title="下移">↓</button>' +
+        '<input class="t" data-t="1" maxlength="20" value="' + esc(csTitleOf(k)) + '">' +
+        '<span class="tag">' + kindTxt + '</span>' +
+        '<label><input type="checkbox" data-vis="1"' + (hide ? '' : ' checked') + '>显示</label>' +
+        (isC ? '<button class="del" data-del="1">删</button>' : '') +
+        '</div>';
+    }).join('') || '<div class="cs-tip">没有可配置的列</div>';
+    var btn = $('csAddBtn');
+    if (btn) btn.disabled = !!(csDraft && csDraft.custom.length >= CS_MAX);
+  }
+  function csMove(k, dir) {
+    var i = csDraft.order.indexOf(k);
+    if (i < 0) return;
+    var j = dir === 'up' ? i - 1 : i + 1;
+    if (j < 0 || j >= csDraft.order.length) return;
+    var t = csDraft.order[i];
+    csDraft.order[i] = csDraft.order[j];
+    csDraft.order[j] = t;
+    csDraw();
+  }
+  function csAdd() {
+    var el = $('csNewTitle');
+    if (!el) return;
+    var t = (el.value || '').trim();
+    if (!t) { toast('请先填新列的标题', false); el.focus(); return; }
+    if (csDraft.custom.length >= CS_MAX) { toast('最多只能加 ' + CS_MAX + ' 个自定义列', false); return; }
+    var used = {}; csDraft.custom.forEach(function (c) { used[c.k] = 1; });
+    var slot = '';
+    for (var i = 1; i <= CS_MAX; i++) if (!used['c' + i]) { slot = 'c' + i; break; }
+    if (!slot) { toast('没有空闲的自定义列位了', false); return; }
+    var kind = ($('csNewType') || {}).value || 'text';
+    csDraft.custom.push({ k: slot, t: t, num: kind === 'num' ? 1 : 0, kind: kind === 'num' ? 'num' : (kind === 'date' ? 'date' : '') });
+    csDraft.order.push(slot);
+    el.value = '';
+    csDraw();
+    toast('已添加列「' + t + '」，点「保存」后生效（默认加在最后一列，可用 ↑ 移到想要的位置）', true);
+  }
+  function csDel(k) {
+    var t = csTitleOf(k);
+    csDraft.custom = csDraft.custom.filter(function (c) { return c.k !== k; });
+    csDraft.order = csDraft.order.filter(function (x) { return x !== k; });
+    delete csDraft.rename[k];
+    var h = csDraft.hidden.indexOf(k);
+    if (h >= 0) csDraft.hidden.splice(h, 1);
+    csDraw();
+    toast('已移除列「' + t + '」：保存后表格不再显示，已有数据仍留在数据库', true);
+  }
+  function csReset() {
+    csDraft = { order: csDefaultOrder(), hidden: [], custom: [], rename: {} };
+    csDraw();
+    toast('已恢复默认列顺序与列名，点「保存」后生效', true);
+  }
+  async function csSavePanel() {
+    try {
+      await csPersist(csDraft);
+      csClose();
+      render();
+      toast('列设置已保存（全体跟单共用）', true);
+    } catch (e) { toast('保存失败：' + e.message, false); }
+  }
+  function csBind() {
+    if ($('colSetBtn')) $('colSetBtn').addEventListener('click', csOpen);
+    if ($('colSetClose')) $('colSetClose').addEventListener('click', csClose);
+    if ($('csCancelBtn')) $('csCancelBtn').addEventListener('click', csClose);
+    if ($('csSaveBtn')) $('csSaveBtn').addEventListener('click', csSavePanel);
+    if ($('csResetBtn')) $('csResetBtn').addEventListener('click', csReset);
+    if ($('csAddBtn')) $('csAddBtn').addEventListener('click', csAdd);
+    var mask = $('colSetMask');
+    if (mask) mask.addEventListener('click', function (e) { if (e.target === mask) csClose(); });
+    var box = $('colSetList');
+    if (!box) return;
+    box.addEventListener('click', function (e) {
+      var row = e.target.closest ? e.target.closest('.cs-row') : null;
+      if (!row || !csDraft) return;
+      var k = row.dataset.k;
+      if (e.target.dataset && e.target.dataset.mv) { csMove(k, e.target.dataset.mv); return; }
+      if (e.target.dataset && e.target.dataset.del) { csDel(k); }
+    });
+    box.addEventListener('change', function (e) {
+      var row = e.target.closest ? e.target.closest('.cs-row') : null;
+      if (!row || !csDraft) return;
+      if (!(e.target.dataset && e.target.dataset.vis)) return;
+      var k = row.dataset.k, idx = csDraft.hidden.indexOf(k);
+      if (e.target.checked) { if (idx >= 0) csDraft.hidden.splice(idx, 1); }
+      else if (idx < 0) csDraft.hidden.push(k);
+    });
+    box.addEventListener('input', function (e) {
+      var row = e.target.closest ? e.target.closest('.cs-row') : null;
+      if (!row || !csDraft) return;
+      if (!(e.target.dataset && e.target.dataset.t)) return;
+      var k = row.dataset.k, v = (e.target.value || '').trim(), c = csLookup(k);
+      if (!v || (c && v === c.t)) delete csDraft.rename[k];
+      else csDraft.rename[k] = v.slice(0, 20);
+    });
+  }
+
   function boardLabel(b) {
     if (b === 'intake') return '📥 入仓';
     return b === 'progress' ? '🏭 生产进度' : (b === 'ordered' ? '⚙️ 生产中' : '📦 库存');
@@ -1046,7 +1241,7 @@
   }
   function closeFPanel() { $('fPanel').classList.remove('show'); $('fPanel').innerHTML = ''; }
   function openFPanel(k, btn) {
-    var c = colsAll().find(function (x) { return x.k === k; });
+    var c = csLookup(k);
     if (!c) return;
     var cur = colF[k] || { vals: [], min: '', max: '', kind: c.kind };
     var vals = uniqueVals(k);
@@ -1090,7 +1285,7 @@
   }
   function readFPanel() {
     var box = $('fPanel'), k = box.dataset.k;
-    var c = colsAll().find(function (x) { return x.k === k; });
+    var c = csLookup(k);
     var vals = Array.prototype.slice.call(box.querySelectorAll('#fpList input[type=checkbox]')).filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
     var all = Array.prototype.slice.call(box.querySelectorAll('#fpList input[type=checkbox]')).map(function (cb) { return cb.value; });
     var min = $('fpMin') ? $('fpMin').value.trim() : '';
@@ -1109,6 +1304,7 @@
       if (editId != null && !items.some(function (x) { return String(x.id) === String(editId); })) editId = null;
     if (!editMode) mods = {};
       Object.keys(picks).forEach(function (k) { if (!items.some(function (x) { return String(x.id) === String(k); })) delete picks[k]; });
+      await csLoad();   // v1.0.208 先取列布局再渲染
       refreshDatalists();
       render();
     } catch (e) {
@@ -2334,6 +2530,7 @@
     });
     // v1.0.198 词典弹窗
     $('dictBtn').addEventListener('click', openDict);
+    csBind();   // v1.0.208 列设置
     $('dictClose').addEventListener('click', function () { $('dictMask').classList.remove('show'); });
     $('dictCancel').addEventListener('click', function () { $('dictMask').classList.remove('show'); });
     $('dictMask').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
