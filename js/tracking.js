@@ -82,7 +82,7 @@
 
   // ---------- 列定义 ----------
   var COL_CHK = [{ k: '_chk', t: '', ck: 1 }];
-  // 公共列（入仓清单 21 项）
+  // 公共列（入仓清单 22 项）
   var COL_BASE = [
     { k: 'purchase_date', t: '采购日期', kind: 'date' },
     { k: 'warehouse_date', t: '进仓日期', kind: 'date' },
@@ -105,7 +105,8 @@
     { k: 'price_notax', t: '单价(不含税)', num: 1, kind: 'num' },
     { k: 'amount_tax', t: '总金额(含税)', num: 1, kind: 'num' },
     { k: 'amount_notax', t: '总金额(不含税)', num: 1, kind: 'num' },
-    { k: 'supplier', t: '供应商' }
+    { k: 'supplier', t: '供应商' },
+    { k: 'note', t: '备注', wide: 1 }
   ];
   // 生产相关列（库存板块不显示）
   var COL_PROD = [
@@ -113,7 +114,6 @@
     { k: 'customer', t: '客户名称' },
     { k: 'follower', t: '跟单员' },
     { k: 'due_date', t: '预期交期', kind: 'date', sp: 'due' },
-    { k: 'note', t: '备注', wide: 1 },
     { k: 'sale_price', t: '销售定价', num: 1, kind: 'num' }
   ];
   var COL_INV_ST = [{ k: 'inv_status', t: '库存状态', st: 1, enum: ENUM_INV }];
@@ -161,6 +161,35 @@
     });
     return out;
   }
+  // v1.0.213 新增列自愈：已保存的列顺序里缺了新列时，插回它在基础列中的原位置
+  function csHealOrder() {
+    var o = LAYOUT.order || [];
+    if (!o.length) return false;
+    var want = csAllBase().map(function (c) { return c.k; });
+    var have = {}; o.forEach(function (k) { have[k] = 1; });
+    var miss = want.filter(function (k) { return !have[k]; });
+    if (!miss.length) return false;
+    miss.forEach(function (k) {
+      var wi = want.indexOf(k), at = -1;
+      for (var i = 0; i < o.length && at < 0; i++) { if (want.indexOf(o[i]) > wi) at = i; }
+      if (at < 0) o.push(k); else o.splice(at, 0, k);
+    });
+    LAYOUT.order = o;
+    return true;
+  }
+  // v1.0.213 宽列（备注等）历史量出的过窄宽度纠正一次
+  function csHealWidth() {
+    var W = LAYOUT.width || {}, ids = ['inventory', 'ordered', 'intake', 'progress'], n = 0;
+    ids.forEach(function (b) {
+      var m = W[b];
+      if (!m) return;
+      Object.keys(m).forEach(function (k) {
+        var cd = csLookup(k);
+        if (cd && cd.wide && Number(m[k]) < 180) { delete m[k]; n++; }
+      });
+    });
+    return n > 0;
+  }
   function csApply(cols, withCustom) {
     var list = cols.map(csCopy), i;
     if (withCustom !== false) {
@@ -191,7 +220,7 @@
   }
   function csLoad() {
     return api({ action: 'layoutget' }).then(function (r) {
-      if (r && r.ok && r.layout) LAYOUT = r.layout;
+      if (r && r.ok && r.layout) { LAYOUT = r.layout; csHealOrder(); csHealWidth(); }
     }).catch(function () { });
   }
   function csNorm(nl) {
@@ -1237,6 +1266,7 @@
     $('thead').innerHTML = '<tr>' + (board === 'intake' ? '<th class="th-no" data-cw="_no" title="行号">' + cwRs() + '</th>' : '') + cols.map(function (c) {
       if (c.ck) return '<th class="th-ck" data-cw="_chk"><div class="th-in"><input type="checkbox" class="ckb" id="ckAll" title="全选本页"></div>' + cwRs() + '</th>';
       var cls = c.st ? 'th-st' : (c.num ? 'num-r' : '');
+      if (c.wide) cls = (cls ? cls + ' ' : '') + 'wide';
       return '<th class="' + cls + '" data-k="' + c.k + '" data-cw="' + c.k + '"><div class="th-in"><span>' + esc(c.t) + '</span>' +
         '<button class="fbtn' + (fActive(c.k) ? ' on' : '') + '" data-fk="' + c.k + '" title="筛选 / 排序">▼</button></div>' + cwRs() + '</th>';
     }).join('') + '</tr>';

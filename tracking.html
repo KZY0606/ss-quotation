@@ -340,7 +340,11 @@
   /* v1.0.206 Excel 式填充柄：单元格右下角小方块，拖动即可把内容复制到其它行 */
   .fillhandle { position: fixed; width: 9px; height: 9px; display: none; background: #2c5282; border: 1px solid #fff; box-shadow: 0 0 0 1px #2c5282; z-index: 9998; cursor: crosshair; }
   .fh-hl { outline: 2px solid #2c5282; outline-offset: -2px; }
-</style>
+
+    /* v1.0.213 宽列（备注）：保证有足够宽度显示内容，过长时省略并可悬浮查看 */
+    table.tk th.wide, table.tk td.wide { min-width: 180px; }
+    table.tk td.wide { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  </style>
 </head>
 <body>
   <div class="top">
@@ -663,6 +667,6 @@
           </div>
         </div>
       </div>
-<script src="js/tracking.js?v=1.0.212"></script>
+<script src="js/tracking.js?v=1.0.213"></script>
 </body>
 </html>
