@@ -633,6 +633,7 @@
       return r;
     });
     inRows = filled.concat(add);
+    notaxApply(inRows);
     for (var i = 0; i < IN_MIN; i++) inRows.push(inBlank());
     inRenumber();
     colF = {}; sortKey = ''; sortDir = ''; closeFPanel();
@@ -692,6 +693,7 @@
         cells++;
       });
     });
+    notaxApply(inRows);
     render();
     toast('已粘贴 ' + aoa.length + ' 行 · ' + cells + ' 格' + (filterCount() ? '（筛选中，部分行可能不显示）' : ''));
   }
@@ -712,6 +714,7 @@
       o.dueDate = normDate(o.dueDate);
       return o;
     });
+    notaxApply(payload);
     var btn = $('inGoBtn');
     if (btn) { btn.disabled = true; btn.textContent = '入仓中…'; }
     try {
@@ -1274,6 +1277,34 @@
   function round2v(n) { return Math.round((n + 1e-9) * 100) / 100; }
   function taxPct() { var t = num(taxRate); return isFinite(t) ? t : 0; }
   function notaxOf(v) { var n = num(v); return isFinite(n) ? round2v(n * (1 - taxPct() / 100)) : NaN; }
+  // v1.0.204 batch entries (import / paste / one-click intake) also fill notax from tax-included values
+  var NOTAX_PAIRS = [['price_tax', 'price_notax'], ['amount_tax', 'amount_notax'], ['priceTax', 'priceNotax'], ['amountTax', 'amountNotax']];
+  function notaxFillRow(o, force) {
+    var n = 0;
+    if (!o) return 0;
+    NOTAX_PAIRS.forEach(function (p) {
+      var t = String(o[p[0]] == null ? '' : o[p[0]]).trim();
+      if (!t) return;
+      var c = String(o[p[1]] == null ? '' : o[p[1]]).trim();
+      if (c && !force) return;
+      var v = notaxOf(t);
+      if (!isFinite(v)) return;
+      if (String(v) === c) return;
+      o[p[1]] = String(v);
+      n++;
+    });
+    return n;
+  }
+  function notaxFillRows(rows, force) {
+    var n = 0;
+    (rows || []).forEach(function (r) { n += notaxFillRow(r, force); });
+    return n;
+  }
+  function notaxApply(rows) {
+    var n = notaxFillRows(rows);
+    if (n) toast('已按税点 ' + (String(taxRate).trim() === '' ? '0' : taxRate) + '% 自动算出不含税 ' + n + ' 处');
+    return n;
+  }
   function initTax() {
     var el = $('taxRate');
     var saved = null;
@@ -1676,6 +1707,7 @@
   function showPrev(res) {
     impRows = res.rows;
     var rows = res.rows;
+    var _notaxN = notaxApply(rows);
     var prev = $('impPrev');
     prev.style.display = 'block';
     var showCols = ['purchaseDate', 'warehouseDate', 'warehouse', 'grade', 'surface', 'thickness', 'width', 'length', 'wOrig', 'wNow', 'count', 'contractNo', 'customer', 'follower', 'dueDate'];
@@ -1687,6 +1719,8 @@
     prev.innerHTML = '<table><thead><tr>' + heads.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') +
       '<th>…</th><th>入仓类型</th><th>库存状态</th><th>订单状态</th></tr></thead><tbody>' + body + '</tbody></table>' +
       '<div style="padding:8px 10px;font-size:12px;color:#475569;background:#f8fafc">共解析 <b>' + rows.length + '</b> 条（预览前 5 条，日期自动规范为 YYYY-MM-DD，状态列已按清单归位）</div>';
+    var _tip = prev.querySelector('div');
+    if (_tip && typeof _notaxN === 'number' && _notaxN > 0) _tip.textContent += ' · 含税价已按 ' + (String(taxRate).trim() === '' ? '0' : taxRate) + '% 税点自动算出不含税 ' + _notaxN + ' 处';
     var w = $('impWarn');
     if (res.warn) { w.innerHTML = res.warn; w.className = 'imp-warn show'; }
     else { w.innerHTML = ''; w.className = 'imp-warn'; }
@@ -1771,6 +1805,7 @@
         IMP_COLS.forEach(function (c) { o[c] = it[c]; });
         return o;
       });
+      notaxApply(payload);
       var r = await api({ action: 'import', rows: payload });
       $('impMask').classList.remove('show');
       toast('导入成功 ' + (r.imported || 0) + ' 条' + (r.skipped ? '，跳过 ' + r.skipped + ' 条' : ''));
