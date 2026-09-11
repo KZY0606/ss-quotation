@@ -118,7 +118,21 @@ const ExcelParser = (() => {
     return items;
   }
 
-  function parseExcel(file, basePrice) {
+  // v1.0.212: Excel libs load on demand (keeps ~1.8MB CDN payload off first paint)
+function ensureXlsx() {
+  if (typeof XLSX !== "undefined") return Promise.resolve(true);
+  return KKAuth.loadLib("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js", function () { return typeof XLSX !== "undefined"; });
+}
+function ensureExcelJS() {
+  if (typeof ExcelJS !== "undefined") return Promise.resolve(true);
+  return KKAuth.loadLib("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js", function () { return typeof ExcelJS !== "undefined"; });
+}
+window.addEventListener("load", function () {
+  setTimeout(function () { try { ensureXlsx().catch(function () { }); ensureExcelJS().catch(function () { }); } catch (e) { } }, 2500);
+});
+
+async function parseExcel(file, basePrice) {
+  if (typeof XLSX === "undefined") await ensureXlsx();
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -307,6 +321,7 @@ const ExcelParser = (() => {
   }
 
     async function exportToExcel(results, filename, termInfo) {
+  if (typeof ExcelJS === "undefined") await ensureExcelJS();
     const ti = termInfo || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null };
     if (typeof KK_QUOTE_TEMPLATE_B64 === 'undefined' || !KK_QUOTE_TEMPLATE_B64) throw new Error('报价模板未加载');
     const term = (ti.term === 'FOB' || ti.term === 'CIF') ? ti.term : 'EXW';
@@ -483,6 +498,7 @@ const ExcelParser = (() => {
   }
   // v1.0.141: 导出合同（基于用户合同模板 xlsx：单 sheet Sheet1，填入报价结果 + 合同信息）
   async function exportContract(results, filename, opts) {
+  if (typeof ExcelJS === "undefined") await ensureExcelJS();
     const ti = opts || { term: 'EXW', fobUsd: 0, cifUsd: 0, rate: 670.97, extras: null, contractNo: '', orderTrack: '', buyer: '', containers: 1, deposit: '', currency: 'RMB', sprayCode: '' };
     if (typeof KK_CONTRACT_TEMPLATE_B64 === 'undefined' || !KK_CONTRACT_TEMPLATE_B64) throw new Error('合同模板未加载');
     let bytes;

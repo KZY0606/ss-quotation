@@ -71,8 +71,24 @@
     try { await kkCall('logUsage', { token: a.token, item: item }); } catch (e) {}
   }
 
+  // v1.0.212: on-demand script loader (keeps heavy libs out of first paint)
+  var KK_LIB_P = {};
+  function kkLoadLib(url, ready) {
+    if (typeof ready === "function" && ready()) return Promise.resolve(true);
+    if (KK_LIB_P[url]) return KK_LIB_P[url];
+    KK_LIB_P[url] = new Promise(function (res, rej) {
+      var s = document.createElement("script");
+      s.src = url;
+      s.async = true;
+      s.onload = function () { res(true); };
+      s.onerror = function () { KK_LIB_P[url] = null; rej(new Error("\u7ec4\u4ef6\u52a0\u8f7d\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u7f51\u7edc\u540e\u91cd\u8bd5")); };
+      document.head.appendChild(s);
+    });
+    return KK_LIB_P[url];
+  }
+
   window.KKAuth = {
-    call: kkCall, isHttp: isHttp,
+    call: kkCall, isHttp: isHttp, loadLib: kkLoadLib,
     getAuth: kkGetAuth, setAuth: kkSetAuth, clearAuth: kkClearAuth,
     verify: kkVerify, requireLogin: kkRequireLogin,
     login: kkLogin, logout: kkLogout, reportUsage: kkReportUsage

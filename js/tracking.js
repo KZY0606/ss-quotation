@@ -1601,14 +1601,15 @@
   // ---------- 数据 ----------
   async function load() {
     try {
-      var r = await api({ action: 'list' });
+      var pr = await Promise.all([api({ action: 'list' }), csLoad()]);
+      var r = pr[0];
       items = r.items || [];
       if (selId != null && !items.some(function (x) { return String(x.id) === String(selId); })) selId = null;
       if (editId != null && !items.some(function (x) { return String(x.id) === String(editId); })) editId = null;
     if (!editMode) mods = {};
       Object.keys(picks).forEach(function (k) { if (!items.some(function (x) { return String(x.id) === String(k); })) delete picks[k]; });
-      await csLoad();   // v1.0.208 先取列布局再渲染
       refreshDatalists();
+      if (bootSkipRender) { bootSkipRender = false; return; }
       render();
     } catch (e) {
       $('tbody').innerHTML = '<tr><td colspan="' + colsOf(board).length + '" class="empty">加载失败：' + esc(e.message) + '</td></tr>';
@@ -2440,7 +2441,11 @@
     if ($('impGo')) $('impGo').textContent = _isIn ? '导入到入仓表格' : '确认导入';
     $('impMask').classList.add('show');
   }
-  function handleFile(file) {
+  async function handleFile(file) {
+    if (typeof XLSX === "undefined") {
+      toast("\u6b63\u5728\u51c6\u5907 Excel \u89e3\u6790\u6a21\u5757\u2026");
+      try { await ensureXlsx(); } catch (e) { toast(e.message, false); return; }
+    }
     var reader = new FileReader();
     reader.onload = function (e) {
       try {
@@ -2913,14 +2918,30 @@
   }
 
   // ---------- 启动 ----------
+  // v1.0.212: lazy-load the Excel parser only when needed (273KB off first paint)
+  var bootSkipRender = false;
+  function ensureXlsx() {
+    if (typeof XLSX !== "undefined") return Promise.resolve(true);
+    if (window.KKAuth && KKAuth.loadLib) return KKAuth.loadLib("js/vendor/xlsx.mini.min.js?v=1.0.212", function () { return typeof XLSX !== "undefined"; });
+    return Promise.reject(new Error("Excel \u6a21\u5757\u4e0d\u53ef\u7528"));
+  }
+  window.addEventListener("load", function () {
+    setTimeout(function () { try { ensureXlsx().catch(function () { }); } catch (e) { } }, 2500);
+  });
+
   (async function init() {
     bind();
+    // v1.0.212 loading-hint-v212
+    try {
+      var tb0 = $("tbody");
+      if (tb0) tb0.innerHTML = '<tr><td colspan="' + colsOf(board).length + '" class="empty">\u6b63\u5728\u52a0\u8f7d\u6570\u636e\u2026</td></tr>';
+    } catch (e) { }
     var auth = await KKAuth.requireLogin();
     if (!auth) return;
     myName = String(auth.realName || auth.username || '').trim();
     $('curUser').textContent = '当前：' + myName + (auth.realName ? '' : '（未设姓名，跟单员请填真实姓名）');
-    await loadLib();
-    await loadDict();
-    await load();
+    bootSkipRender = true;
+    await Promise.all([loadLib(), loadDict(), load()]);
+    render();
   })();
 })();

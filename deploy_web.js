@@ -12,12 +12,15 @@ const ENV = 'kk-quotation-d2gtggelpcd901498';
 const TCB_BIN = path.join(process.env.APPDATA, 'npm', 'node_modules', '@cloudbase', 'cli', 'bin', 'tcb');
 
 // 递归复制目录（fs.cpSync 在本机 node 上会崩溃 0xC0000409，改用 copyFileSync）
-function copyDir(src, dest) {
+const SKIP_FILE = /(^|\/)(test\.js|debug_surface\.js|verify-ui\.js)$/;
+function copyDir(src, dest, rel) {
   fs.mkdirSync(dest, { recursive: true });
   for (const e of fs.readdirSync(src, { withFileTypes: true })) {
     const s = path.join(src, e.name);
     const d = path.join(dest, e.name);
-    if (e.isDirectory()) copyDir(s, d);
+    const r = rel ? rel + '/' + e.name : e.name;
+    if (SKIP_FILE.test(r)) { console.log('  \u8df3\u8fc7\u6d4b\u8bd5\u6587\u4ef6: ' + r); continue; }
+    if (e.isDirectory()) copyDir(s, d, r);
     else fs.copyFileSync(s, d);
   }
 }
@@ -29,7 +32,7 @@ fs.mkdirSync(distDir, { recursive: true });
 fs.copyFileSync(path.join(webDir, 'index_real.html'), path.join(distDir, 'index.html'));
 ['login.html', 'admin.html', 'tracking.html'].forEach(f => fs.copyFileSync(path.join(webDir, f), path.join(distDir, f)));
 fs.copyFileSync(path.join(webDir, 'rate.json'), path.join(distDir, 'rate.json')); // 汇率兜底文件
-['css', 'js'].forEach(d => copyDir(path.join(webDir, d), path.join(distDir, d)));
+['css', 'js'].forEach(d => copyDir(path.join(webDir, d), path.join(distDir, d), d));
 
 const files = [];
 (function walk(dir) {
