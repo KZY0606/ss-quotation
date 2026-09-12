@@ -426,6 +426,24 @@ const SURFACE_FEES = {
     { tMin: 2.05, tMax: 2.50, wMin: 1500, wMax: 1530, price: 15.0, unit: 'sqm' },
     { tMin: 2.55, tMax: 3.00, wMin: 1500, wMax: 1530, price: 18.0, unit: 'sqm' }
   ],
+  // v1.0.223：梓烨（加工厂）普磨 8K 卷磨价，与宏旺的普磨 8K（卷磨）区分
+  '8K(梓烨)': [
+    { tMin: 0.26, tMax: 1.00, wMin: 1000, wMax: 1280, price: 1.8, unit: 'sqm' },
+    { tMin: 1.05, tMax: 1.11, wMin: 1000, wMax: 1280, price: 250, unit: 'ton' },
+    { tMin: 1.15, tMax: 1.20, wMin: 1000, wMax: 1280, price: 300, unit: 'ton' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 300, unit: 'ton' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1280, price: 350, unit: 'ton' },
+    { tMin: 2.05, tMax: 3.00, wMin: 1000, wMax: 1280, price: 400, unit: 'ton' }
+  ],
+  // v1.0.223：双面普磨 8K（卷磨）（梓烨）= 单面 × 2
+  '双面8K(梓烨)': [
+    { tMin: 0.26, tMax: 1.00, wMin: 1000, wMax: 1280, price: 3.6, unit: 'sqm' },
+    { tMin: 1.05, tMax: 1.11, wMin: 1000, wMax: 1280, price: 500, unit: 'ton' },
+    { tMin: 1.15, tMax: 1.20, wMin: 1000, wMax: 1280, price: 600, unit: 'ton' },
+    { tMin: 1.21, tMax: 1.50, wMin: 1000, wMax: 1280, price: 600, unit: 'ton' },
+    { tMin: 1.55, tMax: 2.00, wMin: 1000, wMax: 1280, price: 700, unit: 'ton' },
+    { tMin: 2.05, tMax: 3.00, wMin: 1000, wMax: 1280, price: 800, unit: 'ton' }
+  ],
 
   // 2026-08-23 用户规则：单张普磨8K（按张加工，区别于卷磨8K；费用只按厚度分档，不区分宽度）
   // 2026-08-23 用户规则：单张8K 系列 5 品质（按张加工，仅限平板）
@@ -995,6 +1013,10 @@ const SURFACE_ALIASES = {
   '双面no.4': '双面砂面NO.4', '双面no4': '双面砂面NO.4', '双面no 4': '双面砂面NO.4', '双面NO.4': '双面砂面NO.4',
   '双面砂面no.4': '双面砂面NO.4', '双面砂面no4': '双面砂面NO.4', '双面砂面': '双面砂面NO.4', '双面磨砂no.4': '双面砂面NO.4',
   '双面hl': '双面HL拉丝', '双面hl拉丝': '双面HL拉丝', '双面拉丝hl': '双面HL拉丝', '双面拉丝': '双面HL拉丝', '双面HL': '双面HL拉丝', '双面hl丝': '双面HL拉丝',
+  // v1.0.223：梓烨加工厂的普磨 8K（卷磨）
+  '8k(梓烨)': '8K(梓烨)', '8k梓烨': '8K(梓烨)', '普磨8k(梓烨)': '8K(梓烨)', '卷磨8k(梓烨)': '8K(梓烨)',
+  '梓烨8k': '8K(梓烨)', '梓烨普磨8k': '8K(梓烨)', '梓烨卷磨8k': '8K(梓烨)',
+  '双面8k(梓烨)': '双面8K(梓烨)', '双面8k梓烨': '双面8K(梓烨)', '梓烨双面8k': '双面8K(梓烨)',
   '2b': '2B', '2ba': '2BA', '2ba(非标)': '2BA(非标)', '2BA': '2BA', '8k': '8K', '单张普磨8k': '单张普磨8K', 
   '单张砂面no.4': '单张砂面NO.4', '单张砂面': '单张砂面NO.4', '单张no.4': '单张砂面NO.4',
   '单张拉丝hl': '单张拉丝HL',

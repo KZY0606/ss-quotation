@@ -1718,6 +1718,81 @@ test('v1.0.215 calculate 梓烨：仅 1219/1240 宽度 + 厚度加价沿用原�
 
 
 
+// ===== v1.0.223 表面加工：梓烨（加工厂）普磨 8K（卷磨）+ 宏旺加工费标明（宏旺） =====
+test('v1.0.223 梓烨普磨8K 六档数值精确', () => {
+  const tb = PricingEngine.SURFACE_FEES['8K(梓烨)'];
+  eq(!!tb, true, '梓烨表存在');
+  const exp = [[0.26, 1.00, 1.8, 'sqm'], [1.05, 1.11, 250, 'ton'], [1.15, 1.20, 300, 'ton'], [1.21, 1.50, 300, 'ton'], [1.55, 2.00, 350, 'ton'], [2.05, 3.00, 400, 'ton']];
+  eq(tb.length, exp.length, '档位数');
+  exp.forEach((e, i) => {
+    eq(tb[i].tMin, e[0], '第' + i + '档 tMin');
+    eq(tb[i].tMax, e[1], '第' + i + '档 tMax');
+    eq(tb[i].price, e[2], '第' + i + '档 price');
+    eq(tb[i].unit, e[3], '第' + i + '档 unit');
+    eq(tb[i].wMin, 1000, '第' + i + '档 wMin');
+    eq(tb[i].wMax, 1280, '第' + i + '档 wMax');
+  });
+});
+test('v1.0.223 双面梓烨8K = 单面 × 2', () => {
+  const one = PricingEngine.SURFACE_FEES['8K(梓烨)'];
+  const two = PricingEngine.SURFACE_FEES['双面8K(梓烨)'];
+  eq(!!two, true, '双面表存在');
+  eq(two.length, one.length, '档位数相同');
+  one.forEach((o, i) => {
+    eq(two[i].price, o.price * 2, '第' + i + '档 = 单面×2');
+    eq(two[i].tMin, o.tMin, '第' + i + '档 tMin');
+    eq(two[i].tMax, o.tMax, '第' + i + '档 tMax');
+    eq(two[i].unit, o.unit, '第' + i + '档 unit');
+  });
+});
+test('v1.0.223 梓烨8K getSurfaceFee 各档取值', () => {
+  const g = (t, w) => PricingEngine.getSurfaceFee('8K(梓烨)', t, w || '1240', '304');
+  eq(g('0.30').sqmPrice, 1.8, '0.30 → 1.8 元/㎡');
+  eq(g('1.00').sqmPrice, 1.8, '1.00 → 1.8 元/㎡');
+  eq(g('1.08'), 250, '1.08 → 250 元/吨');
+  eq(g('1.18'), 300, '1.18 → 300 元/吨');
+  eq(g('1.30'), 300, '1.30 → 300 元/吨');
+  eq(g('1.80'), 350, '1.80 → 350 元/吨');
+  eq(g('2.50'), 400, '2.50 → 400 元/吨');
+  eq(g('3.00'), 400, '3.00 → 400 元/吨');
+});
+test('v1.0.223 梓烨8K 空隙区间与宽板报错', () => {
+  const g = (t, w) => PricingEngine.getSurfaceFee('8K(梓烨)', t, w || '1240', '304');
+  eq(g('1.02'), null, '1.02 空隙');
+  eq(g('1.13'), null, '1.13 空隙');
+  eq(g('1.52'), null, '1.52 空隙');
+  eq(g('2.02'), null, '2.02 空隙');
+  eq(g('0.25'), null, '低于 0.26');
+  eq(g('0.50', '1500'), null, '宽板 1500 未给价');
+});
+test('v1.0.223 normalizeSurface 不剥「(梓烨)」加工厂括注', () => {
+  const r1 = PricingEngine.calculate({ material: '304', surface: '8K(梓烨)', thickness: '0.50', width: '1240', length: 'C', origin: '宏旺', basePrice: 14300, calcMode: 'coil' });
+  eq(r1.success, true, '梓烨8K 可算');
+  eq(r1.detail.normSurface, '8K(梓烨)', 'normSurface 保留括注');
+  eq(r1.detail.surfaceFeeSqm, 1.8, '表面费 = 1.8');
+  const r2 = PricingEngine.calculate({ material: '304', surface: '双面8K(梓烨)', thickness: '0.50', width: '1240', length: 'C', origin: '宏旺', basePrice: 14300, calcMode: 'coil' });
+  eq(r2.detail.normSurface, '双面8K(梓烨)', '双面 normSurface 保留括注');
+  eq(r2.detail.surfaceFeeSqm, 3.6, '双面表面费 = 3.6');
+});
+test('v1.0.223 宏旺 8K 与梓烨不串价', () => {
+  const g = PricingEngine.getSurfaceFee;
+  const hw = g('8K', '0.50', '1240', '304');
+  const zy = g('8K(梓烨)', '0.50', '1240', '304');
+  eq(hw.sqmPrice, 2.5, '宏旺 8K = 2.5');
+  eq(zy.sqmPrice, 1.8, '梓烨 8K = 1.8');
+  eq(hw.sqmPrice !== zy.sqmPrice, true, '两家不同价');
+  eq(g('8K', '1.80', '1240', '304').sqmPrice, 8, '宏旺 1.80 = 8');
+  eq(g('8K(梓烨)', '1.80', '1240', '304'), 350, '梓烨 1.80 = 350');
+});
+test('v1.0.223 梓烨8K 别名与中文写法', () => {
+  const A = PricingEngine.SURFACE_ALIASES;
+  eq(A['8k(梓烨)'], '8K(梓烨)', '8k(梓烨)');
+  eq(A['梓烨8k'], '8K(梓烨)', '梓烨8k');
+  eq(A['8k梓烨'], '8K(梓烨)', '8k梓烨');
+  eq(A['普磨8k(梓烨)'], '8K(梓烨)', '普磨8k(梓烨)');
+  eq(A['卷磨8k(梓烨)'], '8K(梓烨)', '卷磨8k(梓烨)');
+  eq(A['双面8k(梓烨)'], '双面8K(梓烨)', '双面8k(梓烨)');
+});
 test('v1.0.221 产地名收正：梓烨（不带 201），保留历史写法兼容', () => {
   // 白名单里的产地名已不带 201
   eq(JSON.stringify(PricingEngine.ORIGIN_MATERIAL_ALLOW['201']), '["宏旺","梓烨","北港"]', '201 白名单产地名');

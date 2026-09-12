@@ -443,6 +443,11 @@ const PricingEngine = (() => {
   function normalizeSurface(raw) {
     if (!raw) return null;
     let s = raw.trim();
+    // v1.0.223：先做全名精确匹配。因为下方的产地括注剥离规则会把「加工厂」括注（如 8K(梓烨)）当成产地括注剥掉，
+    // 而「梓烨」恰好在 _ORIGIN_ALT 里（v1.0.220 产地白名单新增），会导致 8K(梓烨) 退化成宏旺 8K 价
+    if (SURFACE_FEES[s]) return s;
+    const _fullAlias = SURFACE_ALIASES[s.toLowerCase()];
+    if (_fullAlias && SURFACE_FEES[_fullAlias]) return _fullAlias;
     // v1.0.180 热轧：NO.1（及 no1/no.1/no 1 变体）为热轧表面标记，必须原样保留（模糊匹配会误伤成 NO.4）
     const _no1u = s.replace(/\s+/g, '').replace(/^\/+/, '').toUpperCase();
     if (_no1u === 'NO.1' || _no1u === 'NO1') return 'NO.1';

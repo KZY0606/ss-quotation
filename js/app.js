@@ -1657,59 +1657,62 @@ const App = (() => {
     if (!wrap) return;
     const groupDefs = [
       {
-        cls: 'sf-base', label: '基础表面（宏旺）', // v1.0.173: 宏旺
+        cls: 'sf-base', label: '基础表面', // v1.0.173: 宏旺
         items: [
-          { display: '2B', key: '2B' },
-          { display: 'NO.4', key: 'NO.4' },
-          { display: 'HL', key: 'HL' },
+          { display: '2B（宏旺）', key: '2B' },
+          { display: 'NO.4（宏旺）', key: 'NO.4' },
+          { display: 'HL（宏旺）', key: 'HL' },
           // 2026-09-05 双面（价 = 单面 ×2）
-          { display: '双面砂面NO.4', key: '双面砂面NO.4' },
-          { display: '双面HL拉丝', key: '双面HL拉丝' },
-          { display: '单面抛光', key: '单面抛光' },
-          { display: '双面抛光', key: '双面抛光' },
-          { display: '6K', key: '6K' },
-          { display: '双面6K', key: '双面6K' },
-          { display: '普磨8K（卷磨）', key: '8K' },
-          { display: '双面8K', key: '双面8K' }
+          { display: '双面砂面NO.4（宏旺）', key: '双面砂面NO.4' },
+          { display: '双面HL拉丝（宏旺）', key: '双面HL拉丝' },
+          { display: '单面抛光（宏旺）', key: '单面抛光' },
+          { display: '双面抛光（宏旺）', key: '双面抛光' },
+          { display: '6K（宏旺）', key: '6K' },
+          { display: '双面6K（宏旺）', key: '双面6K' },
+          { display: '普磨8K（卷磨）（宏旺）', key: '8K' },
+          { display: '双面8K（宏旺）', key: '双面8K' },
+          // v1.0.223：梓烨（加工厂）普磨 8K（卷磨）
+          { display: '普磨8K（卷磨）（梓烨）', key: '8K(梓烨)' },
+          { display: '双面普磨8K（卷磨）（梓烨）', key: '双面8K(梓烨)' }
         ]
       },
       {
-        cls: 'sf-color8k', label: '8K 彩色（板）（宏旺）', // v1.0.173: 宏旺
+        cls: 'sf-color8k', label: '8K 彩色（板）', // v1.0.173: 宏旺
         items: [
-          { display: '8K黄钛金(板)', key: '8K黄钛金' },
-          { display: '8K黄钛金(板)/L', key: '8K黄钛金/L' },
-          { display: '8K黄钛金(板)/S', key: '8K黄钛金/S' },
-          { display: '8K玫瑰金(板)', key: '8K玫瑰金' },
-          { display: '8K玫瑰金(板)/L', key: '8K玫瑰金/L' },
-          { display: '8K玫瑰金(板)/S', key: '8K玫瑰金/S' },
-          { display: '8K香槟金(板)', key: '8K香槟金' },
-          { display: '8K香槟金(板)/L', key: '8K香槟金/L' },
-          { display: '8K香槟金(板)/S', key: '8K香槟金/S' },
-          { display: '8K黑钛金(板)', key: '8K黑钛金' },
-          { display: '8K宝石蓝(板)', key: '8K宝石蓝' },
-          { display: '8K紫罗兰(板)', key: '8K紫罗兰' },
-          { display: '8K翡翠绿(板)', key: '8K翡翠绿' },
-          { display: '8K紫红(板)', key: '8K紫红' },
-          { display: '8K中国红(板)', key: '8K中国红' },
-          { display: '8K古铜(板)', key: '8K古铜' }
+          { display: '8K黄钛金(板)（宏旺）', key: '8K黄钛金' },
+          { display: '8K黄钛金(板)/L（宏旺）', key: '8K黄钛金/L' },
+          { display: '8K黄钛金(板)/S（宏旺）', key: '8K黄钛金/S' },
+          { display: '8K玫瑰金(板)（宏旺）', key: '8K玫瑰金' },
+          { display: '8K玫瑰金(板)/L（宏旺）', key: '8K玫瑰金/L' },
+          { display: '8K玫瑰金(板)/S（宏旺）', key: '8K玫瑰金/S' },
+          { display: '8K香槟金(板)（宏旺）', key: '8K香槟金' },
+          { display: '8K香槟金(板)/L（宏旺）', key: '8K香槟金/L' },
+          { display: '8K香槟金(板)/S（宏旺）', key: '8K香槟金/S' },
+          { display: '8K黑钛金(板)（宏旺）', key: '8K黑钛金' },
+          { display: '8K宝石蓝(板)（宏旺）', key: '8K宝石蓝' },
+          { display: '8K紫罗兰(板)（宏旺）', key: '8K紫罗兰' },
+          { display: '8K翡翠绿(板)（宏旺）', key: '8K翡翠绿' },
+          { display: '8K紫红(板)（宏旺）', key: '8K紫红' },
+          { display: '8K中国红(板)（宏旺）', key: '8K中国红' },
+          { display: '8K古铜(板)（宏旺）', key: '8K古铜' }
         ]
       },
       {
-        cls: 'sf-hairline', label: '砂面/拉丝（板）（宏旺）', // v1.0.173: 宏旺
+        cls: 'sf-hairline', label: '砂面/拉丝（板）', // v1.0.173: 宏旺
         items: [
-          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)', keys: ['拉丝黄钛金','磨砂黄钛金'] },
-          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/L', keys: ['拉丝黄钛金/L','磨砂黄钛金/L'] },
-          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/S', keys: ['拉丝黄钛金/S','磨砂黄钛金/S'] },
-          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
-          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)/L', keys: ['拉丝玫瑰金/L','磨砂玫瑰金/L'] },
-          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)/S', keys: ['拉丝玫瑰金/S','磨砂玫瑰金/S'] },
-          { display: '砂面/拉丝(NO.4/HL)香槟金(板)', keys: ['拉丝香槟金','磨砂香槟金'] },
-          { display: '砂面/拉丝(NO.4/HL)香槟金(板)/L', keys: ['拉丝香槟金/L','磨砂香槟金/L'] },
-          { display: '砂面/拉丝(NO.4/HL)香槟金(板)/S', keys: ['拉丝香槟金/S','磨砂香槟金/S'] },
-          { display: '砂面/拉丝(NO.4/HL)黑钛金(板)', keys: ['拉丝黑钛金','磨砂黑钛金'] },
-          { display: '砂面/拉丝(NO.4/HL)古铜(板)', keys: ['拉丝古铜','磨砂古铜'] },
-          { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹(板)', key: '拉丝古铜哑光抗指纹' },
-          { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹(板)', key: '拉丝古铜亮光抗指纹' }
+          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)（宏旺）', keys: ['拉丝黄钛金','磨砂黄钛金'] },
+          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/L（宏旺）', keys: ['拉丝黄钛金/L','磨砂黄钛金/L'] },
+          { display: '砂面/拉丝(NO.4/HL)黄钛金(板)/S（宏旺）', keys: ['拉丝黄钛金/S','磨砂黄钛金/S'] },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)（宏旺）', keys: ['拉丝玫瑰金','磨砂玫瑰金'] },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)/L（宏旺）', keys: ['拉丝玫瑰金/L','磨砂玫瑰金/L'] },
+          { display: '砂面/拉丝(NO.4/HL)玫瑰金(板)/S（宏旺）', keys: ['拉丝玫瑰金/S','磨砂玫瑰金/S'] },
+          { display: '砂面/拉丝(NO.4/HL)香槟金(板)（宏旺）', keys: ['拉丝香槟金','磨砂香槟金'] },
+          { display: '砂面/拉丝(NO.4/HL)香槟金(板)/L（宏旺）', keys: ['拉丝香槟金/L','磨砂香槟金/L'] },
+          { display: '砂面/拉丝(NO.4/HL)香槟金(板)/S（宏旺）', keys: ['拉丝香槟金/S','磨砂香槟金/S'] },
+          { display: '砂面/拉丝(NO.4/HL)黑钛金(板)（宏旺）', keys: ['拉丝黑钛金','磨砂黑钛金'] },
+          { display: '砂面/拉丝(NO.4/HL)古铜(板)（宏旺）', keys: ['拉丝古铜','磨砂古铜'] },
+          { display: '砂面/拉丝(NO.4/HL)古铜哑光抗指纹(板)（宏旺）', key: '拉丝古铜哑光抗指纹' },
+          { display: '砂面/拉丝(NO.4/HL)古铜亮光抗指纹(板)（宏旺）', key: '拉丝古铜亮光抗指纹' }
         ]
       },
       {
@@ -1809,7 +1812,7 @@ const App = (() => {
             const tiers = g.tiers;
             if (!tiers || tiers.length === 0) return;
             const locked = !!priceOverrides.surfaceLocked[cfgKey];
-            const arrCopy = item.display === '普磨8K（卷磨）' ? '普磨8K' : (item.keys ? item.keys[0] : (item.key || g.label));
+            const arrCopy = item.display === '普磨8K（卷磨）（宏旺）' ? '普磨8K' : (item.display === '普磨8K（卷磨）（梓烨）' ? '8K(梓烨)' : (item.keys ? item.keys[0] : (item.key || g.label)));
             rows.push('<tr' + rowCls + '>' +
               '<td><span class="cfg-name">' + g.label + '</span>' + COPY_BTN(arrCopy, '复制名称：' + arrCopy) + '</td>' +
               '<td class="tier-cells">' + tierCellsHtml(tiers, names, locked) + '</td>' +
