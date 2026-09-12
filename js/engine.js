@@ -151,8 +151,8 @@ const PricingEngine = (() => {
       }
     }
     const t = parseFloat(thickness);
-    // v1.0.215：产地旧名（本地201(压延)/本地201/本地）统一归一到「梓烨201」
-    if (origin === '本地201(压延)' || origin === '本地201' || origin === '本地') origin = '梓烨201';
+    // v1.0.215：产地旧名（本地201(压延)/本地201/本地）统一归一到「梓烨」
+    if (origin === '本地201(压延)' || origin === '本地201' || origin === '本地' || origin === '梓烨201') origin = '梓烨';
     // 400系：按材质+表面(+产地)对应独立加价，无匹配则返回 null
     if (material && THICKNESS_SURCHARGE_400) {
       // 标准化：Excel中"非标"可能没有括号
@@ -731,11 +731,11 @@ const PricingEngine = (() => {
 
     // 201 系基价宽度档校验（精确值档位；J5 不分宽度，跳过）
     if (isMaterial201(material) && !/^201J5/.test(material)) {
-      // v1.0.215：梓烨201（原「本地201(压延)」）仅提供 1219/1240mm 宽度（单值基价不分档）
-      const _ziyeO = (item.origin === '梓烨201' || item.origin === '本地201(压延)' || item.origin === '本地201' || item.origin === '本地');
+      // v1.0.215：梓烨（原「本地201(压延)」）仅提供 1219/1240mm 宽度（单值基价不分档）
+      const _ziyeO = (item.origin === '梓烨' || item.origin === '本地201(压延)' || item.origin === '本地201' || item.origin === '本地');
       if (_ziyeO) {
         if (width !== 1219 && width !== 1240) {
-          errors.push(`梓烨201 仅提供 1219/1240mm 宽度（当前 ${isNaN(width) ? (item.width || '?') : width}mm）`);
+          errors.push(`梓烨 仅提供 1219/1240mm 宽度（当前 ${isNaN(width) ? (item.width || '?') : width}mm）`);
         }
       } else {
       const wb = getWidthBand201(width);
@@ -765,7 +765,7 @@ const PricingEngine = (() => {
       errors.push(`宽度 ${width}mm 不在可计算宽度（1000/1030/1219/1240/1250/1280/1500/1524/1530）`);
     }
     // v1.0.220 产地旧名就地归一（保证白名单校验与加价表、表名一致）
-    if (item.origin === '本地201(压延)' || item.origin === '本地201' || item.origin === '本地') item.origin = '梓烨201';
+    if (item.origin === '本地201(压延)' || item.origin === '本地201' || item.origin === '本地' || item.origin === '梓烨201') item.origin = '梓烨';
     // 2026-08-22 用户规则：201 材质不提供 1250/1280mm 宽度，一律不计算（卷板/平板都拦）
     if ((width === 1250 || width === 1280) && /^201/.test(String(material || '').toUpperCase())) {
       errors.push('201 材质不提供 ' + width + 'mm 宽度，无法计算（2026-08-22 用户规则）');
@@ -1330,6 +1330,8 @@ const PricingEngine = (() => {
       if (origin && ORIGIN_THICKNESS_SURCHARGE_316L && ORIGIN_THICKNESS_SURCHARGE_316L[origin]) return origin + ' 316L加价';
       return '316L 加价（未提供数据）';
     }
+    // v1.0.221：201 专属产地（梓烨）自名加价表，明细显示「梓烨 加价」
+    if (material && /^201/.test(String(material).toUpperCase()) && origin && typeof ORIGIN_201_LABELS !== 'undefined' && ORIGIN_201_LABELS.indexOf(String(origin).trim()) !== -1) return origin + ' 加价';
     if (material && (material === '304' || material.startsWith('304'))) {
       if (origin && (typeof ORIGIN_304_LABELS !== 'undefined' && ORIGIN_304_LABELS.indexOf(origin) !== -1)) return origin + ' 加价';
       return '304 加价';
@@ -1376,9 +1378,9 @@ const PricingEngine = (() => {
     // 处理中文逗号和全角符号
     remaining = remaining.replace(/[，,、；;：:]/g, ' ').trim();
 
-    // v1.0.215：先摘「梓烨201」产地（含旧名兼容；须在轧硬料检测之前摘出，避免误触 isYanYan）
+    // v1.0.215：先摘「梓烨」产地（含旧名兼容；须在轧硬料检测之前摘出，避免误触 isYanYan）
     let _ziyeOrigin = false;
-    const _ziyeRe = /梓烨\s*201?|本地201\s*[(（]?\s*压延\s*[)）]?|本地201|本地/;
+    const _ziyeRe = /梓烨201?(?![0-9J])|本地201\s*[(（]?\s*压延\s*[)）]?|本地201|本地/;
     if (_ziyeRe.test(remaining)) {
       _ziyeOrigin = true;
       remaining = remaining.replace(_ziyeRe, ' ').replace(/\s+/g, ' ').trim();
@@ -1460,9 +1462,9 @@ const PricingEngine = (() => {
         break;
       }
     }
-    // v1.0.215：梓烨201 多写法归一（梓烨/梓烨201；旧名 本地201(压延)/本地201/本地 一并兼容；'压延'单独出现仍是轧硬料标志）
-    if (origin === '本地201(压延)' || origin === '本地201' || origin === '本地') origin = '梓烨201';
-    if (_ziyeOrigin) origin = '梓烨201';
+    // v1.0.215：梓烨 多写法归一（梓烨/梓烨；旧名 本地201(压延)/本地201/本地 一并兼容；'压延'单独出现仍是轧硬料标志）
+    if (origin === '本地201(压延)' || origin === '本地201' || origin === '本地') origin = '梓烨';
+    if (_ziyeOrigin) origin = '梓烨';
 
     // 提取保护膜（如果括号里没找到）
     if (!film1) {
@@ -1627,3 +1629,4 @@ const PricingEngine = (() => {
     HOT201_THICK_MIN, HOT201_THICK_MAX
   };
 })();
+

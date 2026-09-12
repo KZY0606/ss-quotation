@@ -1666,67 +1666,106 @@ test('v1.0.184 parseFreeText 识别窄带产地 金海/鑫峰', () => {
   eq(r2.origin, '鑫峰', '鑫峰 origin');
 });
 
-// === v1.0.215 梓烨201（原「本地201(压延)」改名）：产地名 + 沿用原专属厚度加价表 ===
-test('v1.0.215 梓烨201 厚度加价表（沿用原「本地201(压延)」：0.25-0.26 +1400 … 0.78-3.00 +200）', () => {
+// === v1.0.215 梓烨（原「本地201(压延)」改名）：产地名 + 沿用原专属厚度加价表 ===
+test('v1.0.215 梓烨 厚度加价表（沿用原「本地201(压延)」：0.25-0.26 +1400 … 0.78-3.00 +200）', () => {
   const cases = [[0.25, 1400], [0.26, 1400], [0.27, 1200], [0.28, 1200], [0.29, 1000], [0.30, 1000], [0.31, 1000], [0.33, 900], [0.37, 900], [0.38, 800], [0.42, 800], [0.43, 700], [0.47, 700], [0.48, 500], [0.57, 500], [0.58, 400], [0.73, 400], [0.74, 300], [0.77, 300], [0.78, 200], [1.50, 200], [3.00, 200]];
   for (const [t, fee] of cases) {
-    const r = PricingEngine.getThicknessSurcharge(String(t), false, '201J2', '梓烨201', '2B');
+    const r = PricingEngine.getThicknessSurcharge(String(t), false, '201J2', '梓烨', '2B');
     eq(r, fee, t + 'mm → ' + fee + '（实际 ' + r + '）');
   }
 });
 
-test('v1.0.215 产地旧名兼容（本地201(压延)/本地201/本地 → 梓烨201，历史报价单仍可算）', () => {
+test('v1.0.215 产地旧名兼容（本地201(压延)/本地201/本地 → 梓烨，历史报价单仍可算）', () => {
   ['本地201(压延)', '本地201', '本地'].forEach(o => {
     eq(PricingEngine.getThicknessSurcharge('0.25', false, '201J2', o, '2B'), 1400, o + ' 0.25 → 1400');
     eq(PricingEngine.getThicknessSurcharge('0.80', false, '201J2', o, '2B'), 200, o + ' 0.80 → 200');
   });
 });
 
-test('v1.0.215 parseFreeText 识别梓烨201（含旧名兼容；单独「压延」仍是轧硬料标志）', () => {
-  const r1 = PricingEngine.parseFreeText('梓烨201 201J3 0.5*1240*C', {});
-  eq(r1.origin, '梓烨201', '梓烨201 全称: ' + r1.origin);
+test('v1.0.215 parseFreeText 识别梓烨（含旧名兼容；单独「压延」仍是轧硬料标志）', () => {
+  const r1 = PricingEngine.parseFreeText('梓烨 201J3 0.5*1240*C', {});
+  eq(r1.origin, '梓烨', '梓烨 全称: ' + r1.origin);
   eq(r1.material, '201J3', 'material');
   eq(r1.isYanYan, false, '产地里的 201 不触发轧硬标志');
   const r2 = PricingEngine.parseFreeText('梓烨 201J2 0.5*1240*C', {});
-  eq(r2.origin, '梓烨201', '梓烨 简称: ' + r2.origin);
+  eq(r2.origin, '梓烨', '梓烨 简称: ' + r2.origin);
   const r3 = PricingEngine.parseFreeText('本地201(压延) 201J3 0.5*1240*C', {});
-  eq(r3.origin, '梓烨201', '旧名归一: ' + r3.origin);
+  eq(r3.origin, '梓烨', '旧名归一: ' + r3.origin);
   eq(r3.isYanYan, false, '旧名不触发轧硬标志');
   const r4 = PricingEngine.parseFreeText('压延201J2 0.5*1010*C', {});
   eq(r4.isYanYan, true, '压延料标志保留');
   eq(r4.origin, '', '压延不归一为产地');
 });
 
-test('v1.0.215 calculate 梓烨201：仅 1219/1240 宽度 + 厚度加价沿用原表', () => {
+test('v1.0.215 calculate 梓烨：仅 1219/1240 宽度 + 厚度加价沿用原表', () => {
   const base = { material: '201J2', surface: '2B', thickness: '0.25', width: '1240', length: 'C', film1: '', film2: '', basePrice: 6300 };
-  const ok = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨201' }));
+  const ok = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨' }));
   eq(ok.success, true, '1240 应可算: ' + (ok.errors || []).join(';'));
   eq(ok.detail.costTax, 7700, '含税成本 7700, 实际 ' + ok.detail.costTax);
-  eq(ok.detail.thickTable, '常规', '明细表名(回滚后与 v1.0.214 一致): ' + ok.detail.thickTable);
-  const ok2 = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨201', width: '1219' }));
+  eq(ok.detail.thickTable, '梓烨 加价', '明细表名(v1.0.221 产地正名为 梓烨，表名随之显示): ' + ok.detail.thickTable);
+  const ok2 = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨', width: '1219' }));
   eq(ok2.success, true, '1219 应可算: ' + (ok2.errors || []).join(';'));
-  const bad = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨201', width: '1010' }));
+  const bad = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨', width: '1010' }));
   eq(bad.success, false, '1010 应报错');
   eq((bad.errors || []).join(',').indexOf('仅提供 1219/1240') >= 0, true, '报错文案: ' + (bad.errors || []).join(','));
-  const ok3 = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨201', thickness: '0.80' }));
+  const ok3 = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨', thickness: '0.80' }));
   eq(ok3.detail.costTax, 6500, '0.80 含税 6500, 实际 ' + ok3.detail.costTax);
   const old = PricingEngine.calculate(Object.assign({}, base, { origin: '本地201(压延)' }));
   eq(old.success, true, '旧名应仍可算: ' + (old.errors || []).join(';'));
-  eq(old.detail.costTax, 7700, '旧名结果与梓烨201 一致');
+  eq(old.detail.costTax, 7700, '旧名结果与梓烨 一致');
 });
 
 
 
+
+test('v1.0.221 产地名收正：梓烨（不带 201），保留历史写法兼容', () => {
+  // 白名单里的产地名已不带 201
+  eq(JSON.stringify(PricingEngine.ORIGIN_MATERIAL_ALLOW['201']), '["宏旺","梓烨","北港"]', '201 白名单产地名');
+  // 加价表 key 同步改为梓烨
+  eq(Object.keys(PricingEngine.ORIGIN_THICKNESS_SURCHARGE_201).join(','), '梓烨', '201 专属表 key = 梓烨');
+  // 专属档位数值一分未动
+  eq(PricingEngine.getThicknessSurcharge('0.25', false, '201J2', '梓烨', '2B'), 1400, '梓烨 0.25 = 1400');
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '201J2', '梓烨', '2B'), 500, '梓烨 0.50 = 500');
+  eq(PricingEngine.getThicknessSurcharge('3.00', false, '201J2', '梓烨', '2B'), 200, '梓烨 3.00 = 200');
+  // calculate 走新名
+  const base = { material: '201J2', surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 8000 };
+  const r1 = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨' }));
+  eq(r1.success, true, '梓烨 可算: ' + (r1.errors || []).join(';'));
+  eq(r1.detail.thickTable, '梓烨 加价', '梓烨 加价表名');
+  // 历史写法 梓烨201 仍能算（兼容归一）
+  const r2 = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨201' }));
+  eq(r2.success, true, '历史写法 梓烨201 仍可算: ' + (r2.errors || []).join(';'));
+  eq(r2.detail.origin, '梓烨', '历史写法归一为梓烨: ' + r2.detail.origin);
+  eq(r2.detail.thickTable, '梓烨 加价', '历史写法表名');
+  // 历史旧名也仍然兼容
+  eq(PricingEngine.calculate(Object.assign({}, base, { origin: '本地201(压延)' })).success, true, '本地201(压延) 仍可算');
+  // parseFreeText：产地不再吞掉后面的牌号
+  const f1 = PricingEngine.parseFreeText('梓烨 201J3 0.5*1240*C', {});
+  eq(f1.origin, '梓烨', '梓烨 + 空格 + 201J3 → origin');
+  eq(f1.material, '201J3', '梓烨 + 空格 + 201J3 → material');
+  const f2 = PricingEngine.parseFreeText('梓烨201 201J3 0.5*1240*C', {});
+  eq(f2.origin, '梓烨', '历史连写 梓烨201 → origin 梓烨');
+  eq(f2.material, '201J3', '历史连写 不吞牌号');
+  const f3 = PricingEngine.parseFreeText('梓烨201J2 0.5*1240*C', {});
+  eq(f3.origin, '梓烨', '连写 201J2 → origin 梓烨');
+  eq(f3.material, '201J2', '连写 201J2 → material 不被吃');
+  // 报错文案里的可用产地名
+  const rej = PricingEngine.calculate(Object.assign({}, base, { origin: '德龙' }));
+  eq(rej.success, false, '201 + 德龙 报错');
+  eq(String((rej.errors || []).join('')).indexOf('可用：宏旺 / 梓烨 / 北港') >= 0, true, '报错可用清单含梓烨');
+  // 304 不再出现 梓烨201 这个产地名
+  eq(String((PricingEngine.calculate({ material: '304', origin: '梓烨', surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 14300 }).errors || []).join('')).indexOf('【产地校验】') >= 0, true, '304 + 梓烨 报错');
+});
 test('v1.0.220 冷轧产地白名单（2026-09-12 用户规则）', () => {
-  eq(JSON.stringify(PricingEngine.ORIGIN_MATERIAL_ALLOW), '{"201":["宏旺","梓烨201","北港"],"304":["德龙","宏旺","上克","甬金","张浦","太钢"],"316":["甬金","张浦","太钢"],"410":["甬金","上克","宏旺","瑞钢"],"430":["甬金","上克","宏旺","瑞钢","硕阳"]}', '白名单内容');
+  eq(JSON.stringify(PricingEngine.ORIGIN_MATERIAL_ALLOW), '{"201":["宏旺","梓烨","北港"],"304":["德龙","宏旺","上克","甬金","张浦","太钢"],"316":["甬金","张浦","太钢"],"410":["甬金","上克","宏旺","瑞钢"],"430":["甬金","上克","宏旺","瑞钢","硕阳"]}', '白名单内容');
   const cal = (m, o, extra) => PricingEngine.calculate(Object.assign({ material: m, surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 10000, origin: o }, extra || {}));
   const isRej = r => r && r.success === false;
   // 201 仅 3 个产地
-  ['宏旺', '梓烨201', '北港'].forEach(o => eq(cal('201J2', o).success, true, '201 + ' + o + ' 可算'));
+  ['宏旺', '梓烨', '北港'].forEach(o => eq(cal('201J2', o).success, true, '201 + ' + o + ' 可算'));
   ['青山', '联众', '太钢', '德龙', '瑞钢', '酒钢', '宝钢', '鞍钢', '东方特钢', '硕阳', '鼎信', '永达', '金海', '鑫峰', '甬金', '上克', '张浦'].forEach(o => eq(isRej(cal('201J2', o)), true, '201 + ' + o + ' 应拥报错'));
   // 304 仅 6 个产地
   ['德龙', '宏旺', '上克', '甬金', '张浦', '太钢'].forEach(o => eq(cal('304', o).success, true, '304 + ' + o + ' 可算'));
-  ['青山', '联众', '瑞钢', '北港', '酒钢', '宝钢', '鞍钢', '东方特钢', '硕阳', '鼎信', '永达', '金海', '鑫峰', '梓烨201'].forEach(o => eq(isRej(cal('304', o)), true, '304 + ' + o + ' 应报错'));
+  ['青山', '联众', '瑞钢', '北港', '酒钢', '宝钢', '鞍钢', '东方特钢', '硕阳', '鼎信', '永达', '金海', '鑫峰', '梓烨'].forEach(o => eq(isRej(cal('304', o)), true, '304 + ' + o + ' 应报错'));
   // 316L 仅 3 个产地
   ['甬金', '张浦', '太钢'].forEach(o => eq(cal('316L', o).success, true, '316L + ' + o + ' 可算'));
   ['宏旺', '上克', '德龙', '瑞钢', '北港'].forEach(o => eq(isRej(cal('316L', o)), true, '316L + ' + o + ' 应报错'));
@@ -1738,9 +1777,9 @@ test('v1.0.220 冷轧产地白名单（2026-09-12 用户规则）', () => {
   eq(isRej(cal('430/BA', '青山', { surface: '' })), true, '430/BA + 青山 报错');
   eq(cal('430/BA', '瑞钢', { surface: '' }).success, true, '430/BA + 瑞钢 可算（白名单内）');
   // 报错文案带可用清单
-  eq(String((cal('201J2', '德龙').errors || []).join('')).indexOf('可用：宏旺 / 梓烨201 / 北港') >= 0, true, '201 报错文案含可用清单');
+  eq(String((cal('201J2', '德龙').errors || []).join('')).indexOf('可用：宏旺 / 梓烨 / 北港') >= 0, true, '201 报错文案含可用清单');
   // 旧名归一后不再误拥
-  eq(cal('201J2', '本地201(压延)').success, true, '旧名归一为梓烨201，不报错');
+  eq(cal('201J2', '本地201(压延)').success, true, '旧名归一为梓烨，不报错');
   // 热轧 201 不受白名单影响
   const hr = PricingEngine.calculate({ material: '201J3', surface: 'NO.1', thickness: '5.0', width: '1240', length: 'C', basePrice: 6800, origin: '鼎信' });
   eq(String((hr.errors || []).join('')).indexOf('产地校验') < 0, true, '热轧 201 + 鼎信 不走冷轧白名单');
@@ -1757,7 +1796,7 @@ test('v1.0.220 暂无厚度加价的产地：太钢 304/316L 加价记 0', () =>
   eq(PricingEngine.getThicknessSurcharge('0.50', false, '304', '太钢', '2B'), 0, 'getThicknessSurcharge 太钢 304 = 0');
   eq(PricingEngine.getThicknessSurcharge('0.50', false, '316L', '太钢', '2B'), 0, 'getThicknessSurcharge 太钢 316L = 0');
 });
-test('v1.0.219/220 冷轧产地校验：201 仅 宏旺/梓烨201/北港；304 仅 德龙/宏旺/上克/甬金/张浦/太钢', () => {
+test('v1.0.219/220 冷轧产地校验：201 仅 宏旺/梓烨/北港；304 仅 德龙/宏旺/上克/甬金/张浦/太钢', () => {
   const cal = (m, o, extra) => PricingEngine.calculate(Object.assign({ material: m, surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 10000, origin: o }, extra || {}));
   const isRej = r => r && r.success === false;
   // --- 201 系 × 甬金/上克/张浦 → 应报错 ---
@@ -1776,7 +1815,7 @@ test('v1.0.219/220 冷轧产地校验：201 仅 宏旺/梓烨201/北港；304 �
   eq(cal('201J2', '宏旺').success, true, '201 + 宏旺 仍可算');
   eq(cal('201J2', '北港').success, true, '201 + 北港 仍可算');
   eq(cal('201J2', '德龙').success, false, '德龙 不在 201 白名单 → 报错');
-  eq(cal('201J2', '梓烨201').success, true, '201 + 梓烨201 仍可算');
+  eq(cal('201J2', '梓烨').success, true, '201 + 梓烨 仍可算');
   eq(cal('304', '甬金').detail.thickSurcharge, 700, '304 + 甬金 = 700');
   eq(cal('304', '宏旺').detail.thickSurcharge, 600, '304 + 宏旺 = 600');
   eq(cal('304', '德龙').detail.thickSurcharge, 600, '304 + 德龙 = 600');
@@ -1789,7 +1828,7 @@ test('v1.0.219/220 冷轧产地校验：201 仅 宏旺/梓烨201/北港；304 �
   // --- 无产地时不校验 ---
   eq(PricingEngine.calculate({ material: '304', surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 10000 }).success, true, '304（无产地）仍可算');
 });
-test('v1.0.218 304 产地专属表归位（甬金/上克并入 304 表、张浦去重、梓烨201 拆到 201 表）', () => {
+test('v1.0.218 304 产地专属表归位（甬金/上克并入 304 表、张浦去重、梓烨 拆到 201 表）', () => {
   const g = (t, m, o) => PricingEngine.getThicknessSurcharge(t, false, m, o, '2B');
   // --- 304 四产地数值（应与此前完全一致）---
   eq(g('0.25', '304', '甬金'), 2100, '304 甬金 0.25 = 2100');
@@ -1806,8 +1845,8 @@ test('v1.0.218 304 产地专属表归位（甬金/上克并入 304 表、张浦�
   // v1.0.219 起：201 + 甬金/上克/张浦 改为报错（详见 v1.0.219 块）
 
 
-  eq(g('0.25', '201J2', '梓烨201'), 1400, '201 梓烨201 0.25 保持 1400');
-  eq(g('0.50', '201J2', '梓烨201'), 500, '201 梓烨201 0.50 保持 500');
+  eq(g('0.25', '201J2', '梓烨'), 1400, '201 梓烨 0.25 保持 1400');
+  eq(g('0.50', '201J2', '梓烨'), 500, '201 梓烨 0.50 保持 500');
   // --- 表名（宏旺/德龙 仍为「304 加价」）---
   const c = o => PricingEngine.calculate({ material: '304', surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 10000, origin: o });
   eq(c('甬金').detail.thickTable, '甬金 加价', '甬金 304 表名');
@@ -1816,7 +1855,7 @@ test('v1.0.218 304 产地专属表归位（甬金/上克并入 304 表、张浦�
   eq(c('宏旺').detail.thickTable, '304 加价', '宏旺 304 表名保持');
   // --- 表结构 ---
   eq(Object.keys(PricingEngine.ORIGIN_THICKNESS_SURCHARGE_304).join(','), '宏旺,甬金,上克,张浦', '304 产地表成员');
-  eq(Object.keys(PricingEngine.ORIGIN_THICKNESS_SURCHARGE_201).join(','), '梓烨201', '201 产地表仅梓烨201');
+  eq(Object.keys(PricingEngine.ORIGIN_THICKNESS_SURCHARGE_201).join(','), '梓烨', '201 产地表仅梓烨');
   eq(PricingEngine.ORIGIN_THICKNESS_SURCHARGE, undefined, '旧混装表已移除');
 });
 test('v1.0.215 304 产地厚度加价与表名回归（甬金·上克·张浦·宏旺·德龙 锁定不变）', () => {

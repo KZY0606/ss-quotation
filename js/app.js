@@ -46,7 +46,7 @@ const App = (() => {
   let beigangJ1Locked = false;
   let beigangJ5Price = 0;
   let beigangJ5Locked = false;
-  // v1.0.215 梓烨201（原「本地201(压延)」）：J1-J4 单值基价（不分宽度档）
+  // v1.0.215 梓烨（原「本地201(压延)」）：J1-J4 单值基价（不分宽度档）
   const BENDI201_J = ['201J1', '201J2', '201J3', '201J4'];
   let bendi201Prices = { '201J1': 0, '201J2': 0, '201J3': 0, '201J4': 0 };
   let bendi201Locked = false;
@@ -197,8 +197,8 @@ const App = (() => {
       if (material === '201J1' && origin === '北港') {
         return (beigangJ1Price > 0) ? beigangJ1Price : null;
       }
-      // v1.0.215 梓烨201（原「本地201(压延)」）：J1-J4 单值基价，不分宽度档；旧名/'压延' 简称归一
-      if (origin === '梓烨201' || origin === '本地201(压延)' || origin === '本地201' || origin === '本地' || origin === '压延') {
+      // v1.0.215 梓烨（原「本地201(压延)」）：J1-J4 单值基价，不分宽度档；旧名/'压延' 简称归一
+      if (origin === '梓烨' || origin === '梓烨201' || origin === '本地201(压延)' || origin === '本地201' || origin === '本地' || origin === '压延') {
         const bj = (material === '201') ? '201J2' : material;
         const bp = bendi201Prices[bj];
         return (bp && bp > 0) ? bp : null;
@@ -239,7 +239,7 @@ const App = (() => {
     loadLockedPrices(); // 恢复已锁定的价格（201 + 304 + 316L）
     loadPrices400();    // 恢复400系基价
     loadHot201();       // v1.0.180 恢复热轧 201/NO.1 基价
-    loadBendi201();     // v1.0.215 恢复梓烨201（原「本地201(压延)」）基价
+    loadBendi201();     // v1.0.215 恢复梓烨（原「本地201(压延)」）基价
     loadPriceOverrides(); // 恢复保护膜/表面加工费覆盖
     PricingEngine.setUserOverrides(priceOverrides); // 注入引擎
 
@@ -655,14 +655,14 @@ const App = (() => {
       });
     });
 
-    // v1.0.215 梓烨201（原「本地201(压延)」）：J1-J4 单值基价行（紧跟北港行后）
+    // v1.0.215 梓烨（原「本地201(压延)」）：J1-J4 单值基价行（紧跟北港行后）
     const bd = document.createElement('div');
     bd.className = 'origin-row';
     bd.innerHTML = `
-      <span class="oname">梓烨201</span>
+      <span class="oname">梓烨</span>
       ${BENDI201_J.map(j => `<div class="oj2"><label>${j.replace('201', '')}</label><input type="number" data-bendi="${j}" class="origin-j2-input" value="${bendi201Prices[j] > 0 ? bendi201Prices[j] : ''}" step="10" placeholder="未填" ${bendi201Locked ? 'readonly' : ''}></div>`).join('')}
       <button id="bendi201Lock" class="o-lock ${bendi201Locked ? 'locked' : ''}" title="${bendi201Locked ? '点击解锁' : '点击锁定整行'}">${bendi201Locked ? '🔒' : '🔓'}</button>
-      <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">梓烨201 J1-J4，仅 1219/1240 宽度；厚度加价走专属表；随「📢 发布当前基价」同步全员</span>
+      <span class="oderived" style="margin-left:auto;font-size:11px;color:var(--text-muted);">梓烨 J1-J4，仅 1219/1240 宽度；厚度加价走专属表；随「📢 发布当前基价」同步全员</span>
     `;
     els.originRows201.appendChild(bd);
     bd.querySelectorAll('[data-bendi]').forEach(inp => {
@@ -833,7 +833,7 @@ const App = (() => {
     try { localStorage.setItem('kk_beigang_j5', JSON.stringify({ price: beigangJ5Price, locked: beigangJ5Locked })); } catch (e) { /* ignore */ }
   }
 
-  // v1.0.215 梓烨201（原「本地201(压延)」）
+  // v1.0.215 梓烨（原「本地201(压延)」）
   function saveBendi201() {
     try { localStorage.setItem('kk_bendi201', JSON.stringify({ prices: bendi201Prices, locked: bendi201Locked })); } catch (e) { /* ignore */ }
   }
@@ -948,7 +948,7 @@ const App = (() => {
       beigangJ1Price: beigangJ1Price,
       beigangJ5Price: beigangJ5Price,
       prices400: prices400,
-      bendi201Prices: bendi201Prices,   // v1.0.190 梓烨201（原「本地201(压延)」）J1-J4 单价基价
+      bendi201Prices: bendi201Prices,   // v1.0.190 梓烨（原「本地201(压延)」）J1-J4 单价基价
       hot201Prices: hot201Prices        // v1.0.190 热轧 201 基价（产地-Jx-4/-5/-N）
     };
   }
@@ -975,7 +975,7 @@ const App = (() => {
     try {
       ['kk_locked_prices','kk_locked_prices_304','kk_locked_prices_316L','kk_locked_prices_304_ff','kk_locked_prices_316L_ff','kk_beigang_j1','kk_beigang_j5','kk_prices_400','kk_prices_400_ff']
         .forEach(k => localStorage.removeItem(k));
-      // v1.0.190 云端价优先：梓烨201（原「本地201(压延)」）与热轧面板解锁（价格已由 applyBasePrices 写入）
+      // v1.0.190 云端价优先：梓烨（原「本地201(压延)」）与热轧面板解锁（价格已由 applyBasePrices 写入）
       bendi201Locked = false; saveBendi201();
       lockedHot201 = {}; saveHot201();
     } catch (e) { /* ignore */ }
@@ -1006,7 +1006,7 @@ const App = (() => {
     if (p.prices400 && typeof p.prices400 === 'object') { for (const [k, v] of Object.entries(p.prices400)) { prices400[k] = v; lockedPrices400[k] = false; changed = true; } }
     if (typeof p.beigangJ1Price === 'number') { beigangJ1Price = p.beigangJ1Price; beigangJ1Locked = false; changed = true; }
     if (typeof p.beigangJ5Price === 'number') { beigangJ5Price = p.beigangJ5Price; beigangJ5Locked = false; changed = true; }
-    // v1.0.190 梓烨201（原「本地201(压延)」）基价（J1-J4 单价）
+    // v1.0.190 梓烨（原「本地201(压延)」）基价（J1-J4 单价）
     if (p.bendi201Prices && typeof p.bendi201Prices === 'object') {
       let bdChanged = false;
       for (const [j, v] of Object.entries(p.bendi201Prices)) {
@@ -2065,9 +2065,9 @@ const App = (() => {
     h.push('<h4 class="ref-subtitle">压延料（轧硬料）</h4>');
     h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 4px;">无厚度加价（v1.0.215 起：报关写「压延」时不再另加厚度加价，只算基价 + 表面加工费等）</div>');
 
-    // v1.0.215 梓烨201（原「本地201(压延)」）专属厚度加价表
-    h.push('<h4 class="ref-subtitle">梓烨201（201 专属）</h4>');
-    refTable(ORIGIN_THICKNESS_SURCHARGE_201['梓烨201']);
+    // v1.0.215 梓烨（原「本地201(压延)」）专属厚度加价表
+    h.push('<h4 class="ref-subtitle">梓烨（201 专属）</h4>');
+    refTable(ORIGIN_THICKNESS_SURCHARGE_201['梓烨']);
     h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 4px;">仅 1219/1240mm 宽度；0.31-0.32mm 未单独给档，并入 0.29-0.32 档 +1000</div>');
 
     // 304 通用表（宏旺已建独立表，通用表仅德龙）
