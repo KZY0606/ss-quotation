@@ -1311,7 +1311,7 @@ test('v1.0.169 201J5 北港既有逻辑不受影响', () => {
 
 // === v1.0.170 定制化计价（2026-09-05 用户规则：平板+件数+包装总额手填均摊+费用覆盖+新公式）===
 test('v1.0.170 定制化 304 平板 1.00*1219*2438 100张 包装总额3000：平摊+成本+双口径', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', packing: '定制木架' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', packing: '定制木架' });
   eq(r.success, true, JSON.stringify(r.errors));
   const c = r.detail.custom;
   eq(r.calcMode, 'custom');
@@ -1323,38 +1323,38 @@ test('v1.0.170 定制化 304 平板 1.00*1219*2438 100张 包装总额3000：平
   eq(c.containerPerTon, 50, '装柜默认50元/吨');
   eq(c.edgePerTon, 200, '边部自动200(1219切边)');
   eq(c.surfacePerTon, 0);
-  eq(r.detail.costTax, 16260, '含税成本十位整');
-  eq(r.detail.costNoTax, 14950);
-  eq(c.sheetCostTax, 383.22, '每张含税');
-  eq(c.sheetCostNoTax, 352.34, '每张不含税');
-  eq(c.totalCostTax, 38321.57, '整批含税总额');
-  eq(r.detail.saleTax, 16260, '兼容saleTax=costTax');
+  eq(r.detail.costTax, 16360, '含税成本十位整');
+  eq(r.detail.costNoTax, 15050);
+  eq(c.sheetCostTax, 385.57, '每张含税');
+  eq(c.sheetCostNoTax, 354.7, '每张不含税');
+  eq(c.totalCostTax, 38557.25, '整批含税总额');
+  eq(r.detail.saleTax, 16360, '兼容saleTax=costTax');
   eq(r.detail.weight, 2.3568, '兼容weight=总吨');
 });
 test('v1.0.170 定制化覆盖项生效（表面500/装柜100/边部0/包装100元吨）', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceTon: '500', customContainerTon: '100', customEdgeTon: '0', customPackingTon: '100' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceTon: '500', customContainerTon: '100', customEdgeTon: '0', customPackingTon: '100' });
   eq(r.success, true, JSON.stringify(r.errors));
-  eq(r.detail.costTax, 15360);
+  eq(r.detail.costTax, 15460);
   eq(r.detail.custom.surfacePerTon, 500);
   eq(r.detail.custom.containerPerTon, 100);
   eq(r.detail.custom.edgePerTon, 0);
   eq(r.detail.custom.packingPerTon, 100);
 });
 test('v1.0.170 定制化 NO.4 表面自动带出（不限单张表面白名单）', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: 'NO.4', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: 'NO.4', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000' });
   eq(r.success, true, JSON.stringify(r.errors));
   eq(r.detail.custom.surfaceAutoPerTon > 0, true, 'NO.4自动费>0');
 });
 test('v1.0.170 定制化卷板报错', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: 'C', basePrice: 14300, calcMode: 'custom', quantity: '100' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: 'C', basePrice: 14300, calcMode: 'custom', quantity: '100' });
   eq(r.success, false, JSON.stringify(r.errors));
 });
 test('v1.0.170 定制化缺件数报错', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom' });
   eq(r.success, false, JSON.stringify(r.errors));
 });
 test('v1.0.170 定制化件数翻倍每张成本不变（固定元/吨费用）', () => {
-  const base = { material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', customPackingTon: '100' };
+  const base = { material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', customPackingTon: '100' };
   const a = PricingEngine.calculate(Object.assign({}, base, { quantity: '100' }));
   const b = PricingEngine.calculate(Object.assign({}, base, { quantity: '200' }));
   eq(a.success && b.success, true);
@@ -1364,7 +1364,7 @@ test('v1.0.170 定制化件数翻倍每张成本不变（固定元/吨费用）'
 
 // === v1.0.171 定制化口径纯净 + 覆盖输入单位（2026-09-05 用户规则）===
 test('v1.0.171 表面覆盖按 元/㎡ 输入：自动 ×每吨面积 折元/吨', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceSqm: '10' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceSqm: '10' });
   eq(r.success, true, JSON.stringify(r.errors));
   const c = r.detail.custom;
   eq(c.surfaceOvSqm, 10, '回显㎡原值');
@@ -1372,21 +1372,21 @@ test('v1.0.171 表面覆盖按 元/㎡ 输入：自动 ×每吨面积 折元/吨
   eq(Math.abs(c.surfacePerTon - 10 * c.sqmPerTon) < 0.2, true, 'surfacePerTon≈10×每吨面积(实际 ' + c.surfacePerTon + ', sqmPerTon ' + c.sqmPerTon + ')');
 });
 test('v1.0.171 膜覆盖按 元/㎡ 输入：折算正确', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customFilmSqm: '1' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customFilmSqm: '1' });
   eq(r.success, true, JSON.stringify(r.errors));
   const c = r.detail.custom;
   eq(c.filmOvSqm, 1);
   eq(Math.abs(c.filmPerTon - c.sqmPerTon) < 0.02, true, 'filmPerTon≈每吨面积(实际 ' + c.filmPerTon + ')');
 });
 test('v1.0.171 装柜整体费用总额平摊（1000元 ÷ 总吨）', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', customContainerTotal: '1000' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', customContainerTotal: '1000' });
   eq(r.success, true, JSON.stringify(r.errors));
   const c = r.detail.custom;
   eq(c.containerTotal, 1000, '总额回显');
   eq(Math.abs(c.containerPerTon - 1000 / 2.3568) < 0.02, true, '装柜平摊≈424.3(实际 ' + c.containerPerTon + ')');
 });
 test('v1.0.171 单张口径全套字段与吨口径一致（edge/surface/film/inspect ÷1000×kg）', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: 'NO.4', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', film1: '7C-FILM' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: 'NO.4', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', packingFee: '3000', film1: '7C-FILM' });
   eq(r.success, true, JSON.stringify(r.errors));
   const c = r.detail.custom;
   const kg = c.sheetWeightKg;
@@ -1396,9 +1396,9 @@ test('v1.0.171 单张口径全套字段与吨口径一致（edge/surface/film/in
   });
 });
 test('v1.0.171 覆盖按 元/吨 输入仍兼容（旧字段不破坏）', () => {
-  const r = PricingEngine.calculate({ material: '304', origin: '申金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceTon: '500', customContainerTon: '100', customEdgeTon: '0', customPackingTon: '100' });
+  const r = PricingEngine.calculate({ material: '304', origin: '甬金', surface: '2B', thickness: '1.00', width: '1219', length: '2438', basePrice: 14300, calcMode: 'custom', quantity: '100', customSurfaceTon: '500', customContainerTon: '100', customEdgeTon: '0', customPackingTon: '100' });
   eq(r.success, true, JSON.stringify(r.errors));
-  eq(r.detail.costTax, 15360, '与v1.0.170 T2 同值(覆盖均按元/吨)');
+  eq(r.detail.costTax, 15460, '与v1.0.170 T2 同值(覆盖均按元/吨)');
 });
 
 // === v1.0.172 钛铝古铜 vs 钛块古铜 严格区分：小写/无点/空格/表头直传 不再被吞（2026-09-07 用户反馈）===
@@ -1716,7 +1716,48 @@ test('v1.0.215 calculate 梓烨201：仅 1219/1240 宽度 + 厚度加价沿用�
 });
 
 
-test('v1.0.219 冷轧产地校验：201 不识别 甬金/上克/张浦；304 不识别 北港', () => {
+
+test('v1.0.220 冷轧产地白名单（2026-09-12 用户规则）', () => {
+  eq(JSON.stringify(PricingEngine.ORIGIN_MATERIAL_ALLOW), '{"201":["宏旺","梓烨201","北港"],"304":["德龙","宏旺","上克","甬金","张浦","太钢"],"316":["甬金","张浦","太钢"],"410":["甬金","上克","宏旺","瑞钢"],"430":["甬金","上克","宏旺","瑞钢","硕阳"]}', '白名单内容');
+  const cal = (m, o, extra) => PricingEngine.calculate(Object.assign({ material: m, surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 10000, origin: o }, extra || {}));
+  const isRej = r => r && r.success === false;
+  // 201 仅 3 个产地
+  ['宏旺', '梓烨201', '北港'].forEach(o => eq(cal('201J2', o).success, true, '201 + ' + o + ' 可算'));
+  ['青山', '联众', '太钢', '德龙', '瑞钢', '酒钢', '宝钢', '鞍钢', '东方特钢', '硕阳', '鼎信', '永达', '金海', '鑫峰', '甬金', '上克', '张浦'].forEach(o => eq(isRej(cal('201J2', o)), true, '201 + ' + o + ' 应拥报错'));
+  // 304 仅 6 个产地
+  ['德龙', '宏旺', '上克', '甬金', '张浦', '太钢'].forEach(o => eq(cal('304', o).success, true, '304 + ' + o + ' 可算'));
+  ['青山', '联众', '瑞钢', '北港', '酒钢', '宝钢', '鞍钢', '东方特钢', '硕阳', '鼎信', '永达', '金海', '鑫峰', '梓烨201'].forEach(o => eq(isRej(cal('304', o)), true, '304 + ' + o + ' 应报错'));
+  // 316L 仅 3 个产地
+  ['甬金', '张浦', '太钢'].forEach(o => eq(cal('316L', o).success, true, '316L + ' + o + ' 可算'));
+  ['宏旺', '上克', '德龙', '瑞钢', '北港'].forEach(o => eq(isRej(cal('316L', o)), true, '316L + ' + o + ' 应报错'));
+  // 410 仅 4 个产地
+  ['甬金', '上克', '宏旺', '瑞钢'].forEach(o => eq(cal('410', o).success, true, '410 + ' + o + ' 可算'));
+  ['德龙', '青山', '太钢', '张浦', '硕阳'].forEach(o => eq(isRej(cal('410', o)), true, '410 + ' + o + ' 应报错'));
+  // 430 仅 5 个产地（含硕阳）
+  eq(cal('430/BA', '硕阳', { surface: '' }).success, true, '430/BA + 硕阳 可算');
+  eq(isRej(cal('430/BA', '青山', { surface: '' })), true, '430/BA + 青山 报错');
+  eq(cal('430/BA', '瑞钢', { surface: '' }).success, true, '430/BA + 瑞钢 可算（白名单内）');
+  // 报错文案带可用清单
+  eq(String((cal('201J2', '德龙').errors || []).join('')).indexOf('可用：宏旺 / 梓烨201 / 北港') >= 0, true, '201 报错文案含可用清单');
+  // 旧名归一后不再误拥
+  eq(cal('201J2', '本地201(压延)').success, true, '旧名归一为梓烨201，不报错');
+  // 热轧 201 不受白名单影响
+  const hr = PricingEngine.calculate({ material: '201J3', surface: 'NO.1', thickness: '5.0', width: '1240', length: 'C', basePrice: 6800, origin: '鼎信' });
+  eq(String((hr.errors || []).join('')).indexOf('产地校验') < 0, true, '热轧 201 + 鼎信 不走冷轧白名单');
+});
+
+test('v1.0.220 暂无厚度加价的产地：太钢 304/316L 加价记 0', () => {
+  const r1 = PricingEngine.calculate({ material: '304', origin: '太钢', surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 14300 });
+  eq(r1.success, true, '304 + 太钢 可算: ' + (r1.errors || []).join(';'));
+  eq(r1.detail.thickSurcharge, 0, '304 太钢 厚度加价 = 0');
+  eq(r1.detail.thickTable, '太钢（暂无厚度加价）', '太钢表名');
+  const r2 = PricingEngine.calculate({ material: '316L', origin: '太钢', surface: '2B', thickness: '1.00', width: '1240', length: 'C', basePrice: 20000 });
+  eq(r2.success, true, '316L + 太钢 可算: ' + (r2.errors || []).join(';'));
+  eq(r2.detail.thickSurcharge, 0, '316L 太钢 厚度加价 = 0');
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '304', '太钢', '2B'), 0, 'getThicknessSurcharge 太钢 304 = 0');
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '316L', '太钢', '2B'), 0, 'getThicknessSurcharge 太钢 316L = 0');
+});
+test('v1.0.219/220 冷轧产地校验：201 仅 宏旺/梓烨201/北港；304 仅 德龙/宏旺/上克/甬金/张浦/太钢', () => {
   const cal = (m, o, extra) => PricingEngine.calculate(Object.assign({ material: m, surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 10000, origin: o }, extra || {}));
   const isRej = r => r && r.success === false;
   // --- 201 系 × 甬金/上克/张浦 → 应报错 ---
@@ -1734,7 +1775,7 @@ test('v1.0.219 冷轧产地校验：201 不识别 甬金/上克/张浦；304 不
   // --- 合法组合不受影响 ---
   eq(cal('201J2', '宏旺').success, true, '201 + 宏旺 仍可算');
   eq(cal('201J2', '北港').success, true, '201 + 北港 仍可算');
-  eq(cal('201J2', '德龙').success, true, '201 + 德龙 仍可算');
+  eq(cal('201J2', '德龙').success, false, '德龙 不在 201 白名单 → 报错');
   eq(cal('201J2', '梓烨201').success, true, '201 + 梓烨201 仍可算');
   eq(cal('304', '甬金').detail.thickSurcharge, 700, '304 + 甬金 = 700');
   eq(cal('304', '宏旺').detail.thickSurcharge, 600, '304 + 宏旺 = 600');

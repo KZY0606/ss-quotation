@@ -143,6 +143,13 @@ const PricingEngine = (() => {
   }
 
   function getThicknessSurcharge(thickness, isYanYan, material, origin, surface) {
+    // v1.0.220 暂无厚度加价的产地：加价记 0（2026-09-12 用户规则：太钢目前没有厚度加价）
+    if (origin && typeof ORIGIN_ZERO_SURCHARGE !== 'undefined') {
+      const _zm = String(material || '').toUpperCase();
+      for (const _zk in ORIGIN_ZERO_SURCHARGE) {
+        if (new RegExp('^' + _zk).test(_zm) && ORIGIN_ZERO_SURCHARGE[_zk].indexOf(String(origin).trim()) !== -1) return 0;
+      }
+    }
     const t = parseFloat(thickness);
     // v1.0.215：产地旧名（本地201(压延)/本地201/本地）统一归一到「梓烨201」
     if (origin === '本地201(压延)' || origin === '本地201' || origin === '本地') origin = '梓烨201';
@@ -757,28 +764,24 @@ const PricingEngine = (() => {
     if (!isNaN(width) && width > 0 && !WIDTH_ALLOWED.includes(width)) {
       errors.push(`宽度 ${width}mm 不在可计算宽度（1000/1030/1219/1240/1250/1280/1500/1524/1530）`);
     }
+    // v1.0.220 产地旧名就地归一（保证白名单校验与加价表、表名一致）
+    if (item.origin === '本地201(压延)' || item.origin === '本地201' || item.origin === '本地') item.origin = '梓烨201';
     // 2026-08-22 用户规则：201 材质不提供 1250/1280mm 宽度，一律不计算（卷板/平板都拦）
     if ((width === 1250 || width === 1280) && /^201/.test(String(material || '').toUpperCase())) {
       errors.push('201 材质不提供 ' + width + 'mm 宽度，无法计算（2026-08-22 用户规则）');
     }
 
-    // v1.0.219 产地 × 材质校验（2026-09-12 用户规则）：201 不识别 甬金/上克/张浦；304 不识别 北港
+    // v1.0.220 冷轧产地白名单校验（2026-09-12 用户规则）
     // 注：热轧 201 已在上方 return calcHot201(…) 提前返回，不会走到这里
-    if (item.origin && typeof ORIGIN_MATERIAL_BLOCK !== 'undefined') {
-      const _obm = String(material || '').toUpperCase().replace(/\/NO\.1$/, '');
-      const _oori = String(item.origin).trim();
-      for (const _opfx in ORIGIN_MATERIAL_BLOCK) {
-        if (!new RegExp('^' + _opfx).test(_obm)) continue;
-        if (ORIGIN_MATERIAL_BLOCK[_opfx].indexOf(_oori) !== -1) {
-          if (_opfx === '201') {
-            errors.push('【产地校验】201 不提供产地「' + _oori + '」（甬金/上克/张浦 不生产 201，请改选宏旺/北港/德龙 等）');
-          } else if (_opfx === '304') {
-            errors.push('【产地校验】304 不识别产地「' + _oori + '」（北港只做 201）');
-          } else {
-            errors.push('【产地校验】' + _opfx + ' 不识别产地「' + _oori + '」');
-          }
-          break;
+    if (item.origin && typeof ORIGIN_MATERIAL_ALLOW !== 'undefined') {
+      const _apm = String(material || '').toUpperCase();
+      const _aori = String(item.origin).trim();
+      for (const _apfx in ORIGIN_MATERIAL_ALLOW) {
+        if (!new RegExp('^' + _apfx).test(_apm)) continue;
+        if (ORIGIN_MATERIAL_ALLOW[_apfx].indexOf(_aori) === -1) {
+          errors.push('【产地校验】' + _apfx + ' 不提供产地「' + _aori + '」，可用：' + ORIGIN_MATERIAL_ALLOW[_apfx].join(' / '));
         }
+        break;
       }
     }
 
@@ -1317,6 +1320,12 @@ const PricingEngine = (() => {
         if (THICKNESS_SURCHARGE_400[key]) return '400系(' + key + ')';
       }
     }
+    // v1.0.220 暂无厚度加价的产地（在 316L 分支前判断）
+    if (origin && typeof ORIGIN_ZERO_SURCHARGE !== 'undefined') {
+      for (const _zk in ORIGIN_ZERO_SURCHARGE) {
+        if (new RegExp('^' + _zk).test(String(material || '').toUpperCase()) && ORIGIN_ZERO_SURCHARGE[_zk].indexOf(String(origin).trim()) !== -1) return origin + '（暂无厚度加价）';
+      }
+    }
     if (material === '316L') {
       if (origin && ORIGIN_THICKNESS_SURCHARGE_316L && ORIGIN_THICKNESS_SURCHARGE_316L[origin]) return origin + ' 316L加价';
       return '316L 加价（未提供数据）';
@@ -1607,7 +1616,7 @@ const PricingEngine = (() => {
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304,
     ORIGIN_THICKNESS_SURCHARGE_201, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
-    ORIGIN_MATERIAL_BLOCK,
+    ORIGIN_MATERIAL_ALLOW, ORIGIN_ZERO_SURCHARGE,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, COIL_MARKUP_DETAIL, COIL_MARKUP_DETAIL_316L, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, SHEET_LENGTH_BANDS_WIDE, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
     SHEET_PACKING_FEES, SHEET_CONTAINER_FEE,
