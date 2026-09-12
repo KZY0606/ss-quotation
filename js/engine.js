@@ -1308,10 +1308,6 @@ const PricingEngine = (() => {
       if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
       return '304 加价';
     }
-    // v1.0.215：201 产地专属表（如梓烨201）在报价明细里显示产地表名，便于核对
-    if (origin && ORIGIN_THICKNESS_SURCHARGE && ORIGIN_THICKNESS_SURCHARGE[origin]) {
-      return origin + ' 加价';
-    }
     return '常规';
   }
 

@@ -1702,7 +1702,7 @@ test('v1.0.215 calculate 梓烨201：仅 1219/1240 宽度 + 厚度加价沿用�
   const ok = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨201' }));
   eq(ok.success, true, '1240 应可算: ' + (ok.errors || []).join(';'));
   eq(ok.detail.costTax, 7700, '含税成本 7700, 实际 ' + ok.detail.costTax);
-  eq(ok.detail.thickTable, '梓烨201 加价', '明细表名: ' + ok.detail.thickTable);
+  eq(ok.detail.thickTable, '常规', '明细表名(回滚后与 v1.0.214 一致): ' + ok.detail.thickTable);
   const ok2 = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨201', width: '1219' }));
   eq(ok2.success, true, '1219 应可算: ' + (ok2.errors || []).join(';'));
   const bad = PricingEngine.calculate(Object.assign({}, base, { origin: '梓烨201', width: '1010' }));
@@ -1714,6 +1714,31 @@ test('v1.0.215 calculate 梓烨201：仅 1219/1240 宽度 + 厚度加价沿用�
   eq(old.success, true, '旧名应仍可算: ' + (old.errors || []).join(';'));
   eq(old.detail.costTax, 7700, '旧名结果与梓烨201 一致');
 });
+test('v1.0.215 304 产地厚度加价与表名回归（甬金·上克·张浦·宏旺·德龙 锁定不变）', () => {
+  // 数值：与 v1.0.214 逐项一致，本次改动完全没有触及 304 路径
+  eq(PricingEngine.getThicknessSurcharge('0.25', false, '304', '甬金', '2B'), 2100, '甬金304 0.25 → 2100');
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '304', '甬金', '2B'), 700, '甬金304 0.50 → 700');
+  eq(PricingEngine.getThicknessSurcharge('0.80', false, '304', '甬金', '2B'), 400, '甬金304 0.80 → 400');
+  eq(PricingEngine.getThicknessSurcharge('0.25', false, '304', '上克', '2B'), 2100, '上克304 0.25 → 2100');
+  eq(PricingEngine.getThicknessSurcharge('0.80', false, '304', '上克', '2B'), 350, '上克304 0.80 → 350');
+  eq(PricingEngine.getThicknessSurcharge('0.30', false, '304', '张浦', '2B'), 1200, '张浦304 0.30 → 1200');
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '304', '张浦', '2B'), 900, '张浦304 0.50 → 900');
+  eq(PricingEngine.getThicknessSurcharge('0.80', false, '304', '张浦', '2B'), 600, '张浦304 0.80 → 600');
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '304', '宏旺', '2B'), 600, '宏旺304 0.50 → 600（走 304 专属表）');
+  eq(PricingEngine.getThicknessSurcharge('0.80', false, '304', '宏旺', '2B'), 300, '宏旺304 0.80 → 300');
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '304', '德龙', '2B'), 600, '德龙304 0.50 → 600');
+  // 表名：304 甬金/上克/张浦 命中产地表（这是 v1.0.187 之前就有的历史规则），宏旺/德龙 走 304 通用表
+  const c = (o) => PricingEngine.calculate({ material: '304', surface: '2B', thickness: '0.50', width: '1240', length: 'C', film1: '', film2: '', basePrice: 13000, origin: o });
+  eq(c('甬金').detail.thickTable, '甬金 加价', '甬金304 表名');
+  eq(c('上克').detail.thickTable, '上克 加价', '上克304 表名');
+  eq(c('张浦').detail.thickTable, '张浦 加价', '张浦304 表名');
+  eq(c('宏旺').detail.thickTable, '304 加价', '宏旺304 表名');
+  eq(c('德龙').detail.thickTable, '304 加价', '德龙304 表名');
+  // 316L 产地表同样不受影响
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '316L', '甬金', '2B'), 700, '甬金316L 0.50 → 700');
+  eq(PricingEngine.getThicknessSurcharge('0.50', false, '316L', '张浦', '2B'), 900, '张浦316L 0.50 → 900');
+});
+
 
 test('v1.0.215 其它 201 产地不受影响（宏旺/无产地 0.25→2000）', () => {
   eq(PricingEngine.getThicknessSurcharge('0.25', false, '201J2', '宏旺', '2B'), 2000, '宏旺 0.25 → 2000');
