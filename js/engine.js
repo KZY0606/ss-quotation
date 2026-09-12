@@ -144,6 +144,8 @@ const PricingEngine = (() => {
 
   function getThicknessSurcharge(thickness, isYanYan, material, origin, surface) {
     const t = parseFloat(thickness);
+    // v1.0.215：产地旧名（本地201(压延)/本地201/本地）统一归一到「梓烨201」
+    if (origin === '本地201(压延)' || origin === '本地201' || origin === '本地') origin = '梓烨201';
     // 400系：按材质+表面(+产地)对应独立加价，无匹配则返回 null
     if (material && THICKNESS_SURCHARGE_400) {
       // 标准化：Excel中"非标"可能没有括号
@@ -178,9 +180,9 @@ const PricingEngine = (() => {
       // 如果基材是400系已知材料但该组合未配置 → 返回 null
       if (baseMaterial === '410S' || baseMaterial === '430' || baseMaterial === '430B' || baseMaterial === '430W') return null;
     }
-    // 压延料使用独立加价表（不分产地）
+    // v1.0.215 用户规则：压延料（轧硬料）不再单独加厚度加价（原独立加价表已删除）→ 恒为 0
     if (isYanYan) {
-      return findInTable(YANYAN_THICKNESS_SURCHARGE, t);
+      return 0;
     }
     // 316L：仅产地特异性加价表；未提供数据的产地（甬金/太钢）直接返回 null 报错（2026-08-20 用户确认）
     if (material === '316L') {
@@ -725,11 +727,11 @@ const PricingEngine = (() => {
 
     // 201 系基价宽度档校验（精确值档位；J5 不分宽度，跳过）
     if (isMaterial201(material) && !/^201J5/.test(material)) {
-      // v1.0.187：本地201(压延) 仅提供 1219/1240mm 宽度（单值基价不分档）
-      const _bendiO = (item.origin === '本地201(压延)' || item.origin === '本地201' || item.origin === '本地');
-      if (_bendiO) {
+      // v1.0.215：梓烨201（原「本地201(压延)」）仅提供 1219/1240mm 宽度（单值基价不分档）
+      const _ziyeO = (item.origin === '梓烨201' || item.origin === '本地201(压延)' || item.origin === '本地201' || item.origin === '本地');
+      if (_ziyeO) {
         if (width !== 1219 && width !== 1240) {
-          errors.push(`本地201(压延) 仅提供 1219/1240mm 宽度（当前 ${isNaN(width) ? (item.width || '?') : width}mm）`);
+          errors.push(`梓烨201 仅提供 1219/1240mm 宽度（当前 ${isNaN(width) ? (item.width || '?') : width}mm）`);
         }
       } else {
       const wb = getWidthBand201(width);
@@ -1273,7 +1275,7 @@ const PricingEngine = (() => {
   }
 
   function getThickTableName(isYanYan, material, origin, surface) {
-    if (isYanYan) return '压延料';
+    if (isYanYan) return '压延料（无厚度加价）';
     if (material && THICKNESS_SURCHARGE_400) {
       // 标准化：Excel中"非标"可能没有括号
       let normMaterial = (material || '').replace(/\(?非标\)?/g, '(非标)').replace(/（非标）/g, '(非标)');
@@ -1305,6 +1307,10 @@ const PricingEngine = (() => {
     if (material && (material === '304' || material.startsWith('304'))) {
       if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
       return '304 加价';
+    }
+    // v1.0.215：201 产地专属表（如梓烨201）在报价明细里显示产地表名，便于核对
+    if (origin && ORIGIN_THICKNESS_SURCHARGE && ORIGIN_THICKNESS_SURCHARGE[origin]) {
+      return origin + ' 加价';
     }
     return '常规';
   }
@@ -1348,12 +1354,12 @@ const PricingEngine = (() => {
     // 处理中文逗号和全角符号
     remaining = remaining.replace(/[，,、；;：:]/g, ' ').trim();
 
-    // v1.0.187：先摘「本地201(压延)」产地（全称带'压延'二字，须在轧硬料检测之前摘出，避免误触 isYanYan）
-    let _bendiOrigin = false;
-    const _bendiRe = /本地201\s*[(（]?\s*压延\s*[)）]?/;
-    if (_bendiRe.test(remaining)) {
-      _bendiOrigin = true;
-      remaining = remaining.replace(_bendiRe, ' ').replace(/\s+/g, ' ').trim();
+    // v1.0.215：先摘「梓烨201」产地（含旧名兼容；须在轧硬料检测之前摘出，避免误触 isYanYan）
+    let _ziyeOrigin = false;
+    const _ziyeRe = /梓烨\s*201?|本地201\s*[(（]?\s*压延\s*[)）]?|本地201|本地/;
+    if (_ziyeRe.test(remaining)) {
+      _ziyeOrigin = true;
+      remaining = remaining.replace(_ziyeRe, ' ').replace(/\s+/g, ' ').trim();
     }
 
     // v1.0.180 热轧标记：材质尾 /NO.1、独立 NO.1/NO1/热轧（剥除标记避免被膜/表面逻辑误抢，末段再按 201 材质回填 surface）
@@ -1432,9 +1438,9 @@ const PricingEngine = (() => {
         break;
       }
     }
-    // v1.0.187：本地201(压延) 多写法归一（本地201/本地；全称已在入口摘出；'压延'单独出现仍是轧硬料标志）
-    if (origin === '本地201' || origin === '本地') origin = '本地201(压延)';
-    if (_bendiOrigin) origin = '本地201(压延)';
+    // v1.0.215：梓烨201 多写法归一（梓烨/梓烨201；旧名 本地201(压延)/本地201/本地 一并兼容；'压延'单独出现仍是轧硬料标志）
+    if (origin === '本地201(压延)' || origin === '本地201' || origin === '本地') origin = '梓烨201';
+    if (_ziyeOrigin) origin = '梓烨201';
 
     // 提取保护膜（如果括号里没找到）
     if (!film1) {
@@ -1586,7 +1592,7 @@ const PricingEngine = (() => {
     parseThicknessRange,
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee, getCoilMarkupInfo, matchEmboss, splitEmboss,
     setUserOverrides,
-    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304, YANYAN_THICKNESS_SURCHARGE,
+    DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304,
     ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, COIL_MARKUP_DETAIL, COIL_MARKUP_DETAIL_316L, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, SHEET_LENGTH_BANDS_WIDE, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
