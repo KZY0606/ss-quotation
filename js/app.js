@@ -2060,13 +2060,6 @@ const App = (() => {
     refTable(THICKNESS_SURCHARGE);
     h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 4px;">北港 201J1/J5、德龙 201、永达 201：厚度加价与宏旺 201 正材一致（直接用本表数值）</div>');
 
-    // v1.0.217 产地专属表（甬金 / 上克 / 张浦）：不再误标为「201正材」
-    h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:10px 0 2px;">以下三张为产地专属添加的厚度加价表，适用材质以各材质板块为准</div>');
-    Object.entries(ORIGIN_THICKNESS_SURCHARGE).forEach(([origin, table]) => {
-      if (origin === '梓烨201') return; // 梓烨201 专属表，单独成段（见下）
-      h.push(`<h4 class="ref-subtitle">${origin}（产地专属表）</h4>`);
-      refTable(table);
-    });
 
     // v1.0.215：压延料（轧硬料）不再单独加厚度加价
     h.push('<h4 class="ref-subtitle">压延料（轧硬料）</h4>');
@@ -2074,7 +2067,7 @@ const App = (() => {
 
     // v1.0.215 梓烨201（原「本地201(压延)」）专属厚度加价表
     h.push('<h4 class="ref-subtitle">梓烨201（201 专属）</h4>');
-    refTable(ORIGIN_THICKNESS_SURCHARGE['梓烨201']);
+    refTable(ORIGIN_THICKNESS_SURCHARGE_201['梓烨201']);
     h.push('<div style="font-size:11px;font-weight:500;color:var(--text-muted);margin:4px 0 4px;">仅 1219/1240mm 宽度；0.31-0.32mm 未单独给档，并入 0.29-0.32 档 +1000</div>');
 
     // 304 通用表（宏旺已建独立表，通用表仅德龙）

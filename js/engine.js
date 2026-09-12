@@ -196,9 +196,6 @@ const PricingEngine = (() => {
       if (origin && ORIGIN_THICKNESS_SURCHARGE_304 && ORIGIN_THICKNESS_SURCHARGE_304[origin]) {
         return findInTable(ORIGIN_THICKNESS_SURCHARGE_304[origin], t);
       }
-      if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) {
-        return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
-      }
       return findInTable(THICKNESS_SURCHARGE_304, t);
     }
     // 201J5锛堝寳娓級锛氬帤搴﹀姞浠蜂笌瀹忔椇 201 姝ｆ潗涓€鑷?2026-08-25 鐢ㄦ埛瑙勫垯锛屽鍚嶆椇201姝ｆ潗琛級
@@ -206,8 +203,8 @@ const PricingEngine = (() => {
       return findInTable(THICKNESS_SURCHARGE, t);
     }
     // 201：v1.0.187 起支持产地专属厚度加价表（如 本地201(压延)）；未配置的产地仍用统一标准表
-    if (origin && ORIGIN_THICKNESS_SURCHARGE && ORIGIN_THICKNESS_SURCHARGE[origin]) {
-      return findInTable(ORIGIN_THICKNESS_SURCHARGE[origin], t);
+    if (origin && ORIGIN_THICKNESS_SURCHARGE_201 && ORIGIN_THICKNESS_SURCHARGE_201[origin]) {
+      return findInTable(ORIGIN_THICKNESS_SURCHARGE_201[origin], t);
     }
     return findInTable(THICKNESS_SURCHARGE, t);
   }
@@ -1305,7 +1302,7 @@ const PricingEngine = (() => {
       return '316L 加价（未提供数据）';
     }
     if (material && (material === '304' || material.startsWith('304'))) {
-      if (origin && ORIGIN_THICKNESS_SURCHARGE[origin]) return origin + ' 加价';
+      if (origin && (typeof ORIGIN_304_LABELS !== 'undefined' && ORIGIN_304_LABELS.indexOf(origin) !== -1)) return origin + ' 加价';
       return '304 加价';
     }
     return '常规';
@@ -1589,7 +1586,7 @@ const PricingEngine = (() => {
     getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee, getCoilMarkupInfo, matchEmboss, splitEmboss,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304,
-    ORIGIN_THICKNESS_SURCHARGE, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
+    ORIGIN_THICKNESS_SURCHARGE_201, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, COIL_MARKUP_DETAIL, COIL_MARKUP_DETAIL_316L, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, SHEET_LENGTH_BANDS_WIDE, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
     SHEET_PACKING_FEES, SHEET_CONTAINER_FEE,
