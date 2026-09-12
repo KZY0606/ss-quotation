@@ -100,6 +100,12 @@ const TERM_KEY_FOB = 'kk_fob_surcharge_usd';
 const TERM_KEY_CIF = 'kk_cif_surcharge_usd';
 
 // 201 系材质名列表（用于档位校验）
+// v1.0.219 冷轧产地 × 材质限制（2026-09-12 用户规则）
+// key = 材质前缀；value = 该材质不能识别的产地清单（命中则报错不计算）
+const ORIGIN_MATERIAL_BLOCK = {
+  '201': ['甬金', '上克', '张浦'],
+  '304': ['北港']
+};
 const MATERIALS_201 = ['201', '201J1', '201J2', '201J3', '201J4', '201J5'];
 
 // 北港产地：单独一行填写基价，不分宽度（2026-09-05 起北港供 201J1 和 201J5）

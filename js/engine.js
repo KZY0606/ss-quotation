@@ -762,6 +762,26 @@ const PricingEngine = (() => {
       errors.push('201 材质不提供 ' + width + 'mm 宽度，无法计算（2026-08-22 用户规则）');
     }
 
+    // v1.0.219 产地 × 材质校验（2026-09-12 用户规则）：201 不识别 甬金/上克/张浦；304 不识别 北港
+    // 注：热轧 201 已在上方 return calcHot201(…) 提前返回，不会走到这里
+    if (item.origin && typeof ORIGIN_MATERIAL_BLOCK !== 'undefined') {
+      const _obm = String(material || '').toUpperCase().replace(/\/NO\.1$/, '');
+      const _oori = String(item.origin).trim();
+      for (const _opfx in ORIGIN_MATERIAL_BLOCK) {
+        if (!new RegExp('^' + _opfx).test(_obm)) continue;
+        if (ORIGIN_MATERIAL_BLOCK[_opfx].indexOf(_oori) !== -1) {
+          if (_opfx === '201') {
+            errors.push('【产地校验】201 不提供产地「' + _oori + '」（甬金/上克/张浦 不生产 201，请改选宏旺/北港/德龙 等）');
+          } else if (_opfx === '304') {
+            errors.push('【产地校验】304 不识别产地「' + _oori + '」（北港只做 201）');
+          } else {
+            errors.push('【产地校验】' + _opfx + ' 不识别产地「' + _oori + '」');
+          }
+          break;
+        }
+      }
+    }
+
     const density = getDensity(material);
     if (density === null) errors.push(`材质 "${material}" 无匹配密度`);
 
@@ -1587,6 +1607,7 @@ const PricingEngine = (() => {
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304,
     ORIGIN_THICKNESS_SURCHARGE_201, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,
+    ORIGIN_MATERIAL_BLOCK,
     SURFACE_FEES, SURFACE_FEES_304, FILM_FEES, SALES_MARKUP, COIL_MARKUP_DETAIL, COIL_MARKUP_DETAIL_316L, MATERIAL_OFFSETS, THICKNESS_SURCHARGE_400,
     SHEET_MARKUP_DETAIL, SHEET_LENGTH_BANDS, SHEET_LENGTH_BANDS_NARROW, SHEET_LENGTH_BANDS_WIDE, PACKING_OPTIONS, PACKING_WOODEN_BOX_SURCHARGE,
     SHEET_PACKING_FEES, SHEET_CONTAINER_FEE,

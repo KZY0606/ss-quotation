@@ -1715,6 +1715,39 @@ test('v1.0.215 calculate 梓烨201：仅 1219/1240 宽度 + 厚度加价沿用�
   eq(old.detail.costTax, 7700, '旧名结果与梓烨201 一致');
 });
 
+
+test('v1.0.219 冷轧产地校验：201 不识别 甬金/上克/张浦；304 不识别 北港', () => {
+  const cal = (m, o, extra) => PricingEngine.calculate(Object.assign({ material: m, surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 10000, origin: o }, extra || {}));
+  const isRej = r => r && r.success === false;
+  // --- 201 系 × 甬金/上克/张浦 → 应报错 ---
+  ['201', '201J1', '201J2', '201J4', '201J5'].forEach(m => {
+    ['甬金', '上克', '张浦'].forEach(o => {
+      const r = cal(m, o);
+      eq(isRej(r), true, m + ' + ' + o + ' 应报错');
+      if (isRej(r)) eq(String((r.errors || []).join('|')).indexOf('产地校验') >= 0, true, m + ' + ' + o + ' 报错文案含「产地校验」');
+    });
+  });
+  // --- 304 × 北港 → 应报错 ---
+  const rb = cal('304', '北港');
+  eq(isRej(rb), true, '304 + 北港 应报错');
+  if (isRej(rb)) eq(String((rb.errors || []).join('|')).indexOf('北港') >= 0, true, '304+北港 报错文案含北港');
+  // --- 合法组合不受影响 ---
+  eq(cal('201J2', '宏旺').success, true, '201 + 宏旺 仍可算');
+  eq(cal('201J2', '北港').success, true, '201 + 北港 仍可算');
+  eq(cal('201J2', '德龙').success, true, '201 + 德龙 仍可算');
+  eq(cal('201J2', '梓烨201').success, true, '201 + 梓烨201 仍可算');
+  eq(cal('304', '甬金').detail.thickSurcharge, 700, '304 + 甬金 = 700');
+  eq(cal('304', '宏旺').detail.thickSurcharge, 600, '304 + 宏旺 = 600');
+  eq(cal('304', '德龙').detail.thickSurcharge, 600, '304 + 德龙 = 600');
+  eq(cal('316L', '甬金').detail.thickSurcharge, 700, '316L + 甬金 = 700');
+  // --- 热轧 201 不受本校验影响（直接 return calcHot201，走 HOT201_MATRIX）---
+  const hr = PricingEngine.calculate({ material: '201J1', surface: 'NO.1', thickness: '3.00', width: '1240', length: 'C', basePrice: 10000, origin: '鼎信' });
+  eq(String((hr.errors || []).join('|')).indexOf('产地校验') < 0, true, '热轧 201 + 鼎信 不走冷轧校验');
+  const hr2 = PricingEngine.calculate({ material: '201J1', surface: 'NO.1', thickness: '3.00', width: '1240', length: 'C', basePrice: 10000, origin: '甬金' });
+  eq(String((hr2.errors || []).join('|')).indexOf('201 热轧暂不提供产地') >= 0, true, '热轧 201 + 甬金 由 HOT201_MATRIX 拦截');
+  // --- 无产地时不校验 ---
+  eq(PricingEngine.calculate({ material: '304', surface: '2B', thickness: '0.50', width: '1240', length: 'C', basePrice: 10000 }).success, true, '304（无产地）仍可算');
+});
 test('v1.0.218 304 产地专属表归位（甬金/上克并入 304 表、张浦去重、梓烨201 拆到 201 表）', () => {
   const g = (t, m, o) => PricingEngine.getThicknessSurcharge(t, false, m, o, '2B');
   // --- 304 四产地数值（应与此前完全一致）---
@@ -1729,9 +1762,9 @@ test('v1.0.218 304 产地专属表归位（甬金/上克并入 304 表、张浦�
   eq(g('0.50', '304', '宏旺'), 600, '304 宏旺 0.50 = 600');
   eq(g('0.50', '304', '德龙'), 600, '304 德龙 0.50 = 600');
   // --- 201：甬金/上克/张浦 不再从 304 产地表取值（改走 201 通用表）---
-  eq(g('0.50', '201J2', '甬金'), 500, '201 甬金 → 通用表 500');
-  eq(g('0.50', '201J2', '上克'), 500, '201 上克 → 通用表 500');
-  eq(g('0.50', '201J2', '张浦'), 500, '201 张浦 → 通用表 500');
+  // v1.0.219 起：201 + 甬金/上克/张浦 改为报错（详见 v1.0.219 块）
+
+
   eq(g('0.25', '201J2', '梓烨201'), 1400, '201 梓烨201 0.25 保持 1400');
   eq(g('0.50', '201J2', '梓烨201'), 500, '201 梓烨201 0.50 保持 500');
   // --- 表名（宏旺/德龙 仍为「304 加价」）---
