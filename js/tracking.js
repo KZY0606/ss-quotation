@@ -1,4 +1,7 @@
-// tracking.js — KK 不锈钢跟单系统（v1.0.199）
+// tracking.js — KK 不锈钢跟单系统（v1.0.217）
+// v1.0.217：① 新增「采购清单」板块（排在入仓前）：Sheet1 采购需求录入 / Sheet2 采购清单，Excel 式 sheet 切换
+//           ② Sheet1 像入仓一样录入（可粘贴 / 加行 / 下拉），提交后进 Sheet2，状态默认「未买」
+//           ③ Sheet2 专给采购员看：采购状态列一键切 未买/已买 + 未买行醒目高亮 + 选中批量标记 + 可带回入仓录入
 // v1.0.199：① 新增「入仓」板块（排在库存前）：Excel 式录入表格，可直接输入 / 从 Excel 粘贴
 //           ② 入仓板块支持表头筛选 + 搜索（只筛显示，不影响提交范围）
 //           ③ 「一键入仓」把已填行一次性写入库存（action: import，status=inventory）
@@ -72,6 +75,61 @@
     { k: 'follower', t: '跟单员' }
   ];
 
+  // ================= v1.0.217 采购清单板块（Sheet1 需求录入 / Sheet2 采购清单）=================
+  var ENUM_PUR = ['未买', '已买'];
+  var purSheet = 'req';          // 'req' = Sheet1 采购需求录入 | 'list' = Sheet2 采购清单
+  var puRows = [];               // 采购需求录入行：[{ _r: 1, grade: '201', ... }]
+  var puSeq = 0;                 // 录入行号自增
+  var PU_MIN = 20;               // 最少显示行数
+  var PU_GO_LABEL = '🛒 提交采购需求';
+  var PU_KEYS = ['purchase_date', 'due_date', 'grade', 'surface', 'film_status', 'thickness', 'width', 'length', 'count',
+    'w_orig', 'origin', 'supplier', 'type', 'code', 'customer', 'follower', 'note'];
+  var PU_MAP = [['purchase_date', 'purchaseDate'], ['due_date', 'dueDate'], ['grade', 'grade'], ['surface', 'surface'],
+    ['film_status', 'filmStatus'], ['thickness', 'thickness'], ['width', 'width'], ['length', 'length'], ['count', 'count'],
+    ['w_orig', 'wOrig'], ['origin', 'origin'], ['supplier', 'supplier'], ['type', 'type'], ['code', 'code'],
+    ['customer', 'customer'], ['follower', 'follower'], ['note', 'note']];
+  // Sheet1 采购需求录入列（顺序 = 输入顺序）
+  var COL_PUR_IN = [
+    { k: 'purchase_date', t: '需求日期', kind: 'date' },
+    { k: 'due_date', t: '到货期限', kind: 'date' },
+    { k: 'grade', t: '钢种' },
+    { k: 'surface', t: '表面' },
+    { k: 'film_status', t: '保护膜' },
+    { k: 'thickness', t: '厚度', num: 1, kind: 'num' },
+    { k: 'width', t: '宽度', num: 1, kind: 'num' },
+    { k: 'length', t: '长度' },
+    { k: 'count', t: '卷数/张数', num: 1, kind: 'num' },
+    { k: 'w_orig', t: '需求重量/KG', num: 1, kind: 'num' },
+    { k: 'origin', t: '产地' },
+    { k: 'supplier', t: '拟定供应商' },
+    { k: 'type', t: '类型' },
+    { k: 'code', t: '编号', bold: 1 },
+    { k: 'customer', t: '客户名称' },
+    { k: 'follower', t: '跟单员' },
+    { k: 'note', t: '备注', wide: 1 }
+  ];
+  // Sheet2 采购清单列（采购状态在最前，采购员第一眼就看买了没买）
+  var COL_PUR_LIST = [
+    { k: 'pur_status', t: '采购状态', st: 1, enum: ENUM_PUR },
+    { k: 'purchase_date', t: '需求日期', kind: 'date' },
+    { k: 'due_date', t: '到货期限', kind: 'date', sp: 'due' },
+    { k: 'grade', t: '钢种' },
+    { k: 'surface', t: '表面' },
+    { k: 'thickness', t: '厚度', num: 1, kind: 'num' },
+    { k: 'width', t: '宽度', num: 1, kind: 'num' },
+    { k: 'length', t: '长度' },
+    { k: 'count', t: '卷数/张数', num: 1, kind: 'num' },
+    { k: 'w_orig', t: '需求重量/KG', num: 1, kind: 'num' },
+    { k: 'origin', t: '产地' },
+    { k: 'supplier', t: '供应商' },
+    { k: 'pur_buyer', t: '采购员' },
+    { k: 'pur_date', t: '采购完成日期', kind: 'date' },
+    { k: 'code', t: '编号', bold: 1 },
+    { k: 'customer', t: '客户名称' },
+    { k: 'follower', t: '跟单员' },
+    { k: 'note', t: '备注', wide: 1 }
+  ];
+
   // ---------- 状态枚举 ----------
   var ENUM_INV = ['在库', '已预订', '部分出库', '已售出'];
   var ENUM_ORD = ['采购下单', '原料到仓', '投入生产', '加工完成', '发货自提', '已交付'];
@@ -138,6 +196,7 @@
   function colsCore(b) {
     if (b === 'progress') return COL_PG.slice();
     if (b === 'ordered') return COL_BASE.concat(COL_PROD, COL_ORD_ST);
+    if (b === 'purchase') return COL_PUR_LIST.slice();
     return COL_BASE.concat(COL_INV_ST);
   }
   function colsOf(b) { return COL_CHK.concat(csApply(colsCore(b))); }
@@ -157,7 +216,7 @@
   }
   function csAllBase() {
     var out = [], seen = {};
-    [COL_BASE, COL_PROD, COL_PG, COL_INV_ST, COL_ORD_ST].forEach(function (g) {
+    [COL_BASE, COL_PROD, COL_PG, COL_INV_ST, COL_ORD_ST, COL_PUR_IN, COL_PUR_LIST].forEach(function (g) {
       g.forEach(function (c) { if (!seen[c.k]) { seen[c.k] = 1; out.push(c); } });
     });
     return out;
@@ -180,7 +239,7 @@
   }
   // v1.0.213 宽列（备注等）历史量出的过窄宽度纠正一次
   function csHealWidth() {
-    var W = LAYOUT.width || {}, ids = ['inventory', 'ordered', 'intake', 'progress'], n = 0;
+    var W = LAYOUT.width || {}, ids = ['inventory', 'ordered', 'intake', 'progress', 'purchase'], n = 0;
     ids.forEach(function (b) {
       var m = W[b];
       if (!m) return;
@@ -346,7 +405,7 @@
   function csNormW(nw) {
     var out = {};
     if (!nw || typeof nw !== 'object') return out;
-    ['inventory', 'ordered', 'progress', 'intake'].forEach(function (b) {
+    ['inventory', 'ordered', 'progress', 'intake', 'purchase'].forEach(function (b) {
       var src = nw[b];
       if (!src || typeof src !== 'object') return;
       var o = {};
@@ -390,7 +449,7 @@
       css.push('table.tk.fb-' + b + ' tr > *:nth-child(' + (i + 1) + '){width:' + px + 'px;max-width:' + px + 'px;}');
     }
     el.textContent = css.join('');
-    ['intake', 'inventory', 'ordered', 'progress'].forEach(function (x) { t.classList.remove('fb-' + x); });
+    ['intake', 'inventory', 'ordered', 'progress', 'purchase'].forEach(function (x) { t.classList.remove('fb-' + x); });
     t.classList.add('fb-' + b);
     if (fixed && sum > 0) { t.classList.add('cwf'); t.style.minWidth = ''; t.style.width = sum + 'px'; }
     else { t.classList.remove('cwf'); t.style.width = ''; }
@@ -893,10 +952,12 @@
 
   function boardLabel(b) {
     if (b === 'intake') return '📥 入仓';
+    if (b === 'purchase') return '🛒 采购清单';
     return b === 'progress' ? '🏭 生产进度' : (b === 'ordered' ? '⚙️ 生产中' : '📦 库存');
   }
   function boardShort(b) {
     if (b === 'intake') return '入仓';
+    if (b === 'purchase') return '采购清单';
     return b === 'progress' ? '生产进度' : (b === 'ordered' ? '生产中' : '库存');
   }
   function boardRowsOf(b) {
@@ -937,7 +998,7 @@
     if (m) return m[1] + '-' + pad2(m[2]) + '-' + pad2(m[3]);
     return s;
   }
-  function statusLabel(st) { return st === 'ordered' ? '生产中' : '库存'; }
+  function statusLabel(st) { return st === 'ordered' ? '生产中' : (st === 'purchase' ? '采购清单' : '库存'); }
   function val(it, k) {
     if (!it) return '';
     var v;
@@ -1003,7 +1064,7 @@
     if (f === 'status') return statusLabel(l.from) + ' → ' + statusLabel(l.to);
     return (l.from || '未设置') + ' → ' + (l.to || '—');
   }
-  function fieldLabel(f) { return f === 'inv_status' ? '库存状态' : (f === 'ord_status' ? '订单状态' : '板块'); }
+  function fieldLabel(f) { return f === 'inv_status' ? '库存状态' : (f === 'ord_status' ? '订单状态' : (f === 'pur_status' ? '采购状态' : '板块')); }
   function stLast(it, field) {
     var a = stLogArr(it, field);
     if (!a.length) return '';
@@ -1250,6 +1311,21 @@
   }
 
   function renderStats() {
+    var np = items.filter(function (i) { return i.status === 'purchase'; });
+    var npTodo = np.filter(function (i) { return String(i.pur_status || '') !== '已买'; }).length;
+    if ($('nPur')) $('nPur').textContent = npTodo;
+    if ($('nPurMini')) $('nPurMini').textContent = '未买 ' + npTodo + ' / 共 ' + np.length;
+    if (board === 'purchase' && purSheet !== 'list') {
+      var sp = puSum();
+      $('nInv').textContent = items.filter(function (i) { return i.status === 'inventory'; }).length;
+      $('nOrd').textContent = items.filter(function (i) { return i.status === 'ordered'; }).length;
+      $('nPg').textContent = items.filter(function (i) { return i.status === 'ordered'; }).length;
+      $('nAll').textContent = items.length;
+      $('sumLine').innerHTML = '<b>🛒 采购需求录入（Sheet1）</b>：已填 <b>' + sp.n + '</b> 行 · <b>' + fmtNum(sp.cnt, 0) +
+        '</b> 卷/张 · 需求 <b>' + fmtNum(sp.kg / 1000, 3) + '</b> 吨（' + fmtNum(sp.kg, 0) + ' KG）' +
+        '<span style="color:#64748b">　（提交后进 Sheet2 采购清单，采购状态默认「未买」）</span>';
+      return;
+    }
     if (board === 'intake') {
       var s0 = inSum();
       if ($('nIn')) $('nIn').textContent = s0.n;
@@ -1270,6 +1346,16 @@
     $('nOrd').textContent = ord.length;
     $('nPg').textContent = ord.length;
     $('nAll').textContent = items.length;
+    if (board === 'purchase') {
+      var r0 = visibleRows();
+      var cnt0 = 0, kg0 = 0;
+      r0.forEach(function (it) { cnt0 += num(val(it, 'count')); kg0 += num(val(it, 'w_orig')); });
+      var todo0 = r0.filter(function (i) { return String(i.pur_status || '') !== '已买'; }).length;
+      $('sumLine').innerHTML = '<b>🛒 采购清单</b>：共 <b>' + r0.length + '</b> 条 · <b style="color:#b45309">未买 ' + todo0 +
+        '</b> · <b style="color:#047857">已买 ' + (r0.length - todo0) + '</b> · <b>' + fmtNum(cnt0, 0) + '</b> 卷/张 · 需求 <b>' +
+        fmtNum(kg0 / 1000, 3) + '</b> 吨<span style="color:#64748b">　（点「采购状态」下拉直接切 未买/已买；未买行左侧橘色标）</span>';
+      return;
+    }
     var rows = visibleRows();
     var sumCount = 0, sumKg = 0, sumAmt = 0;
     rows.forEach(function (it) {
@@ -1387,6 +1473,30 @@
     render();
     toast('已把 ' + add.length + ' 条放进入仓表格 —— 核对/补充后点「📥 一键入仓」再进库存');
   }
+  // v1.0.217 采购需求导入：同样先进录入表，不直接写库
+  function impToPur() {
+    var filled = puRows.filter(puHas);
+    var add = impRows.map(function (it) {
+      var r = { _r: 0 };
+      PU_MAP.forEach(function (p) {
+        var v = it[p[1]];
+        if (v == null || v === '') v = it[p[0]];
+        r[p[0]] = String(v == null ? '' : v).trim();
+      });
+      r.purchase_date = normDate(r.purchase_date) || todayStr();
+      r.due_date = normDate(r.due_date);
+      return r;
+    });
+    puRows = filled.concat(add);
+    for (var i = 0; i < PU_MIN; i++) puRows.push(puBlank());
+    puRenumber();
+    colF = {}; sortKey = ''; sortDir = ''; closeFPanel();
+    board = 'purchase';
+    purSheet = 'req';
+    render();
+    toast('已把 ' + add.length + ' 条放进采购需求表格 —— 核对/补充后点「🛒 提交采购需求」');
+  }
+
   function inSum() {
     var o = { n: 0, cnt: 0, kg: 0, amt: 0 };
     inRows.forEach(function (r) {
@@ -1534,9 +1644,242 @@
     if (btn) { btn.disabled = false; btn.textContent = IN_GO_LABEL; }
   }
 
+  // ================= v1.0.217 采购：Sheet1 录入表 / Sheet2 清单 =================
+  function puHas(r) {
+    for (var i = 0; i < PU_KEYS.length; i++) {
+      var k = PU_KEYS[i];
+      if (k === 'purchase_date' || k === 'due_date') continue;
+      if (String(r[k] == null ? '' : r[k]).trim()) return true;
+    }
+    return false;
+  }
+  // 提交校验：至少要能看懂「要买什么」
+  function puValid(r) {
+    return ['grade', 'surface', 'thickness', 'width', 'code', 'supplier', 'origin', 'customer', 'note', 'count'].some(function (k) {
+      return String(r[k] == null ? '' : r[k]).trim();
+    });
+  }
+  function puBlank() { return { _r: ++puSeq, purchase_date: todayStr() }; }
+  function initPuRows(n) {
+    if (puRows.length) return;
+    for (var i = 0; i < (n || PU_MIN); i++) puRows.push(puBlank());
+  }
+  function puRenumber() { puRows.forEach(function (r, i) { r._r = i + 1; }); puSeq = puRows.length; }
+  function puPh(c) {
+    if (c.kind === 'date') return '如 2026-09-20';
+    if (c.k === 'thickness') return '0.63';
+    if (c.k === 'width') return '1219';
+    if (c.k === 'length') return '如 C';
+    if (c.k === 'count') return '1';
+    return '';
+  }
+  function puCellHtml(r, c) {
+    var v = r[c.k] == null ? '' : r[c.k];
+    var w = inW(c);
+    var inp = '<input class="cellin" data-r="' + r._r + '" data-k="' + c.k + '" value="' + esc(v) + '" placeholder="' + esc(puPh(c)) + '"' + (w ? ' style="min-width:' + w + 'px"' : '') + '>';
+    if (hasDictCol(c.k) && combinedVals(c.k).length) return '<div class="cell-dd">' + inp + '<button class="ddbtn" data-dd="' + c.k + '" tabindex="-1" title="从词典选择">▼</button></div>';
+    return inp;
+  }
+  function puRowHtml(r) {
+    return '<tr data-r="' + r._r + '" class="inrow">' + '<td class="in-no">' + r._r + '</td>' +
+      COL_PUR_IN.map(function (c) { return '<td' + (c.num ? ' class="num-r"' : '') + '>' + puCellHtml(r, c) + '</td>'; }).join('') + '</tr>';
+  }
+  function puAdd(n) {
+    var added = [];
+    for (var i = 0; i < (n || 10); i++) { var r = puBlank(); puRows.push(r); added.push(r); }
+    if (board !== 'purchase' || purSheet !== 'req' || filterCount()) { renderStats(); return; }
+    var tb = $('tbody');
+    if (!tb || tb.querySelector('td.empty')) { render(); return; }
+    added.forEach(function (r) { tb.insertAdjacentHTML('beforeend', puRowHtml(r)); });
+    renderStats(); syncBar();
+  }
+  function puVisible() {
+    var rows = puRows.filter(function (r) { return !filterCount() || passesFilter(r); });
+    if (sortKey && sortDir) {
+      var desc = sortDir === 'desc';
+      rows = rows.slice().sort(function (a, b) {
+        var av = a[sortKey] == null ? '' : a[sortKey], bv = b[sortKey] == null ? '' : b[sortKey];
+        var c = num(av) - num(bv);
+        if (!num(av) && !num(bv)) c = String(av).localeCompare(String(bv), 'zh-CN');
+        return desc ? -c : c;
+      });
+    }
+    return rows;
+  }
+  function puSum() {
+    var o = { n: 0, cnt: 0, kg: 0 };
+    puRows.forEach(function (r) {
+      if (!puHas(r)) return;
+      o.n++;
+      o.cnt += num(r.count);
+      o.kg += num(r.w_orig);
+    });
+    return o;
+  }
+  function renderPurReq() {
+    renderThead();
+    renderStats();
+    syncBar();
+    var t = document.querySelector('table.tk');
+    if (t) { t.className = 'tk inin'; t.style.minWidth = (COL_PUR_IN.length * 96 + 46) + 'px'; }
+    cwApply(); hsbSoon();
+    if ($('trackCard')) { $('trackCard').className = 'track'; $('trackCard').innerHTML = ''; }
+    var rows = puVisible();
+    if (!rows.length) {
+      $('tbody').innerHTML = '<tr><td colspan="' + (COL_PUR_IN.length + 1) + '" class="empty">' +
+        (filterCount() ? '当前筛选没有匹配的行 —— 点列头 ▼ 可以清除筛选' : '点「＋ 加 10 行」开始录采购需求，或直接从 Excel 复制后粘贴进来') + '</td></tr>';
+      return;
+    }
+    $('tbody').innerHTML = rows.map(puRowHtml).join('');
+  }
+  function puPaste(e) {
+    var cd = e.clipboardData || window.clipboardData;
+    if (!cd) return;
+    var txt = cd.getData('text') || '';
+    if (!txt || (txt.indexOf('\t') < 0 && txt.indexOf('\n') < 0)) return;
+    e.preventDefault();
+    var aoa = txt.replace(/\r/g, '').split('\n').filter(function (l) { return l.trim() !== ''; })
+      .map(function (l) { return l.split('\t').map(function (x) { return x.trim(); }); });
+    var el = e.target;
+    var c0 = (el && el.dataset && el.dataset.k) ? PU_KEYS.indexOf(el.dataset.k) : 0;
+    if (c0 < 0) c0 = 0;
+    var r0 = (el && el.dataset && el.dataset.r) ? (parseInt(el.dataset.r, 10) - 1) : 0;
+    if (!(r0 >= 0)) r0 = 0;
+    while (puRows.length < r0 + aoa.length) puRows.push(puBlank());
+    var cells = 0;
+    aoa.forEach(function (arr, ri) {
+      var row = puRows[r0 + ri];
+      if (!row) return;
+      arr.forEach(function (v, ci) {
+        var k = PU_KEYS[c0 + ci];
+        if (!k) return;
+        row[k] = v;
+        cells++;
+      });
+    });
+    while (puRows.length < r0 + aoa.length + 6) puRows.push(puBlank());
+    puRenumber();
+    render();
+    toast('已粘贴 ' + aoa.length + ' 行 · ' + cells + ' 格' + (filterCount() ? '（筛选中，部分行可能不显示）' : ''));
+  }
+  async function doPurSubmit() {
+    var rows = puRows.filter(puHas);
+    if (!rows.length) { toast('还没有填任何采购需求 —— 直接在表格里输入，或从 Excel 复制后粘贴', false); return; }
+    var bad = [];
+    rows.forEach(function (r) { if (!puValid(r)) bad.push(r._r); });
+    if (bad.length) {
+      toast('第 ' + bad.slice(0, 6).join('、') + (bad.length > 6 ? ' 等 ' + bad.length + ' 行' : ' 行') +
+        ' 看不出要买什么：钢种 / 表面 / 厚度 / 宽度 / 编号 / 供应商 / 产地 / 客户 / 备注 至少填一个', false);
+      return;
+    }
+    var payload = rows.map(function (r) {
+      var o = { status: 'purchase', pur_status: '未买' };
+      PU_MAP.forEach(function (p) { o[p[1]] = String(r[p[0]] == null ? '' : r[p[0]]).trim(); });
+      o.purchaseDate = normDate(o.purchaseDate);
+      o.dueDate = normDate(o.dueDate);
+      o.pur_status = '未买';
+      o.follower = o.follower || myName;
+      return o;
+    });
+    var groups = splitBatches(payload, rows);
+    var btn = $('puGoBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '提交中 0/' + rows.length; }
+    if (groups.length > 1) toast('数据较多（' + rows.length + ' 条），正在分 ' + groups.length + ' 批提交，请勿关闭页面');
+    var done = 0, skipped = 0, failAt = -1, emsg = '';
+    for (var gi = 0; gi < groups.length; gi++) {
+      var okk = false;
+      for (var at = 0; at < 3 && !okk; at++) {
+        try {
+          var rr = await api({ action: 'import', rows: groups[gi].items });
+          done += (rr.imported || 0); skipped += (rr.skipped || 0); okk = true;
+        } catch (e) {
+          emsg = (e && e.message) ? e.message : String(e);
+          if (at < 2) await new Promise(function (res) { setTimeout(res, 900); });
+        }
+      }
+      if (!okk) { failAt = gi; break; }
+      if (btn) btn.textContent = '提交中 ' + done + '/' + rows.length;
+    }
+    if (failAt < 0) {
+      toast('已提交 ' + done + ' 条采购需求' + (skipped ? '，跳过 ' + skipped + ' 条' : '') + ' → 已进 Sheet2 采购清单（未买）');
+      puRows = []; puSeq = 0;
+      initPuRows(PU_MIN);
+      colF = {}; sortKey = ''; sortDir = ''; closeFPanel();
+      await load();
+      purSheet = 'list';
+      var st = Array.prototype.slice.call(document.querySelectorAll('.stat')).filter(function (x) { return x.dataset.st === 'purchase'; })[0];
+      paintStats(st || null);
+      render();
+    } else {
+      var rest = [];
+      for (var k2 = failAt; k2 < groups.length; k2++) {
+        (groups[k2].src || []).forEach(function (r0) { if (r0) rest.push(r0); });
+      }
+      var restN = rest.length;
+      puRows = rest;
+      for (var m2 = 0; m2 < PU_MIN; m2++) puRows.push(puBlank());
+      puRenumber();
+      render();
+      toast('已提交 ' + done + ' 条；剩余 ' + restN + ' 条没提交成功（' + emsg + '），已留在录入表，请再点一次「提交采购需求」', false);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = PU_GO_LABEL; }
+  }
+  // 采购清单 → 入仓录入：买好的货直接带进 Sheet1（免重复录入）
+  function puToIntake() {
+    var ids = pickIds();
+    if (!ids.length && selId != null) ids = [selId];
+    if (!ids.length) { toast('请先勾选要入仓的采购行（或点一行选中后再点）', false); return; }
+    var src = items.filter(function (i) { return ids.indexOf(i.id) >= 0; });
+    if (!src.length) { toast('没找到对应记录', false); return; }
+    var filled = inRows.filter(inHas);
+    var add = src.map(function (it) {
+      var r = { _r: 0 };
+      IN_MAP.forEach(function (p) {
+        var v = it[p[1]];
+        if (v == null || v === '') v = it[p[0]];
+        r[p[0]] = String(v == null ? '' : v).trim();
+      });
+      r.purchase_date = normDate(r.purchase_date) || todayStr();
+      r.warehouse_date = normDate(r.warehouse_date) || todayStr();
+      return r;
+    });
+    inRows = filled.concat(add);
+    notaxApply(inRows);
+    for (var i = 0; i < IN_MIN; i++) inRows.push(inBlank());
+    inRenumber();
+    colF = {}; sortKey = ''; sortDir = ''; closeFPanel();
+    picks = {}; selId = null;
+    board = 'intake';
+    var st = Array.prototype.slice.call(document.querySelectorAll('.stat')).filter(function (x) { return x.dataset.st === 'intake'; })[0];
+    paintStats(st || null);
+    render();
+    toast('已把 ' + add.length + ' 条带进入仓录入表 —— 核对/补充后点「📥 一键入仓」');
+  }
+  async function puMark(status) {
+    var ids = pickIds();
+    if (!ids.length && selId != null) ids = [selId];
+    if (!ids.length) { toast('请先勾选行（或点一行选中后再点）', false); return; }
+    try {
+      await api({ action: 'batchset', ids: ids, fields: { pur_status: status } });
+      toast('已把 ' + ids.length + ' 条标记为「' + status + '」');
+      picks = {};
+      await load();
+      render();
+    } catch (e) { toast(e.message, false); }
+  }
+  function setPurSheet(s) {
+    purSheet = (s === 'list') ? 'list' : 'req';
+    if (purSheet === 'req') initPuRows(PU_MIN);
+    selId = null; picks = {}; colF = {}; sortKey = ''; sortDir = ''; editMode = false;
+    closeFPanel();
+    render();
+    toast(purSheet === 'req' ? 'Sheet1 · 采购需求录入' : 'Sheet2 · 采购清单（采购员视角）');
+  }
+
   function renderThead() {
-    var cols = board === 'intake' ? COL_IN : colsOf(board);
-    $('thead').innerHTML = '<tr>' + (board === 'intake' ? '<th class="th-no" data-cw="_no" title="行号">' + cwRs() + '</th>' : '') + cols.map(function (c) {
+    var isReq = board === 'purchase' && purSheet === 'req';
+    var cols = board === 'intake' ? COL_IN : (isReq ? COL_PUR_IN : colsOf(board));
+    $('thead').innerHTML = '<tr>' + ((board === 'intake' || isReq) ? '<th class="th-no" data-cw="_no" title="行号">' + cwRs() + '</th>' : '') + cols.map(function (c) {
       if (c.ck) return '<th class="th-ck" data-cw="_chk"><div class="th-in"><input type="checkbox" class="ckb" id="ckAll" title="全选本页"></div>' + cwRs() + '</th>';
       var cls = c.st ? 'th-st' : (c.num ? 'num-r' : '');
       if (c.wide) cls = (cls ? cls + ' ' : '') + 'wide';
@@ -1545,7 +1888,7 @@
     }).join('') + '</tr>';
     var t = document.querySelector('table.tk');
     if (t) {
-      if (board !== 'intake') t.className = 'tk';
+      if (board !== 'intake' && !isReq) t.className = 'tk';
       t.style.minWidth = cols.length > 18 ? (cols.length * 108) + 'px' : '';
     }
     var ca = $('ckAll');
@@ -1565,7 +1908,7 @@
     })).join('');
     var attr = inline ? ('data-k="' + c.k + '"') : ('data-act="setf" data-f="' + c.k + '" data-id="' + it.id + '"');
     return '<div class="st-cell">' +
-      '<select class="stsel ' + (c.k === 'inv_status' ? 'inv' : 'ord') + (dirty ? ' dirty' : '') + '" ' + attr + '>' + opts + '</select>' +
+      '<select class="stsel ' + (c.k === 'inv_status' ? 'inv' : (c.k === 'pur_status' ? ('pur ' + (cur === '已买' ? 'bought' : (cur ? 'todo' : ''))) : 'ord')) + (dirty ? ' dirty' : '') + '" ' + attr + '>' + opts + '</select>' +
       (lg ? '<div class="st-log" title="' + esc(stTitle(it, c.k)) + '">' + esc(lg) + '</div>' : '') +
       '</div>';
   }
@@ -1640,6 +1983,12 @@
   }
 
   function render() {
+    if (board === 'purchase' && purSheet === 'req') {
+      var _cq = $('tblCard');
+      if (_cq) _cq.classList.remove('tf-empty');
+      renderPurReq();
+      return;
+    }
     if (board === 'intake') {
       var _c0 = $('tblCard');
       if (_c0) _c0.classList.remove('tf-empty');
@@ -1665,6 +2014,8 @@
       var inline = editMode;
       var tds = cols.map(function (c) { return cellHtml(it, c, inline); }).join('');
       var cls = (String(it.id) === String(selId) ? 'sel ' : '') + (editMode ? 'editing ' : '') + (picks[it.id] ? 'picked' : '');
+      // v1.0.217 采购清单：未买 / 已买 一眼看清（左侧色条 + 淡底）
+      if (board === 'purchase') cls += (String(it.pur_status || '') === '已买' ? 'pu-bought ' : 'pu-todo ');
       return '<tr data-id="' + it.id + '" class="' + cls.trim() + '">' + tds + '</tr>';
     }).join('');
     var ca = $('ckAll');
@@ -1705,19 +2056,39 @@
     $('batchOrdBtn').disabled = !pids.length;
     $('batchInvBtn').disabled = !pids.length;
     $('batchDelBtn').disabled = !pids.length;
-    // v1.0.199 入仓板块：只留录入相关的按钮
+    // v1.0.199 入仓板块 / v1.0.217 采购需求录入：只留录入相关的按钮
     var isIn = board === 'intake';
+    var purReq = board === 'purchase' && purSheet === 'req';
+    var lean = isIn || purReq;
     if ($('inGrp')) $('inGrp').style.display = isIn ? '' : 'none';
-    if ($('addBtn')) $('addBtn').style.display = isIn ? 'none' : '';
-    if ($('myOnlyBtn')) $('myOnlyBtn').style.display = isIn ? 'none' : '';
-    if (isIn) {
+    if ($('puGrp')) $('puGrp').style.display = purReq ? '' : 'none';
+    if ($('puListGrp')) $('puListGrp').style.display = (board === 'purchase' && purSheet === 'list') ? '' : 'none';
+    if ($('purSheetBar')) {
+      $('purSheetBar').style.display = (board === 'purchase') ? '' : 'none';
+      if ($('shReq')) $('shReq').className = 'sh' + (purSheet === 'req' ? ' active' : '');
+      if ($('shList')) $('shList').className = 'sh' + (purSheet === 'list' ? ' active' : '');
+      var ph = $('purSheetHint');
+      if (ph) {
+        var pq = items.filter(function (i) { return i.status === 'purchase'; });
+        var pqTodo = pq.filter(function (i) { return String(i.pur_status || '') !== '已买'; }).length;
+        ph.textContent = purSheet === 'req'
+          ? 'Sheet1 · 录入采购需求：像入仓表一样输入或粘贴，填完点「🛒 提交采购需求」'
+          : 'Sheet2 · 采购员视角：共 ' + pq.length + ' 条，未买 ' + pqTodo + ' 条（点采购状态下拉即可标记）';
+      }
+    }
+    if ($('addBtn')) $('addBtn').style.display = lean ? 'none' : '';
+    if ($('myOnlyBtn')) $('myOnlyBtn').style.display = lean ? 'none' : '';
+    if ($('expBtn')) $('expBtn').style.display = purReq ? 'none' : '';
+    if (lean) {
       $('rowEditBtn').style.display = 'none';
       $('rowProcBtn').style.display = 'none';
       $('rowAdvBtn').style.display = 'none';
       $('rowBackBtn').style.display = 'none';
       $('rowDelBtn').style.display = 'none';
       $('selHint').className = 'hint hot';
-      $('selHint').textContent = '入仓录入 · 已填 ' + inSum().n + ' 行（可直接输入，或从 Excel 粘贴）';
+      $('selHint').textContent = purReq
+        ? ('采购需求录入 · 已填 ' + puSum().n + ' 行（可直接输入，或从 Excel 粘贴）')
+        : ('入仓录入 · 已填 ' + inSum().n + ' 行（可直接输入，或从 Excel 粘贴）');
       $('batchBar').className = 'batch';
     }
   }
@@ -1824,7 +2195,7 @@
 
   // ---------- 表头筛选面板 ----------
   // 筛选/搜索的取值来源：入仓板块看录入行，其它板块看当前板块记录
-  function srcRows() { return board === 'intake' ? inRows : boardRowsOf(board); }
+  function srcRows() { return board === 'intake' ? inRows : ((board === 'purchase' && purSheet === 'req') ? puRows : boardRowsOf(board)); }
   function uniqueVals(k) {
     var d = dictCols(k);
     var s = [];
@@ -2736,12 +3107,21 @@
     $('impZone').innerHTML = $('impZone').getAttribute('data-html') || $('impZone').innerHTML;
     $('impDefStatus').value = dataBoard(board);
     var _isIn = board === 'intake';
-    if ($('impIntakeTip')) $('impIntakeTip').style.display = _isIn ? '' : 'none';
+    var _isPurReq = board === 'purchase' && purSheet === 'req';
+    var _toSheet = _isIn || _isPurReq;
+    var _tip = $('impIntakeTip');
+    if (_tip) {
+      if (!_tip.getAttribute('data-orig')) _tip.setAttribute('data-orig', _tip.innerHTML);
+      _tip.innerHTML = _isPurReq
+        ? '🛒 <b>当前是「采购清单 · Sheet1 采购需求录入」</b>：导入的数据会先放进<b>采购需求表格</b>（不会直接变成采购清单）—— 核对后点「🛒 提交采购需求」。'
+        : _tip.getAttribute('data-orig');
+      _tip.style.display = _toSheet ? '' : 'none';
+    }
     if ($('impDefStatus') && $('impDefStatus').closest) {
       var _lb = $('impDefStatus').closest('label');
-      if (_lb) _lb.style.display = _isIn ? 'none' : '';
+      if (_lb) _lb.style.display = _toSheet ? 'none' : '';
     }
-    if ($('impGo')) $('impGo').textContent = _isIn ? '导入到入仓表格' : '确认导入';
+    if ($('impGo')) $('impGo').textContent = _isPurReq ? '导入到采购需求表格' : (_isIn ? '导入到入仓表格' : '确认导入');
     $('impMask').classList.add('show');
   }
   async function handleFile(file) {
@@ -2797,8 +3177,9 @@
   }
   async function doImport() {
     if (!impRows || !impRows.length) return;
-    // v1.0.203 入仓板块：数据先进录入表格（还能补/改），点「一键入仓」才写进库存
+    // v1.0.203 入仓板块 / v1.0.217 采购需求录入：数据先进录入表格（还能补/改），提交后才写库
     if (board === 'intake') { impToIntake(); $('impMask').classList.remove('show'); return; }
+    if (board === 'purchase' && purSheet === 'req') { impToPur(); $('impMask').classList.remove('show'); return; }
     $('impGo').disabled = true;
     $('impGo').textContent = '导入中…';
     try {
@@ -2808,9 +3189,29 @@
         return o;
       });
       notaxApply(payload);
-      var r = await api({ action: 'import', rows: payload });
+      // v1.0.217 导入同样分批，避免大数据量撞网关 413
+      var groups = splitBatches(payload, null);
+      var done = 0, skipped = 0, failAt = -1, emsg = '';
+      for (var gi = 0; gi < groups.length; gi++) {
+        var okk = false;
+        for (var at = 0; at < 3 && !okk; at++) {
+          try {
+            var rr = await api({ action: 'import', rows: groups[gi].items });
+            done += (rr.imported || 0); skipped += (rr.skipped || 0); okk = true;
+          } catch (e) {
+            emsg = (e && e.message) ? e.message : String(e);
+            if (at < 2) await new Promise(function (res) { setTimeout(res, 900); });
+          }
+        }
+        if (!okk) { failAt = gi; break; }
+        $('impGo').textContent = '导入中 ' + done + '/' + payload.length;
+      }
       $('impMask').classList.remove('show');
-      toast('导入成功 ' + (r.imported || 0) + ' 条' + (r.skipped ? '，跳过 ' + r.skipped + ' 条' : ''));
+      if (failAt < 0) {
+        toast('导入成功 ' + done + ' 条' + (skipped ? '，跳过 ' + skipped + ' 条' : ''));
+      } else {
+        toast('已导入 ' + done + ' 条；剩下的批次没成功（' + emsg + '），请重新导入未成功的行', false);
+      }
       await load();
     } catch (e) {
       toast(e.message, false);
@@ -2852,6 +3253,7 @@
         if (editMode) { toast('请先点「保存全部」或「取消编辑」', false); return; }
         board = el.dataset.st || 'inventory';
         if (board === 'intake') initInRows(IN_MIN);
+        if (board === 'purchase') initPuRows(PU_MIN);
         selId = null;
         colF = {}; sortKey = ''; sortDir = '';
         closeFPanel();
@@ -2872,7 +3274,26 @@
       toast('已清空');
     });
     if ($('inGoBtn')) { $('inGoBtn').textContent = IN_GO_LABEL; $('inGoBtn').addEventListener('click', doIntake); }
-    $('tbody').addEventListener('paste', inPaste, true);
+    // v1.0.217 采购清单：Sheet1 录入 / Sheet2 清单
+    if ($('puAddBtn')) $('puAddBtn').addEventListener('click', function () { puAdd(10); });
+    if ($('puClearBtn')) $('puClearBtn').addEventListener('click', function () {
+      if (!puRows.some(puHas)) { toast('表格本来就是空的'); return; }
+      if (!confirm('清空采购需求表格里已填的内容？（不会影响 Sheet2 已提交的采购清单）')) return;
+      puRows = []; puSeq = 0;
+      initPuRows(PU_MIN);
+      render();
+      toast('已清空');
+    });
+    if ($('puGoBtn')) { $('puGoBtn').textContent = PU_GO_LABEL; $('puGoBtn').addEventListener('click', doPurSubmit); }
+    if ($('shReq')) $('shReq').addEventListener('click', function () { setPurSheet('req'); });
+    if ($('shList')) $('shList').addEventListener('click', function () { setPurSheet('list'); });
+    if ($('puBoughtBtn')) $('puBoughtBtn').addEventListener('click', function () { puMark('已买'); });
+    if ($('puNotBtn')) $('puNotBtn').addEventListener('click', function () { puMark('未买'); });
+    if ($('puToIntakeBtn')) $('puToIntakeBtn').addEventListener('click', puToIntake);
+    $('tbody').addEventListener('paste', function (e) {
+      if (board === 'intake') { inPaste(e); return; }
+      if (board === 'purchase' && purSheet === 'req') puPaste(e);
+    }, true);
     // v1.0.206 填充柄：单元格获得焦点时在右下角显示小方块，拖动即可向上/向下填充
     $('tbody').addEventListener('focusin', function (e) {
       var el = e.target;
@@ -2896,7 +3317,9 @@
       if (!el || !el.dataset || !el.dataset.r || el.dataset.id) return;
       var k = el.dataset.k;
       if (!k) return;
-      var row = inRows.filter(function (x) { return String(x._r) === String(el.dataset.r); })[0];
+      var isPurReq = board === 'purchase' && purSheet === 'req';
+      var srcAll = isPurReq ? puRows : inRows;
+      var row = srcAll.filter(function (x) { return String(x._r) === String(el.dataset.r); })[0];
       if (!row) return;
       row[k] = el.value;
       // v1.0.203 含税 → 不含税自动填
@@ -2920,8 +3343,10 @@
           fillPairInput(_tr2, 'amount_notax', _p4);
         }
       }
-      var last = inRows[inRows.length - 1];
-      if (last && inHas(last) && !filterCount()) inAdd(10);
+      var last = srcAll[srcAll.length - 1];
+      if (last && (isPurReq ? puHas(last) : inHas(last)) && !filterCount()) {
+        if (isPurReq) puAdd(10); else inAdd(10);
+      }
       renderStats();
       syncBar();
     });
@@ -3216,7 +3641,7 @@
   function paintStats(active) {
     Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (x) {
       var st = x.dataset.st;
-      x.className = 'stat' + (x === active ? ' active' : '') + (st === 'intake' ? ' st-intake' : st === 'inventory' ? ' st-inv' : st === 'ordered' ? ' st-ord' : st === 'progress' ? ' st-pg' : '');
+      x.className = 'stat' + (x === active ? ' active' : '') + (st === 'intake' ? ' st-intake' : st === 'inventory' ? ' st-inv' : st === 'ordered' ? ' st-ord' : st === 'progress' ? ' st-pg' : st === 'purchase' ? ' st-pur' : '');
     });
   }
 

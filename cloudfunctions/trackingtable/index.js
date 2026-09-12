@@ -6,6 +6,9 @@
 // v1.0.196：① 新增 客户名称 customer / 跟单员 follower / 预期交期 due_date / 工序链 process_flow / 当前工序 process_step
 //           ② 「已接单」改名「生产中」（status 值仍为 ordered）；新增「生产进度」视图（同一批数据的精简列）
 //           ③ 批量接口 batchset / batchdel；工序库字典接口 libget / libset（存 tracking_lib）
+// v1.0.217：① 新增「采购清单」板块（status = purchase，排在入仓前：Sheet1 需求录入 / Sheet2 采购清单）
+//           ② 新增采购字段 pur_status(未买/已买) / pur_buyer(采购员) / pur_date(采购完成日期)，pur_status 变更留痕
+//           ③ list 支持 status=purchase 过滤；layoutsave 宽表白名单加 purchase
 const CloudBase = require('@cloudbase/manager-node');
 const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
 const database = app.database;
@@ -56,6 +59,10 @@ const ALIAS = {
   inv_status: ['invStatus', 'inv_status'],
   ord_status: ['ordStatus', 'ord_status'],
   // v1.0.196 生产进度相关
+  // v1.0.217 采购清单
+  pur_status: ['purStatus', 'pur_status'],
+  pur_buyer: ['purBuyer', 'pur_buyer'],
+  pur_date: ['purDate', 'pur_date'],
   customer: ['customer', 'custName'],
   follower: ['follower', 'salesman', 'owner'],
   due_date: ['dueDate', 'due_date'],
@@ -69,10 +76,12 @@ const MAXLEN = { note: 1000, process_flow: 4000, customer: 200, follower: 100, d
   c1: 500, c2: 500, c3: 500, c4: 500, c5: 500, c6: 500, c7: 500, c8: 500, c9: 500, c10: 500, c11: 500, c12: 500 };
 
 // 状态枚举
-const ENUM_STATUS = ['inventory', 'ordered'];                  // 板块归属（ordered = 生产中 / 生产进度）
+const ENUM_STATUS = ['inventory', 'ordered', 'purchase'];      // 板块归属（ordered = 生产中 / 生产进度；purchase = 采购清单）
 const ENUM_INV = ['在库', '已预订', '部分出库', '已售出'];      // 库存板块状态列
 const ENUM_ORD = ['采购下单', '原料到仓', '投入生产', '加工完成', '发货自提', '已交付']; // 订单状态列
-const STATUS_FIELDS = { status: ENUM_STATUS, inv_status: ENUM_INV, ord_status: ENUM_ORD };
+// v1.0.217 采购状态：一目了然的二元状态
+const ENUM_PUR = ['未买', '已买'];
+const STATUS_FIELDS = { status: ENUM_STATUS, inv_status: ENUM_INV, ord_status: ENUM_ORD, pur_status: ENUM_PUR };
 // batchset 允许的额外列（不在 ALIAS 映射里的系统列）
 const EXTRA_COLS = ['status'];
 
@@ -92,6 +101,8 @@ const DEFAULT_DICT = {
     follower: ["本人","业务员A","业务员B","业务员C"],
     type: ["正品","次品","混包","其他"],
     prod_status: ["库存","生产中"],
+    pur_status: ["未买","已买"],
+    pur_buyer: [],
     inv_status: ["在库","已预订","部分出库","已售出","可销售","已锁货","加工中","在途","待检验","待处理","不可售","已出库"],
     ord_status: ["采购下单","原料到仓","投入生产","加工完成","发货自提","已交付","待确认","已确认","备料中","加工中","待交货","部分交货","已完成","已取消","暂停","异常"],
     film_status: ["不贴膜","普通蓝膜","普通黑白膜","激光膜","激光双层膜","透明膜","PVC膜","PE膜","进口膜","客户指定","5C膜","7C膜","鱼头膜","Novacel","5C激光膜","7C激光膜","深冲膜","低粘膜","中粘膜","高粘膜"],
@@ -128,7 +139,7 @@ const DEFAULT_DICT = {
     "金额核对容差": ["0.01","元，避免分币误差"],
   }
 };
-const DICT_LABEL = { grade: '钢种', surface: '表面', film_status: '保护膜', origin: '产地', warehouse: '仓库/加工厂', follower: '跟单员', type: '类型', prod_status: '生产状态', inv_status: '库存状态', ord_status: '订单状态', customer: '客户名称', supplier: '供应商' };
+const DICT_LABEL = { grade: '钢种', surface: '表面', film_status: '保护膜', origin: '产地', warehouse: '仓库/加工厂', follower: '跟单员', type: '类型', prod_status: '生产状态', inv_status: '库存状态', ord_status: '订单状态', pur_status: '采购状态', pur_buyer: '采购员', customer: '客户名称', supplier: '供应商' };
 
 async function ensureTables() {
   await exec(`CREATE TABLE IF NOT EXISTS tracking_items (
@@ -155,6 +166,10 @@ async function ensureTables() {
   }
   // v1.0.206 保护膜列
   await exec("ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS film_status TEXT DEFAULT ''");
+  // v1.0.217 采购清单（采购状态 / 采购员 / 采购完成日期）
+  for (const c of ['pur_status', 'pur_buyer', 'pur_date']) {
+    await exec(`ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS ${c} TEXT DEFAULT ''`);
+  }
   // v1.0.208 custom column slots (c1..c12) - created up front so adding a column needs no schema change
   for (let i = 1; i <= 12; i++) {
     await exec(`ALTER TABLE tracking_items ADD COLUMN IF NOT EXISTS c${i} TEXT DEFAULT ''`);
@@ -200,7 +215,7 @@ function cleanStr(v, maxLen) {
   return s;
 }
 
-function validStatus(v) { return v === 'ordered' ? 'ordered' : 'inventory'; }
+function validStatus(v) { return (v === 'ordered' || v === 'purchase') ? v : 'inventory'; }
 
 // 把前端传入的 item 归一化成 DB 行（未传字段 → 空串）
 function buildRow(it) {
@@ -216,6 +231,9 @@ function buildRow(it) {
   // 状态列只在值合法时保留，避免脏值
   if (row.inv_status && ENUM_INV.indexOf(row.inv_status) < 0) row.inv_status = '';
   if (row.ord_status && ENUM_ORD.indexOf(row.ord_status) < 0) row.ord_status = '';
+  // v1.0.217 采购状态：空 → 未买（采购清单默认就是"还没买"）
+  if (row.pur_status && ENUM_PUR.indexOf(row.pur_status) < 0) row.pur_status = '';
+  if (row.status === 'purchase' && !row.pur_status) row.pur_status = '未买';
   return row;
 }
 
@@ -315,7 +333,7 @@ exports.main = async (event) => {
 
     if (action === 'list') {
       const status = String((evt && evt.status) || '').trim();
-      const where = (status === 'inventory' || status === 'ordered') ? ' WHERE status=' + q(status) : '';
+      const where = (status === 'inventory' || status === 'ordered' || status === 'purchase') ? ' WHERE status=' + q(status) : '';
       const res = await exec('SELECT * FROM tracking_items' + where + ' ORDER BY id DESC LIMIT 2000');
       const items = [];
       for (let i = 0; i < (res.Rows || []).length; i++) items.push(rowToItem(res, i));
@@ -333,12 +351,13 @@ exports.main = async (event) => {
         const olds = {
           status: await readField(id, 'status'),
           inv_status: await readField(id, 'inv_status'),
-          ord_status: await readField(id, 'ord_status')
+          ord_status: await readField(id, 'ord_status'),
+          pur_status: await readField(id, 'pur_status')
         };
         if (olds.status === null) return { ok: false, msg: '记录不存在或已被删除' };
         await exec(sqlUpdate(id, row));
-        const news = { status: row.status, inv_status: row.inv_status || '', ord_status: row.ord_status || '' };
-        for (const fl of ['status', 'inv_status', 'ord_status']) {
+        const news = { status: row.status, inv_status: row.inv_status || '', ord_status: row.ord_status || '', pur_status: row.pur_status || '' };
+        for (const fl of ['status', 'inv_status', 'ord_status', 'pur_status']) {
           const a = olds[fl] === null ? '' : String(olds[fl]);
           const b = String(news[fl] || '');
           if (a === b) continue;
@@ -466,7 +485,7 @@ exports.main = async (event) => {
       const arr = a => (Array.isArray(a) ? a.map(x => String(x)).filter(x => okK(x)) : []);
       const cut = (s, n) => String(s == null ? '' : s).trim().slice(0, n);
       const out = { order: arr(L.order).slice(0, 200), hidden: arr(L.hidden).slice(0, 200), custom: [], rename: {}, width: {} };
-      const okB = b => ['inventory', 'ordered', 'progress', 'intake'].indexOf(String(b)) >= 0;
+      const okB = b => ['inventory', 'ordered', 'progress', 'intake', 'purchase'].indexOf(String(b)) >= 0;
       Object.keys(L.width || {}).forEach(b => {
         if (!okB(b)) return;
         const src = (L.width || {})[b] || {}, o = {};
@@ -537,7 +556,10 @@ exports.main = async (event) => {
           if (row.ord_status && !row.inv_status) row.status = 'ordered';
           if (row.inv_status && !row.ord_status) row.status = 'inventory';
           const hasAny = [row.code, row.grade, row.supplier, row.warehouse, row.contract_no, row.warehouse_date, row.customer].some(v => v !== '');
-          if (!hasAny) { errs++; continue; }
+          // v1.0.217 采购需求不要求以上字段全（只写了钢种/规格/备注也算一条要买的东西）
+          const hasAnyPur = row.status === 'purchase' &&
+            [row.grade, row.surface, row.thickness, row.width, row.count, row.supplier, row.origin, row.code, row.customer, row.note].some(v => v !== '');
+          if (!hasAny && !hasAnyPur) { errs++; continue; }
           const initLog = JSON.stringify([logEntry('import', '', row.status, user.username, 'status')]);
           await exec(sqlInsert(row, user.username, initLog));
           n++;

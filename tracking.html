@@ -305,6 +305,21 @@
   /* v1.0.199 入仓板块：录入表格（紧凑、铺满，不留白） */
   .stat.st-intake .num { color: #b45309; }
   .stat.st-intake.active { border-color: #f0b429; box-shadow: inset 0 -2px 0 #f0b429; }
+  /* ===== v1.0.217 采购清单板块：Sheet 切换 + 未买/已买 一眼看清 ===== */
+  .stat.st-pur .num { color: #b45309; }
+  .stat.st-pur.active { border-color: #f0b429; box-shadow: inset 0 -2px 0 #f0b429; }
+  .stat .mini { font-size: 10.5px; color: #94a3b8; margin-top: 3px; }
+  .sheetbar { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; padding: 0 2px; flex-wrap: wrap; }
+  .sheetbar .sh { border: 1px solid #dcdfe2; border-bottom: none; background: #eef1f4; color: #4b5563; border-radius: 8px 8px 0 0; padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .sheetbar .sh.active { background: #fff; color: #b45309; box-shadow: inset 0 -3px 0 #f0b429; }
+  .sheetbar .shhint { font-size: 11.5px; color: #94a3b8; }
+  .stsel.pur { width: 96px; }
+  .stsel.pur.todo { background: #fff7ed; color: #b45309; border: 1px solid #fed7aa; }
+  .stsel.pur.bought { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  table.tk tr.pu-todo td { background: #fffaf2; }
+  table.tk tr.pu-bought td { background: #f5fbf7; }
+  table.tk tr.pu-todo td:first-child { box-shadow: inset 3px 0 0 #f0b429; }
+  table.tk tr.pu-bought td:first-child { box-shadow: inset 3px 0 0 #34a853; }
     /* v1.0.209 列宽：拖动表头右边缘调整 / 双击自动适配 */
     body.cw-dragging, body.cw-dragging * { cursor: col-resize !important; user-select: none !important; }
     table.tk.cwf { table-layout: fixed; }
@@ -369,7 +384,7 @@
     <div class="logo">📋</div>
     <div>
       <h1>KK 不锈钢跟单系统</h1>
-      <div class="sub">Tracking System · 入仓 / 库存 / 生产中 / 生产进度 · 工序跟踪 + 状态留痕</div>
+      <div class="sub">Tracking System · 采购清单 / 入仓 / 库存 / 生产中 / 生产进度 · 工序跟踪 + 状态留痕</div>
     </div>
     <div class="sp"></div>
     <span class="user" id="curUser"></span>
@@ -379,6 +394,10 @@
 
   <div class="wrap">
     <div class="stats">
+      <div class="stat st-pur" data-st="purchase">
+        <div class="num" id="nPur">0</div><div class="lbl">🛒 采购清单</div>
+        <div class="mini" id="nPurMini">未买 0 / 共 0</div>
+      </div>
       <div class="stat st-intake" data-st="intake">
         <div class="num" id="nIn">0</div><div class="lbl">📥 入仓</div>
       </div>
@@ -410,6 +429,16 @@
         <button class="btn sm" id="inAddBtn" title="在表格末尾追加 10 行">＋ 加 10 行</button>
         <button class="btn sm" id="inClearBtn" title="清空录入表格（不影响已入库数据）">清空表格</button>
         <button class="btn primary" id="inGoBtn" title="把表格里填好的行一次性写入库存">📥 一键入仓</button>
+      </div>
+      <div class="grp" id="puGrp" style="display:none">
+        <button class="btn sm" id="puAddBtn" title="在表格末尾追加 10 行">＋ 加 10 行</button>
+        <button class="btn sm" id="puClearBtn" title="清空采购需求表格（不影响已提交的采购清单）">清空表格</button>
+        <button class="btn primary" id="puGoBtn" title="把填好的采购需求提交到 Sheet2 采购清单（状态默认未买）">🛒 提交采购需求</button>
+      </div>
+      <div class="grp" id="puListGrp" style="display:none">
+        <button class="btn sm" id="puBoughtBtn" title="把勾选的行采购状态改成「已买」">✅ 标记已买</button>
+        <button class="btn sm" id="puNotBtn" title="把勾选的行采购状态改回「未买」">↩ 标记未买</button>
+        <button class="btn sm" id="puToIntakeBtn" title="把勾选的行带进入仓录入表格（免重复录入）">📥 带入仓录入</button>
       </div>
       <div class="grp">
         <button class="btn sm" id="myOnlyBtn" title="只看跟单员是我自己的单">👤 只看我的单</button>
@@ -450,6 +479,13 @@
 
     <!-- 追踪卡（搜索命中跟单员/客户/合同时出现） -->
     <div class="track" id="trackCard"></div>
+
+    <!-- v1.0.217 采购清单：Excel 式 Sheet 切换（Sheet1 需求录入 / Sheet2 采购清单） -->
+    <div class="sheetbar" id="purSheetBar" style="display:none">
+      <button class="sh active" id="shReq">🧾 Sheet1 · 采购需求录入</button>
+      <button class="sh" id="shList">🛒 Sheet2 · 采购清单</button>
+      <span class="shhint" id="purSheetHint"></span>
+    </div>
 
     <div class="tblcard" id="tblCard">
       <table class="tk">
@@ -627,6 +663,7 @@
             <select id="impDefStatus" style="padding:4px 8px;border:1px solid #cbd5e0;border-radius:6px;">
               <option value="inventory">📦 库存</option>
               <option value="ordered">🏭 生产中</option>
+              <option value="purchase">🛒 采购清单</option>
             </select>
           </label>
           <span style="color:#94a3b8">表内「库存状态 / 订单状态 / 状态」列会按状态清单自动归位</span>
@@ -713,6 +750,6 @@
     <div class="dlg-f"><button class="btn" id="colDlgCancel">取消</button><button class="btn primary" id="colDlgOk">确定</button></div>
   </div>
 </div>
-<script src="js/tracking.js?v=1.0.214"></script>
+<script src="js/tracking.js?v=1.0.217"></script>
 </body>
 </html>
