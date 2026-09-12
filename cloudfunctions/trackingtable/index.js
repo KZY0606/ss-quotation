@@ -9,6 +9,7 @@
 // v1.0.217：① 新增「采购清单」板块（status = purchase，排在入仓前：Sheet1 需求录入 / Sheet2 采购清单）
 //           ② 新增采购字段 pur_status(未买/已买) / pur_buyer(采购员) / pur_date(采购完成日期)，pur_status 变更留痕
 //           ③ list 支持 status=purchase 过滤；layoutsave 宽表白名单加 purchase
+// v1.0.221：税点全公司统一——libset 支持非数组值（tracking_lib ▸ taxRate 存数字），前端读写同一份统一税点
 const CloudBase = require('@cloudbase/manager-node');
 const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
 const database = app.database;
@@ -131,7 +132,7 @@ const DEFAULT_DICT = {
     "合作状态": ["长期合作","正常合作","试单","暂停合作","黑名单","待考察"],
     "质量评级": ["A优秀","B良好","C一般","D需改善","未评级"],
     "报价含税口径": ["含税","不含税"],
-    "常用税点": ["0","0.01","0.03","0.06","0.09","0.13"],
+    "常用税点": ["0","0.01","0.03","0.06","0.08","0.09","0.13"],
     "约定账期天数": ["0","7","15","30","45","60","90","120"],
     "剩余款回款节点": ["定金","货到付款","月结尾款","其他约定"],
     "账期起算方式": ["基准日后N天","基准日月末后N天"],
@@ -432,11 +433,14 @@ exports.main = async (event) => {
     }
     if (action === 'libset') {
       const key = String(evt.key || 'processLib');
-      const val = Array.isArray(evt.value) ? evt.value.map(x => String(x).trim()).filter(x => x) : null;
-      if (!val) return { ok: false, msg: '字典值必须是数组' };
+      // v1.0.221：数组 = 字典列表（工序库等，老行为不变）；非数组（数字 / 对象）= 应用级统一设置（如税点 taxRate）
+      let val;
+      if (Array.isArray(evt.value)) val = evt.value.map(x => String(x).trim()).filter(x => x);
+      else if (evt.value === null || evt.value === undefined || evt.value === '') return { ok: false, msg: '值不能为空' };
+      else val = evt.value;
       await exec('INSERT INTO tracking_lib (k, v, updated_at) VALUES (' + q(key) + ', ' + q(JSON.stringify(val)) + ', now()) ' +
         'ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()');
-      return { ok: true, key: key, count: val.length };
+      return { ok: true, key: key, count: Array.isArray(val) ? val.length : 1, value: val };
     }
 
     // v1.0.198 基础数据词典：dictget 取全部（列词典 + 预留类别）/ dictset 覆盖保存

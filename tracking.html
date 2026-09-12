@@ -419,9 +419,9 @@
 
     <div class="bar">
       <input type="text" id="kw" placeholder="🔍 搜索客户 / 跟单员 / 合同号 / 编号 / 钢种 / 仓库，或直接输入重量数字（如 5433）">
-      <div class="taxbox" title="税点（%）：填「单价(含税)」或「总金额(含税)」时会按这个税点自动算出不含税值（不含税 = 含税 ×（1 − 税点））">
+      <div class="taxbox" title="税点（%）：全公司统一（v1.0.221 起，默认 8%），修改会同步给所有人。填「单价(含税)」或「总金额(含税)」时按此自动算出不含税值（不含税 = 含税 ×（1 − 税点））">
         <span class="taxlb">税点</span>
-        <input type="number" id="taxRate" min="0" max="100" step="0.1" value="13" inputmode="decimal">
+        <input type="number" id="taxRate" min="0" max="100" step="0.1" value="8" inputmode="decimal">
         <span class="taxpct">%</span>
       </div>
       <div class="sp"></div>
@@ -750,6 +750,6 @@
     <div class="dlg-f"><button class="btn" id="colDlgCancel">取消</button><button class="btn primary" id="colDlgOk">确定</button></div>
   </div>
 </div>
-<script src="js/tracking.js?v=1.0.217"></script>
+<script src="js/tracking.js?v=1.0.221"></script>
 </body>
 </html>

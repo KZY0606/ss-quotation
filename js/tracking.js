@@ -1,4 +1,6 @@
-// tracking.js — KK 不锈钢跟单系统（v1.0.217）
+// tracking.js — KK 不锈钢跟单系统（v1.0.221）
+// v1.0.221：税点改为「全公司统一」——以云端 tracking_lib ▸ taxRate 为准（默认 8%），谁改所有人同步
+//           本机 localStorage（kk_tax_rate）不再作为权威，旧值一律忽略；云端还没有值时自动写入默认 8%
 // v1.0.217：① 新增「采购清单」板块（排在入仓前）：Sheet1 采购需求录入 / Sheet2 采购清单，Excel 式 sheet 切换
 //           ② Sheet1 像入仓一样录入（可粘贴 / 加行 / 下拉），提交后进 Sheet2，状态默认「未买」
 //           ③ Sheet2 专给采购员看：采购状态列一键切 未买/已买 + 未买行醒目高亮 + 选中批量标记 + 可带回入仓录入
@@ -2462,7 +2464,8 @@
     toast('编辑模式：点任意格子直接改，回车跳同列下一行，方向键上下左右移动（Shift+Enter 上一行 / Ctrl+Enter 保存 / Esc 取消）');
   }
   // ---------- v1.0.203 税点（%）：不含税 = 含税 × (1 - 税点) ----------
-  var taxRate = '13';       // 默认 13%，改了会记住
+  var TAX_DEFAULT = '8';    // v1.0.221 全公司统一默认税点（%）
+  var taxRate = TAX_DEFAULT;
   function round2v(n) { return Math.round((n + 1e-9) * 100) / 100; }
   function taxPct() { var t = num(taxRate); return isFinite(t) ? t : 0; }
   function notaxOf(v) { var n = num(v); return isFinite(n) ? round2v(n * (1 - taxPct() / 100)) : NaN; }
@@ -2520,23 +2523,40 @@
     if (n) toast('已按税点 ' + (String(taxRate).trim() === '' ? '0' : taxRate) + '% 自动算出不含税 ' + n + ' 处');
     return n;
   }
+  function taxNum(v) { var s = String(v == null ? '' : v).trim(); return s === '' ? 0 : num(s); }
+  // v1.0.221 从云端取统一税点；云端还没有值时写入默认 8%（作为全公司基线）
+  function loadTaxRemote(retry) {
+    var el = $('taxRate');
+    return api({ action: 'libget', key: 'taxRate' }).then(function (r) {
+      var v = (r && r.ok) ? r.value : null;
+      if (v === null || v === undefined || String(v).trim() === '') {
+        return api({ action: 'libset', key: 'taxRate', value: taxNum(TAX_DEFAULT) }).then(function () {
+          taxRate = TAX_DEFAULT; if (el) el.value = TAX_DEFAULT;
+        });
+      }
+      var s = String(v).trim();
+      if (isFinite(num(s))) { taxRate = s; if (el) el.value = s; }
+    }).catch(function () {
+      if (retry) setTimeout(function () { loadTaxRemote(false); }, 3000);
+    });
+  }
   function initTax() {
     var el = $('taxRate');
-    var saved = null;
-    try { saved = localStorage.getItem('kk_tax_rate'); } catch (e) { }
-    if (saved != null && String(saved).trim() !== '') taxRate = String(saved).trim();
+    // v1.0.221：税点不再按本机记，清掉旧值避免各机器不一致（13% 那批）
+    try { localStorage.removeItem('kk_tax_rate'); } catch (e) { }
     if (!el) return;
     el.value = taxRate;
-    el.addEventListener('input', function () {
-      taxRate = el.value;
-      try { localStorage.setItem('kk_tax_rate', taxRate); } catch (e) { }
-    });
+    el.addEventListener('input', function () { taxRate = el.value; });
     el.addEventListener('change', function () {
       taxRate = el.value;
-      try { localStorage.setItem('kk_tax_rate', taxRate); } catch (e) { }
-      toast('税点已设为 ' + (taxRate === '' ? '0' : taxRate) + '% —— 以后填含税单价 / 总金额会自动算出不含税');
+      var t = String(taxRate).trim() === '' ? '0' : String(taxRate).trim();
+      api({ action: 'libset', key: 'taxRate', value: taxNum(t) }).then(function (r) {
+        if (r && r.ok) toast('税点已统一设为 ' + t + '% —— 所有人同步生效，填含税单价 / 总金额会自动算出不含税');
+        else toast('税点没存上：' + ((r && r.msg) || '请重试'));
+      }).catch(function () { toast('税点没存上，请检查网络后重试'); });
     });
     el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+    loadTaxRemote(true);
   }
   // 编辑模式：把不含税结果写进 mods（与原值相同则清理该改动）
   function autoNotaxMod(it, id, pair, rawVal) {
