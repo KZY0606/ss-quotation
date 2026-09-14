@@ -10,6 +10,9 @@
 //           ② 新增采购字段 pur_status(未买/已买) / pur_buyer(采购员) / pur_date(采购完成日期)，pur_status 变更留痕
 //           ③ list 支持 status=purchase 过滤；layoutsave 宽表白名单加 purchase
 // v1.0.221：税点全公司统一——libset 支持非数组值（tracking_lib ▸ taxRate 存数字），前端读写同一份统一税点
+// v1.0.222：性能优化——schema 就绪标记（tracking_lib ▸ schemaVer）：每次请求先 1 次查标记，版本一致就跳过
+//           全部建表/补列 DDL（原来每请求约 25 条 DDL，实测每次调用固定多花 1~2 秒）
+//           ⚠️ 以后加列/改表必须同时升 SCHEMA_VER，否则新请求不会补列
 const CloudBase = require('@cloudbase/manager-node');
 const app = CloudBase.init({ envId: process.env.TCB_ENV_ID || 'kk-quotation-d2gtggelpcd901498' });
 const database = app.database;
@@ -142,6 +145,24 @@ const DEFAULT_DICT = {
 };
 const DICT_LABEL = { grade: '钢种', surface: '表面', film_status: '保护膜', origin: '产地', warehouse: '仓库/加工厂', follower: '跟单员', type: '类型', prod_status: '生产状态', inv_status: '库存状态', ord_status: '订单状态', pur_status: '采购状态', pur_buyer: '采购员', customer: '客户名称', supplier: '供应商' };
 
+const SCHEMA_VER = '2026-09-14a';   // ⚠️ 每次改表结构（加列/建索引）都要升这个版本号
+let __schemaOK = false;             // 同实例进程内缓存：本实例已确认过就不再查
+async function ensureSchemaOnce() {
+  if (__schemaOK) return;
+  try {
+    const r = await exec("SELECT v FROM tracking_lib WHERE k='schemaVer' LIMIT 1");
+    if (r.Rows && r.Rows.length) {
+      let v = '';
+      try { const row = JSON.parse(r.Rows[0]); v = String(JSON.parse(row[0] || '""')); } catch (e1) { v = ''; }
+      if (v === SCHEMA_VER) { __schemaOK = true; return; }
+    }
+  } catch (e) { /* tracking_lib 还不存在等情况 → 走完整初始化 */ }
+  await ensureTables();
+  try {
+    await exec("INSERT INTO tracking_lib (k, v, updated_at) VALUES ('schemaVer', " + q(JSON.stringify(SCHEMA_VER)) + ", now()) ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()");
+  } catch (e) { }
+  __schemaOK = true;
+}
 async function ensureTables() {
   await exec(`CREATE TABLE IF NOT EXISTS tracking_items (
     id SERIAL PRIMARY KEY,
@@ -327,7 +348,7 @@ async function applyFields(id, fields, user) {
 exports.main = async (event) => {
   const evt = parseEvt(event);
   try {
-    await ensureTables();
+    await ensureSchemaOnce();
     const action = String((evt && evt.action) || 'list');
     const user = await checkToken(String((evt && evt.token) || ''));
     if (!user) return { ok: false, msg: '未登录或登录已过期' };
