@@ -1,4 +1,5 @@
-// tracking.js — KK 不锈钢跟单系统（v1.0.221）
+// tracking.js — KK 不锈钢跟单系统（v1.0.227）
+// v1.0.227：打开秒显示——本地缓存先渲染（毫秒级看到上次数据）+ 后台刷新；数据分批加载（先 500 条快显，其余后台补齐并增量渲染）
 // v1.0.221：税点改为「全公司统一」——以云端 tracking_lib ▸ taxRate 为准（默认 8%），谁改所有人同步
 //           本机 localStorage（kk_tax_rate）不再作为权威，旧值一律忽略；云端还没有值时自动写入默认 8%
 // v1.0.217：① 新增「采购清单」板块（排在入仓前）：Sheet1 采购需求录入 / Sheet2 采购清单，Excel 式 sheet 切换
@@ -2012,14 +2013,7 @@
       if (et) et.textContent = (boardRowsOf(board).length ? '当前筛选 / 搜索无匹配' : (board === 'progress' ? '生产进度板块显示「生产中」的货，先到生产中板块录入或转过来' : '该板块暂无数据，点「＋ 入仓」或「📥 导入 Excel/CSV」开始'));
       return;
     }
-    tb.innerHTML = rows.map(function (it) {
-      var inline = editMode;
-      var tds = cols.map(function (c) { return cellHtml(it, c, inline); }).join('');
-      var cls = (String(it.id) === String(selId) ? 'sel ' : '') + (editMode ? 'editing ' : '') + (picks[it.id] ? 'picked' : '');
-      // v1.0.217 采购清单：未买 / 已买 一眼看清（左侧色条 + 淡底）
-      if (board === 'purchase') cls += (String(it.pur_status || '') === '已买' ? 'pu-bought ' : 'pu-todo ');
-      return '<tr data-id="' + it.id + '" class="' + cls.trim() + '">' + tds + '</tr>';
-    }).join('');
+    tb.innerHTML = rows.map(function (it) { return rowHtml(it, cols); }).join('');
     var ca = $('ckAll');
     if (ca) {
       var ids = rows.map(function (r) { return r.id; });
@@ -2274,19 +2268,154 @@
     else colF[k] = { vals: vals, min: min, max: max, kind: c ? c.kind : '' };
   }
 
+  // ---------- v1.0.227 打开秒显示：本地缓存 + 分批加载 ----------
+  var CACHE_LIMIT = 3500000;   // 超过 3.5MB 就不缓存（localStorage 有配额）
+  var cacheKey = '';
+  var cacheInitDone = false;
+  var _renderedInLoad = false; // load() 内是否已经渲染过（避免启动时重复整表渲染）
+  var _loadGen = 0;            // 加载代次：新的 load 开始时，旧的补齐循环自动退出
+  var LOAD_FIRST = 500;        // 首批（先显示）
+  var LOAD_CHUNK = 1000;       // 后台补齐每批
+  function cacheSetKey(u) { cacheKey = 'kk_track_cache_v1' + (u ? '_' + u : ''); }
+  function cacheSave(list) {
+    if (!cacheKey) return;
+    try {
+      var s = JSON.stringify({ ts: Date.now(), items: list || [] });
+      if (s.length > CACHE_LIMIT) { try { localStorage.removeItem(cacheKey); } catch (e0) { } return; }
+      localStorage.setItem(cacheKey, s);
+    } catch (e) { }
+  }
+  function cacheLoad() {
+    if (!cacheKey) return null;
+    try {
+      var s = localStorage.getItem(cacheKey);
+      if (!s) return null;
+      var o = JSON.parse(s);
+      return (o && Array.isArray(o.items) && o.items.length) ? o : null;
+    } catch (e) { return null; }
+  }
+  function rowHtml(it, cols) {
+    var tds = cols.map(function (c) { return cellHtml(it, c, editMode); }).join('');
+    var cls = (String(it.id) === String(selId) ? 'sel ' : '') + (editMode ? 'editing ' : '') + (picks[it.id] ? 'picked' : '');
+    if (board === 'purchase') cls += (String(it.pur_status || '') === '已买' ? 'pu-bought ' : 'pu-todo ');
+    return '<tr data-id="' + it.id + '" class="' + cls.trim() + '">' + tds + '</tr>';
+  }
+  function canAppendNow() {
+    if (editMode || Object.keys(mods).length) return false;
+    if (sortKey && sortDir) return false;
+    if (board === 'intake') return false;
+    if (board === 'purchase' && purSheet === 'req') return false;
+    if (!$('tbody')) return false;
+    return true;
+  }
+  function appendRows(add) {
+    if (!add || !add.length) return;
+    var rows = add.filter(function (it) { return passesFilter(it) && passesKw(it) && passesMy(it); });
+    if (!rows.length) { renderStats(); return; }
+    if (!$('tbody').children.length) { render(); return; }
+    var cols = colsOf(board);
+    $('tbody').insertAdjacentHTML('beforeend', rows.map(function (it) { return rowHtml(it, cols); }).join(''));
+    var ca = $('ckAll');
+    if (ca) { var ids = visibleRows().map(function (r0) { return r0.id; }); ca.checked = ids.length > 0 && ids.every(function (i) { return !!picks[i]; }); }
+    renderStats();
+  }
+  async function loadRest(before, gen) {
+    try {
+      var guard = 0;
+      while (guard++ < 30) {
+        if (gen !== _loadGen) return;
+        var r = await api({ action: 'list', limit: LOAD_CHUNK, before: before });
+        var more = (r && r.items) || [];
+        if (!more.length) break;
+        var have = {};
+        items.forEach(function (x) { have[x.id] = 1; });
+        var add = more.filter(function (x) { return !have[x.id]; });
+        items = items.concat(add);
+        before = more[more.length - 1].id;
+        if (add.length && canAppendNow()) { try { appendRows(add); } catch (e0) { } }
+        if (!r.hasMore) break;
+      }
+      if (gen === _loadGen) {
+        if (!canAppendNow()) { try { render(); _renderedInLoad = true; } catch (e1) { } }
+        cacheSave(items);
+      }
+    } catch (e) { }
+  }
+  // v1.0.227：静默补齐（不渲染），返回全部数据；被新一代 load 取代时返回 null
+  async function fetchAll(first, gen) {
+    var all = first.slice();
+    if (!all.length) return all;
+    var before = all[all.length - 1].id;
+    var guard = 0;
+    while (guard++ < 30) {
+      if (gen !== _loadGen) return null;
+      var r = await api({ action: 'list', limit: LOAD_CHUNK, before: before });
+      var more = (r && r.items) || [];
+      if (!more.length) break;
+      all = all.concat(more);
+      before = more[more.length - 1].id;
+      if (!r.hasMore) break;
+    }
+    return all;
+  }
+  function sameData(a, b) {
+    if (!a || !b) return false;
+    if (a.length !== b.length) return false;
+    try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return false; }
+  }
   // ---------- 数据 ----------
   async function load() {
+    _loadGen++;
+    var gen = _loadGen;
     try {
-      var pr = await Promise.all([api({ action: 'list' }), csLoad()]);
+      // v1.0.227 首次加载：先用本地缓存秒开（不闪烁），后台静默刷新；数据有变化才重绘
+      var hadCache = false;
+      if (!cacheInitDone) {
+        cacheInitDone = true;
+        var c = cacheLoad();
+        if (c) {
+          hadCache = true;
+          try {
+            items = c.items;
+            render();
+            _renderedInLoad = true;
+            toast('已用上次数据秒开（' + c.items.length + ' 条），正在后台刷新最新数据…');
+          } catch (e0) { hadCache = false; }
+        }
+      }
+      var pr = await Promise.all([api({ action: 'list', limit: LOAD_FIRST }), csLoad()]);
       var r = pr[0];
-      items = r.items || [];
-      if (selId != null && !items.some(function (x) { return String(x.id) === String(selId); })) selId = null;
-      if (editId != null && !items.some(function (x) { return String(x.id) === String(editId); })) editId = null;
-    if (!editMode) mods = {};
-      Object.keys(picks).forEach(function (k) { if (!items.some(function (x) { return String(x.id) === String(k); })) delete picks[k]; });
-      refreshDatalists();
-      if (bootSkipRender) { bootSkipRender = false; return; }
-      render();
+      var first = (r && r.items) || [];
+      if (!hadCache) {
+        // 无缓存（首次打开）：首批立即显示，后台增量补齐（追加渲染）
+        items = first;
+        if (selId != null && !items.some(function (x) { return String(x.id) === String(selId); })) selId = null;
+        if (editId != null && !items.some(function (x) { return String(x.id) === String(editId); })) editId = null;
+        if (!editMode) mods = {};
+        Object.keys(picks).forEach(function (k) { if (!items.some(function (x) { return String(x.id) === String(k); })) delete picks[k]; });
+        refreshDatalists();
+        if (bootSkipRender) { bootSkipRender = false; } else { render(); _renderedInLoad = true; }
+        cacheSave(items);
+        if (r.hasMore && first.length) { loadRest(first[first.length - 1].id, gen); }
+      } else {
+        // 有缓存：静默补齐全部 → 与缓存比对 → 有变化才重绘（避免 2500→500→2500 的降级闪烁）
+        var all = await fetchAll(first, gen);
+        if (all === null) return;
+        var changed = !sameData(items, all);
+        if (changed) {
+          items = all;
+          if (selId != null && !items.some(function (x) { return String(x.id) === String(selId); })) selId = null;
+          if (editId != null && !items.some(function (x) { return String(x.id) === String(editId); })) editId = null;
+          if (!editMode) mods = {};
+          Object.keys(picks).forEach(function (k) { if (!items.some(function (x) { return String(x.id) === String(k); })) delete picks[k]; });
+          refreshDatalists();
+          if (!editMode && !Object.keys(mods).length) { render(); _renderedInLoad = true; }
+        } else {
+          _renderedInLoad = true;
+        }
+        bootSkipRender = false;
+        cacheSave(items);
+      }
     } catch (e) {
       $('tbody').innerHTML = '<tr><td colspan="' + colsOf(board).length + '" class="empty">加载失败：' + esc(e.message) + '</td></tr>';
       toast(e.message, false);
@@ -3687,9 +3816,10 @@
     var auth = await KKAuth.requireLogin();
     if (!auth) return;
     myName = String(auth.realName || auth.username || '').trim();
+    cacheSetKey(auth.username || '');
     $('curUser').textContent = '当前：' + myName + (auth.realName ? '' : '（未设姓名，跟单员请填真实姓名）');
     bootSkipRender = true;
     await Promise.all([loadLib(), loadDict(), load()]);
-    render();
+    if (!_renderedInLoad) render();   // v1.0.227：load 内已渲染过（缓存/新数据）就不再重复整表渲染
   })();
 })();

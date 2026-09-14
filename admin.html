@@ -229,10 +229,15 @@
       return r;
     }
 
-    async function loadUsers() {
+    // v1.0.227：支持传入已有数据直接渲染（避免重复请求）+ 本地缓存
+    async function loadUsers(preset) {
       try {
-        var r = await api('adminUsers', { action: 'list' });
-        var users = r.users || [];
+        var users = preset || [];
+        if (!preset) {
+          var r = await api('adminUsers', { action: 'list' });
+          users = r.users || [];
+        }
+        try { localStorage.setItem('kk_admin_users_cache_v1', JSON.stringify(users)); } catch (e0) { }
         var tb = document.getElementById('userTbody');
         document.getElementById('userCount').textContent = '共 ' + users.length + ' 人';
         tb.innerHTML = '';
@@ -337,13 +342,23 @@
       try { var r = await api('adminUsers', { action: 'remove', data: { username: username } }); setMsg(r.msg); loadUsers(); } catch (e) {}
     }
 
+    // v1.0.227：先显示本地缓存，再刷新
     async function loadLogs(type) {
       var el = document.getElementById(type === 'login' ? 'loginList' : 'usageList');
-      el.innerHTML = '<div class="empty">加载中…</div>';
+      var ck = type === 'login' ? 'kk_admin_logs_login_cache_v1' : 'kk_admin_logs_usage_cache_v1';
+      var cached = null;
+      try { cached = JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e0) { }
+      if (cached && cached.list && cached.list.length) { renderLogs(type, cached.list); } else { el.innerHTML = '<div class="empty">加载中…</div>'; }
       try {
         var r = await api('adminLogs', { type: type, days: 7 });
         var list = type === 'usage' ? (r.groups || []) : (r.logs || []);
-        if (!list || !list.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
+        try { localStorage.setItem(ck, JSON.stringify({ ts: Date.now(), list: list || [] })); } catch (e1) { }
+        renderLogs(type, list);
+      } catch (e) { }
+    }
+    function renderLogs(type, list) {
+      var el = document.getElementById(type === 'login' ? 'loginList' : 'usageList');
+      if (!list || !list.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
         el.innerHTML = '';
         list.forEach(function (it) {
           var div = document.createElement('div');
@@ -372,7 +387,6 @@
           }
           el.appendChild(div);
         });
-      } catch (e) {}
     }
 
     var lastUsers = [];
@@ -389,11 +403,15 @@
       auth = await KKAuth.requireLogin();
       if (!auth) return;
       document.getElementById('curUser').textContent = '当前：' + auth.realName + '（' + auth.username + '）';
+      // v1.0.227：先用用户列表缓存秒开，再刷新；拉到的新数据直接渲染（不再重复请求）
+      var cu = null;
+      try { cu = JSON.parse(localStorage.getItem('kk_admin_users_cache_v1') || 'null'); } catch (e0) { }
+      if (cu && cu.length) { lastUsers = cu; loadUsers(cu); }
       try {
         var r = await api('adminUsers', { action: 'list' });
         lastUsers = r.users || [];
       } catch (e) {}
-      loadUsers();
+      loadUsers(lastUsers);
     })();
   </script>
 </body>

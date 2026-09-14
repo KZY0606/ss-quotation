@@ -10,6 +10,7 @@
 //           ② 新增采购字段 pur_status(未买/已买) / pur_buyer(采购员) / pur_date(采购完成日期)，pur_status 变更留痕
 //           ③ list 支持 status=purchase 过滤；layoutsave 宽表白名单加 purchase
 // v1.0.221：税点全公司统一——libset 支持非数组值（tracking_lib ▸ taxRate 存数字），前端读写同一份统一税点
+// v1.0.227：list 支持 before 游标 + limit 分批（前端先显 500 条、后台补齐）；旧调用不传参数行为不变
 // v1.0.222：性能优化——schema 就绪标记（tracking_lib ▸ schemaVer）：每次请求先 1 次查标记，版本一致就跳过
 //           全部建表/补列 DDL（原来每请求约 25 条 DDL，实测每次调用固定多花 1~2 秒）
 //           ⚠️ 以后加列/改表必须同时升 SCHEMA_VER，否则新请求不会补列
@@ -355,11 +356,15 @@ exports.main = async (event) => {
 
     if (action === 'list') {
       const status = String((evt && evt.status) || '').trim();
-      const where = (status === 'inventory' || status === 'ordered' || status === 'purchase') ? ' WHERE status=' + q(status) : '';
-      const res = await exec('SELECT * FROM tracking_items' + where + ' ORDER BY id DESC LIMIT 2000');
+      let where = (status === 'inventory' || status === 'ordered' || status === 'purchase') ? ' WHERE status=' + q(status) : '';
+      // v1.0.227：支持分批（before 游标 + limit）——前端首批快显 + 后台补齐；不传参数时行为同旧版
+      const limit = Math.min(Math.max(parseInt((evt && evt.limit) || 0, 10) || 2000, 1), 2000);
+      const before = parseInt((evt && evt.before) || 0, 10) || 0;
+      if (before > 0) where += (where ? ' AND' : ' WHERE') + ' id < ' + before;
+      const res = await exec('SELECT * FROM tracking_items' + where + ' ORDER BY id DESC LIMIT ' + limit);
       const items = [];
       for (let i = 0; i < (res.Rows || []).length; i++) items.push(rowToItem(res, i));
-      return { ok: true, items: items };
+      return { ok: true, items: items, hasMore: items.length >= limit, limit: limit };
     }
 
     if (action === 'save') {
