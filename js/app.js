@@ -151,16 +151,21 @@ const App = (() => {
     }
     // 400系：查独立基价表（按产地+材质），410S/BA 是一个整体材质名
     if (origin && material) {
-      const normMat = normalize400Material(material);
-      if (PRODUCTS_400.some(p => p.origin === origin && p.material === normMat)) {
+      // v1.0.225（2026-09-14 用户规则）：400 系「材质/表面」写法
+      // 材质列只写材质（430B / 430 / 410S / 430W）、表面列写表面（BA / 2BA）时，
+      // 自动组合成「材质/表面」去匹配基价面板；400 系所有产地一致
+      const _c400 = [normalize400Material(material)];
+      if (String(material).indexOf('/') < 0 && String(surface || '').trim()) {
+        _c400.push(normalize400Material(String(material).trim() + '/' + String(surface).trim()));
+      }
+      for (const normMat of _c400) {
+        if (!PRODUCTS_400.some(p => p.origin === origin && p.material === normMat)) continue;
         const key = origin + '-' + normMat;
         // v1.0.96 五尺（1500/1524/1530mm）：仅宏旺410S/2BA、宏旺430W/2BA 提供
         if (isFiveFootWidth(width)) {
-          if (FIVE_FOOT_ORIGINS['400'].includes(key)) {
-            const p = fiveFootPrices400[key];
-            return (p && p > 0) ? p : null;
-          }
-          return null;
+          if (!FIVE_FOOT_ORIGINS['400'].includes(key)) continue;
+          const p = fiveFootPrices400[key];
+          return (p && p > 0) ? p : null;
         }
         return prices400[key] || null;
       }
@@ -2442,7 +2447,8 @@ const App = (() => {
       let s = raw.replace(/[，,、；;：:]/g, ' ').trim();
       let origin = '', material = '';
       for (const op of ORIGIN_KEYWORDS) { if (s.includes(op)) { origin = op; s = s.replace(op, ' ').trim(); break; } }
-      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S/BA','410S','430B','430/BA','430W/2BA','430W/2BB','410','430'];
+      // v1.0.225（2026-09-14）：400 系补齐「材质/表面」与「只写材质」两种写法
+      const mps = ['201J5','201J4','201J1','201J3','201J2','201','304','316L','410S/2BA(非标)','410S/BA','410S/2BA','430B/2BA','430/2BA','430W/2BA','430W/2BB','410S','430B','430/BA','430W','410','430'];
       for (const mp of mps) { if (s.toUpperCase().includes(mp)) { material = mp; s = s.replace(new RegExp(mp,'gi'), ' ').trim(); break; } }
       let width = 1240, length = 'C';
       const sp = s.match(/(\d+\.?\d*)\s*[*×xX]\s*(\d+\.?\d*)(?:\s*MM)?/i);
@@ -2674,7 +2680,12 @@ const App = (() => {
         } else if (/^201/.test(item.material) && item.material !== '201J5' && PricingEngine.getWidthBand201(w) === null) {
           item._bpError = `宽度 ${isNaN(w) ? (item.width || '?') : w}mm 不在 201 基价档位（1219/1240、1250/1280、1500/1530），请检查宽度或补充对应档位基价`;
         } else {
-          item._bpError = `${item.origin || '?'} ${item.material} 基价未设置${isNaN(w) ? '' : `（宽度 ${w}mm 对应档位）`}，请在基价面板填写`;
+          // v1.0.225 基价提示：400 系材质列只写材质时，提示带上组合名（材质/表面）
+          const _mUp400 = String(item.material || '').toUpperCase();
+          const _sT400 = String(item.surface || '').trim();
+          const _is400BP = /^(410|430)/.test(_mUp400) && String(item.material || '').indexOf('/') < 0 && _sT400;
+          const _bpName = _is400BP ? (String(item.material).trim() + '/' + _sT400) : item.material;
+          item._bpError = `${item.origin || '?'} ${_bpName} 基价未设置${isNaN(w) ? '' : `（宽度 ${w}mm 对应档位）`}，请在基价面板填写`;
         }
       }
     });

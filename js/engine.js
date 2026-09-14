@@ -1619,7 +1619,7 @@ const PricingEngine = (() => {
     calculate, calculateBatch, parseSpec, parseFreeText,
     normalizeSurface, normalizeFilm, getDensity, getEdgeType, cnToUsd, addUsdSurcharge, addExtras, calcTotal,
     parseThicknessRange,
-    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee, getCoilMarkupInfo, matchEmboss, splitEmboss,
+    getThicknessSurcharge, getSurfaceFee, getFilmFee, getSquareMetersPerTon, getSheetMarkupKey, getEdgeFee, getCoilMarkupInfo, matchEmboss, splitEmboss, getThickTableName,
     setUserOverrides,
     DENSITY, THICKNESS_SURCHARGE, THICKNESS_SURCHARGE_304,
     ORIGIN_THICKNESS_SURCHARGE_201, ORIGIN_THICKNESS_SURCHARGE_304, ORIGIN_THICKNESS_SURCHARGE_316L,

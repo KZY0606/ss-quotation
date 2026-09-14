@@ -1793,6 +1793,49 @@ test('v1.0.223 梓烨8K 别名与中文写法', () => {
   eq(A['卷磨8k(梓烨)'], '8K(梓烨)', '卷磨8k(梓烨)');
   eq(A['双面8k(梓烨)'], '双面8K(梓烨)', '双面8k(梓烨)');
 });
+  test('v1.0.225 400系「材质/表面」：BA / 2BA 是表面、与 2B 同不加价', () => {
+  // 2026-09-14 用户规则：BA / 2BA 属表面，不加表面加工费（同 2B）
+  eq(PricingEngine.getSurfaceFee('BA', '0.40', 1000, '430B'), 0, '宁金 430B + BA 表面费 0');
+  eq(PricingEngine.getSurfaceFee('BA', '0.40', 1000, '430'), 0, '宁金 430 + BA 表面费 0');
+  eq(PricingEngine.getSurfaceFee('BA', '0.23', 1000, '410S'), 0, '宁金 410S + BA 表面费 0');
+  eq(PricingEngine.getSurfaceFee('2BA', '0.40', 1000, '430B'), 0, '430B + 2BA 表面费 0');
+  eq(PricingEngine.getSurfaceFee('2BA', '0.40', 1000, '430W'), 0, '430W + 2BA 表面费 0');
+  eq(PricingEngine.getSurfaceFee('2B', '0.40', 1000, '430'), 0, '对照：2B 也是 0');
+  });
+
+  test('v1.0.225 400系「材质/表面」：材质列只写材质时厚度加价照常命中', () => {
+  // 材质列 430B + 表面列 BA → 内部拼 430B-BA
+  eq(PricingEngine.getThicknessSurcharge('0.40', false, '430B', '宁金', 'BA'), 200, '430B + BA → 430B-BA 0.40-0.49 = 200');
+  eq(PricingEngine.getThicknessSurcharge('0.23', false, '430B', '宁金', 'BA'), 1200, '430B + BA 0.22-0.23 = 1200');
+  eq(PricingEngine.getThicknessSurcharge('0.40', false, '430', '宁金', 'BA'), 200, '430 + BA → 430-BA（=430B-BA）= 200');
+  eq(PricingEngine.getThicknessSurcharge('0.23', false, '410S', '宁金', 'BA'), 1200, '410S + BA → 410S-BA 0.22-0.23 = 1200');
+  eq(PricingEngine.getThicknessSurcharge('0.40', false, '430W', '宏旺', '2BA'), 300, '430W + 2BA → 430W-2BA 0.40-0.42 = 300');
+  eq(PricingEngine.getThicknessSurcharge('0.40', false, '410S', '瑞钢', '2BA'), 100, '410S + 2BA → 410S-2BA-瑞钢 = 100');
+  eq(PricingEngine.getThicknessSurcharge('0.45', false, '430B', '瑞钢', '2BA'), 100, '430B + 2BA → 430B-2BA-瑞钢 0.43-0.47 = 100');
+  eq(PricingEngine.getThicknessSurcharge('0.45', false, '430', '硕阳', 'BA'), 100, '430 + BA → 430-BA-硕阳 0.42-0.51 = 100');
+  });
+
+  test('v1.0.225 400系：明细表名按组合名输出', () => {
+  eq(PricingEngine.getThickTableName(false, '430B', '宁金', 'BA'), '400系(430B-BA)', '430B + BA 表名');
+  eq(PricingEngine.getThickTableName(false, '430', '宁金', 'BA'), '400系(430-BA)', '430 + BA 表名');
+  eq(PricingEngine.getThickTableName(false, '430', '硕阳', 'BA'), '400系(430-BA-硕阳)', '硕阳产地专属表优先');
+  });
+
+  test('v1.0.225 400系：旧写法（材质里带 /BA）仍然兼容', () => {
+  // 材质列直接写 430B/BA（旧习惯）也要照常算
+  eq(PricingEngine.getThicknessSurcharge('0.40', false, '430B/BA', '宁金', ''), 200, '旧写法 430B/BA 仍然行');
+  eq(PricingEngine.getThicknessSurcharge('0.23', false, '410S/BA', '宁金', ''), 1200, '旧写法 410S/BA 仍然行');
+  eq(PricingEngine.getThickTableName(false, '430B/BA', '宁金', ''), '400系(430B-BA)', '旧写法表名');
+  });
+
+  test('v1.0.225 400系：密度与产地白名单对「只写材质」同样生效', () => {
+  eq(PricingEngine.getDensity('430B'), 7.75, '430B 密度');
+  eq(PricingEngine.getDensity('430'), 7.75, '430 密度');
+  eq(PricingEngine.getDensity('410S'), 7.75, '410S 密度');
+  eq(PricingEngine.getDensity('430W'), 7.75, '430W 密度');
+  eq(PricingEngine.ORIGIN_MATERIAL_ALLOW['430'].length, 5, '430 白名单 5 个产地');
+  eq(PricingEngine.ORIGIN_MATERIAL_ALLOW['410'].length, 4, '410 白名单 4 产地');
+  });
 test('v1.0.221 产地名收正：梓烨（不带 201），保留历史写法兼容', () => {
   // 白名单里的产地名已不带 201
   eq(JSON.stringify(PricingEngine.ORIGIN_MATERIAL_ALLOW['201']), '["宏旺","梓烨","北港"]', '201 白名单产地名');
