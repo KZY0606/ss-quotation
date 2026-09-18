@@ -2308,9 +2308,20 @@
     if (!$('tbody')) return false;
     return true;
   }
+  // v1.0.228：只重画单行（配合局部更新，避免整表重载造成卡顿）
+  function repaintRow(it) {
+    var tb = $('tbody');
+    if (!tb || !it) return false;
+    var tr = tb.querySelector('tr[data-id="' + it.id + '"]');
+    if (!tr) return false;
+    tr.outerHTML = rowHtml(it, colsOf(board));
+    return true;
+  }
   function appendRows(add) {
     if (!add || !add.length) return;
-    var rows = add.filter(function (it) { return passesFilter(it) && passesKw(it) && passesMy(it); });
+    // v1.0.228：必须按当前板块过滤，否则分页补齐会把其它板块（如库存）的行追加进当前表格
+    var _bs = dataBoard(board);
+    var rows = add.filter(function (it) { return it.status === _bs && passesFilter(it) && passesKw(it) && passesMy(it); });
     if (!rows.length) { renderStats(); return; }
     if (!$('tbody').children.length) { render(); return; }
     var cols = colsOf(board);
@@ -2330,9 +2341,10 @@
         var have = {};
         items.forEach(function (x) { have[x.id] = 1; });
         var add = more.filter(function (x) { return !have[x.id]; });
+        if (!add.length) break;   // v1.0.228：没有新数据即停止，避免游标异常时空转
         items = items.concat(add);
         before = more[more.length - 1].id;
-        if (add.length && canAppendNow()) { try { appendRows(add); } catch (e0) { } }
+        if (canAppendNow()) { try { appendRows(add); } catch (e0) { } }
         if (!r.hasMore) break;
       }
       if (gen === _loadGen) {
@@ -2345,6 +2357,9 @@
   async function fetchAll(first, gen) {
     var all = first.slice();
     if (!all.length) return all;
+    // v1.0.228：与 loadRest 保持一致，按 id 去重；游标异常或接口重复返回时不会把数据翻倍
+    var seen = {};
+    all.forEach(function (x) { seen[x.id] = 1; });
     var before = all[all.length - 1].id;
     var guard = 0;
     while (guard++ < 30) {
@@ -2352,7 +2367,10 @@
       var r = await api({ action: 'list', limit: LOAD_CHUNK, before: before });
       var more = (r && r.items) || [];
       if (!more.length) break;
-      all = all.concat(more);
+      var add = more.filter(function (x) { return !seen[x.id]; });
+      if (!add.length) break;   // 没有新数据即停止，避免空转
+      add.forEach(function (x) { seen[x.id] = 1; });
+      all = all.concat(add);
       before = more[more.length - 1].id;
       if (!r.hasMore) break;
     }
@@ -2369,7 +2387,11 @@
     var gen = _loadGen;
     try {
       // v1.0.227 首次加载：先用本地缓存秒开（不闪烁），后台静默刷新；数据有变化才重绘
-      var hadCache = false;
+      // v1.0.228：hadCache 原来是函数内局部变量，第二次及以后调用 load() 时恒为 false，
+      // 于是每次刷新都走「无缓存全量重载」分支：先只渲染首批少量行，再逐批把剩余行追加进当前表格，
+      // 既产生跨板块混入（点「下一道」时库存货被塞进生产进度板块），又造成明显卡顿。
+      // 现在：首屏渲染完成后的每次刷新都按「已渲染过」走静默补齐 + 有变化才重绘。
+      var hadCache = cacheInitDone && _renderedInLoad;
       if (!cacheInitDone) {
         cacheInitDone = true;
         var c = cacheLoad();
@@ -2976,8 +2998,12 @@
     if (s >= f.length) { toast('工序已全部完成', false); return; }
     try {
       await api({ action: 'batchset', ids: [it.id], fields: { process_step: String(s + 1) } });
+      // v1.0.228：本地即时生效，只重画这一行，不再整表重载（原 await load() 要重新拉全量分页，慢且会闪）
+      it.process_step = String(s + 1);
+      repaintRow(it);
+      renderStats();
+      cacheSave(items);
       toast('工序已推进到「' + f[s] + '」');
-      await load();
     } catch (e) { toast(e.message, false); }
   }
   async function doSwitchBoard() {
